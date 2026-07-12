@@ -11,71 +11,27 @@ const links = [
     {
       label: "Beranda",
       icon: "i-lucide-house",
-      to: "/finance",
+      to: "/operations",
       onSelect: () => {
         open.value = false;
       },
     },
     {
-      label: "Manajemen Harga",
-      icon: "i-lucide-banknote",
-      defaultOpen: true,
-      children: [
-        {
-          label: "Harga Solar",
-          to: "/finance/harga/solar",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Harga Pengiriman",
-          to: "/finance/harga/pengiriman",
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
+      label: "Rekap Data Delivery Order",
+      icon: "i-lucide-file-text",
+      to: "/operations/rekap",
+      onSelect: () => {
+        open.value = false;
+      },
     },
     {
-      label: "Customer",
-      icon: "i-lucide-users",
-
-      defaultOpen: true,
-      children: [
-        {
-          label: "Penawaran Customer",
-          to: "/finance/customer/penawaran",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "PO Customer",
-          to: "/finance/customer/po",
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
-    },
-    {
-      label: "Supplier",
-      icon: "i-lucide-truck",
-
-      defaultOpen: true,
-      children: [
-        {
-          label: "PO Supplier",
-          to: "/finance/supplier/po",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
+      label: "Delivery Order",
+      icon: "i-lucide-file-input",
+      to: "/operations/delivery-order",
+      exact: true,
+      onSelect: () => {
+        open.value = false;
+      },
     },
   ],
 ] satisfies NavigationMenuItem[][];
