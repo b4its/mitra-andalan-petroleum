@@ -73,9 +73,7 @@ definePageMeta({ layout: "marketing" });
     </template>
 
     <template #body>
-      <h1 class="text-5xl font-bold text-neutral-50">
-        Ikhtisar Data Marketing
-      </h1>
+      <h1 class="text-5xl font-bold text-neutral-50">Rekap Data Marketing</h1>
       <MarketingStats :period="period" :range="range" />
       <!-- <HomeChart :period="period" :range="range" /> -->
       <HomeSales :period="period" :range="range" />

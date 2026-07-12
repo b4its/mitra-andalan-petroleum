@@ -13,7 +13,7 @@ definePageMeta({ layout: "marketing" });
 
 <template>
   <h1 class="text-5xl font-bold text-neutral-50">
-    Ikhtisar Histori Penawaran Customer
+    Rekap Histori Penawaran Customer
   </h1>
   <HomeSales :period="period" :range="range" />
 </template>
