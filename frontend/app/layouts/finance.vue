@@ -17,60 +17,29 @@ const links = [
       },
     },
     {
-      label: "Manajemen Harga",
-      icon: "i-lucide-banknote",
-      defaultOpen: true,
-      children: [
-        {
-          label: "Harga Solar",
-          to: "/finance/harga/solar",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Harga Pengiriman",
-          to: "/finance/harga/pengiriman",
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
-    },
-    {
-      label: "Customer",
-      icon: "i-lucide-users",
-
-      defaultOpen: true,
-      children: [
-        {
-          label: "Penawaran Customer",
-          to: "/finance/customer/penawaran",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "PO Customer",
-          to: "/finance/customer/po",
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
-    },
-    {
-      label: "Supplier",
+      label: "Data DO",
       icon: "i-lucide-truck",
-
+      to: "/finance/do",
+      onSelect: () => {
+        open.value = false;
+      },
+    },
+    {
+      label: "Manajemen Invoice",
+      icon: "i-lucide-receipt",
       defaultOpen: true,
       children: [
         {
-          label: "PO Supplier",
-          to: "/finance/supplier/po",
+          label: "Pembuatan Invoice",
+          to: "/finance/invoice/pembuatan-invoice",
           exact: true,
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: "Data Invoice Customer",
+          to: "/finance/invoice/data-invoice-customer",
           onSelect: () => {
             open.value = false;
           },
