@@ -73,9 +73,7 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #body>
-      <h1 class="text-5xl font-bold text-neutral-50">
-        Ikhtisar Data Operations
-      </h1>
+      <h1 class="text-5xl font-bold text-neutral-50">Rekap Data Operations</h1>
       <OperationsStats :period="period" :range="range" />
       <OperationsTable :period="period" :range="range" />
     </template>

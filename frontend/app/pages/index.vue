@@ -73,7 +73,7 @@ definePageMeta({ layout: "default" });
     </template>
 
     <template #body>
-      <h1 class="text-5xl font-bold text-neutral-50">Ikhtisar Data</h1>
+      <h1 class="text-5xl font-bold text-neutral-50">Rekap Data</h1>
       <HomeStats :period="period" :range="range" />
       <!-- <HomeChart :period="period" :range="range" /> -->
       <HomeSales :period="period" :range="range" />

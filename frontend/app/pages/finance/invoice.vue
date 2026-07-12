@@ -4,7 +4,7 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 const links = [
   [
     {
-      label: "Ikhtisar",
+      label: "Rekap",
       icon: "i-lucide-square-chart-gantt",
       to: "/finance/invoice",
       exact: true,

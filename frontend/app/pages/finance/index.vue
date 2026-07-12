@@ -73,7 +73,7 @@ definePageMeta({ layout: "finance" });
     </template>
 
     <template #body>
-      <h1 class="text-5xl font-bold text-neutral-50">Ikhtisar Data Finance</h1>
+      <h1 class="text-5xl font-bold text-neutral-50">Rekap Data Finance</h1>
       <FinanceStats :period="period" :range="range" />
       <!-- <HomeChart :period="period" :range="range" /> -->
       <FinanceTable :period="period" :range="range" />
