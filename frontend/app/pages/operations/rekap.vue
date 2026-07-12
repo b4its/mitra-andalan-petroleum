@@ -30,35 +30,14 @@ definePageMeta({ layout: "operations" });
 </script>
 
 <template>
-  <UDashboardPanel id="home">
+  <UDashboardPanel id="rekap">
     <template #header>
-      <UDashboardNavbar title="Beranda" :ui="{ right: 'gap-3' }">
+      <UDashboardNavbar
+        title="Rekap Data Delivery Order"
+        :ui="{ right: 'gap-3' }"
+      >
         <template #leading>
           <UDashboardSidebarCollapse />
-        </template>
-
-        <template #right>
-          <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip color="error" inset>
-                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
-            </UButton>
-          </UTooltip>
-
-          <UDropdownMenu :items="items">
-            <UButton
-              icon="i-lucide-plus"
-              label="Aksi Cepat"
-              size="md"
-              class="rounded-full"
-            />
-          </UDropdownMenu>
         </template>
       </UDashboardNavbar>
 
@@ -73,10 +52,6 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #body>
-      <h1 class="text-5xl font-bold text-neutral-50">
-        Ikhtisar Data Operations
-      </h1>
-      <OperationsStats :period="period" :range="range" />
       <OperationsTable :period="period" :range="range" />
     </template>
   </UDashboardPanel>
