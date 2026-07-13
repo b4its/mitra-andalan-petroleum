@@ -17,35 +17,13 @@ const links = [
       },
     },
     {
-      label: "Manajemen Harga",
-      icon: "i-lucide-banknote",
-      defaultOpen: true,
-      children: [
-        {
-          label: "Harga Solar",
-          to: "/marketing/harga/solar",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Harga Pengiriman",
-          to: "/marketing/harga/pengiriman",
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
-    },
-    {
       label: "Customer",
       icon: "i-lucide-users",
 
       defaultOpen: true,
       children: [
         {
-          label: "Penawaran Customer",
+          label: "Surat Penawaran",
           to: "/marketing/customer/penawaran",
           exact: true,
           onSelect: () => {
@@ -53,7 +31,7 @@ const links = [
           },
         },
         {
-          label: "PO Customer",
+          label: "Purchase Order",
           to: "/marketing/customer/po",
           onSelect: () => {
             open.value = false;
