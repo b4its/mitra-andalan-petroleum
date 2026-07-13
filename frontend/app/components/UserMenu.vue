@@ -31,10 +31,6 @@ const neutrals = ["slate", "gray", "zinc", "neutral", "stone"];
 
 const user = ref({
   name: "Benjamin Canac",
-  avatar: {
-    src: "https://github.com/benjamincanac.png",
-    alt: "Benjamin Canac",
-  },
 });
 
 const items = computed<DropdownMenuItem[][]>(() => [
@@ -42,7 +38,6 @@ const items = computed<DropdownMenuItem[][]>(() => [
     {
       type: "label",
       label: user.value.name,
-      avatar: user.value.avatar,
     },
   ],
   [
