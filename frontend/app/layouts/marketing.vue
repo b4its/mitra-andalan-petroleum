@@ -23,7 +23,15 @@ const links = [
       defaultOpen: true,
       children: [
         {
-          label: "Surat Penawaran",
+          label: "Rekap",
+          to: "/marketing/customer",
+          exact: true,
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: "Surat Penawaran Customer",
           to: "/marketing/customer/penawaran",
           exact: true,
           onSelect: () => {
@@ -31,7 +39,7 @@ const links = [
           },
         },
         {
-          label: "Purchase Order",
+          label: "Purchase Order Customer",
           to: "/marketing/customer/po",
           onSelect: () => {
             open.value = false;

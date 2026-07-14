@@ -10,13 +10,13 @@ const links = [
       exact: true,
     },
     {
-      label: "Penawaran Customer",
-      icon: "i-lucide-fuel",
+      label: "Surat Penawaran Customer",
+      icon: "i-lucide-file-user",
       to: "/marketing/customer/penawaran",
     },
     {
       label: "Purchase Order Customer",
-      icon: "i-lucide-truck",
+      icon: "i-lucide-receipt-text",
       to: "/marketing/customer/po",
     },
   ],
