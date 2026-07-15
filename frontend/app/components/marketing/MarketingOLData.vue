@@ -4,11 +4,6 @@ import { h, resolveComponent } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import type { MarketingOfferingLetterOverview, Period, Range } from "~/types";
 
-const props = defineProps<{
-  period: Period;
-  range: Range;
-}>();
-
 const UBadge = resolveComponent("UBadge");
 const UButton = resolveComponent("UButton");
 const table = useTemplateRef("table");
@@ -62,7 +57,6 @@ const { data: OlData } = await useAsyncData(
     );
   },
   {
-    watch: [() => props.period, () => props.range],
     default: () => [],
   },
 );
@@ -116,7 +110,7 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
 
       return h(
         UBadge,
-        { class: "capitalize", variant: "subtle", color },
+        { class: "capitalize", variant: "soft", color },
         () => status,
       );
     },
@@ -207,7 +201,6 @@ const pagination = ref({
       :data="OlData"
       :columns="columns"
       :column-pinning="columnPinning"
-      class="min-w-max"
       :ui="{
         base: 'table-fixed border-separate border-spacing-0',
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
@@ -221,11 +214,21 @@ const pagination = ref({
       }"
     >
       <template #actions-cell="{ row }">
-        <div class="flex items-center justify-end gap-2">
-          <UButton variant="subtle" size="md" color="neutral">
+        <div class="flex items-center gap-2">
+          <UButton
+            :to="`/marketing/detail/surat-penawaran-${row.original.id}`"
+            variant="solid"
+            size="md"
+            color="primary"
+          >
             Lihat Surat
           </UButton>
-          <UButton variant="soft" size="md" color="primary">
+          <UButton
+            :to="`/marketing/detail/revisi-surat-penawaran-${row.original.id}`"
+            variant="soft"
+            size="md"
+            color="neutral"
+          >
             Revisi Penawaran
           </UButton>
         </div>
