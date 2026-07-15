@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
 import {
-  marketingOLDetailsSchema,
-  marketingOLFooterSchema,
-  marketingOLHeaderSchema,
   type MarketingOLDetailsState,
   type MarketingOLFooterState,
   type MarketingOLHeaderState,

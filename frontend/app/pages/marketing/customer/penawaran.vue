@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
 import {
-  marketingOLDetailsSchema,
-  marketingOLFooterSchema,
-  marketingOLHeaderSchema,
   type MarketingOLDetailsState,
   type MarketingOLFooterState,
   type MarketingOLHeaderState,
@@ -119,34 +116,3 @@ definePageMeta({ layout: "marketing" });
     </template>
   </UStepper>
 </template>
-
-<!-- <template>
-  <UStepper disabled ref="stepper" :items>
-    <template #letterHeader>
-      <MarketingOLHeaderForm
-        v-model="letterHeader"
-        :hasPrevious="stepper?.hasPrev"
-        @previous="previousNavigation"
-        @submit="onHeaderSubmit"
-      />
-    </template>
-
-    <template #letterOfferDetails>
-      <MarketingOLDetailsForm
-        v-model="letterOfferDetails"
-        :hasPrevious="stepper?.hasPrev"
-        @previous="previousNavigation"
-        @submit="onDetailsSubmit"
-      />
-    </template>
-
-    <template #letterFooter>
-      <MarketingOLFooterForm
-        v-model="letterFooter"
-        :hasPrevious="stepper?.hasPrev"
-        @previous="previousNavigation"
-        @submit="onFooterSubmit"
-      />
-    </template>
-  </UStepper>
-</template> -->
