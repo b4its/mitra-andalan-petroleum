@@ -1,136 +1,132 @@
 <script setup lang="ts">
-import * as z from "zod";
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { StepperItem } from "@nuxt/ui";
 
-const fileRef = ref<HTMLInputElement>();
+const items: StepperItem[] = [
+  { title: "Informasi Perusahaan", slot: "companyInformation" },
+  { title: "Informasi Mitra", slot: "associateInformation" },
+  { title: "Detail Purchase Order", slot: "poDetails" },
+  { title: "Informasi Tambahan", slot: "additionalDetails" },
+];
 
-const profileSchema = z.object({
-  name: z.string().min(2, "Too short"),
-  email: z.string().email("Invalid email"),
-  username: z.string().min(2, "Too short"),
-  avatar: z.string().optional(),
-  bio: z.string().optional(),
+const letterCompanyMain = reactive({
+  companyInformation: {
+    name: "PT. MITRA ANDALAN PETROLEUM",
+    address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
+    npwp: "43.170.319.8-722.000",
+    contactPerson: "0812 3456 7898", // add masking
+    email: "marketing.mapetroleum@gmail.com",
+  },
 });
 
-type ProfileSchema = z.output<typeof profileSchema>;
-
-const profile = reactive<Partial<ProfileSchema>>({
-  name: "Benjamin Canac",
-  email: "ben@nuxtlabs.com",
-  username: "benjamincanac",
-  avatar: undefined,
-  bio: undefined,
+const letterCompanyAssociate = reactive({
+  associateInformation: {
+    name: "PT. MIGAS KUKAR MANDIRI",
+    address: "Jl. KH AGUS SALIM No. 32 SAMARINDA",
+    npwp: undefined,
+    contactPerson: undefined, // add masking
+    email: undefined,
+  },
 });
-const toast = useToast();
-async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
-  toast.add({
-    title: "Success",
-    description: "Your settings have been updated.",
-    icon: "i-lucide-check",
-    color: "success",
+
+const letterOfferDetails = reactive({
+  po: {
+    date: `${new Date().toISOString().split("T")[0]}`,
+    number: "0543/PO/MAP/I/05/26",
+  },
+  vat: 0.11,
+  paymentAddress: {
+    bankName: "Bank Central Asia Cabang Sudirman, Samarinda",
+    accountNumber: "027 8091972",
+    accountName: "PT. Migas Kukar Mandiri",
+  },
+  products: [
+    {
+      name: "Bio Diesel",
+      qty: 20000,
+      unit: "Liter",
+      price: 21800,
+      totalPrice: 0,
+    },
+  ],
+  totalProductsPrice: 0,
+});
+
+const letterAdditional = reactive({
+  termAndCondition: "CBD",
+  delivery: {
+    loadingTerminal: undefined,
+    loadingDate: undefined,
+    picOperationMap: undefined,
+  },
+  details: undefined,
+  forwarder: {
+    trucking: "TBA",
+  },
+  signed: {
+    createdBy: "Fitri",
+    approvedBy: "Stenly B",
+  },
+});
+
+const stepper = useTemplateRef("stepper");
+
+function previousNavigation() {
+  stepper.value?.prev();
+}
+
+function onFormSubmitToNext() {
+  stepper.value?.next();
+}
+
+function onFormSubmit() {
+  console.log("Data submitted");
+  console.log({
+    ...letterCompanyMain,
+    ...letterCompanyAssociate,
+    ...letterOfferDetails,
+    ...letterAdditional,
   });
-  console.log(event.data);
-}
-
-function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement;
-
-  if (!input.files?.length) {
-    return;
-  }
-
-  profile.avatar = URL.createObjectURL(input.files[0]!);
-}
-
-function onFileClick() {
-  fileRef.value?.click();
 }
 
 definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UForm
-    id="settings"
-    :schema="profileSchema"
-    :state="profile"
-    @submit="onSubmit"
-  >
-    <UPageCard
-      title="Form Harga Pengiriman"
-      description="Form input untuk harga pengiriman solar"
-      variant="naked"
-      orientation="horizontal"
-      class="mb-4"
-    >
-      <UButton
-        form="settings"
-        label="Save changes"
-        color="neutral"
-        type="submit"
-        class="w-fit lg:ms-auto"
+  <UStepper disabled ref="stepper" :items>
+    <template #companyInformation>
+      <MarketingPOCompanyForm
+        v-model="letterCompanyMain"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmitToNext"
       />
-    </UPageCard>
+    </template>
 
-    <UPageCard variant="subtle">
-      <UFormField
-        name="name"
-        label="Name"
-        description="Will appear on receipts, invoices, and other communication."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput v-model="profile.name" autocomplete="off" />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="email"
-        label="Email"
-        description="Used to sign in, for email receipts and product updates."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput v-model="profile.email" type="email" autocomplete="off" />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="username"
-        label="Username"
-        description="Your unique username for logging in and your profile URL."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput v-model="profile.username" type="username" autocomplete="off" />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="avatar"
-        label="Avatar"
-        description="JPG, GIF or PNG. 1MB Max."
-        class="flex max-sm:flex-col justify-between sm:items-center gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3">
-          <UAvatar :src="profile.avatar" :alt="profile.name" size="lg" />
-          <UButton label="Choose" color="neutral" @click="onFileClick" />
-          <input
-            ref="fileRef"
-            type="file"
-            class="hidden"
-            accept=".jpg, .jpeg, .png, .gif"
-            @change="onFileChange"
-          />
-        </div>
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="bio"
-        label="Bio"
-        description="Brief description for your profile. URLs are hyperlinked."
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-        :ui="{ container: 'w-full' }"
-      >
-        <UTextarea v-model="profile.bio" :rows="5" autoresize class="w-full" />
-      </UFormField>
-    </UPageCard>
-  </UForm>
+    <template #associateInformation>
+      <MarketingPOAssociateForm
+        v-model="letterCompanyAssociate"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmitToNext"
+      />
+    </template>
+
+    <template #poDetails>
+      <MarketingPODetailsForm
+        v-model="letterOfferDetails"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmitToNext"
+      />
+    </template>
+
+    <template #additionalDetails>
+      <MarketingPOAdditionalForm
+        v-model="letterAdditional"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmit"
+      />
+    </template>
+  </UStepper>
 </template>

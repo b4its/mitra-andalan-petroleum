@@ -1,0 +1,116 @@
+<script setup lang="ts">
+import * as z from "zod";
+import type { FormSubmitEvent } from "@nuxt/ui";
+
+defineProps<{
+  hasPrevious: boolean | undefined;
+}>();
+
+const emit = defineEmits<{
+  submit: [];
+  previous: [];
+}>();
+
+const state = defineModel<{
+  companyInformation: {
+    name: string;
+    address: string;
+    npwp: string;
+    contactPerson: string;
+    email: string;
+  };
+}>({ required: true });
+
+const schema = z.object({
+  companyInformation: z.object({
+    name: z.string(),
+    address: z.string(),
+    npwp: z.string(),
+    contactPerson: z.string(),
+    email: z.email(),
+  }),
+});
+
+type FooterSchema = z.output<typeof schema>;
+
+function previous() {
+  emit("previous");
+}
+
+function onSubmit(_event: FormSubmitEvent<FooterSchema>) {
+  emit("submit");
+}
+</script>
+
+<template>
+  <UForm
+    id="letter-company"
+    :schema="schema"
+    :state="state"
+    :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
+    @submit="onSubmit"
+  >
+    <UPageCard variant="soft">
+      <p>Informasi Perusahaan</p>
+
+      <UFormField name="companyName" label="Nama Perusahaan" required>
+        <UInput
+          v-model="state.companyInformation.name"
+          type="text"
+          autocomplete="off"
+        />
+      </UFormField>
+
+      <UFormField name="address" label="Alamat" required>
+        <UInput
+          v-model="state.companyInformation.address"
+          type="text"
+          autocomplete="off"
+        />
+      </UFormField>
+
+      <UFormField name="npwp" label="NPWP" required>
+        <UInput
+          v-model="state.companyInformation.npwp"
+          type="text"
+          autocomplete="off"
+        />
+      </UFormField>
+
+      <div class="flex w-full gap-4">
+        <UFormField name="phoneNumber" label="Nomor Telepon" required>
+          <UInput
+            v-model="state.companyInformation.contactPerson"
+            v-maska="'#### #### ####'"
+            type="text"
+            autocomplete="off"
+          />
+        </UFormField>
+
+        <UFormField name="email" label="Alamat Email" required>
+          <UInput
+            v-model="state.companyInformation.email"
+            type="email"
+            autocomplete="off"
+          />
+        </UFormField>
+      </div>
+
+      <div class="flex justify-between pt-4">
+        <UButton
+          variant="ghost"
+          color="neutral"
+          leading-icon="i-lucide-arrow-left"
+          :disabled="!hasPrevious"
+          @click="previous"
+        >
+          Sebelumnya
+        </UButton>
+
+        <UButton type="submit" trailing-icon="i-lucide-arrow-right">
+          Selanjutnya
+        </UButton>
+      </div>
+    </UPageCard>
+  </UForm>
+</template>
