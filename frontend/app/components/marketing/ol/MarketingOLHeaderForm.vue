@@ -8,7 +8,7 @@ defineProps<{
 
 const emit = defineEmits<{
   submit: [];
-  previous: void;
+  previous: [];
 }>();
 
 const state = defineModel<{
