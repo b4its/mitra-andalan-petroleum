@@ -34,7 +34,7 @@ export type MarketingPOCustomerState = z.infer<
 
 export const marketingOLHeaderSchema = z.object({
   location: z.string().min(2),
-  date: z.string(),
+  date: z.iso.date(),
   offeringLetterNumber: z.string(),
   regarding: z.string(),
   receiver: z.string().min(2),
@@ -117,7 +117,7 @@ export type MarketingPOAssociateState = z.infer<
 
 export const marketingPODetailsSchema = z.object({
   po: z.object({
-    date: z.string().min(1, "Wajib diisi"),
+    date: z.iso.date(),
     number: z.string().min(1, "Wajib diisi"),
   }),
   vat: z.number(),
@@ -146,7 +146,7 @@ export const marketingPOAdditionalSchema = z.object({
   termAndCondition: z.string(),
   delivery: z.object({
     loadingTerminal: z.string().optional(),
-    loadingDate: z.string().optional(),
+    loadingDate: z.iso.date().optional(),
     picOperationMap: z.string().optional(),
   }),
   details: z.string().optional(),
@@ -162,3 +162,97 @@ export const marketingPOAdditionalSchema = z.object({
 export type MarketingPOAdditionalState = z.infer<
   typeof marketingPOAdditionalSchema
 >;
+
+// Operations Delivery Order
+export const operationsDOHeaderSchema = z.object({
+  companyInformation: z.object({
+    name: z.string(),
+    nameSub: z.string().optional(),
+    address: z.string(),
+    phoneNumber: z.string(),
+  }),
+  doInformation: z.object({
+    doNumber: z.string(),
+    doDateCreated: z.iso.date(),
+    poCustomerNumber: z.string().optional(),
+    soNumber: z.string().optional(),
+  }),
+});
+export const operationsDOReceiverSchema = z.object({
+  customerName: z.string(),
+  customerId: z.string(),
+  address: z.string(),
+  receiverInformation: z.object({
+    name: z.string().optional(),
+    phoneNumber: z.string().optional(),
+  }),
+  dateReceived: z.iso.date(),
+});
+export const operationsDOTransportSchema = z.object({
+  transportName: z.string(),
+  transportId: z.string().optional(),
+  address: z.string(),
+  driverInformation: z.object({
+    name: z.string().optional(),
+    phoneNumber: z.string().optional(),
+  }),
+  helperName: z.string().optional(),
+  dateReceived: z.iso.date(),
+});
+export const operationsDODetailsTransportSchema = z.object({
+  dueDate: z.iso.date().optional(),
+  productInformation: z.object({
+    name: z.string().optional(),
+    qty: z.number().optional(),
+    temperature: z.number().optional(),
+    topSeal: z.string().optional(),
+    bottomSeal: z.string().optional(),
+  }),
+  transportInformation: z.object({
+    transportType: z.string().optional(),
+    transportNumber: z.string().optional(),
+    startKm: z.number().optional(),
+    endKm: z.number().optional(),
+    sgMeter: z.number().optional(),
+    isWaterFree: z.boolean().optional(),
+    timeInformation: z.object({
+      departureTime: z.string().optional(),
+      arrivalTime: z.string().optional(),
+      unloadingTime: z.string().optional(),
+      depotArrivalTime: z.string().optional(),
+    }),
+  }),
+  total: z.number(),
+});
+export const operationsDOAdditionalSchema = z.object({
+  notes: z.array(
+    z.object({
+      note: z.string().optional(),
+    }),
+  ),
+  t2Depot: z.number().optional(),
+  t2Unloading: z.number().optional(),
+  indexSensitivity: z.number().optional(),
+  fuelReceived: z.number().optional(),
+});
+export const operationsDOFooterSchema = z.object({
+  companyCoordinator: z.string(),
+  distributionAdmin: z.string(),
+  receiver: z.string().optional(),
+  driver: z.string().optional(),
+});
+
+export type OperationsDOHeaderState = z.infer<typeof operationsDOHeaderSchema>;
+export type OperationsDOReceiverState = z.infer<
+  typeof operationsDOReceiverSchema
+>;
+export type OperationsDOTransportState = z.infer<
+  typeof operationsDOTransportSchema
+>;
+export type OperationsDODetailsTransportState = z.infer<
+  typeof operationsDODetailsTransportSchema
+>;
+export type OperationsDOAdditionalState = z.infer<
+  typeof operationsDOAdditionalSchema
+>;
+export type OperationsDOFooterState = z.infer<typeof operationsDOFooterSchema>;
