@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import {
+  marketingPOCompanySchema,
+  type MarketingPOCompanyState,
+} from "~/types/schemas";
 
 defineProps<{
   hasPrevious: boolean | undefined;
@@ -11,33 +14,13 @@ const emit = defineEmits<{
   previous: [];
 }>();
 
-const state = defineModel<{
-  companyInformation: {
-    name: string;
-    address: string;
-    npwp: string;
-    contactPerson: string;
-    email: string;
-  };
-}>({ required: true });
-
-const schema = z.object({
-  companyInformation: z.object({
-    name: z.string(),
-    address: z.string(),
-    npwp: z.string(),
-    contactPerson: z.string(),
-    email: z.email(),
-  }),
-});
-
-type FooterSchema = z.output<typeof schema>;
+const state = defineModel<MarketingPOCompanyState>({ required: true });
 
 function previous() {
   emit("previous");
 }
 
-function onSubmit(_event: FormSubmitEvent<FooterSchema>) {
+function onSubmit(_event: FormSubmitEvent<MarketingPOCompanyState>) {
   emit("submit");
 }
 </script>
@@ -45,7 +28,7 @@ function onSubmit(_event: FormSubmitEvent<FooterSchema>) {
 <template>
   <UForm
     id="letter-company"
-    :schema="schema"
+    :schema="marketingPOCompanySchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
     @submit="onSubmit"

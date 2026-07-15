@@ -1,53 +1,22 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import {
+  marketingPOAdditionalSchema,
+  type MarketingPOAdditionalState,
+} from "~/types/schemas";
 
 const emit = defineEmits<{
   submit: [];
   previous: [];
 }>();
 
-const state = defineModel<{
-  termAndCondition: string;
-  delivery: {
-    loadingTerminal?: string;
-    loadingDate?: string;
-    picOperationMap?: string;
-  };
-  details?: string;
-  forwarder: {
-    trucking: string;
-  };
-  signed: {
-    createdBy: string;
-    approvedBy: string;
-  };
-}>({ required: true });
-
-const schema = z.object({
-  termAndCondition: z.string(),
-  delivery: z.object({
-    loadingTerminal: z.string().optional(),
-    loadingDate: z.string().optional(),
-    picOperationMap: z.string().optional(),
-  }),
-  details: z.string().optional(),
-  forwarder: z.object({
-    trucking: z.string(),
-  }),
-  signed: z.object({
-    createdBy: z.string(),
-    approvedBy: z.string(),
-  }),
-});
-
-type POAdditionalInfoSchema = z.output<typeof schema>;
+const state = defineModel<MarketingPOAdditionalState>({ required: true });
 
 function previous() {
   emit("previous");
 }
 
-function onSubmit(_event: FormSubmitEvent<POAdditionalInfoSchema>) {
+function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
   emit("submit");
 }
 </script>
@@ -55,7 +24,7 @@ function onSubmit(_event: FormSubmitEvent<POAdditionalInfoSchema>) {
 <template>
   <UForm
     id="letter-footer"
-    :schema="schema"
+    :schema="marketingPOAdditionalSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
     @submit="onSubmit"

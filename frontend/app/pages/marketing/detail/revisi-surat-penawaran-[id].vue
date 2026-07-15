@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
+import {
+  marketingOLDetailsSchema,
+  marketingOLFooterSchema,
+  marketingOLHeaderSchema,
+  type MarketingOLDetailsState,
+  type MarketingOLFooterState,
+  type MarketingOLHeaderState,
+} from "~/types/schemas";
 
 const items: StepperItem[] = [
   { title: "Kop Surat Penawaran", slot: "letterHeader" },
@@ -11,7 +19,7 @@ const items: StepperItem[] = [
 const route = useRoute();
 const idOfferingLetter = route.params.id;
 
-const letterHeader = reactive({
+const letterHeader = reactive<MarketingOLHeaderState>({
   location: "Samarinda",
   date: `${new Date().toISOString().split("T")[0]}`,
   offeringLetterNumber: "722/MAP/II-06/26",
@@ -19,7 +27,7 @@ const letterHeader = reactive({
   receiver: "",
 });
 
-const letterOfferDetails = reactive({
+const letterOfferDetails = reactive<MarketingOLDetailsState>({
   supplyPoint: "Terminal Bahan Bakar Minyak (TBBM) Palaran",
   qualityAssurance: "Sesuai dengan spesifikasi SK Dirjen Migas",
   custodyTransfer:
@@ -50,7 +58,7 @@ const letterOfferDetails = reactive({
   },
 });
 
-const letterFooter = reactive({
+const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: 30,
   offeror: {
     name: "Stenly Boseke",

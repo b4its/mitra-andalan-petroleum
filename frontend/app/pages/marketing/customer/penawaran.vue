@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
+import {
+  marketingOLDetailsSchema,
+  marketingOLFooterSchema,
+  marketingOLHeaderSchema,
+  type MarketingOLDetailsState,
+  type MarketingOLFooterState,
+  type MarketingOLHeaderState,
+} from "~/types/schemas";
 
 const items: StepperItem[] = [
   { title: "Kop Surat Penawaran", slot: "letterHeader" },
@@ -7,7 +15,7 @@ const items: StepperItem[] = [
   { title: "Penutup Surat Penawaran", slot: "letterFooter" },
 ];
 
-const letterHeader = reactive({
+const letterHeader = reactive<MarketingOLHeaderState>({
   location: "Samarinda",
   date: `${new Date().toISOString().split("T")[0]}`,
   offeringLetterNumber: "722/MAP/II-06/26",
@@ -15,7 +23,7 @@ const letterHeader = reactive({
   receiver: "",
 });
 
-const letterOfferDetails = reactive({
+const letterOfferDetails = reactive<MarketingOLDetailsState>({
   supplyPoint: "Terminal Bahan Bakar Minyak (TBBM) Palaran",
   qualityAssurance: "Sesuai dengan spesifikasi SK Dirjen Migas",
   custodyTransfer:
@@ -46,7 +54,7 @@ const letterOfferDetails = reactive({
   },
 });
 
-const letterFooter = reactive({
+const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: 30,
   offeror: {
     name: "Stenly Boseke",
@@ -54,7 +62,7 @@ const letterFooter = reactive({
   },
   companyInformation: {
     address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
-    phoneNumber: "0541-2832313", // add masking
+    phoneNumber: "0541-2832313",
     email: "marketing.mapetroleum@gmail.com",
   },
 });
@@ -111,3 +119,34 @@ definePageMeta({ layout: "marketing" });
     </template>
   </UStepper>
 </template>
+
+<!-- <template>
+  <UStepper disabled ref="stepper" :items>
+    <template #letterHeader>
+      <MarketingOLHeaderForm
+        v-model="letterHeader"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onHeaderSubmit"
+      />
+    </template>
+
+    <template #letterOfferDetails>
+      <MarketingOLDetailsForm
+        v-model="letterOfferDetails"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onDetailsSubmit"
+      />
+    </template>
+
+    <template #letterFooter>
+      <MarketingOLFooterForm
+        v-model="letterFooter"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFooterSubmit"
+      />
+    </template>
+  </UStepper>
+</template> -->

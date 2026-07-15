@@ -1,22 +1,17 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import {
+  marketingPOCustomerSchema,
+  type MarketingPOCustomerState,
+} from "~/types/schemas";
 
 const emit = defineEmits<{
   submit: [];
 }>();
 
-const state = defineModel<{
-  offeringLetterNumber: string;
-}>({ required: true });
+const state = defineModel<MarketingPOCustomerState>({ required: true });
 
-const schema = z.object({
-  offeringLetterNumber: z.string(),
-});
-
-type FooterSchema = z.output<typeof schema>;
-
-function onSubmit(_event: FormSubmitEvent<FooterSchema>) {
+function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
   emit("submit");
 }
 
@@ -48,7 +43,7 @@ function onOpen() {
 <template>
   <UForm
     id="letter-footer"
-    :schema="schema"
+    :schema="marketingPOCustomerSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
     @submit="onSubmit"

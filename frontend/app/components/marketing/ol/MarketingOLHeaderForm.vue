@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import {
+  marketingOLHeaderSchema,
+  type MarketingOLHeaderState,
+} from "~/types/schemas";
 
 defineProps<{
   hasPrevious: boolean | undefined;
@@ -11,14 +14,6 @@ const emit = defineEmits<{
   previous: [];
 }>();
 
-const state = defineModel<{
-  location: string;
-  date: string;
-  offeringLetterNumber: string;
-  regarding: string;
-  receiver: string;
-}>({ required: true });
-
 const options = {
   mask: "###/AAA/AA-##/##",
   tokens: {
@@ -26,21 +21,13 @@ const options = {
   },
 };
 
-const schema = z.object({
-  location: z.string().min(2),
-  date: z.string(),
-  offeringLetterNumber: z.string(),
-  regarding: z.string(),
-  receiver: z.string().min(2),
-});
-
-type HeaderSchema = z.output<typeof schema>;
+const state = defineModel<MarketingOLHeaderState>({ required: true });
 
 function previous() {
   emit("previous");
 }
 
-function onSubmit(_event: FormSubmitEvent<HeaderSchema>) {
+function onSubmit(_event: FormSubmitEvent<MarketingOLHeaderState>) {
   emit("submit");
 }
 </script>
@@ -48,7 +35,7 @@ function onSubmit(_event: FormSubmitEvent<HeaderSchema>) {
 <template>
   <UForm
     id="letter-header"
-    :schema="schema"
+    :schema="marketingOLHeaderSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
     @submit="onSubmit"
