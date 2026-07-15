@@ -1,28 +1,16 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import { profileSchema, type ProfileState } from "~/types/schemas";
 
 const fileRef = ref<HTMLInputElement>();
 
-const profileSchema = z.object({
-  name: z.string().min(2, "Too short"),
-  email: z.string().email("Invalid email"),
-  username: z.string().min(2, "Too short"),
-  avatar: z.string().optional(),
-  bio: z.string().optional(),
-});
-
-type ProfileSchema = z.output<typeof profileSchema>;
-
-const profile = reactive<Partial<ProfileSchema>>({
+const profile = reactive<ProfileState>({
   name: "Benjamin Canac",
   email: "ben@nuxtlabs.com",
   username: "benjamincanac",
-  avatar: undefined,
-  bio: undefined,
 });
 const toast = useToast();
-async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
+async function onSubmit(event: FormSubmitEvent<ProfileState>) {
   toast.add({
     title: "Success",
     description: "Your settings have been updated.",

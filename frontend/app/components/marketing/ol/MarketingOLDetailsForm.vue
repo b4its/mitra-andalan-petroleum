@@ -1,73 +1,16 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import {
+  marketingOLDetailsSchema,
+  type MarketingOLDetailsState,
+} from "~/types/schemas";
 
 const emit = defineEmits<{
   submit: [];
   previous: [];
 }>();
 
-const state = defineModel<{
-  supplyPoint: string;
-  qualityAssurance: string;
-  custodyTransfer: string;
-  unloadingProcedure: string;
-  volumeUnit: string;
-  volumeTolerance: number;
-  paymentTerm: number;
-  latePenalty: number;
-  servicePattern: string;
-  personInCharge: {
-    name: string;
-    phoneNumber: string;
-  };
-  paymentAddress: {
-    bankName: string;
-    accountNumber: string;
-    accountName: string;
-  };
-  fuelPrices: {
-    logisticInformation: string;
-    productName: string;
-    sellingPrice: {
-      ppkb: number;
-      oat: number | null;
-    };
-    ppn: number;
-  };
-}>({ required: true });
-
-const schema = z.object({
-  supplyPoint: z.string(),
-  qualityAssurance: z.string(),
-  custodyTransfer: z.string(),
-  unloadingProcedure: z.string(),
-  volumeUnit: z.string(),
-  volumeTolerance: z.number().min(0),
-  paymentTerm: z.number().min(1),
-  latePenalty: z.number().min(0.01),
-  servicePattern: z.string(),
-  personInCharge: z.object({
-    name: z.string(),
-    phoneNumber: z.string().length(11, "Phone Number"),
-  }),
-  paymentAddress: z.object({
-    bankName: z.string(),
-    accountNumber: z.string(),
-    accountName: z.string(),
-  }),
-  fuelPrices: z.object({
-    logisticInformation: z.string(),
-    productName: z.string(),
-    sellingPrice: z.object({
-      ppkb: z.number(),
-      oat: z.number().nullable(),
-    }),
-    ppn: z.number(),
-  }),
-});
-
-type DetailsSchema = z.output<typeof schema>;
+const state = defineModel<MarketingOLDetailsState>({ required: true });
 
 const totalFuelPrices = computed(() => {
   return (
@@ -81,7 +24,7 @@ function previous() {
   emit("previous");
 }
 
-function onSubmit(_event: FormSubmitEvent<DetailsSchema>) {
+function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
   emit("submit");
 }
 </script>
@@ -89,7 +32,7 @@ function onSubmit(_event: FormSubmitEvent<DetailsSchema>) {
 <template>
   <UForm
     id="letter-details"
-    :schema="schema"
+    :schema="marketingOLDetailsSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
     @submit="onSubmit"

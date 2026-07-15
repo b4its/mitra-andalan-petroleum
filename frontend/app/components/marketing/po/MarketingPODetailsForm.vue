@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import {
+  marketingPODetailsSchema,
+  type MarketingPODetailsState,
+} from "~/types/schemas";
 
 defineProps<{
   hasPrevious: boolean | undefined;
@@ -11,54 +14,7 @@ const emit = defineEmits<{
   previous: [];
 }>();
 
-const state = defineModel<{
-  po: {
-    date: string;
-    number: string;
-  };
-  vat: number;
-  paymentAddress: {
-    bankName: string;
-    accountNumber: string;
-    accountName: string;
-  };
-  products: {
-    name: string;
-    qty: number;
-    unit: string;
-    price: number;
-    totalPrice: number;
-  }[];
-  totalProductsPrice: number;
-}>({ required: true });
-
-const schema = z.object({
-  po: z.object({
-    date: z.string().min(1, "Wajib diisi"),
-    number: z.string().min(1, "Wajib diisi"),
-  }),
-  vat: z.number(),
-  paymentAddress: z.object({
-    bankName: z.string(),
-    accountNumber: z.string(),
-    accountName: z.string(),
-  }),
-  products: z
-    .array(
-      z.object({
-        name: z.string().min(1, "Wajib diisi"),
-        qty: z.number().min(1, "Min 1"),
-        unit: z.string().min(1, "Wajib diisi"),
-        price: z.number().min(0, "Min 0"),
-        totalPrice: z.number(),
-      }),
-    )
-    .min(1, "Tambahkan minimal 1 produk"),
-  totalProductsPrice: z.number(),
-});
-
-type MarketingPODetails = z.output<typeof schema>;
-
+const state = defineModel<MarketingPODetailsState>({ required: true });
 function emptyProduct() {
   return { name: "", qty: 1, unit: "", price: 0, totalPrice: 0 };
 }
@@ -95,7 +51,7 @@ function previous() {
   emit("previous");
 }
 
-function onSubmit(_event: FormSubmitEvent<MarketingPODetails>) {
+function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
   emit("submit");
 }
 </script>
@@ -103,7 +59,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetails>) {
 <template>
   <UForm
     id="letter-associate"
-    :schema="schema"
+    :schema="marketingPODetailsSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-4xl lg:mx-auto mt-8' }"
     @submit="onSubmit"

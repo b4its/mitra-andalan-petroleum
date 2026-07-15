@@ -1,5 +1,15 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
+import {
+  marketingPOAdditionalSchema,
+  marketingPOAssociateSchema,
+  marketingPOCompanySchema,
+  marketingPODetailsSchema,
+  type MarketingPOAdditionalState,
+  type MarketingPOAssociateState,
+  type MarketingPOCompanyState,
+  type MarketingPODetailsState,
+} from "~/types/schemas";
 
 const items: StepperItem[] = [
   { title: "Informasi Perusahaan", slot: "companyInformation" },
@@ -8,7 +18,7 @@ const items: StepperItem[] = [
   { title: "Informasi Tambahan", slot: "additionalDetails" },
 ];
 
-const letterCompanyMain = reactive({
+const letterCompanyMain = reactive<MarketingPOCompanyState>({
   companyInformation: {
     name: "PT. MITRA ANDALAN PETROLEUM",
     address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
@@ -18,17 +28,14 @@ const letterCompanyMain = reactive({
   },
 });
 
-const letterCompanyAssociate = reactive({
+const letterCompanyAssociate = reactive<MarketingPOAssociateState>({
   associateInformation: {
     name: "PT. MIGAS KUKAR MANDIRI",
     address: "Jl. KH AGUS SALIM No. 32 SAMARINDA",
-    npwp: undefined,
-    contactPerson: undefined, // add masking
-    email: undefined,
   },
 });
 
-const letterOfferDetails = reactive({
+const letterOfferDetails = reactive<MarketingPODetailsState>({
   po: {
     date: `${new Date().toISOString().split("T")[0]}`,
     number: "0543/PO/MAP/I/05/26",
@@ -51,14 +58,9 @@ const letterOfferDetails = reactive({
   totalProductsPrice: 0,
 });
 
-const letterAdditional = reactive({
+const letterAdditional = reactive<MarketingPOAdditionalState>({
   termAndCondition: "CBD",
-  delivery: {
-    loadingTerminal: undefined,
-    loadingDate: undefined,
-    picOperationMap: undefined,
-  },
-  details: undefined,
+  delivery: {},
   forwarder: {
     trucking: "TBA",
   },

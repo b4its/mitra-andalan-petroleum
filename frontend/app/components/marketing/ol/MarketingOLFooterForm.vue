@@ -1,45 +1,22 @@
 <script setup lang="ts">
-import * as z from "zod";
 import type { FormSubmitEvent } from "@nuxt/ui";
+import {
+  marketingOLFooterSchema,
+  type MarketingOLFooterState,
+} from "~/types/schemas";
 
 const emit = defineEmits<{
   submit: [];
   previous: [];
 }>();
 
-const state = defineModel<{
-  purchaseOrderDeadline: number;
-  offeror: {
-    name: string;
-    signature: string;
-  };
-  companyInformation: {
-    address: string;
-    phoneNumber: string;
-    email: string;
-  };
-}>({ required: true });
-
-const schema = z.object({
-  purchaseOrderDeadline: z.number(),
-  offeror: z.object({
-    name: z.string(),
-    signature: z.string(),
-  }),
-  companyInformation: z.object({
-    address: z.string(),
-    phoneNumber: z.string(),
-    email: z.email(),
-  }),
-});
-
-type FooterSchema = z.output<typeof schema>;
+const state = defineModel<MarketingOLFooterState>({ required: true });
 
 function previous() {
   emit("previous");
 }
 
-function onSubmit(_event: FormSubmitEvent<FooterSchema>) {
+function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
   emit("submit");
 }
 </script>
@@ -47,7 +24,7 @@ function onSubmit(_event: FormSubmitEvent<FooterSchema>) {
 <template>
   <UForm
     id="letter-footer"
-    :schema="schema"
+    :schema="marketingOLFooterSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
     @submit="onSubmit"
