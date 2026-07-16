@@ -262,3 +262,78 @@ export type OperationsDOAdditionalState = z.infer<
   typeof operationsDOAdditionalSchema
 >;
 export type OperationsDOFooterState = z.infer<typeof operationsDOFooterSchema>;
+
+// Finance Invoice
+export const financeInvoiceHeaderSchema = z.object({
+  companyInformation: z.object({
+    name: z.string(),
+    nameSub: z.string().optional(),
+    address: z.string(),
+    phoneNumber: z.string(),
+  }),
+  billToInformation: z.string(),
+  deliveryPointInformation: z.string(),
+});
+
+export const financeInvoiceDetailsSchema = z.object({
+  invoiceInformation: z.object({
+    invoiceNumber: z.string(),
+    invoiceDate: z.iso.date(),
+    terms: z.number(),
+    dueDate: z.iso.date(),
+  }),
+  customerPurchaseInformation: z.object({
+    deliveryOrderNumberData: z.array(z.string()),
+    customerPurchaseOrderNumber: z.string(),
+    taxInvoiceNumber: z.string(),
+    salesOrderNumber: z.string().optional(),
+  }),
+});
+export const financeInvoiceProductsSchema = z.object({
+  products: z
+    .array(
+      z.object({
+        qty: z.number().min(1, "Min 1"),
+        unit: z.string().min(1, "Wajib diisi"),
+        name: z.string().min(1, "Wajib diisi"),
+        price: z.number().min(0, "Min 0"),
+        totalPrice: z.number(),
+      }),
+    )
+    .min(1, "Tambahkan minimal 1 produk"),
+  priceSummary: z.object({
+    subTotal: z.number(),
+    prePaid: z.number().optional(),
+    discount: z.number().optional(),
+    ppn: z.number(),
+    grandTotal: z.number(),
+    spellNumber: z.string(),
+  }),
+});
+export const financeInvoiceFooterSchema = z.object({
+  termsAndCondition: z.object({
+    term: z.string(),
+  }),
+  paymentInformation: z.object({
+    bankName: z.string(),
+    bankAccountNumber: z.string(),
+    accountName: z.string(),
+  }),
+  signature: z.object({
+    companyName: z.string(),
+    createdBy: z.string(),
+  }),
+});
+
+export type FinanceInvoiceHeaderState = z.infer<
+  typeof financeInvoiceHeaderSchema
+>;
+export type FinanceInvoiceDetailsState = z.infer<
+  typeof financeInvoiceDetailsSchema
+>;
+export type FinanceInvoiceProductsState = z.infer<
+  typeof financeInvoiceProductsSchema
+>;
+export type FinanceInvoiceFooterState = z.infer<
+  typeof financeInvoiceFooterSchema
+>;
