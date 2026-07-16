@@ -2,6 +2,8 @@
 import { faker } from "@faker-js/faker";
 
 const pdfLink = ref<string | null>(null);
+const route = useRoute();
+const idOfferingLetter = route.params.id;
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
@@ -34,11 +36,10 @@ const loadPdf = async () => {
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Invoice ${invoiceNumber}`,
-        author: "Acme Solutions Inc.",
-        subject: "Professional services invoice",
-        creator: "Nuxt pdfMake",
-        producer: "pdfmake",
+        title: `Surat Penawaran #${idOfferingLetter}`,
+        author: "PT. Mitra Andalan Petroleum",
+        creator: "User",
+        producer: "PT. Mitra Andalan Petroleum",
       },
       pageMargins: [40, 46, 40, 42],
       content: [
