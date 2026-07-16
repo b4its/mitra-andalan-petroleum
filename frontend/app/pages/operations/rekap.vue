@@ -41,18 +41,18 @@ definePageMeta({ layout: "operations" });
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar>
+      <!-- <UDashboardToolbar>
         <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
+           NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. 
           <HomeDateRangePicker v-model="range" class="-ms-1" />
 
           <HomePeriodSelect v-model="period" :range="range" />
         </template>
-      </UDashboardToolbar>
+      </UDashboardToolbar> -->
     </template>
 
     <template #body>
-      <OperationsTable :period="period" :range="range" />
+      <OperationsDOData />
     </template>
   </UDashboardPanel>
 </template>
