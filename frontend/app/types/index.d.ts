@@ -55,6 +55,17 @@ export interface MarketingOfferingLetterOverview {
   status: "created" | "under_revision" | "po_received";
 }
 
+export interface OperationsDeliveryOrderOverview {
+  id: string;
+  customerName: string;
+  deliveryOrderNumber: string;
+  purchaseOrderNumber: string;
+  transportName: string;
+  dateCreated: string;
+  dateChanged: string;
+  status: "created" | "document_returned";
+}
+
 export interface Notification {
   id: number;
   unread?: boolean;

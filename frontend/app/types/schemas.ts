@@ -32,6 +32,12 @@ export type MarketingPOCustomerState = z.infer<
   typeof marketingPOCustomerSchema
 >;
 
+export const operationsDOSchema = z.object({
+  deliveryOrderNumber: z.string(),
+});
+
+export type OperationsDOState = z.infer<typeof operationsDOSchema>;
+
 export const marketingOLHeaderSchema = z.object({
   location: z.string().min(2),
   date: z.iso.date(),
