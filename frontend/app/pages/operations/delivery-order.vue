@@ -1,45 +1,133 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
-import { profileSchema, type ProfileState } from "~/types/schemas";
+import type { StepperItem } from "@nuxt/ui";
+import {
+  type OperationsDOAdditionalState,
+  type OperationsDODetailsTransportState,
+  type OperationsDOFooterState,
+  type OperationsDOHeaderState,
+  type OperationsDOReceiverState,
+  type OperationsDOTransportState,
+} from "~/types/schemas";
 
-// form input
-const fileRef = ref<HTMLInputElement>();
+const items: StepperItem[] = [
+  { title: "Kop Surat Delivery Order", slot: "doHeader" },
+  { title: "Mitra Penerima", slot: "doReceiver" },
+  { title: "Agen/Transportir", slot: "doTransport" },
+  { title: "Rincian Pengiriman", slot: "doDetailsTransport" },
+  { title: "Catatan Tambahan", slot: "doAdditional" },
+  { title: "Penutup Surat Delivery Order", slot: "doFooter" },
+];
 
-const profile = reactive<ProfileState>({
-  name: "Benjamin Canac",
-  email: "ben@nuxtlabs.com",
-  username: "benjamincanac",
+const doHeader = reactive<OperationsDOHeaderState>({
+  companyInformation: {
+    name: "PT. MITRA ANDALAN PETROLEUM",
+    nameSub: "Distributor for Elnusa Petrofin",
+    address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
+    phoneNumber: "0541-2832313", // add masking
+  },
+  doInformation: {
+    doNumber: "1086/DO/MAP/V/2026",
+    doDateCreated: `${new Date().toISOString().split("T")[0]}`,
+    poCustomerNumber: undefined,
+    soNumber: undefined,
+  },
 });
-const toast = useToast();
-async function onSubmit(event: FormSubmitEvent<ProfileState>) {
-  toast.add({
-    title: "Success",
-    description: "Your settings have been updated.",
-    icon: "i-lucide-check",
-    color: "success",
+const doReceiver = reactive<OperationsDOReceiverState>({
+  customerName: "PT. Sinergi Agro Industri",
+  customerId: "PT. Sinergi Agro Industri",
+  address: "Kebun Belidan",
+  receiverInformation: {
+    name: undefined,
+    phoneNumber: undefined,
+  },
+  dateReceived: `${new Date().toISOString().split("T")[0]}`,
+});
+const doTransport = reactive<OperationsDOTransportState>({
+  transportName: "PT. Karya Bersaudara Sinergi",
+  transportId: "PT. Karya Bersaudara Sinergi",
+  address: "Samarinda",
+  driverInformation: {
+    name: "Heru Irawan",
+    phoneNumber: undefined,
+  },
+  dateReceived: `${new Date().toISOString().split("T")[0]}`,
+});
+const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
+  dueDate: undefined,
+  total: 5000,
+  productInformation: {
+    name: "Bio diesel",
+    qty: 5000,
+    topSeal: undefined,
+    bottomSeal: undefined,
+    temperature: 0,
+  },
+  transportInformation: {
+    startKm: undefined,
+    endKm: undefined,
+    sgMeter: undefined,
+    // isWaterFree: true, // need to discuss
+    timeInformation: {
+      departureTime: undefined,
+      arrivalTime: undefined,
+      depotArrivalTime: undefined,
+      unloadingTime: undefined,
+    },
+    transportNumber: "KT 8518 WB",
+    transportType: undefined,
+  },
+});
+const doAdditional = reactive<OperationsDOAdditionalState>({
+  notes: [
+    {
+      note: "Catatan Tambahan 1",
+    },
+    {
+      note: "Catatan Tambahan 2",
+    },
+    {
+      note: "Lainnya :",
+    },
+  ],
+  t2Depot: undefined,
+  t2Unloading: undefined,
+  indexSensitivity: undefined,
+  fuelReceived: 5000,
+});
+const doFooter = reactive<OperationsDOFooterState>({
+  companyCoordinator: "Stenly B",
+  distributionAdmin: "Inka",
+  receiver: undefined,
+  driver: undefined,
+});
+
+const stepper = useTemplateRef("stepper");
+
+function previousNavigation() {
+  stepper.value?.prev();
+}
+
+function onFormSubmitToNext() {
+  stepper.value?.next();
+}
+
+function onFormSubmit() {
+  console.log("Data submitted");
+  console.log({
+    ...doHeader,
+    ...doReceiver,
+    ...doTransport,
+    ...doDetailsTransport,
+    ...doAdditional,
+    ...doFooter,
   });
-  console.log(event.data);
-}
-
-function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement;
-
-  if (!input.files?.length) {
-    return;
-  }
-
-  profile.avatar = URL.createObjectURL(input.files[0]!);
-}
-
-function onFileClick() {
-  fileRef.value?.click();
 }
 
 definePageMeta({ layout: "operations" });
 </script>
 
 <template>
-  <UDashboardPanel :ui="{ body: 'lg: max-w-6xl mx-auto' }" id="home">
+  <UDashboardPanel :ui="{ body: 'w-full' }" id="do">
     <template #header>
       <UDashboardNavbar
         title="Form Pembuatan Delivery Order"
@@ -52,98 +140,61 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #body>
-      <UForm
-        id="settings"
-        :schema="profileSchema"
-        :state="profile"
-        @submit="onSubmit"
-      >
-        <UPageCard
-          title="Form Delivery Order"
-          description="Form input untuk pembuatan delivery order"
-          variant="naked"
-          orientation="horizontal"
-          class="mb-4"
-        >
-          <UButton
-            form="settings"
-            label="Save changes"
-            color="neutral"
-            type="submit"
-            class="w-fit lg:ms-auto"
+      <UStepper disabled ref="stepper" :items>
+        <template #doHeader>
+          <OperationsDOHeaderForm
+            v-model="doHeader"
+            :hasPrevious="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmitToNext"
           />
-        </UPageCard>
+        </template>
 
-        <UPageCard variant="subtle">
-          <UFormField
-            name="name"
-            label="Name"
-            description="Will appear on receipts, invoices, and other communication."
-            required
-            class="flex max-sm:flex-col justify-between items-start gap-4"
-          >
-            <UInput v-model="profile.name" autocomplete="off" />
-          </UFormField>
-          <USeparator />
-          <UFormField
-            name="email"
-            label="Email"
-            description="Used to sign in, for email receipts and product updates."
-            required
-            class="flex max-sm:flex-col justify-between items-start gap-4"
-          >
-            <UInput v-model="profile.email" type="email" autocomplete="off" />
-          </UFormField>
-          <USeparator />
-          <UFormField
-            name="username"
-            label="Username"
-            description="Your unique username for logging in and your profile URL."
-            required
-            class="flex max-sm:flex-col justify-between items-start gap-4"
-          >
-            <UInput
-              v-model="profile.username"
-              type="username"
-              autocomplete="off"
-            />
-          </UFormField>
-          <USeparator />
-          <UFormField
-            name="avatar"
-            label="Avatar"
-            description="JPG, GIF or PNG. 1MB Max."
-            class="flex max-sm:flex-col justify-between sm:items-center gap-4"
-          >
-            <div class="flex flex-wrap items-center gap-3">
-              <UAvatar :src="profile.avatar" :alt="profile.name" size="lg" />
-              <UButton label="Choose" color="neutral" @click="onFileClick" />
-              <input
-                ref="fileRef"
-                type="file"
-                class="hidden"
-                accept=".jpg, .jpeg, .png, .gif"
-                @change="onFileChange"
-              />
-            </div>
-          </UFormField>
-          <USeparator />
-          <UFormField
-            name="bio"
-            label="Bio"
-            description="Brief description for your profile. URLs are hyperlinked."
-            class="flex max-sm:flex-col justify-between items-start gap-4"
-            :ui="{ container: 'w-full' }"
-          >
-            <UTextarea
-              v-model="profile.bio"
-              :rows="5"
-              autoresize
-              class="w-full"
-            />
-          </UFormField>
-        </UPageCard>
-      </UForm>
+        <template #doReceiver>
+          <OperationsDOReceiverForm
+            v-model="doReceiver"
+            :hasPrevious="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmitToNext"
+          />
+        </template>
+
+        <template #doTransport>
+          <OperationsDOTransportForm
+            v-model="doTransport"
+            :hasPrevious="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmitToNext"
+          />
+        </template>
+
+        <template #doDetailsTransport>
+          <OperationsDODetailsTransportForm
+            v-model="doDetailsTransport"
+            :hasPrevious="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmitToNext"
+          />
+        </template>
+
+        <template #doAdditional>
+          <OperationsDOAdditionalForm
+            v-model="doAdditional"
+            :hasPrevious="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmitToNext"
+          />
+        </template>
+
+        <template #doFooter>
+          <OperationsDOFooterForm
+            v-model="doFooter"
+            :hasPrevious="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmit"
+          />
+        </template>
+      </UStepper>
     </template>
   </UDashboardPanel>
 </template>
