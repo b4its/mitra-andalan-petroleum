@@ -17,18 +17,17 @@ const links = [
       },
     },
     {
-      label: "Rekap Data Delivery Order",
-      icon: "i-lucide-file-text",
-      to: "/operations/rekap",
+      label: "Delivery Order",
+      icon: "i-lucide-truck",
+      to: "/operations/delivery-order",
       onSelect: () => {
         open.value = false;
       },
     },
     {
-      label: "Delivery Order",
-      icon: "i-lucide-file-input",
-      to: "/operations/delivery-order",
-      exact: true,
+      label: "Rekap Data Delivery Order",
+      icon: "i-lucide-square-chart-gantt",
+      to: "/operations/rekap",
       onSelect: () => {
         open.value = false;
       },
