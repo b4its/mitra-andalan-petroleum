@@ -141,12 +141,12 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
 
       <USeparator />
 
-      <div class="mt-6 space-y-3">
+      <div class="space-y-3">
         <p class="font-medium">Daftar Produk</p>
 
         <div
           v-for="(product, index) in products"
-          :key="index"
+          :key="`product-${index}`"
           class="flex items-end gap-2"
         >
           <UFormField
