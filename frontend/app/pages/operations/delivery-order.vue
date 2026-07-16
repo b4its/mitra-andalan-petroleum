@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { StepperItem } from "@nuxt/ui";
+import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
 import {
   type OperationsDOAdditionalState,
   type OperationsDODetailsTransportState,
@@ -123,6 +123,21 @@ function onFormSubmit() {
   });
 }
 
+const links = [
+  [
+    {
+      label: "Buat Delivery Order",
+      icon: "i-lucide-truck",
+      to: "/operations/delivery-order",
+    },
+    {
+      label: "Upload Delivery Order (Yang sudah dikembalikan)",
+      icon: "i-lucide-file-output",
+      to: "/operations/delivery-order-returned",
+    },
+  ],
+] satisfies NavigationMenuItem[][];
+
 definePageMeta({ layout: "operations" });
 </script>
 
@@ -137,6 +152,13 @@ definePageMeta({ layout: "operations" });
           <UDashboardSidebarCollapse />
         </template>
       </UDashboardNavbar>
+
+      <UDashboardToolbar>
+        <template #left>
+          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
+          <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
+        </template>
+      </UDashboardToolbar>
     </template>
 
     <template #body>
