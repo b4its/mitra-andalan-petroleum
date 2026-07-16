@@ -58,63 +58,41 @@ definePageMeta({ layout: "operations" });
 </script>
 
 <template>
-  <UDashboardPanel :ui="{ body: 'w-full' }" id="do">
-    <template #header>
-      <UDashboardNavbar
-        title="Form Pembuatan Delivery Order"
-        :ui="{ right: 'gap-3' }"
-      >
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
-      </UDashboardNavbar>
-
-      <UDashboardToolbar>
-        <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
-          <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
-        </template>
-      </UDashboardToolbar>
+  <UStepper disabled ref="stepper" :items>
+    <template #invoiceHeader>
+      <InvoiceHeaderForm
+        v-model="financeHeader"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmitToNext"
+      />
     </template>
 
-    <template #body>
-      <UStepper disabled ref="stepper" :items>
-        <template #invoiceHeader>
-          <InvoiceHeaderForm
-            v-model="financeHeader"
-            :hasPrevious="stepper?.hasPrev"
-            @previous="previousNavigation"
-            @submit="onFormSubmitToNext"
-          />
-        </template>
-
-        <template #invoiceDetails>
-          <InvoiceDetailsForm
-            v-model="financeDetails"
-            :hasPrevious="stepper?.hasPrev"
-            @previous="previousNavigation"
-            @submit="onFormSubmitToNext"
-          />
-        </template>
-
-        <template #invoiceProducts>
-          <InvoiceProductsForm
-            v-model="financeProducts"
-            :hasPrevious="stepper?.hasPrev"
-            @previous="previousNavigation"
-            @submit="onFormSubmitToNext"
-          />
-        </template>
-
-        <template #invoiceFooter>
-          <InvoiceFooterForm
-            v-model="financeFooter"
-            :hasPrevious="stepper?.hasPrev"
-            @previous="previousNavigation"
-            @submit="onFormSubmitToNext"
-          />
-        </template>
-      </UStepper>
+    <template #invoiceDetails>
+      <InvoiceDetailsForm
+        v-model="financeDetails"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmitToNext"
+      />
     </template>
-  </UDashboardPanel>
+
+    <template #invoiceProducts>
+      <InvoiceProductsForm
+        v-model="financeProducts"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmitToNext"
+      />
+    </template>
+
+    <template #invoiceFooter>
+      <InvoiceFooterForm
+        v-model="financeFooter"
+        :hasPrevious="stepper?.hasPrev"
+        @previous="previousNavigation"
+        @submit="onFormSubmitToNext"
+      />
+    </template>
+  </UStepper>
 </template>
