@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
-import {
-  marketingPOCustomerSchema,
-  type MarketingPOCustomerState,
-} from "~/types/schemas";
+import { type MarketingPOCustomerState } from "~/types/schemas";
 
 const items: StepperItem[] = [
   {
@@ -16,16 +13,6 @@ const items: StepperItem[] = [
 const poCustomer = reactive<MarketingPOCustomerState>({
   offeringLetterNumber: "722/MAP/II-06/26",
 });
-
-const stepper = useTemplateRef("stepper");
-
-function previousNavigation() {
-  stepper.value?.prev();
-}
-
-function onHeaderSubmit() {
-  stepper.value?.next();
-}
 
 function onPoCustomerSubmit() {
   console.log("Data submitted");

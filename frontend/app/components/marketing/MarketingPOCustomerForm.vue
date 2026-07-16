@@ -42,7 +42,7 @@ function onOpen() {
 
 <template>
   <UForm
-    id="letter-footer"
+    id="po-customer"
     :schema="marketingPOCustomerSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"

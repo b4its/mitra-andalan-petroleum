@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
 import {
-  marketingPOAdditionalSchema,
-  marketingPOAssociateSchema,
-  marketingPOCompanySchema,
-  marketingPODetailsSchema,
   type MarketingPOAdditionalState,
   type MarketingPOAssociateState,
   type MarketingPOCompanyState,
