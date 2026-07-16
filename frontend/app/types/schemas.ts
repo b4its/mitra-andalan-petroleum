@@ -214,7 +214,7 @@ export const operationsDODetailsTransportSchema = z.object({
     startKm: z.number().optional(),
     endKm: z.number().optional(),
     sgMeter: z.number().optional(),
-    isWaterFree: z.boolean().optional(),
+    // isWaterFree: z.boolean().optional(), // need to discuss
     timeInformation: z.object({
       departureTime: z.string().optional(),
       arrivalTime: z.string().optional(),
