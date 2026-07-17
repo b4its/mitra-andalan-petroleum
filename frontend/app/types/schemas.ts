@@ -270,6 +270,7 @@ export const financeInvoiceHeaderSchema = z.object({
     nameSub: z.string().optional(),
     address: z.string(),
     phoneNumber: z.string(),
+    email: z.email(),
   }),
   billToInformation: z.string(),
   deliveryPointInformation: z.string(),
@@ -280,7 +281,7 @@ export const financeInvoiceDetailsSchema = z.object({
     invoiceNumber: z.string(),
     invoiceDate: z.iso.date(),
     terms: z.number(),
-    dueDate: z.iso.date(),
+    invoiceDueDate: z.iso.date(),
   }),
   customerPurchaseInformation: z.object({
     deliveryOrderNumberData: z.array(z.string()),
@@ -311,12 +312,14 @@ export const financeInvoiceProductsSchema = z.object({
   }),
 });
 export const financeInvoiceFooterSchema = z.object({
-  termsAndCondition: z.object({
-    term: z.string(),
-  }),
+  termsAndCondition: z.array(
+    z.object({
+      term: z.string(),
+    }),
+  ),
   paymentInformation: z.object({
     bankName: z.string(),
-    bankAccountNumber: z.string(),
+    accountNumber: z.string(),
     accountName: z.string(),
   }),
   signature: z.object({
