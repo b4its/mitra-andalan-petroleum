@@ -14,10 +14,67 @@ const items: StepperItem[] = [
   { title: "Penutup Invoice", slot: "invoiceFooter" },
 ];
 
-const financeHeader = reactive<FinanceInvoiceHeaderState>({});
-const financeDetails = reactive<FinanceInvoiceDetailsState>({});
-const financeProducts = reactive<FinanceInvoiceProductsState>({});
-const financeFooter = reactive<FinanceInvoiceFooterState>({});
+const financeHeader = reactive<FinanceInvoiceHeaderState>({
+  billToInformation:
+    "PT. MITRA ANDALAN PETROLEUM\nJl. Belatuk No. 63 Samarinda, 75117 Indonesia",
+  deliveryPointInformation:
+    "PT. MIGAS KUKAR MANDIRI\nJl. KH AGUS SALIM No. 32 SAMARINDA",
+  companyInformation: {
+    name: "PT. MITRA ANDALAN PETROLEUM",
+    address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
+    phoneNumber: "0541-2832313", // add masking
+    email: "marketing.mapetroleum@gmail.com",
+  },
+});
+const financeDetails = reactive<FinanceInvoiceDetailsState>({
+  invoiceInformation: {
+    invoiceNumber: "1086/INV/MAP/V/2026",
+    invoiceDate: `${new Date().toISOString().split("T")[0]}`,
+    invoiceDueDate: `${new Date().toISOString().split("T")[0]}`,
+    terms: 45,
+  },
+  customerPurchaseInformation: {
+    deliveryOrderNumberData: ["1086/DO/MAP/V/2026"],
+    customerPurchaseOrderNumber: "1200020175",
+    taxInvoiceNumber: "04002000909090",
+    salesOrderNumber: undefined,
+  },
+});
+const financeProducts = reactive<FinanceInvoiceProductsState>({
+  products: [
+    {
+      name: "Bio Diesel",
+      qty: 20000,
+      unit: "Liter",
+      price: 19500,
+      totalPrice: 0,
+    },
+  ],
+  priceSummary: {
+    grandTotal: 0,
+    subTotal: 0,
+    ppn: 0,
+    spellNumber: "",
+    discount: undefined,
+    prePaid: undefined,
+  },
+});
+const financeFooter = reactive<FinanceInvoiceFooterState>({
+  termsAndCondition: [
+    {
+      term: "Term 1",
+    },
+  ],
+  paymentInformation: {
+    bankName: "MANDIRI - Cab Segiri",
+    accountNumber: "1480002719998",
+    accountName: "PT. MITRA ANDALAN PETROLEUM",
+  },
+  signature: {
+    companyName: "PT. MITRA ANDALAN PETROLEUM",
+    createdBy: "Syannet",
+  },
+});
 
 const stepper = useTemplateRef("stepper");
 
@@ -39,28 +96,13 @@ function onFormSubmit() {
   });
 }
 
-const links = [
-  [
-    {
-      label: "Buat Delivery Order",
-      icon: "i-lucide-truck",
-      to: "/operations/delivery-order",
-    },
-    {
-      label: "Upload Delivery Order (Yang sudah dikembalikan)",
-      icon: "i-lucide-file-output",
-      to: "/operations/delivery-order-returned",
-    },
-  ],
-] satisfies NavigationMenuItem[][];
-
-definePageMeta({ layout: "operations" });
+definePageMeta({ layout: "finance" });
 </script>
 
 <template>
   <UStepper disabled ref="stepper" :items>
     <template #invoiceHeader>
-      <InvoiceHeaderForm
+      <FinanceInvoiceHeaderForm
         v-model="financeHeader"
         :hasPrevious="stepper?.hasPrev"
         @previous="previousNavigation"
@@ -69,7 +111,7 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #invoiceDetails>
-      <InvoiceDetailsForm
+      <FinanceInvoiceDetailsForm
         v-model="financeDetails"
         :hasPrevious="stepper?.hasPrev"
         @previous="previousNavigation"
@@ -78,7 +120,7 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #invoiceProducts>
-      <InvoiceProductsForm
+      <FinanceInvoiceProductsForm
         v-model="financeProducts"
         :hasPrevious="stepper?.hasPrev"
         @previous="previousNavigation"
@@ -87,11 +129,11 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #invoiceFooter>
-      <InvoiceFooterForm
+      <FinanceInvoiceFooterForm
         v-model="financeFooter"
         :hasPrevious="stepper?.hasPrev"
         @previous="previousNavigation"
-        @submit="onFormSubmitToNext"
+        @submit="onFormSubmit"
       />
     </template>
   </UStepper>

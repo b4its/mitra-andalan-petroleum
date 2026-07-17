@@ -17,27 +17,23 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
 
 const value = ref<string>();
 
-// todo: change to fetch offering letter data
-const { data: users, execute } = await useLazyFetch(
-  "https://jsonplaceholder.typicode.com/users",
+const offeringLetters = ref([
   {
-    key: "typicode-users-email",
-    transform: (data: { id: number; name: string; email: string }[]) => {
-      return data?.map((user) => ({
-        label: user.name,
-        email: user.email,
-        value: String(user.id),
-      }));
-    },
-    immediate: false,
+    label: "PT. MIGAS KUKAR MANDIRI",
+    value: "722/MAP/II-06/26",
+    deliveryOrderNumbers: ["1086/DO/MAP/V/2026", "1087/DO/MAP/V/2026"],
   },
-);
-
-function onOpen() {
-  if (!users.value?.length) {
-    execute();
-  }
-}
+  {
+    label: "PT. BERAU MINERAL ENERGI",
+    value: "723/MAP/II-06/26",
+    deliveryOrderNumbers: ["1092/DO/BME/V/2026", "1093/DO/BME/V/2026"],
+  },
+  {
+    label: "PT. KALTIM OIL SERVICES",
+    value: "724/MAP/II-06/26",
+    deliveryOrderNumbers: ["1098/DO/KOS/V/2026", "1099/DO/KOS/V/2026"],
+  },
+]);
 </script>
 
 <template>
@@ -52,22 +48,16 @@ function onOpen() {
       <UFormField name="offeringLetter" label="Nomor Surat Penawaran" required>
         <USelect
           v-model="value"
-          :items="users"
+          :items="offeringLetters"
           placeholder="Pilih Surat Penawaran"
           value-key="value"
           :ui="{ content: 'min-w-fit' }"
           class="w-full"
-          @update:open="onOpen"
         >
           <template #item-label="{ item }">
-            <!-- company name  -->
             {{ item.label }}
 
-            <span class="text-muted text-xs">
-              <!-- {{ item.email }} -->
-              <!-- offering letter Id from fetch -->
-              (722/MAP/II-06/26)
-            </span>
+            <span class="text-muted text-xs"> ({{ item.value }}) </span>
           </template>
         </USelect>
       </UFormField>
