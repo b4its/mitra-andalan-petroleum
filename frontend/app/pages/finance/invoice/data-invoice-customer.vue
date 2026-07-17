@@ -12,5 +12,5 @@ definePageMeta({ layout: "finance" });
 </script>
 
 <template>
-  <FinanceTable :period="period" :range="range" />
+  <FinanceInvoiceData />
 </template>

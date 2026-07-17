@@ -66,6 +66,17 @@ export interface OperationsDeliveryOrderOverview {
   status: "created" | "document_returned";
 }
 
+export interface FinanceInvoiceOverview {
+  id: string;
+  customerName: string;
+  invoiceNumber: string;
+  termsDay: number;
+  dateCreated: string;
+  grandTotal: number;
+  invoiceStatus: "unpaid" | "paid" | "overdue";
+  deadlineStatus: "on_time" | "overdue" | "due_soon";
+}
+
 export interface Notification {
   id: number;
   unread?: boolean;
