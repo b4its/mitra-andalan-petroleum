@@ -23,3 +23,13 @@ export function formatDate(date: string | Date) {
 
   return new Intl.DateTimeFormat("id-ID", options).format(new Date(date));
 }
+
+export function formatDateDoc(date: string | Date) {
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+
+  return new Intl.DateTimeFormat("id-ID", options).format(new Date(date));
+}
