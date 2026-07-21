@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
 
+const route = useRoute();
+const idPoLetter = route.params.id;
+
 const links = [
   [
     {
-      label: "Rekap",
-      icon: "i-lucide-square-chart-gantt",
-      to: "/marketing/supplier",
-      exact: true,
-    },
-    {
-      label: "Purchase Order Supplier",
-      icon: "i-lucide-truck",
-      to: "/marketing/supplier/po",
+      label: "Detail Purchase Order Supplier",
+      icon: "i-lucide-receipt-text",
+      to: `/marketing/detail-supplier/po-supplier-${idPoLetter}`,
     },
   ],
 ] satisfies NavigationMenuItem[][];
@@ -21,9 +18,9 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UDashboardPanel id="supplier" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel id="po-supplier" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar title="Supplier">
+      <UDashboardNavbar :title="`Purchase Order Supplier ${idPoLetter}`"">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

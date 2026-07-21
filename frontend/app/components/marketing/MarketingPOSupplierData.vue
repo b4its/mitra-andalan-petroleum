@@ -216,20 +216,12 @@ const pagination = ref({
       <template #actions-cell="{ row }">
         <div class="flex items-center gap-2">
           <UButton
-            :to="`/marketing/detail/surat-penawaran-${row.original.id}`"
+            :to="`/marketing/detail-supplier/po-supplier-${row.original.id}`"
             variant="solid"
             size="md"
             color="primary"
           >
             Lihat Surat
-          </UButton>
-          <UButton
-            :to="`/marketing/detail/revisi-surat-penawaran-${row.original.id}`"
-            variant="soft"
-            size="md"
-            color="neutral"
-          >
-            Revisi Penawaran
           </UButton>
         </div>
       </template>
