@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { faker } from "@faker-js/faker";
+import logoImage from "~/assets/images/map-logo.jpeg";
 
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
@@ -9,29 +10,7 @@ const loadPdf = async () => {
   const pdfMake = usePDFMake();
   if (!pdfMake) return;
 
-  const lineItems = Array.from({ length: 6 }, () => {
-    const qty = faker.number.int({ min: 1, max: 20 });
-    const rate = faker.number.float({ min: 50, max: 500, fractionDigits: 2 });
-    return {
-      description: faker.commerce.productName(),
-      category: faker.commerce.department(),
-      qty,
-      rate,
-      amount: qty * rate,
-    };
-  });
-
-  const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
-  const tax = subtotal * 0.085;
-  const total = subtotal + tax;
-
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-  const invoiceNumber = `INV-${faker.number.int({ min: 1000, max: 9999 })}`;
   const issueDate = new Date();
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 30);
 
   pdfLink.value = await pdfMake
     .createPdf({
@@ -41,11 +20,12 @@ const loadPdf = async () => {
         creator: "User",
         producer: "PT. Mitra Andalan Petroleum",
       },
-      pageMargins: [72, 42, 72, 10],
+      pageSize: "A4",
+      pageMargins: [72, 10, 72, 10],
       content: [
         {
-          background: "#0ff",
-          text: "LOGO\nPT. Mitra Andalan Petroleum\nYour Trusted Partner".toUpperCase(),
+          image: await toBase64(logoImage),
+          width: 160,
         },
         {
           text: `Samarinda, ${formatDateDoc(issueDate)}`,
@@ -489,248 +469,10 @@ const loadPdf = async () => {
             ],
           },
         },
-        // {
-        //   columns: [
-        //     {
-        //       width: "*",
-        //       stack: [
-        //         { text: "BILL TO", style: "sectionLabel" },
-        //         { text: faker.person.fullName(), style: "clientName" },
-        //         { text: faker.company.name(), style: "clientDetail" },
-        //         {
-        //           text: `${faker.location.streetAddress()}\n${faker.location.city()}, ${faker.location.state({ abbreviated: true })} ${faker.location.zipCode()}`,
-        //           style: "clientDetail",
-        //         },
-        //         { text: faker.internet.email(), style: "clientEmail" },
-        //       ],
-        //     },
-        //     {
-        //       width: "*",
-        //       stack: [
-        //         { text: "PROJECT", style: "sectionLabel" },
-        //         { text: faker.commerce.productName(), style: "clientName" },
-        //         { text: "Professional Services", style: "clientDetail" },
-        //         {
-        //           text: `Reference: REF-${faker.number.int({ min: 100, max: 999 })}`,
-        //           style: "clientDetail",
-        //         },
-        //       ],
-        //     },
-        //   ],
-        //   columnGap: 20,
-        //   marginBottom: 20,
-        // },
-        // {
-        //   table: {
-        //     headerRows: 1,
-        //     widths: ["*", 50, 80, 80],
-        //     body: [
-        //       [
-        //         { text: "Description", style: "th" },
-        //         { text: "Qty", style: "th", alignment: "center" },
-        //         { text: "Rate", style: "th", alignment: "right" },
-        //         { text: "Amount", style: "th", alignment: "right" },
-        //       ],
-        //       ...lineItems.map(
-        //         (item) =>
-        //           [
-        //             {
-        //               stack: [
-        //                 { text: item.description, style: "itemName" },
-        //                 { text: item.category, style: "itemCategory" },
-        //               ],
-        //             },
-        //             {
-        //               text: String(item.qty),
-        //               alignment: "center" as const,
-        //               style: "cell",
-        //             },
-        //             {
-        //               text: fmt(item.rate),
-        //               alignment: "right" as const,
-        //               style: "cell",
-        //             },
-        //             {
-        //               text: fmt(item.amount),
-        //               alignment: "right" as const,
-        //               style: "cell",
-        //             },
-        //           ] as const,
-        //       ),
-        //     ] as any,
-        //   },
-        //   layout: {
-        //     fillColor: (rowIndex: number) =>
-        //       rowIndex === 0
-        //         ? "#0f172a"
-        //         : rowIndex % 2 === 0
-        //           ? "#f8fafc"
-        //           : null,
-        //     hLineWidth: (rowIndex: number) => (rowIndex === 0 ? 0 : 0.5),
-        //     vLineWidth: () => 0,
-        //     hLineColor: "#e2e8f0",
-        //     paddingBottom: () => 9,
-        //     paddingTop: () => 9,
-        //     paddingLeft: () => 10,
-        //     paddingRight: () => 10,
-        //   },
-        //   marginBottom: 0,
-        // },
-        // {
-        //   table: {
-        //     widths: ["*", 80],
-        //     body: [
-        //       [
-        //         { text: "Subtotal", style: "summaryLabel" },
-        //         { text: fmt(subtotal), style: "summaryValue" },
-        //       ],
-        //       [
-        //         { text: "Tax (8.5%)", style: "summaryLabel" },
-        //         { text: fmt(tax), style: "summaryValue" },
-        //       ],
-        //       [
-        //         { text: "Total Due", style: "totalLabel" },
-        //         { text: fmt(total), style: "totalValue" },
-        //       ],
-        //     ],
-        //   },
-        //   layout: {
-        //     hLineWidth: (i: number) => (i === 2 ? 1.5 : 0.5),
-        //     vLineWidth: () => 0,
-        //     hLineColor: (i: number) => (i === 2 ? "#0f172a" : "#e2e8f0"),
-        //     paddingTop: () => 8,
-        //     paddingBottom: () => 8,
-        //     paddingLeft: () => 10,
-        //     paddingRight: () => 10,
-        //   },
-        //   marginBottom: 22,
-        // },
-        // {
-        //   columns: [
-        //     {
-        //       width: "*",
-        //       stack: [
-        //         { text: "PAYMENT TERMS", style: "sectionLabel" },
-        //         {
-        //           text: "Payment is due within 30 days of the invoice date. Late payments are subject to a 1.5% monthly finance charge.",
-        //           style: "noteText",
-        //         },
-        //       ],
-        //     },
-        //     {
-        //       width: "*",
-        //       stack: [
-        //         { text: "BANK TRANSFER DETAILS", style: "sectionLabel" },
-        //         {
-        //           text:
-        //             "Bank: First National Bank\nAccount: 1234-5678-9012\nRouting: 021000021\nRef: " +
-        //             invoiceNumber,
-        //           style: "noteText",
-        //         },
-        //       ],
-        //     },
-        //   ],
-        //   columnGap: 20,
-        // },
       ],
       defaultStyle: {
-        color: "#1d293d",
+        color: "#000000",
         fontSize: 9,
-      },
-      styles: {
-        invoiceTitle: {
-          fontSize: 28,
-          bold: true,
-          color: "#0f172a",
-          characterSpacing: 2,
-          marginBottom: 8,
-        },
-        companyName: {
-          fontSize: 11,
-          bold: true,
-          color: "#0f172a",
-          marginBottom: 3,
-        },
-        companyAddress: {
-          color: "#64748b",
-          lineHeight: 1.4,
-        },
-        metaLabel: {
-          color: "#64748b",
-          fontSize: 8,
-        },
-        metaValue: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 8,
-        },
-        statusBadge: {
-          bold: true,
-          color: "#dc2626",
-          fontSize: 8,
-        },
-        sectionLabel: {
-          fontSize: 7,
-          color: "#94a3b8",
-          bold: true,
-          characterSpacing: 1,
-          marginBottom: 5,
-        },
-        clientName: {
-          fontSize: 11,
-          bold: true,
-          color: "#0f172a",
-          marginBottom: 2,
-        },
-        clientDetail: {
-          color: "#475569",
-          lineHeight: 1.4,
-        },
-        clientEmail: {
-          color: "#0084d1",
-          decoration: "underline",
-        },
-        th: {
-          bold: true,
-          color: "#ffffff",
-          fontSize: 8,
-        },
-        itemName: {
-          bold: true,
-          color: "#0f172a",
-        },
-        itemCategory: {
-          color: "#64748b",
-          fontSize: 8,
-          marginTop: 2,
-        },
-        cell: {
-          color: "#475569",
-        },
-        summaryLabel: {
-          color: "#475569",
-          alignment: "right",
-        },
-        summaryValue: {
-          color: "#475569",
-          alignment: "right",
-        },
-        totalLabel: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 11,
-          alignment: "right",
-        },
-        totalValue: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 11,
-          alignment: "right",
-        },
-        noteText: {
-          color: "#64748b",
-          lineHeight: 1.4,
-        },
       },
     })
     .getDataUrl();
