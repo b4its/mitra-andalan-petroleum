@@ -54,6 +54,11 @@ const links = [
       defaultOpen: true,
       children: [
         {
+          label: "Rekap",
+          to: "/marketing/supplier",
+          exact: true,
+        },
+        {
           label: "PO Supplier",
           to: "/marketing/supplier/po",
           exact: true,
