@@ -1,347 +1,781 @@
 <script setup lang="ts">
-import { faker } from "@faker-js/faker";
-
+import angkaTerbilang from "@develoka/angka-terbilang-js";
+import { useChangeCase } from "@vueuse/integrations/useChangeCase.js";
+import logoImage from "~/assets/images/map-logo-only.jpg";
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
-const idOfferingLetter = route.params.id;
+const idDoLetter = route.params.id;
+const { user } = useAuth();
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
   if (!pdfMake) return;
 
-  const lineItems = Array.from({ length: 6 }, () => {
-    const qty = faker.number.int({ min: 1, max: 20 });
-    const rate = faker.number.float({ min: 50, max: 500, fractionDigits: 2 });
-    return {
-      description: faker.commerce.productName(),
-      category: faker.commerce.department(),
-      qty,
-      rate,
-      amount: qty * rate,
-    };
-  });
-
-  const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
-  const tax = subtotal * 0.085;
-  const total = subtotal + tax;
-
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-  const invoiceNumber = `INV-${faker.number.int({ min: 1000, max: 9999 })}`;
-  const issueDate = new Date();
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 30);
-
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Surat Penawaran #${idOfferingLetter}`,
+        title: `Delivery Order ${idDoLetter}`,
         author: "PT. Mitra Andalan Petroleum",
-        creator: "User",
+        creator: user.value?.name,
         producer: "PT. Mitra Andalan Petroleum",
       },
-      pageMargins: [40, 46, 40, 42],
+      pageMargins: [24, 24, 24, 24],
+      pageSize: "A4",
       content: [
         {
-          columns: [
-            [
-              { text: "INVOICE", style: "invoiceTitle" },
-              { text: "Acme Solutions Inc.", style: "companyName" },
-              {
-                text: "123 Market Street, Suite 400\nSan Francisco, CA 94105\nbilling@acme.example.com",
-                style: "companyAddress",
-              },
-            ],
-            {
-              width: "auto",
-              stack: [
-                {
-                  table: {
-                    widths: [68, 100],
-                    body: [
-                      [
-                        { text: "Invoice No.", style: "metaLabel" },
-                        { text: invoiceNumber, style: "metaValue" },
-                      ],
-                      [
-                        { text: "Issue Date", style: "metaLabel" },
-                        {
-                          text: issueDate.toLocaleDateString(),
-                          style: "metaValue",
-                        },
-                      ],
-                      [
-                        { text: "Due Date", style: "metaLabel" },
-                        {
-                          text: dueDate.toLocaleDateString(),
-                          style: "metaValue",
-                        },
-                      ],
-                      [
-                        { text: "Status", style: "metaLabel" },
-                        { text: "UNPAID", style: "statusBadge" },
-                      ],
-                    ],
-                  },
-                  layout: {
-                    hLineWidth: () => 0.5,
-                    vLineWidth: () => 0,
-                    hLineColor: () => "#e2e8f0",
-                    paddingTop: () => 6,
-                    paddingBottom: () => 6,
-                    paddingLeft: () => 0,
-                    paddingRight: () => 0,
-                  },
-                },
-              ],
-            },
-          ],
-          columnGap: 20,
-          marginBottom: 22,
-        },
-        {
-          columns: [
-            {
-              width: "*",
-              stack: [
-                { text: "BILL TO", style: "sectionLabel" },
-                { text: faker.person.fullName(), style: "clientName" },
-                { text: faker.company.name(), style: "clientDetail" },
-                {
-                  text: `${faker.location.streetAddress()}\n${faker.location.city()}, ${faker.location.state({ abbreviated: true })} ${faker.location.zipCode()}`,
-                  style: "clientDetail",
-                },
-                { text: faker.internet.email(), style: "clientEmail" },
-              ],
-            },
-            {
-              width: "*",
-              stack: [
-                { text: "PROJECT", style: "sectionLabel" },
-                { text: faker.commerce.productName(), style: "clientName" },
-                { text: "Professional Services", style: "clientDetail" },
-                {
-                  text: `Reference: REF-${faker.number.int({ min: 100, max: 999 })}`,
-                  style: "clientDetail",
-                },
-              ],
-            },
-          ],
-          columnGap: 20,
-          marginBottom: 20,
-        },
-        {
-          table: {
-            headerRows: 1,
-            widths: ["*", 50, 80, 80],
-            body: [
-              [
-                { text: "Description", style: "th" },
-                { text: "Qty", style: "th", alignment: "center" },
-                { text: "Rate", style: "th", alignment: "right" },
-                { text: "Amount", style: "th", alignment: "right" },
-              ],
-              ...lineItems.map(
-                (item) =>
-                  [
-                    {
-                      stack: [
-                        { text: item.description, style: "itemName" },
-                        { text: item.category, style: "itemCategory" },
-                      ],
-                    },
-                    {
-                      text: String(item.qty),
-                      alignment: "center" as const,
-                      style: "cell",
-                    },
-                    {
-                      text: fmt(item.rate),
-                      alignment: "right" as const,
-                      style: "cell",
-                    },
-                    {
-                      text: fmt(item.amount),
-                      alignment: "right" as const,
-                      style: "cell",
-                    },
-                  ] as const,
-              ),
-            ] as any,
-          },
           layout: {
-            fillColor: (rowIndex: number) =>
-              rowIndex === 0
-                ? "#0f172a"
-                : rowIndex % 2 === 0
-                  ? "#f8fafc"
-                  : null,
-            hLineWidth: (rowIndex: number) => (rowIndex === 0 ? 0 : 0.5),
-            vLineWidth: () => 0,
-            hLineColor: "#e2e8f0",
-            paddingBottom: () => 9,
-            paddingTop: () => 9,
-            paddingLeft: () => 10,
-            paddingRight: () => 10,
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 10;
+            },
+            paddingLeft: function (i) {
+              return 10;
+            },
+            paddingBottom: function (i) {
+              return 10;
+            },
+            paddingTop: function (i) {
+              return 10;
+            },
+            fillColor: function (i) {
+              return null;
+            },
           },
-          marginBottom: 0,
-        },
-        {
           table: {
-            widths: ["*", 80],
+            widths: ["25%", "*"],
             body: [
               [
-                { text: "Subtotal", style: "summaryLabel" },
-                { text: fmt(subtotal), style: "summaryValue" },
-              ],
-              [
-                { text: "Tax (8.5%)", style: "summaryLabel" },
-                { text: fmt(tax), style: "summaryValue" },
-              ],
-              [
-                { text: "Total Due", style: "totalLabel" },
-                { text: fmt(total), style: "totalValue" },
+                {
+                  image: await toBase64(logoImage),
+                  width: 30,
+                  alignment: "center",
+                  border: [true, true, false, false],
+                },
+                {
+                  text: "SURAT PENGANTAR PENGIRIMAN (DELIVERY ORDER)",
+                  bold: true,
+                  fontSize: 11,
+                  border: [false, true, true, false],
+                },
               ],
             ],
           },
-          layout: {
-            hLineWidth: (i: number) => (i === 2 ? 1.5 : 0.5),
-            vLineWidth: () => 0,
-            hLineColor: (i: number) => (i === 2 ? "#0f172a" : "#e2e8f0"),
-            paddingTop: () => 8,
-            paddingBottom: () => 8,
-            paddingLeft: () => 10,
-            paddingRight: () => 10,
-          },
-          marginBottom: 22,
         },
         {
-          columns: [
-            {
-              width: "*",
-              stack: [
-                { text: "PAYMENT TERMS", style: "sectionLabel" },
+          layout: {
+            defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 1;
+            },
+            paddingTop: function (i) {
+              return 1;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["*", "15%", "auto", "30%"],
+            body: [
+              [
                 {
-                  text: "Payment is due within 30 days of the invoice date. Late payments are subject to a 1.5% monthly finance charge.",
-                  style: "noteText",
+                  text: "PT. MITRA ANDALAN PETROLEUM",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "",
+                  border: [false, false, true, false],
                 },
               ],
-            },
-            {
-              width: "*",
-              stack: [
-                { text: "BANK TRANSFER DETAILS", style: "sectionLabel" },
+              [
                 {
-                  text:
-                    "Bank: First National Bank\nAccount: 1234-5678-9012\nRouting: 021000021\nRef: " +
-                    invoiceNumber,
-                  style: "noteText",
+                  text: "Distributor Agent for Elnusa Petrofin",
+                  italics: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: "No. DO MAP",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "1124/DO/MAP/VI/2026",
+                  border: [false, false, true, false],
                 },
               ],
+              [
+                {
+                  text: "Jl. D.I. Panjaitan No. 25 C-D",
+                  border: [true, false, false, false],
+                },
+                {
+                  text: "Tgl. DO",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: formatDateDoc(new Date()),
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "Samarinda, 75117, Kalimantan Timur",
+                  border: [true, false, false, false],
+                },
+                {},
+                {
+                  text: ":",
+                },
+                {
+                  text: "",
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "Indonesia",
+                  border: [true, false, false, false],
+                },
+                {
+                  text: "NO. PO Cust.",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "1200020145",
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "Telp : 0541-2832313",
+                  border: [true, false, false, false],
+                },
+                {
+                  text: "No. SO",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                },
+                { text: "\n\n", border: [false, false, true, false] },
+              ],
+            ],
+          },
+        },
+        {
+          layout: {
+            defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
             },
-          ],
-          columnGap: 20,
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 2;
+            },
+            paddingTop: function (i) {
+              return 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["auto", "auto", "*", "auto", "auto", "*"],
+            body: [
+              [
+                {
+                  text: "Diserahkan Kepada",
+                  bold: true,
+                  border: [true, true, false, false],
+                },
+                {
+                  text: ":",
+                  border: [false, true, false, false],
+                },
+                {
+                  text: "PT BINA SARANA SUKSES",
+                  border: [false, true, false, false],
+                },
+                {
+                  text: "Agen/ Transportir",
+                  bold: true,
+                  border: [true, true, false, false],
+                },
+                {
+                  text: ":",
+                  border: [false, true, false, false],
+                },
+                {
+                  text: "PT RISKI JAYA ABADI MANDIRI\n\n\n",
+                  border: [false, true, true, false],
+                },
+              ],
+              [
+                {
+                  text: "ID. Pelanggan",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "PT BINA SARANA SUKSES",
+                },
+                {
+                  text: "ID",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "",
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "Alamat",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "Site CDI - Kutai Barat",
+                  border: [false, false, true, false],
+                },
+                {
+                  text: "Alamat",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "Samarinda\n\n\n",
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "Penerima BBM+HP",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "Driver+HP",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "Andika\n\n\n",
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "",
+                  border: [true, false, false, false],
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "Kenet/Helper",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "",
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "Tanggal",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: formatDateDoc(new Date()),
+                  border: [false, false, true, false],
+                },
+                {
+                  text: "Tanggal",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: formatDateDoc(new Date()),
+                  border: [false, false, true, false],
+                },
+              ],
+            ],
+          },
+        },
+        {
+          layout: {
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 2;
+            },
+            paddingTop: function (i) {
+              return 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["*", "*", "*", "*", "*", "*"],
+            body: [
+              [
+                {
+                  text: "Tanggal Berlaku",
+                  alignment: "center",
+                  bold: true,
+                  colSpan: 2,
+                },
+                {},
+                {
+                  text: "Produk",
+                  alignment: "center",
+                  bold: true,
+                  colSpan: 2,
+                },
+                {},
+                {
+                  text: "Volume/ Kuantitas (Liter)",
+                  alignment: "center",
+                  bold: true,
+                  colSpan: 2,
+                },
+                {},
+              ],
+              [
+                {
+                  text: "",
+                  colSpan: 2,
+                  alignment: "center",
+                },
+                {},
+                {
+                  text: "BIO DIESEL",
+                  colSpan: 2,
+                  alignment: "center",
+                },
+                {},
+                {
+                  text: "10,000 Liter",
+                  colSpan: 2,
+                  alignment: "center",
+                },
+                {},
+              ],
+              [
+                {
+                  text: "Dikirim Dengan",
+                  bold: true,
+                },
+                {},
+                {
+                  text: "Segel Atas",
+                  rowSpan: 2,
+                  verticalAlignment: "middle",
+                  bold: true,
+                },
+                {
+                  text: "0009031",
+                  rowSpan: 2,
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: "Bebas Air",
+                  bold: true,
+                },
+                {
+                  text: "Ya / Tidak",
+                  alignment: "center",
+                },
+              ],
+              [
+                {
+                  text: "No. Kendaraan",
+                  bold: true,
+                },
+                {
+                  text: "KT 8092 NU",
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "Jam Berangkat",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+              ],
+              [
+                {
+                  text: "Km. Awal",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "Segel Bawah",
+                  rowSpan: 2,
+                  verticalAlignment: "middle",
+                  bold: true,
+                },
+                {
+                  text: "0009032",
+                  rowSpan: 2,
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: "Jam Tiba",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+              ],
+              [
+                {
+                  text: "Km. Akhir",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "Jam Mulai Pembongkaran",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+              ],
+              [
+                {
+                  text: "SG Meter",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "Temperatur",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+                {
+                  text: "Jam Tiba di Depo",
+                  bold: true,
+                },
+                {
+                  text: "",
+                },
+              ],
+              [
+                { text: "", border: [true, true, false, true] },
+                { text: "", border: [false, true, false, true] },
+                { text: "", border: [false, true, false, true] },
+                { text: "", border: [false, true, false, true] },
+                { text: "", border: [false, true, false, true] },
+                { text: "", border: [false, true, true, true] },
+              ],
+              [
+                {
+                  text: "Jumlah (Liter)",
+                  bold: true,
+                },
+                {
+                  text: `10,000 # (${useChangeCase(angkaTerbilang(10000), "capitalCase").value} Liter) #`,
+                  italics: true,
+                  colSpan: 5,
+                },
+                {},
+                {},
+                {},
+                {},
+              ],
+            ],
+          },
+        },
+        {
+          layout: {
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 100;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i, node) {
+              return i === node.table.body.length - 1 ? 15 : 2;
+            },
+            paddingTop: function (i) {
+              return i === 0 ? 15 : 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["*"],
+            body: [
+              [
+                {
+                  text: "Catatan :",
+                  border: [true, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "1. Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SG Meter, kuantitas, kadar air, flow meter yang digunakan",
+                  border: [true, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "2. Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami",
+                  border: [true, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "3. Lainnya :",
+                  border: [true, false, true, false],
+                },
+              ],
+            ],
+          },
+        },
+        {
+          layout: {
+            defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 15;
+            },
+            paddingTop: function (i) {
+              return 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["*", "auto", "*", "*", "auto", "*"],
+            body: [
+              [
+                {
+                  text: "T2 DEPO",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "______________________",
+                },
+                {
+                  text: "KEPEKAAN INDEX\n(buku tera mobil)",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "______________________",
+                  border: [false, false, true, false],
+                },
+              ],
+              [
+                {
+                  text: "T2 BONGKAR",
+                  bold: true,
+                  border: [true, false, false, false],
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "______________________",
+                },
+                {
+                  text: "BBM DITERIMA",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: "______________________ Liter",
+                  border: [false, false, true, false],
+                },
+              ],
+            ],
+          },
+        },
+        {
+          layout: {
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 10;
+            },
+            paddingLeft: function (i) {
+              return 10;
+            },
+            paddingBottom: function (i) {
+              return 2;
+            },
+            paddingTop: function (i) {
+              return i === 1 ? 75 : 2;
+            },
+            fillColor: function (i) {
+              return i === 0 ? "#e5e5e5" : null;
+            },
+          },
+          table: {
+            widths: ["auto", "auto", "*", "*"],
+            body: [
+              [
+                {
+                  text: "Koordinator MAP",
+                  alignment: "center",
+                  bold: true,
+                },
+                {
+                  text: "Adm. Distribusi",
+                  alignment: "center",
+                  bold: true,
+                },
+                {
+                  text: "Penerima (Nama + Ttd + Stempel)",
+                  alignment: "center",
+                  bold: true,
+                },
+                {
+                  text: "Driver/Officer",
+                  alignment: "center",
+                  bold: true,
+                },
+              ],
+              [
+                {
+                  text: "Stenly B",
+                  alignment: "center",
+                  bold: true,
+                },
+                {
+                  text: "Inka",
+                  alignment: "center",
+                  bold: true,
+                },
+                {
+                  text: "",
+                  alignment: "center",
+                  bold: true,
+                },
+                {
+                  text: "",
+                  alignment: "center",
+                  bold: true,
+                },
+              ],
+              [
+                { text: "", border: [true, true, false, true] },
+                { text: "", border: [false, true, false, true] },
+                { text: "", border: [false, true, false, true] },
+                { text: "", border: [false, true, true, true] },
+              ],
+            ],
+          },
         },
       ],
       defaultStyle: {
-        color: "#1d293d",
+        color: "#000000",
         fontSize: 9,
-      },
-      styles: {
-        invoiceTitle: {
-          fontSize: 28,
-          bold: true,
-          color: "#0f172a",
-          characterSpacing: 2,
-          marginBottom: 8,
-        },
-        companyName: {
-          fontSize: 11,
-          bold: true,
-          color: "#0f172a",
-          marginBottom: 3,
-        },
-        companyAddress: {
-          color: "#64748b",
-          lineHeight: 1.4,
-        },
-        metaLabel: {
-          color: "#64748b",
-          fontSize: 8,
-        },
-        metaValue: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 8,
-        },
-        statusBadge: {
-          bold: true,
-          color: "#dc2626",
-          fontSize: 8,
-        },
-        sectionLabel: {
-          fontSize: 7,
-          color: "#94a3b8",
-          bold: true,
-          characterSpacing: 1,
-          marginBottom: 5,
-        },
-        clientName: {
-          fontSize: 11,
-          bold: true,
-          color: "#0f172a",
-          marginBottom: 2,
-        },
-        clientDetail: {
-          color: "#475569",
-          lineHeight: 1.4,
-        },
-        clientEmail: {
-          color: "#0084d1",
-          decoration: "underline",
-        },
-        th: {
-          bold: true,
-          color: "#ffffff",
-          fontSize: 8,
-        },
-        itemName: {
-          bold: true,
-          color: "#0f172a",
-        },
-        itemCategory: {
-          color: "#64748b",
-          fontSize: 8,
-          marginTop: 2,
-        },
-        cell: {
-          color: "#475569",
-        },
-        summaryLabel: {
-          color: "#475569",
-          alignment: "right",
-        },
-        summaryValue: {
-          color: "#475569",
-          alignment: "right",
-        },
-        totalLabel: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 11,
-          alignment: "right",
-        },
-        totalValue: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 11,
-          alignment: "right",
-        },
-        noteText: {
-          color: "#64748b",
-          lineHeight: 1.4,
-        },
       },
     })
     .getDataUrl();
