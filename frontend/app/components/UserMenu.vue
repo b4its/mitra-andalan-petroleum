@@ -5,39 +5,19 @@ defineProps<{
   collapsed?: boolean;
 }>();
 
+const router = useRouter();
 const colorMode = useColorMode();
-const appConfig = useAppConfig();
 
-const colors = [
-  "red",
-  "orange",
-  "amber",
-  "yellow",
-  "lime",
-  "green",
-  "emerald",
-  "teal",
-  "cyan",
-  "sky",
-  "blue",
-  "indigo",
-  "violet",
-  "purple",
-  "fuchsia",
-  "pink",
-  "rose",
-];
-const neutrals = ["slate", "gray", "zinc", "neutral", "stone"];
-
-const user = ref({
-  name: "Benjamin Canac",
-});
+const { user, logout } = useAuth();
 
 const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       type: "label",
-      label: user.value.name,
+      label: user.value?.name,
+      avatar: {
+        alt: user.value?.name,
+      },
     },
   ],
   [
@@ -46,31 +26,35 @@ const items = computed<DropdownMenuItem[][]>(() => [
       icon: "i-lucide-user",
     },
     {
-      label: "Billing",
-      icon: "i-lucide-credit-card",
-    },
-    {
-      label: "Settings",
-      icon: "i-lucide-settings",
-      to: "/settings",
+      label: "Appearance",
+      icon: "i-lucide-sun",
+      children: [
+        {
+          label: "Light",
+          icon: "i-lucide-sun",
+          onSelect: () => {
+            colorMode.preference = "light";
+          },
+        },
+        {
+          label: "Dark",
+          icon: "i-lucide-moon",
+          onSelect: () => {
+            colorMode.preference = "dark";
+          },
+        },
+      ],
     },
   ],
   [
     {
-      label: "Documentation",
-      icon: "i-lucide-book-open",
-      to: "https://ui.nuxt.com/docs/getting-started/installation/nuxt",
-      target: "_blank",
-    },
-    {
-      label: "GitHub repository",
-      icon: "i-simple-icons-github",
-      to: "https://github.com/nuxt-ui-templates/dashboard",
-      target: "_blank",
-    },
-    {
       label: "Log out",
       icon: "i-lucide-log-out",
+      color: "error",
+      onSelect: () => {
+        logout();
+        router.push("/login");
+      },
     },
   ],
 ]);
@@ -88,6 +72,9 @@ const items = computed<DropdownMenuItem[][]>(() => [
       v-bind="{
         ...user,
         label: collapsed ? undefined : user?.name,
+        avatar: {
+          alt: user?.name,
+        },
         trailingIcon: collapsed ? undefined : 'i-lucide-chevron-down',
       }"
       color="neutral"
