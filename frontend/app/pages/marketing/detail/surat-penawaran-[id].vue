@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { faker } from "@faker-js/faker";
 import logoImage from "~/assets/images/map-logo.jpeg";
 
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
 const idOfferingLetter = route.params.id;
+const { user } = useAuth();
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
@@ -17,7 +17,7 @@ const loadPdf = async () => {
       info: {
         title: `Surat Penawaran #${idOfferingLetter}`,
         author: "PT. Mitra Andalan Petroleum",
-        creator: "User",
+        creator: user.value?.name,
         producer: "PT. Mitra Andalan Petroleum",
       },
       pageSize: "A4",

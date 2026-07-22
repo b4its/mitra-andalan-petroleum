@@ -2,6 +2,7 @@
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
 const idPoLetter = route.params.id;
+const { user } = useAuth();
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
@@ -12,7 +13,7 @@ const loadPdf = async () => {
       info: {
         title: `Purchase Order ${idPoLetter}`,
         author: "PT. Mitra Andalan Petroleum",
-        creator: "User",
+        creator: user.value?.name,
         producer: "PT. Mitra Andalan Petroleum",
       },
       pageMargins: [24, 24, 24, 24],
