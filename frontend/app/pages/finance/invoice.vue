@@ -3,12 +3,12 @@ import type { NavigationMenuItem } from "@nuxt/ui";
 
 const links = [
   [
-    {
-      label: "Rekap",
-      icon: "i-lucide-square-chart-gantt",
-      to: "/finance/invoice",
-      exact: true,
-    },
+    // {
+    //   label: "Rekap",
+    //   icon: "i-lucide-square-chart-gantt",
+    //   to: "/finance/invoice",
+    //   exact: true,
+    // },
     {
       label: "Pembuatan Invoice",
       icon: "i-lucide-receipt",
@@ -41,9 +41,7 @@ definePageMeta({ layout: "finance" });
     </template>
 
     <template #body>
-      <div
-        class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full lg:max-w-7xl mx-auto"
-      >
+      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full">
         <NuxtPage />
       </div>
     </template>

@@ -62,21 +62,23 @@ definePageMeta({ layout: "finance" });
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar>
+      <!-- <UDashboardToolbar>
         <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
+           NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here.
           <HomeDateRangePicker v-model="range" class="-ms-1" />
 
           <HomePeriodSelect v-model="period" :range="range" />
         </template>
-      </UDashboardToolbar>
+      </UDashboardToolbar> -->
     </template>
 
     <template #body>
-      <h1 class="text-5xl font-bold text-neutral-50">Rekap Data Finance</h1>
+      <h1 class="text-3xl font-bold dark:text-neutral-50 text-neutral-900">
+        Rekap Data Finance
+      </h1>
       <FinanceStats :period="period" :range="range" />
       <!-- <HomeChart :period="period" :range="range" /> -->
-      <FinanceTable :period="period" :range="range" />
+      <!-- <FinanceTable :period="period" :range="range" /> -->
     </template>
   </UDashboardPanel>
 </template>

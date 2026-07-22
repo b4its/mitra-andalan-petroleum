@@ -51,31 +51,32 @@ definePageMeta({ layout: "operations" });
             </UButton>
           </UTooltip>
 
-          <UDropdownMenu :items="items">
+          <!-- <UDropdownMenu :items="items">
             <UButton
               icon="i-lucide-plus"
               label="Aksi Cepat"
               size="md"
               class="rounded-full"
             />
-          </UDropdownMenu>
+          </UDropdownMenu> -->
         </template>
       </UDashboardNavbar>
 
-      <UDashboardToolbar>
+      <!-- <UDashboardToolbar>
         <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
           <HomeDateRangePicker v-model="range" class="-ms-1" />
 
           <HomePeriodSelect v-model="period" :range="range" />
         </template>
-      </UDashboardToolbar>
+      </UDashboardToolbar> -->
     </template>
 
     <template #body>
-      <h1 class="text-5xl font-bold text-neutral-50">Rekap Data Operations</h1>
+      <h1 class="text-3xl font-bold dark:text-neutral-50 text-neutral-900">
+        Rekap Data Operations
+      </h1>
       <OperationsStats :period="period" :range="range" />
-      <OperationsTable :period="period" :range="range" />
+      <!-- <OperationsTable :period="period" :range="range" /> -->
     </template>
   </UDashboardPanel>
 </template>
