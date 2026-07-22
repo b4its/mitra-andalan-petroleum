@@ -6,14 +6,6 @@ const props = defineProps<{
   range: Range;
 }>();
 
-function formatCurrency(value: number): string {
-  return value.toLocaleString("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  });
-}
-
 const baseStats = [
   {
     title: "Delivery Order Dibuat",
@@ -22,13 +14,14 @@ const baseStats = [
     maxValue: 1000,
     minVariation: -15,
     maxVariation: 25,
+    to: "/operations/delivery-order",
   },
 ];
 
 const { data: stats } = await useAsyncData<Stat[]>(
   "stats",
   async () => {
-    return baseStats.map((stat) => {
+    return baseStats.map((stat): Stat => {
       const value = randomInt(stat.minValue, stat.maxValue);
       const variation = randomInt(stat.minVariation, stat.maxVariation);
 
@@ -36,6 +29,7 @@ const { data: stats } = await useAsyncData<Stat[]>(
         title: stat.title,
         icon: stat.icon,
         value: value,
+        to: stat.to,
         variation,
       };
     });
@@ -54,7 +48,7 @@ const { data: stats } = await useAsyncData<Stat[]>(
       :key="index"
       :icon="stat.icon"
       :title="stat.title"
-      to="/customers"
+      :to="stat.to"
       variant="subtle"
       :ui="{
         container: 'gap-y-1.5',
