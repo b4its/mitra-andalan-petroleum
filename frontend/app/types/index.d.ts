@@ -33,6 +33,7 @@ export interface Stat {
   icon: string;
   value: number | string;
   variation: number;
+  to: string;
   formatter?: (value: number) => string;
 }
 

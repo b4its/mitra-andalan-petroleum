@@ -12,6 +12,8 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <h1 class="text-5xl font-bold text-neutral-50">Rekap Histori Harga</h1>
+  <h1 class="text-3xl font-bold dark:text-neutral-50 text-neutral-900">
+    Rekap Histori Harga
+  </h1>
   <HomeSales :period="period" :range="range" />
 </template>
