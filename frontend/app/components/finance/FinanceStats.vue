@@ -18,41 +18,44 @@ const baseStats = [
   {
     title: "Delivery Order Diterima",
     icon: "i-lucide-file-check-corner",
-    minValue: 400,
-    maxValue: 1000,
+    minValue: 50,
+    maxValue: 100,
     minVariation: -15,
     maxVariation: 25,
+    to: "/finance/do",
   },
   {
     title: "Invoice Belum Dibuat",
     icon: "i-lucide-file-clock",
-    minValue: 1000,
-    maxValue: 2000,
+    minValue: 50,
+    maxValue: 100,
     minVariation: -10,
     maxVariation: 20,
+    to: "/finance/invoice/pembuatan-invoice",
   },
   {
     title: "Invoice Belum Lunas",
     icon: "i-lucide-receipt",
-    minValue: 200000,
-    maxValue: 500000,
+    minValue: 50,
+    maxValue: 100,
     minVariation: -20,
     maxVariation: 30,
-    formatter: formatCurrency,
+    to: "/finance/invoice/data-invoice-customer",
   },
 ];
 
 const { data: stats } = await useAsyncData<Stat[]>(
   "stats",
   async () => {
-    return baseStats.map((stat) => {
+    return baseStats.map((stat): Stat => {
       const value = randomInt(stat.minValue, stat.maxValue);
       const variation = randomInt(stat.minVariation, stat.maxVariation);
 
       return {
         title: stat.title,
         icon: stat.icon,
-        value: stat.formatter ? stat.formatter(value) : value,
+        value: value,
+        to: stat.to,
         variation,
       };
     });
@@ -71,7 +74,7 @@ const { data: stats } = await useAsyncData<Stat[]>(
       :key="index"
       :icon="stat.icon"
       :title="stat.title"
-      to="/customers"
+      :to="stat.to"
       variant="subtle"
       :ui="{
         container: 'gap-y-1.5',
@@ -86,14 +89,6 @@ const { data: stats } = await useAsyncData<Stat[]>(
         <span class="text-2xl font-semibold text-highlighted">
           {{ stat.value }}
         </span>
-
-        <UBadge
-          :color="stat.variation > 0 ? 'success' : 'error'"
-          variant="subtle"
-          class="text-xs"
-        >
-          {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
-        </UBadge>
       </div>
     </UPageCard>
   </UPageGrid>
