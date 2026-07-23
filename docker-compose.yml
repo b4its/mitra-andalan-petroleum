@@ -1,0 +1,52 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mandalan-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: mandalan
+      MYSQL_PASSWORD: mandalan
+      MYSQL_DATABASE: mandalan
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    profiles:
+      - core
+      - full
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mandalan-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+aiomysql://mandalan:mandalan@db:3306/mandalan
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - core
+      - full
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mandalan-frontend
+    ports:
+      - "8080:3000"
+    depends_on:
+      - backend
+    profiles:
+      - full
+
+volumes:
+  mysqldata:
