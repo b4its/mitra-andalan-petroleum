@@ -14,57 +14,17 @@ function formatCurrency(value: number): string {
   });
 }
 
-const baseStats = [
-  {
-    title: "Delivery Order Diterima",
-    icon: "i-lucide-file-check-corner",
-    minValue: 50,
-    maxValue: 100,
-    minVariation: -15,
-    maxVariation: 25,
-    to: "/finance/do",
-  },
-  {
-    title: "Invoice Belum Dibuat",
-    icon: "i-lucide-file-clock",
-    minValue: 50,
-    maxValue: 100,
-    minVariation: -10,
-    maxVariation: 20,
-    to: "/finance/invoice/pembuatan-invoice",
-  },
-  {
-    title: "Invoice Belum Lunas",
-    icon: "i-lucide-receipt",
-    minValue: 50,
-    maxValue: 100,
-    minVariation: -20,
-    maxVariation: 30,
-    to: "/finance/invoice/data-invoice-customer",
-  },
-];
-
-const { data: stats } = await useAsyncData<Stat[]>(
-  "stats",
-  async () => {
-    return baseStats.map((stat): Stat => {
-      const value = randomInt(stat.minValue, stat.maxValue);
-      const variation = randomInt(stat.minVariation, stat.maxVariation);
-
-      return {
-        title: stat.title,
-        icon: stat.icon,
-        value: value,
-        to: stat.to,
-        variation,
-      };
-    });
-  },
-  {
-    watch: [() => props.period, () => props.range],
-    default: () => [],
-  },
-);
+const { data: stats } = await useAsyncData<Stat[]>("finance-stats", async () => {
+  const { get } = useApi()
+  const res = await get<{ stats: any[] }>("/stats/finance")
+  return (res.stats || []).map((s: any) => ({
+    title: s.title,
+    icon: s.icon,
+    value: s.value,
+    variation: s.variation,
+    to: s.to,
+  }))
+}, { watch: [() => props.period, () => props.range], default: () => [] })
 </script>
 
 <template>

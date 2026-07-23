@@ -6,66 +6,17 @@ const props = defineProps<{
   range: Range;
 }>();
 
-const baseStats = [
-  {
-    title: "Penawaran yang sudah dibuat",
-    icon: "i-lucide-users",
-    minValue: 50,
-    maxValue: 75,
-    minVariation: -15,
-    maxVariation: 25,
-    to: "/marketing/customer",
-  },
-  {
-    title: "Penawaran yang belum disetujui",
-    icon: "i-lucide-clock-fading",
-    minValue: 50,
-    maxValue: 75,
-    minVariation: -10,
-    maxVariation: 20,
-    to: "/marketing/customer",
-  },
-  {
-    title: "Purchase Order dari Customer",
-    icon: "i-lucide-circle-dollar-sign",
-    minValue: 50,
-    maxValue: 75,
-    minVariation: -20,
-    maxVariation: 30,
-    to: "/marketing/customer",
-  },
-  {
-    title: "Purchase Order untuk logistik",
-    icon: "i-lucide-shopping-cart",
-    minValue: 50,
-    maxValue: 75,
-    minVariation: -5,
-    maxVariation: 15,
-    to: "/marketing/supplier",
-  },
-];
-
-const { data: stats } = await useAsyncData<Stat[]>(
-  "stats",
-  async () => {
-    return baseStats.map((stat): Stat => {
-      const value = randomInt(stat.minValue, stat.maxValue);
-      const variation = randomInt(stat.minVariation, stat.maxVariation);
-
-      return {
-        title: stat.title,
-        icon: stat.icon,
-        value: value,
-        to: stat.to,
-        variation,
-      };
-    });
-  },
-  {
-    watch: [() => props.period, () => props.range],
-    default: () => [],
-  },
-);
+const { data: stats } = await useAsyncData<Stat[]>("marketing-stats", async () => {
+  const { get } = useApi()
+  const res = await get<{ stats: any[] }>("/stats/marketing")
+  return (res.stats || []).map((s: any) => ({
+    title: s.title,
+    icon: s.icon,
+    value: s.value,
+    variation: s.variation,
+    to: s.to,
+  }))
+}, { watch: [() => props.period, () => props.range], default: () => [] })
 </script>
 
 <template>
