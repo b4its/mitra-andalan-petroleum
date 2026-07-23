@@ -4,6 +4,8 @@ WORKDIR /app
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN pnpm build
 
 FROM node:22-alpine
