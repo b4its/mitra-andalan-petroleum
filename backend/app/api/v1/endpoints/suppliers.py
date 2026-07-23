@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.models.supplier import Supplier
+from app.schemas.common import MessageResponse
 from app.schemas.supplier import (
     SupplierResponse,
     SupplierCreate,
     SupplierUpdate,
-    MessageResponse,
 )
 
 router = APIRouter()
