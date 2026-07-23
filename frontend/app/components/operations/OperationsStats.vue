@@ -6,39 +6,17 @@ const props = defineProps<{
   range: Range;
 }>();
 
-const baseStats = [
-  {
-    title: "Delivery Order Dibuat",
-    icon: "i-lucide-file-input",
-    minValue: 400,
-    maxValue: 1000,
-    minVariation: -15,
-    maxVariation: 25,
-    to: "/operations/delivery-order",
-  },
-];
-
-const { data: stats } = await useAsyncData<Stat[]>(
-  "stats",
-  async () => {
-    return baseStats.map((stat): Stat => {
-      const value = randomInt(stat.minValue, stat.maxValue);
-      const variation = randomInt(stat.minVariation, stat.maxVariation);
-
-      return {
-        title: stat.title,
-        icon: stat.icon,
-        value: value,
-        to: stat.to,
-        variation,
-      };
-    });
-  },
-  {
-    watch: [() => props.period, () => props.range],
-    default: () => [],
-  },
-);
+const { data: stats } = await useAsyncData<Stat[]>("operations-stats", async () => {
+  const { get } = useApi()
+  const res = await get<{ stats: any[] }>("/stats/operations")
+  return (res.stats || []).map((s: any) => ({
+    title: s.title,
+    icon: s.icon,
+    value: s.value,
+    variation: s.variation,
+    to: s.to,
+  }))
+}, { watch: [() => props.period, () => props.range], default: () => [] })
 </script>
 
 <template>
