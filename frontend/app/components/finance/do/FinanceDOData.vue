@@ -211,7 +211,7 @@ const pagination = ref({
       <template #actions-cell="{ row }">
         <div class="flex items-center gap-2">
           <UButton
-            :to="`/operations/detail/delivery-order-${row.original.id}`"
+            :to="`/finance/detail-operations/delivery-order-${row.original.id}`"
             variant="solid"
             size="md"
             color="primary"
