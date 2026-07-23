@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.models.customer import Customer
+from app.schemas.common import MessageResponse
 from app.schemas.customer import (
     CustomerResponse,
     CustomerCreate,
     CustomerUpdate,
-    MessageResponse,
 )
 
 router = APIRouter()
