@@ -31,7 +31,7 @@ ReDoc: `http://localhost:8000/redoc`
 **Request body:**
 ```json
 {
-  "email": "admin@mandalan.com",
+  "email": "admin@email.com",
   "password": "admin123"
 }
 ```

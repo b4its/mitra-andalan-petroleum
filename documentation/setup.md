@@ -69,7 +69,10 @@ Database akan otomatis diisi dengan data awal saat pertama kali backend dijalank
 
 | Role | Email | Password |
 |------|-------|----------|
-| Super Admin | admin@mandalan.com | admin123 |
+| Admin | admin@email.com | admin123 |
+| Operations | ops@email.com | ops123 |
+| Marketing | marketing@email.com | marketing123 |
+| Finance | finance@email.com | finance123 |
 
 ## Port
 
