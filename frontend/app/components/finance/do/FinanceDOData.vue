@@ -14,7 +14,10 @@ const { get } = useApi();
 const { data: DoData } = await useAsyncData(
   "finance-delivery-orders",
   async () => {
-    const res = await get<{ items: any[] }>("/delivery-orders", { page: 1, page_size: 50 })
+    const res = await get<{ items: any[] }>("/delivery-orders", {
+      page: 1,
+      page_size: 50,
+    });
     return (res.items || []).map((d: any) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
@@ -24,7 +27,7 @@ const { data: DoData } = await useAsyncData(
       dateCreated: d.created_at,
       dateChanged: d.updated_at,
       status: d.status,
-    }))
+    }));
   },
   { default: () => [] },
 );
@@ -59,9 +62,18 @@ const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const color = { created: "info" as const, document_returned: "success" as const }[row.getValue("status") as string];
-      const label = { created: "Dibuat", document_returned: "Dokumen Kembali" }[row.getValue("status") as string];
-      return h(UBadge, { class: "capitalize", variant: "soft", color }, () => label);
+      const color = {
+        created: "info" as const,
+        document_returned: "success" as const,
+      }[row.getValue("status") as string];
+      const label = { created: "Dibuat", document_returned: "Dokumen Kembali" }[
+        row.getValue("status") as string
+      ];
+      return h(
+        UBadge,
+        { class: "capitalize", variant: "soft", color },
+        () => label,
+      );
     },
   },
   {
@@ -92,7 +104,16 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
-        <UButton variant="solid" size="md" color="primary">Buat Invoice</UButton>
+        <div class="flex items-center gap-2">
+          <UButton
+            :to="`/finance/detail-operations/delivery-order-${row.original.id}`"
+            variant="solid"
+            size="md"
+            color="primary"
+          >
+            Lihat Surat
+          </UButton>
+        </div>
       </template>
     </UTable>
 

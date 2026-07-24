@@ -27,7 +27,13 @@ export default defineNuxtConfig({
 
   vite: {
     optimizeDeps: {
-      include: ["maska/vue", "zod"],
+      include: [
+        "date-fns",
+        "maska/vue",
+        "pdfmake/build/pdfmake", // CJS
+        "pdfmake/build/vfs_fonts", // CJS
+        "zod",
+      ],
     },
   },
 });

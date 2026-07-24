@@ -8,7 +8,7 @@ const { setUser } = useAuth();
 const { post } = useApi();
 
 const schema = z.object({
-  email: z.string().email("Invalid email"),
+  email: z.email("Invalid email"),
   password: z.string().min(6, "Must be at least 6 characters"),
 });
 
@@ -37,18 +37,25 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true;
 
   try {
-    const result = await post<{ name: string; email: string; role: string; token: string; logged_in_at: string }>(
-      "/auth/login",
-      { email: event.data.email, password: event.data.password }
-    );
-
-    setUser({
-      email: result.email,
-      name: result.name,
-      role: result.role as any,
-      token: result.token,
-      loggedInAt: result.logged_in_at,
+    const result = await post<{
+      name: string;
+      email: string;
+      role: string;
+      token: string;
+      logged_in_at: string;
+    }>("/auth/login", {
+      email: event.data.email,
+      password: event.data.password,
     });
+
+    // setUser({
+    //   email: result.email,
+    //   name: result.name,
+    //   password: result.password,
+    //   role: result.role as any,
+    //   token: result.token,
+    //   loggedInAt: result.logged_in_at,
+    // });
 
     toast.add({
       title: "Logged in",

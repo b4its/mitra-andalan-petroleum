@@ -43,11 +43,18 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
   fuelPrices: {
     logisticInformation: "TRUCK 10 KL Site BSSR / BAS Tanah Datar",
     productName: "Bio Diesel B50 / B40 if stock still",
+    basePrice: 17950,
+    totalPrice: 0,
     sellingPrice: {
-      ppkb: 17950,
-      oat: 450,
+      ppkb: 0,
+      oat: 0,
+      ppn: 0,
     },
-    ppn: 2024,
+    percentageNum: {
+      oat: 0,
+      ppkb: 0.1,
+      ppn: 0.11,
+    },
   },
 });
 

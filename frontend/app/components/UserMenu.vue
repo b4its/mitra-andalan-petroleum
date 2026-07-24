@@ -24,6 +24,9 @@ const items = computed<DropdownMenuItem[][]>(() => [
     {
       label: "Profile",
       icon: "i-lucide-user",
+      onSelect: () => {
+        router.push(`/${user.value?.role}/profile`);
+      },
     },
     {
       label: "Appearance",

@@ -31,7 +31,7 @@ const loadPdf = async () => {
               return 2;
             },
             fillColor: function (i) {
-              return i === 0 ? "#9c9e9e" : null;
+              return i === 0 ? "#e5e5e5" : null;
             },
           },
           table: {
@@ -143,7 +143,7 @@ const loadPdf = async () => {
               return 1;
             },
             fillColor: function (i) {
-              return i === 0 ? "#9c9e9e" : null;
+              return i === 0 ? "#e5e5e5" : null;
             },
           },
           table: {
@@ -312,7 +312,7 @@ const loadPdf = async () => {
               return 2;
             },
             fillColor: function (i) {
-              return [0, 2].includes(i) ? "#9c9e9e" : null;
+              return [0, 2].includes(i) ? "#e5e5e5" : null;
             },
           },
           table: {

@@ -70,11 +70,18 @@ export const marketingOLDetailsSchema = z.object({
   fuelPrices: z.object({
     logisticInformation: z.string(),
     productName: z.string(),
+    basePrice: z.number(),
+    totalPrice: z.number(),
     sellingPrice: z.object({
       ppkb: z.number(),
       oat: z.number().nullable(),
+      ppn: z.number(),
     }),
-    ppn: z.number(),
+    percentageNum: z.object({
+      ppkb: z.number(),
+      oat: z.number(),
+      ppn: z.number(),
+    }),
   }),
 });
 

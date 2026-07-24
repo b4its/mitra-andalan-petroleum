@@ -1,347 +1,759 @@
 <script setup lang="ts">
-import { faker } from "@faker-js/faker";
-
+import angkaTerbilang from "@develoka/angka-terbilang-js";
+import { useChangeCase } from "@vueuse/integrations/useChangeCase.js";
+import logoImage from "~/assets/images/map-logo-only.jpg";
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
-const idOfferingLetter = route.params.id;
+const idDoLetter = route.params.id;
+const { user } = useAuth();
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
   if (!pdfMake) return;
 
-  const lineItems = Array.from({ length: 6 }, () => {
-    const qty = faker.number.int({ min: 1, max: 20 });
-    const rate = faker.number.float({ min: 50, max: 500, fractionDigits: 2 });
-    return {
-      description: faker.commerce.productName(),
-      category: faker.commerce.department(),
-      qty,
-      rate,
-      amount: qty * rate,
-    };
-  });
-
-  const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
-  const tax = subtotal * 0.085;
-  const total = subtotal + tax;
-
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-  const invoiceNumber = `INV-${faker.number.int({ min: 1000, max: 9999 })}`;
-  const issueDate = new Date();
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 30);
-
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Surat Penawaran #${idOfferingLetter}`,
+        title: `Delivery Order ${idDoLetter}`,
         author: "PT. Mitra Andalan Petroleum",
-        creator: "User",
+        creator: user.value?.name,
         producer: "PT. Mitra Andalan Petroleum",
       },
-      pageMargins: [40, 46, 40, 42],
+      pageMargins: [24, 15, 24, 15],
+      pageSize: "A4",
       content: [
         {
-          columns: [
-            [
-              { text: "INVOICE", style: "invoiceTitle" },
-              { text: "Acme Solutions Inc.", style: "companyName" },
-              {
-                text: "123 Market Street, Suite 400\nSan Francisco, CA 94105\nbilling@acme.example.com",
-                style: "companyAddress",
-              },
-            ],
-            {
-              width: "auto",
-              stack: [
-                {
-                  table: {
-                    widths: [68, 100],
-                    body: [
-                      [
-                        { text: "Invoice No.", style: "metaLabel" },
-                        { text: invoiceNumber, style: "metaValue" },
-                      ],
-                      [
-                        { text: "Issue Date", style: "metaLabel" },
-                        {
-                          text: issueDate.toLocaleDateString(),
-                          style: "metaValue",
-                        },
-                      ],
-                      [
-                        { text: "Due Date", style: "metaLabel" },
-                        {
-                          text: dueDate.toLocaleDateString(),
-                          style: "metaValue",
-                        },
-                      ],
-                      [
-                        { text: "Status", style: "metaLabel" },
-                        { text: "UNPAID", style: "statusBadge" },
-                      ],
-                    ],
-                  },
-                  layout: {
-                    hLineWidth: () => 0.5,
-                    vLineWidth: () => 0,
-                    hLineColor: () => "#e2e8f0",
-                    paddingTop: () => 6,
-                    paddingBottom: () => 6,
-                    paddingLeft: () => 0,
-                    paddingRight: () => 0,
-                  },
-                },
-              ],
-            },
-          ],
-          columnGap: 20,
-          marginBottom: 22,
-        },
-        {
-          columns: [
-            {
-              width: "*",
-              stack: [
-                { text: "BILL TO", style: "sectionLabel" },
-                { text: faker.person.fullName(), style: "clientName" },
-                { text: faker.company.name(), style: "clientDetail" },
-                {
-                  text: `${faker.location.streetAddress()}\n${faker.location.city()}, ${faker.location.state({ abbreviated: true })} ${faker.location.zipCode()}`,
-                  style: "clientDetail",
-                },
-                { text: faker.internet.email(), style: "clientEmail" },
-              ],
-            },
-            {
-              width: "*",
-              stack: [
-                { text: "PROJECT", style: "sectionLabel" },
-                { text: faker.commerce.productName(), style: "clientName" },
-                { text: "Professional Services", style: "clientDetail" },
-                {
-                  text: `Reference: REF-${faker.number.int({ min: 100, max: 999 })}`,
-                  style: "clientDetail",
-                },
-              ],
-            },
-          ],
-          columnGap: 20,
-          marginBottom: 20,
-        },
-        {
-          table: {
-            headerRows: 1,
-            widths: ["*", 50, 80, 80],
-            body: [
-              [
-                { text: "Description", style: "th" },
-                { text: "Qty", style: "th", alignment: "center" },
-                { text: "Rate", style: "th", alignment: "right" },
-                { text: "Amount", style: "th", alignment: "right" },
-              ],
-              ...lineItems.map(
-                (item) =>
-                  [
-                    {
-                      stack: [
-                        { text: item.description, style: "itemName" },
-                        { text: item.category, style: "itemCategory" },
-                      ],
-                    },
-                    {
-                      text: String(item.qty),
-                      alignment: "center" as const,
-                      style: "cell",
-                    },
-                    {
-                      text: fmt(item.rate),
-                      alignment: "right" as const,
-                      style: "cell",
-                    },
-                    {
-                      text: fmt(item.amount),
-                      alignment: "right" as const,
-                      style: "cell",
-                    },
-                  ] as const,
-              ),
-            ] as any,
-          },
           layout: {
-            fillColor: (rowIndex: number) =>
-              rowIndex === 0
-                ? "#0f172a"
-                : rowIndex % 2 === 0
-                  ? "#f8fafc"
-                  : null,
-            hLineWidth: (rowIndex: number) => (rowIndex === 0 ? 0 : 0.5),
-            vLineWidth: () => 0,
-            hLineColor: "#e2e8f0",
-            paddingBottom: () => 9,
-            paddingTop: () => 9,
-            paddingLeft: () => 10,
-            paddingRight: () => 10,
+            defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 1;
+            },
+            paddingTop: function (i) {
+              return 1;
+            },
+            fillColor: function (i) {
+              return null;
+            },
           },
-          marginBottom: 0,
-        },
-        {
           table: {
-            widths: ["*", 80],
+            widths: ["15%", "auto", "auto"],
             body: [
               [
-                { text: "Subtotal", style: "summaryLabel" },
-                { text: fmt(subtotal), style: "summaryValue" },
+                {
+                  image: await toBase64(logoImage),
+                  width: 40,
+                  alignment: "center",
+                  rowSpan: 4,
+                },
+                {
+                  text: "PT. MITRA ANDALAN PETROLEUM",
+                  style: {
+                    bold: true,
+                    fontSize: 20,
+                    color: "#14469b",
+                  },
+                  colSpan: 2,
+                },
+                {},
               ],
               [
-                { text: "Tax (8.5%)", style: "summaryLabel" },
-                { text: fmt(tax), style: "summaryValue" },
+                {},
+                {
+                  text: "Your Trusted Partner",
+                  style: {
+                    bold: true,
+                    italics: true,
+                    fontSize: 14,
+                    color: "#ff0000",
+                  },
+                  colSpan: 2,
+                },
+                {},
               ],
               [
-                { text: "Total Due", style: "totalLabel" },
-                { text: fmt(total), style: "totalValue" },
+                {},
+                {
+                  text: "Jl. D. I. Panjaitan No. 25 C-D, Samarinda 75117, Kalimantan Timur, Indonesia",
+                  colSpan: 2,
+                  fontSize: 8,
+                },
+                {},
+              ],
+              [
+                {},
+                {
+                  text: "0541-2832313",
+                  bold: true,
+                  italics: true,
+                  fontSize: 8,
+                },
+                {
+                  text: "Email: marketing.mapetroleum@email.com",
+                  bold: true,
+                  italics: true,
+                  marginRight: 60,
+                  fontSize: 8,
+                },
               ],
             ],
           },
-          layout: {
-            hLineWidth: (i: number) => (i === 2 ? 1.5 : 0.5),
-            vLineWidth: () => 0,
-            hLineColor: (i: number) => (i === 2 ? "#0f172a" : "#e2e8f0"),
-            paddingTop: () => 8,
-            paddingBottom: () => 8,
-            paddingLeft: () => 10,
-            paddingRight: () => 10,
-          },
-          marginBottom: 22,
         },
         {
-          columns: [
-            {
-              width: "*",
-              stack: [
-                { text: "PAYMENT TERMS", style: "sectionLabel" },
+          layout: {
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return [0, 1].includes(i) ? 0 : 2;
+            },
+            paddingTop: function (i) {
+              return [0, 1].includes(i) ? 0 : 2;
+            },
+            fillColor: function (i) {
+              return [0, 2].includes(i) ? "#1d82d1" : null;
+            },
+          },
+          table: {
+            widths: ["*", "*"],
+            body: [
+              [
                 {
-                  text: "Payment is due within 30 days of the invoice date. Late payments are subject to a 1.5% monthly finance charge.",
-                  style: "noteText",
+                  text: "",
+                  colSpan: 2,
+                },
+                {},
+              ],
+              [
+                {
+                  text: "INVOICE",
+                  style: {
+                    bold: true,
+                    fontSize: 18,
+                    alignment: "center",
+                  },
+                  border: [false, true, false, true],
+                  colSpan: 2,
+                },
+                {},
+              ],
+              [
+                {
+                  text: "Bill To",
+                  color: "#fff",
+                  bold: true,
+                },
+                {
+                  text: "Delivery Point",
+                  color: "#fff",
+                  bold: true,
                 },
               ],
-            },
-            {
-              width: "*",
-              stack: [
-                { text: "BANK TRANSFER DETAILS", style: "sectionLabel" },
+              [
                 {
-                  text:
-                    "Bank: First National Bank\nAccount: 1234-5678-9012\nRouting: 021000021\nRef: " +
-                    invoiceNumber,
-                  style: "noteText",
+                  text: "PT. BINA SARANA SUKSES\nPENJARINGAN, JAKARTA UTARA, LANDMARK PLUIT,\nJALAN PLUIT SELATAN RAYA KOMPLEK PERKANTORAN\nNo. D17, PLUIT, JAKARTA UTARA - 14450",
+                  bold: true,
+                  lineHeight: 1.25,
+                },
+                {
+                  text: "PT. BINA SARANA SUKSES\nTDM (PL02) - DS. MARANG KAYU,\nKEC. TENGGARONG, SEBERANG,\nKAB. KUKAR WORKSHOP BSS KM\n\n",
+                  bold: true,
+                  lineHeight: 1.25,
                 },
               ],
+            ],
+          },
+        },
+        {
+          layout: {
+            // defaultBorder: false,
+
+            paddingRight: function (i) {
+              return 2;
             },
-          ],
-          columnGap: 20,
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 2;
+            },
+            paddingTop: function (i) {
+              return 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["*", "*", "*", "*"],
+            body: [
+              [
+                {
+                  text: "Invoice No.",
+                  bold: true,
+                  alignment: "center",
+                  border: [true, false, true, true],
+                },
+                {
+                  text: "Invoice Date",
+                  bold: true,
+                  alignment: "center",
+                  border: [true, false, true, true],
+                },
+                {
+                  text: "No. DO",
+                  bold: true,
+                  alignment: "center",
+                  border: [true, false, true, true],
+                },
+                {
+                  text: "Customer PO No",
+                  bold: true,
+                  alignment: "center",
+                  border: [true, false, true, true],
+                },
+              ],
+              [
+                {
+                  text: "576/INV/MAP/2026",
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: formatDate(new Date()),
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: "1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1122/DO/MAP/VI/2026",
+
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: "1200020145",
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+              ],
+              [
+                {
+                  text: "Terms",
+                  bold: true,
+                  alignment: "center",
+                },
+                {
+                  text: "Due Date",
+                  bold: true,
+                  alignment: "center",
+                },
+                {
+                  text: "Tax No (Faktur Pajak)",
+                  bold: true,
+                  alignment: "center",
+                },
+                {
+                  text: "SO No",
+                  bold: true,
+                  alignment: "center",
+                },
+              ],
+              [
+                {
+                  text: "40 Days After Delivery",
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: formatDate(new Date()),
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: "04002600249829603",
+
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+                {
+                  text: "",
+                  verticalAlignment: "middle",
+                  alignment: "center",
+                },
+              ],
+            ],
+          },
+        },
+        {
+          marginTop: 10,
+          layout: {
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 2;
+            },
+            paddingTop: function (i) {
+              return 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["6%", "*", "*", "40%", "*", "*"],
+            body: [
+              [
+                {
+                  text: "ITEM",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+                  rowSpan: 2,
+                },
+                {
+                  text: "QUANTITY",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+
+                  colSpan: 2,
+                },
+                {},
+                {
+                  text: "DESCRIPTION",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+
+                  rowSpan: 2,
+                },
+                {
+                  text: "PRICE (IDR)",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+
+                  colSpan: 2,
+                },
+                {},
+              ],
+              [
+                {},
+                {
+                  text: "QTY",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+                },
+                {
+                  text: "UNIT",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+                },
+                {},
+                {
+                  text: "UNIT",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+                },
+                {
+                  text: "TOTAL",
+                  bold: true,
+                  alignment: "center",
+                  verticalAlignment: "middle",
+                },
+              ],
+            ],
+          },
+        },
+        {
+          layout: {
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 2;
+            },
+            paddingTop: function (i) {
+              return 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+            hLineWidth: function () {
+              return 0;
+            },
+          },
+          table: {
+            widths: ["6%", "*", "*", "40%", "*", "*"],
+            body: [
+              [
+                {
+                  text: "1",
+                  alignment: "center",
+                },
+                {
+                  text: "299.845",
+                  alignment: "center",
+                },
+                {
+                  text: "LITER",
+                  alignment: "center",
+                },
+                {
+                  text: "Extra Diesel B40",
+                  alignment: "left",
+                },
+                {
+                  text: "19.500,00",
+                  alignment: "right",
+                },
+                {
+                  text: "5.846.977.500",
+                  alignment: "right",
+                },
+              ],
+              [
+                {
+                  text: "",
+                  alignment: "center",
+                },
+                {
+                  text: "",
+                  alignment: "center",
+                },
+                {
+                  text: "",
+                  alignment: "center",
+                },
+                {
+                  text: "BIAYA TRANSPORT BBM",
+                  alignment: "left",
+                },
+                {
+                  text: "1.200,00",
+                  alignment: "right",
+                },
+                {
+                  text: "359.814.000",
+                  alignment: "right",
+                },
+              ],
+              [{}, {}, {}, {}, {}, {}],
+              [{}, {}, {}, {}, {}, {}],
+              [{}, {}, {}, {}, {}, {}],
+              [{}, {}, {}, {}, {}, {}],
+            ],
+          },
+        },
+        {
+          layout: {
+            // defaultBorder: false,
+            paddingRight: function (i) {
+              return 2;
+            },
+            paddingLeft: function (i) {
+              return 2;
+            },
+            paddingBottom: function (i) {
+              return 2;
+            },
+            paddingTop: function (i) {
+              return 2;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["6%", "*", "*", "40%", "*", "*"],
+            body: [
+              [
+                {
+                  text: useChangeCase(angkaTerbilang(6889538565), "capitalCase")
+                    .value,
+                  alignment: "center",
+                  colSpan: 4,
+                },
+                {},
+                {},
+                {},
+                {
+                  text: "Sub Total",
+                  bold: true,
+                  alignment: "left",
+                },
+                {
+                  text: "6.206.791.500",
+                  alignment: "right",
+                },
+              ],
+              [
+                {
+                  text: "",
+                  colSpan: 4,
+                  border: [false, false, false, false],
+                },
+                {},
+                {},
+                {},
+                {
+                  text: "Pre-Paid",
+                  bold: true,
+                  alignment: "left",
+                },
+                {
+                  text: "",
+                  alignment: "right",
+                },
+              ],
+              [
+                {
+                  text: "",
+                  colSpan: 4,
+                  border: [false, false, false, false],
+                },
+                {},
+                {},
+                {},
+                {
+                  text: "Diskon",
+                  bold: true,
+                  alignment: "left",
+                },
+                {
+                  text: "",
+                  alignment: "right",
+                },
+              ],
+              [
+                {
+                  text: "",
+                  colSpan: 4,
+                  border: [false, false, false, false],
+                },
+                {},
+                {},
+                {},
+                {
+                  text: "PPn",
+                  bold: true,
+                  alignment: "left",
+                },
+                {
+                  text: "682.747.065",
+                  alignment: "right",
+                },
+              ],
+              [
+                {
+                  text: "Term and Conditions:",
+                  bold: true,
+                  colSpan: 4,
+                  border: [false, false, false, false],
+                },
+                {},
+                {},
+                {},
+                {
+                  text: "Grand Total",
+                  bold: true,
+                  alignment: "left",
+                },
+                {
+                  text: "6.889.538.565",
+                  bold: true,
+                  alignment: "right",
+                },
+              ],
+            ],
+          },
+        },
+        {
+          marginLeft: 5,
+          layout: {
+            defaultBorder: false,
+            paddingRight: function (i) {
+              return 1;
+            },
+            paddingLeft: function (i) {
+              return 1;
+            },
+            paddingBottom: function (i) {
+              return 1;
+            },
+            paddingTop: function (i) {
+              return 1;
+            },
+            fillColor: function (i) {
+              return null;
+            },
+          },
+          table: {
+            widths: ["5%", "25%", "1%", "55%"],
+            body: [
+              [
+                {
+                  text: "1.",
+                  alignment: "center",
+                },
+                {
+                  text: "All check payable to",
+                  colSpan: 3,
+                },
+                {},
+                {},
+              ],
+              [
+                {
+                  text: "",
+                },
+                {
+                  text: "Bank Name",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                  bold: true,
+                },
+                {
+                  text: "MANDIRI - Cab Segiri",
+                  bold: true,
+                },
+              ],
+              [
+                {
+                  text: "",
+                },
+                {
+                  text: "Bank Account No",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                  bold: true,
+                },
+                {
+                  text: "1480002717776",
+                  bold: true,
+                },
+              ],
+              [
+                {
+                  text: "",
+                },
+                {
+                  text: "Acct Name",
+                  bold: true,
+                },
+                {
+                  text: ":",
+                  bold: true,
+                },
+                {
+                  text: "PT. MITRA ANDALAN PETROLEUM",
+                  bold: true,
+                },
+              ],
+              [
+                {
+                  text: "2.",
+                  alignment: "center",
+                },
+                {
+                  text: "If payment has no been received by the stated date of payment, penalty of 2% interest per month will be imposed",
+                  colSpan: 3,
+                },
+                {},
+                {},
+              ],
+              [
+                {
+                  text: "3.",
+                  alignment: "center",
+                },
+                {
+                  text: "Seller has the right to refuse / decline delivery if payment terms has not been met, and shall not be held responsible for any direct or indirect consequences arising thereafter",
+                  colSpan: 3,
+                },
+                {},
+                {},
+              ],
+              [
+                {
+                  text: "4.",
+                  alignment: "center",
+                },
+                {
+                  text: "Goods sold are not refundable",
+                  colSpan: 3,
+                },
+                {},
+                {},
+              ],
+              [
+                {
+                  text: "5.",
+                  alignment: "center",
+                },
+                {
+                  text: "Invoice will be considered PAID once seller has received full amount on the stated account",
+                  colSpan: 3,
+                },
+                {},
+                {},
+              ],
+              [
+                {
+                  text: "6.",
+                  alignment: "center",
+                },
+                {
+                  text: "MAP Contact Number Fin & Acct Officer : 08123456789",
+                  colSpan: 3,
+                },
+                {},
+                {},
+              ],
+            ],
+          },
+        },
+        {
+          text: "PT. MITRA ANDALAN PETROLEUM",
+          bold: true,
+          marginTop: 15,
+          marginBottom: 30,
+        },
+        {
+          marginTop: 30,
+          text: "Syannet",
+          bold: true,
+          decoration: "underline",
         },
       ],
       defaultStyle: {
-        color: "#1d293d",
+        color: "#000000",
         fontSize: 9,
-      },
-      styles: {
-        invoiceTitle: {
-          fontSize: 28,
-          bold: true,
-          color: "#0f172a",
-          characterSpacing: 2,
-          marginBottom: 8,
-        },
-        companyName: {
-          fontSize: 11,
-          bold: true,
-          color: "#0f172a",
-          marginBottom: 3,
-        },
-        companyAddress: {
-          color: "#64748b",
-          lineHeight: 1.4,
-        },
-        metaLabel: {
-          color: "#64748b",
-          fontSize: 8,
-        },
-        metaValue: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 8,
-        },
-        statusBadge: {
-          bold: true,
-          color: "#dc2626",
-          fontSize: 8,
-        },
-        sectionLabel: {
-          fontSize: 7,
-          color: "#94a3b8",
-          bold: true,
-          characterSpacing: 1,
-          marginBottom: 5,
-        },
-        clientName: {
-          fontSize: 11,
-          bold: true,
-          color: "#0f172a",
-          marginBottom: 2,
-        },
-        clientDetail: {
-          color: "#475569",
-          lineHeight: 1.4,
-        },
-        clientEmail: {
-          color: "#0084d1",
-          decoration: "underline",
-        },
-        th: {
-          bold: true,
-          color: "#ffffff",
-          fontSize: 8,
-        },
-        itemName: {
-          bold: true,
-          color: "#0f172a",
-        },
-        itemCategory: {
-          color: "#64748b",
-          fontSize: 8,
-          marginTop: 2,
-        },
-        cell: {
-          color: "#475569",
-        },
-        summaryLabel: {
-          color: "#475569",
-          alignment: "right",
-        },
-        summaryValue: {
-          color: "#475569",
-          alignment: "right",
-        },
-        totalLabel: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 11,
-          alignment: "right",
-        },
-        totalValue: {
-          bold: true,
-          color: "#0f172a",
-          fontSize: 11,
-          alignment: "right",
-        },
-        noteText: {
-          color: "#64748b",
-          lineHeight: 1.4,
-        },
       },
     })
     .getDataUrl();
