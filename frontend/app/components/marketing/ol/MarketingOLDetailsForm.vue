@@ -12,13 +12,48 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingOLDetailsState>({ required: true });
 
-const totalFuelPrices = computed(() => {
+const calculatePpkbPercent = computed(() => {
   return (
-    (state.value.fuelPrices?.sellingPrice.ppkb ?? 0) +
-    (state.value.fuelPrices?.sellingPrice.oat ?? 0) +
-    (state.value.fuelPrices?.ppn ?? 0)
+    state.value.fuelPrices.basePrice * state.value.fuelPrices.percentageNum.ppkb
   );
 });
+
+const calculateOatPercent = computed(() => {
+  return (
+    state.value.fuelPrices.basePrice * state.value.fuelPrices.percentageNum.oat
+  );
+});
+
+const calculatePpnPercent = computed(() => {
+  return (
+    state.value.fuelPrices.basePrice * state.value.fuelPrices.percentageNum.ppn
+  );
+});
+
+const totalFuelPrices = computed(() => {
+  return (
+    calculatePpkbPercent.value +
+    calculateOatPercent.value +
+    calculatePpnPercent.value +
+    state.value.fuelPrices.basePrice
+  );
+});
+
+watch(
+  [
+    calculatePpkbPercent,
+    calculateOatPercent,
+    calculatePpnPercent,
+    totalFuelPrices,
+  ],
+  ([ppkb, oat, ppn, total]) => {
+    state.value.fuelPrices.sellingPrice.ppkb = ppkb;
+    state.value.fuelPrices.sellingPrice.oat = oat;
+    state.value.fuelPrices.sellingPrice.ppn = ppn;
+    state.value.fuelPrices.totalPrice = total;
+  },
+  { immediate: true },
+);
 
 function previous() {
   emit("previous");
@@ -218,13 +253,79 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
         </UFormField>
       </div>
 
+      <UFormField name="basePrice" label="Harga Dasar Solar" required>
+        <UInputNumber
+          :ui="{
+            root: 'w-full',
+          }"
+          v-model="state.fuelPrices.basePrice"
+          :increment="false"
+          :decrement="false"
+          :format-options="{
+            style: 'currency',
+            currency: 'IDR',
+            currencyDisplay: 'narrowSymbol',
+            currencySign: 'standard',
+          }"
+        />
+      </UFormField>
+
+      <div class="flex w-full gap-4">
+        <UFormField name="percentagePpkb" label="Persentase PPKB" required>
+          <UInputNumber
+            :ui="{
+              root: 'w-full',
+            }"
+            v-model="state.fuelPrices.percentageNum.ppkb"
+            orientation="vertical"
+            :step="0.001"
+            :format-options="{
+              style: 'percent',
+              minimumFractionDigits: 1,
+            }"
+          />
+        </UFormField>
+
+        <UFormField name="percentageOat" label="Persentase OAT" required>
+          <UInputNumber
+            :ui="{
+              root: 'w-full',
+            }"
+            v-model="state.fuelPrices.percentageNum.oat"
+            orientation="vertical"
+            :step="0.001"
+            :format-options="{
+              style: 'percent',
+              minimumFractionDigits: 1,
+            }"
+          />
+        </UFormField>
+      </div>
+
+      <UFormField name="percentagePpn" label="Persentase PPN" required>
+        <UInputNumber
+          :ui="{
+            root: 'w-full',
+          }"
+          v-model="state.fuelPrices.percentageNum.ppn"
+          orientation="vertical"
+          :step="0.001"
+          :format-options="{
+            style: 'percent',
+            minimumFractionDigits: 1,
+          }"
+        />
+      </UFormField>
+
+      <USeparator />
+
       <div class="flex w-full gap-4">
         <UFormField name="ppkb" label="PPKB" required>
           <UInputNumber
             :ui="{
               root: 'w-full',
             }"
-            v-model="state.fuelPrices.sellingPrice.ppkb"
+            :model-value="calculatePpkbPercent"
             :increment="false"
             :decrement="false"
             :format-options="{
@@ -233,6 +334,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
               currencyDisplay: 'narrowSymbol',
               currencySign: 'standard',
             }"
+            disabled
           />
         </UFormField>
 
@@ -241,7 +343,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
             :ui="{
               root: 'w-full',
             }"
-            v-model="state.fuelPrices.sellingPrice.oat"
+            :model-value="calculateOatPercent"
             :increment="false"
             :decrement="false"
             :format-options="{
@@ -250,6 +352,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
               currencyDisplay: 'narrowSymbol',
               currencySign: 'standard',
             }"
+            disabled
           />
         </UFormField>
       </div>
@@ -264,7 +367,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
           :ui="{
             root: 'w-full',
           }"
-          v-model="state.fuelPrices.ppn"
+          :model-value="calculatePpnPercent"
           :increment="false"
           :decrement="false"
           :format-options="{
@@ -273,6 +376,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
             currencyDisplay: 'narrowSymbol',
             currencySign: 'standard',
           }"
+          disabled
         />
       </UFormField>
 
