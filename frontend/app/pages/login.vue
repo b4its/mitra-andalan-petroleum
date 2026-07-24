@@ -7,7 +7,7 @@ const router = useRouter();
 const { setUser } = useAuth();
 
 const schema = z.object({
-  email: z.string().email("Invalid email"),
+  email: z.email("Invalid email"),
   password: z.string().min(6, "Must be at least 6 characters"),
 });
 
@@ -56,6 +56,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
   setUser({
     email: account.email,
+    password: account.password,
     name: account.name,
     role: account.role,
     token: `dummy-token-${Date.now()}`,
