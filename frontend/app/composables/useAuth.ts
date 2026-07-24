@@ -3,6 +3,7 @@ export type Role = "admin" | "operations" | "marketing" | "finance";
 export interface AuthUser {
   name: string;
   email: string;
+  password: string;
   role: Role;
   token: string;
   loggedInAt: string;
