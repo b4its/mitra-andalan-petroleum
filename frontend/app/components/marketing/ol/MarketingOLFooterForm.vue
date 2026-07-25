@@ -59,6 +59,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
 
       <UFormField name="offerorSignature" label="Tanda Tangan" required>
         <UFileUpload
+          v-model="state.offeror.signature"
           label="Upload File Tanda Tangan"
           description="Format file .png dengan max 2MB"
         />
