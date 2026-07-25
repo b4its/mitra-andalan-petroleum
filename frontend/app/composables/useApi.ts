@@ -5,6 +5,7 @@ import type {
 } from "~/types";
 
 const API_BASE = "http://localhost:8000/api/v1";
+const API_BASE_POST = "/api/v1";
 
 export function useApi() {
   async function get<T>(
@@ -24,8 +25,8 @@ export function useApi() {
     return res.json();
   }
 
-  async function post<T>(path: string, body: any): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
+  async function post<T, U>(path: string, body: U): Promise<T> {
+    const res = await fetch(`${API_BASE_POST}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

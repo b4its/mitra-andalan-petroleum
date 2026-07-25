@@ -14,6 +14,15 @@ export default defineNuxtConfig({
     },
   },
 
+  nitro: {
+    devProxy: {
+      "/api/v1": {
+        target: "http://localhost:8000/api/v1",
+        changeOrigin: true,
+      },
+    },
+  },
+
   compatibilityDate: "2026-06-30",
 
   eslint: {

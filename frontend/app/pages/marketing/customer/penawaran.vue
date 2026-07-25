@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
+import type { OfferingLetterPost } from "~/types/marketing";
 import {
   type MarketingOLDetailsState,
   type MarketingOLFooterState,
@@ -62,7 +63,7 @@ const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: 30,
   offeror: {
     name: "Stenly Boseke",
-    signature: "map-signature.png",
+    signature: undefined,
   },
   companyInformation: {
     address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
@@ -85,9 +86,26 @@ function onDetailsSubmit() {
   stepper.value?.next();
 }
 
-function onFooterSubmit() {
-  console.log("Data submitted");
-  console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
+const toast = useToast();
+const { post } = useApi();
+
+async function onFooterSubmit() {
+  try {
+    const res = await post<any, OfferingLetterPost>("/offering-letters", {
+      customer_id: letterHeader.receiver,
+      date: letterHeader.date,
+      location: letterHeader.location,
+      offering_letter_number: letterHeader.offeringLetterNumber,
+      regarding: letterHeader.regarding,
+      receiver: letterHeader.receiver,
+      status: "created",
+      transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
+      fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
+    });
+    console.log(res);
+  } catch (e: any) {
+    toast.add({ title: "Error", description: e.message, color: "error" });
+  }
 }
 
 definePageMeta({ layout: "marketing" });

@@ -1,3 +1,15 @@
+export interface OfferingLetterPost {
+  offering_letter_number: string;
+  customer_id: string;
+  location: string | null;
+  date: string | null;
+  regarding: string | null;
+  receiver: string | null;
+  fuel_total_price: number;
+  transport_price: number;
+  status: string;
+}
+
 export interface OfferingLetters {
   id: string;
   offering_letter_number: string;
