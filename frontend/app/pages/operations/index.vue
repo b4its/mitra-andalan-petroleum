@@ -27,6 +27,10 @@ const range = shallowRef<Range>({
 const period = ref<Period>("daily");
 
 definePageMeta({ layout: "operations" });
+
+function setNotificationsSlideoverOpen(value: boolean) {
+  isNotificationsSlideoverOpen.value = value;
+}
 </script>
 
 <template>
@@ -43,11 +47,11 @@ definePageMeta({ layout: "operations" });
               color="neutral"
               variant="ghost"
               square
-              @click="isNotificationsSlideoverOpen = true"
+              @click="setNotificationsSlideoverOpen(true)"
             >
-              <UChip color="error" inset>
-                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
+              <!-- <UChip color="error" inset> -->
+              <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
+              <!-- </UChip> -->
             </UButton>
           </UTooltip>
 
