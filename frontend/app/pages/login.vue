@@ -48,14 +48,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       password: event.data.password,
     });
 
-    // setUser({
-    //   email: result.email,
-    //   name: result.name,
-    //   password: result.password,
-    //   role: result.role as any,
-    //   token: result.token,
-    //   loggedInAt: result.logged_in_at,
-    // });
+    setUser({
+      email: result.email,
+      name: result.name,
+      password: event.data.password,
+      role: result.role as Role,
+      token: result.token,
+      loggedInAt: result.logged_in_at,
+    });
 
     toast.add({
       title: "Logged in",
