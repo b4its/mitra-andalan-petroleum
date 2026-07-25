@@ -2,14 +2,22 @@ import type { AvatarProps } from "@nuxt/ui";
 
 export type UserStatus = "subscribed" | "unsubscribed" | "bounced";
 export type SaleStatus = "paid" | "failed" | "refunded";
+export type Role = "admin" | "operations" | "marketing" | "finance";
 
-export interface User {
-  id: number;
+export interface AuthUser {
   name: string;
   email: string;
-  avatar?: AvatarProps;
-  status: UserStatus;
-  location: string;
+  password: string;
+  role: Role;
+  token: string;
+  loggedInAt: string;
+}
+
+export interface DummyAccount {
+  email: string;
+  password: string;
+  role: Role;
+  name: string;
 }
 
 export interface Mail {

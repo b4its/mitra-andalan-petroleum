@@ -1,12 +1,3 @@
-export type Role = "admin" | "operations" | "marketing" | "finance";
-
-export interface DummyAccount {
-  email: string;
-  password: string;
-  role: Role;
-  name: string;
-}
-
 export const dummyAccounts: DummyAccount[] = [
   {
     email: "admin@email.com",
