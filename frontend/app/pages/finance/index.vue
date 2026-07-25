@@ -2,6 +2,7 @@
 import { sub } from "date-fns";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import type { Period, Range } from "~/types";
+import type { Notifications } from "~/types/notification";
 
 const { isNotificationsSlideoverOpen } = useDashboard();
 
@@ -26,11 +27,21 @@ const range = shallowRef<Range>({
 });
 const period = ref<Period>("daily");
 
-definePageMeta({ layout: "finance" });
+const { get } = useApi();
+const { data: financeNotif } = await useAsyncData(
+  "notifications",
+  async () => {
+    const res = await get<Notifications[]>("/notifications");
+    return res;
+  },
+  { default: () => [] },
+);
 
 function setNotificationsSlideoverOpen(value: boolean) {
   isNotificationsSlideoverOpen.value = value;
 }
+
+definePageMeta({ layout: "finance" });
 </script>
 
 <template>
@@ -85,4 +96,6 @@ function setNotificationsSlideoverOpen(value: boolean) {
       <!-- <FinanceTable :period="period" :range="range" /> -->
     </template>
   </UDashboardPanel>
+
+  <NotificationsSlideover :notifications="financeNotif" />
 </template>
