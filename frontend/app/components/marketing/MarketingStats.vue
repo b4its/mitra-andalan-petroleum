@@ -1,22 +1,27 @@
 <script setup lang="ts">
 import type { Period, Range, Stat } from "~/types";
+import type { Stats } from "~/types/stats";
 
 const props = defineProps<{
   period: Period;
   range: Range;
 }>();
 
-const { data: stats } = await useAsyncData<Stat[]>("marketing-stats", async () => {
-  const { get } = useApi()
-  const res = await get<{ stats: any[] }>("/stats/marketing")
-  return (res.stats || []).map((s: any) => ({
-    title: s.title,
-    icon: s.icon,
-    value: s.value,
-    variation: s.variation,
-    to: s.to,
-  }))
-}, { watch: [() => props.period, () => props.range], default: () => [] })
+const { data: stats } = await useAsyncData<Stats[]>(
+  "marketing-stats",
+  async () => {
+    const { get } = useApi();
+    const res = await get<{ stats: Stats[] }>("/stats/marketing");
+    return (res.stats || []).map((s: any) => ({
+      title: s.title,
+      icon: s.icon,
+      value: s.value,
+      variation: s.variation,
+      to: s.to,
+    }));
+  },
+  { watch: [() => props.period, () => props.range], default: () => [] },
+);
 </script>
 
 <template>
