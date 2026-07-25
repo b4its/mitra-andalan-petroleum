@@ -91,7 +91,7 @@ export const marketingOLFooterSchema = z.object({
   purchaseOrderDeadline: z.number(),
   offeror: z.object({
     name: z.string(),
-    signature: z.string(),
+    signature: z.file().optional(),
   }),
   companyInformation: z.object({
     address: z.string(),
