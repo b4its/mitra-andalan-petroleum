@@ -49,9 +49,10 @@ definePageMeta({ layout: "marketing" });
               square
               @click="setNotificationsSlideoverOpen(true)"
             >
-              <UChip color="error" inset>
+              <!-- <UChip color="error" inset>
                 <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
+              </UChip> -->
+              <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
             </UButton>
           </UTooltip>
 
