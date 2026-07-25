@@ -3,6 +3,7 @@ import { getPaginationRowModel } from "@tanstack/vue-table";
 import { h, resolveComponent } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import type { OperationsDeliveryOrderOverview } from "~/types";
+import type { DeliveryOrders } from "~/types/operations";
 
 const UBadge = resolveComponent("UBadge");
 const UButton = resolveComponent("UButton");
@@ -14,17 +15,20 @@ const { get } = useApi();
 const { data: DoData } = await useAsyncData(
   "delivery-orders",
   async () => {
-    const res = await get<{ items: any[] }>("/delivery-orders", { page: 1, page_size: 50 })
-    return (res.items || []).map((d: any) => ({
+    const res = await get<{ items: DeliveryOrders[] }>("/delivery-orders", {
+      page: 1,
+      page_size: 50,
+    });
+    return (res.items || []).map((d: DeliveryOrders) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
       customerName: d.customer_name,
       purchaseOrderNumber: d.po_number,
       transportName: d.transport_name,
-      dateCreated: d.created_at,
-      dateChanged: d.updated_at,
+      dateCreated: d.created_at.toString(),
+      dateChanged: d.updated_at.toString(),
       status: d.status,
-    }))
+    }));
   },
   { default: () => [] },
 );
@@ -59,9 +63,18 @@ const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const color = { created: "info" as const, document_returned: "success" as const }[row.getValue("status") as string];
-      const label = { created: "Dibuat", document_returned: "Dokumen Kembali" }[row.getValue("status") as string];
-      return h(UBadge, { class: "capitalize", variant: "soft", color }, () => label);
+      const color = {
+        created: "info" as const,
+        document_returned: "success" as const,
+      }[row.getValue("status") as string];
+      const label = { created: "Dibuat", document_returned: "Dokumen Kembali" }[
+        row.getValue("status") as string
+      ];
+      return h(
+        UBadge,
+        { class: "capitalize", variant: "soft", color },
+        () => label,
+      );
     },
   },
   {
@@ -94,8 +107,11 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
       <template #actions-cell="{ row }">
         <UButton
           :to="`/operations/detail/delivery-order-${row.original.id}`"
-          variant="solid" size="md" color="primary"
-        >Detail</UButton>
+          variant="solid"
+          size="md"
+          color="primary"
+          >Detail</UButton
+        >
       </template>
     </UTable>
 

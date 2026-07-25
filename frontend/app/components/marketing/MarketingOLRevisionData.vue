@@ -3,6 +3,7 @@ import { getPaginationRowModel } from "@tanstack/vue-table";
 import { h, resolveComponent } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import type { MarketingOfferingLetterOverview } from "~/types";
+import type { OfferingLetters } from "~/types/marketing";
 
 const UBadge = resolveComponent("UBadge");
 const UButton = resolveComponent("UButton");
@@ -14,21 +15,22 @@ const columnPinning = ref({
 const { get } = useApi();
 
 const { data: OlData } = await useAsyncData(
-  "offering-letters-revision",
+  "offering-letters",
   async () => {
-    const res = await get<{ items: any[] }>("/offering-letters", { page: 1, page_size: 50 })
-    return (res.items || [])
-      .filter((ol: any) => ol.status === "under_revision")
-      .map((ol: any) => ({
-        id: ol.id,
-        offeringLetterNumber: ol.offering_letter_number,
-        customerName: ol.customer_name,
-        fuelTotalPrice: ol.fuel_total_price,
-        transportPrice: ol.transport_price,
-        dateCreated: ol.created_at,
-        dateChanged: ol.updated_at,
-        status: ol.status,
-      }))
+    const res = await get<{ items: OfferingLetters[] }>("/offering-letters", {
+      page: 1,
+      page_size: 50,
+    });
+    return res.items.map((ol: OfferingLetters) => ({
+      id: ol.id,
+      offeringLetterNumber: ol.offering_letter_number,
+      customerName: ol.customer_name,
+      fuelTotalPrice: ol.fuel_total_price,
+      transportPrice: ol.transport_price,
+      dateCreated: ol.created_at.toString(),
+      dateChanged: ol.updated_at.toString(),
+      status: ol.status,
+    }));
   },
   {
     default: () => [],
@@ -80,7 +82,11 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
         under_revision: "Penawaran Dalam Revisi",
         po_received: "PO Diterima",
       }[row.getValue("status") as string];
-      return h(UBadge, { class: "capitalize", variant: "soft", color }, () => status);
+      return h(
+        UBadge,
+        { class: "capitalize", variant: "soft", color },
+        () => status,
+      );
     },
   },
   {
@@ -117,12 +123,18 @@ const pagination = ref({
         <div class="flex items-center gap-2">
           <UButton
             :to="`/marketing/customer/surat-penawaran-${row.original.id}`"
-            variant="solid" size="md" color="primary"
-          >Lihat Surat</UButton>
+            variant="solid"
+            size="md"
+            color="primary"
+            >Lihat Surat</UButton
+          >
           <UButton
             :to="`/marketing/customer/revisi-surat-penawaran-${row.original.id}`"
-            variant="soft" size="md" color="neutral"
-          >Revisi Penawaran</UButton>
+            variant="soft"
+            size="md"
+            color="neutral"
+            >Revisi Penawaran</UButton
+          >
         </div>
       </template>
     </UTable>

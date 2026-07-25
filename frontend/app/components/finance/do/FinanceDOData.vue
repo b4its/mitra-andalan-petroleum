@@ -3,6 +3,7 @@ import { getPaginationRowModel } from "@tanstack/vue-table";
 import { h, resolveComponent } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import type { OperationsDeliveryOrderOverview } from "~/types";
+import type { FinanceDeliveryOrders } from "~/types/finance";
 
 const UBadge = resolveComponent("UBadge");
 const UButton = resolveComponent("UButton");
@@ -14,18 +15,21 @@ const { get } = useApi();
 const { data: DoData } = await useAsyncData(
   "finance-delivery-orders",
   async () => {
-    const res = await get<{ items: any[] }>("/delivery-orders", {
-      page: 1,
-      page_size: 50,
-    });
-    return (res.items || []).map((d: any) => ({
+    const res = await get<{ items: FinanceDeliveryOrders[] }>(
+      "/delivery-orders",
+      {
+        page: 1,
+        page_size: 50,
+      },
+    );
+    return res.items.map((d: FinanceDeliveryOrders) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
       customerName: d.customer_name,
       purchaseOrderNumber: d.po_number,
       transportName: d.transport_name,
-      dateCreated: d.created_at,
-      dateChanged: d.updated_at,
+      dateCreated: d.created_at.toString(),
+      dateChanged: d.updated_at.toString(),
       status: d.status,
     }));
   },

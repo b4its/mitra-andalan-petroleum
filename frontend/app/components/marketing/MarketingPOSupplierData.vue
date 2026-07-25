@@ -3,6 +3,7 @@ import { getPaginationRowModel } from "@tanstack/vue-table";
 import { h, resolveComponent } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import type { MarketingOfferingLetterOverview } from "~/types";
+import type { PurchaseOrdersSupplier } from "~/types/marketing";
 
 const UBadge = resolveComponent("UBadge");
 const UButton = resolveComponent("UButton");
@@ -14,17 +15,20 @@ const { get } = useApi();
 const { data: PoData } = await useAsyncData(
   "purchase-orders-supplier",
   async () => {
-    const res = await get<{ items: any[] }>("/purchase-orders", { page: 1, page_size: 50, type: "supplier" })
-    return (res.items || []).map((po: any) => ({
-      id: po.id,
-      offeringLetterNumber: po.po_number,
-      customerName: po.supplier_name,
-      fuelTotalPrice: po.total,
+    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
+      "/purchase-orders",
+      { page: 1, page_size: 50, type: "supplier" },
+    );
+    return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
+      id: purchaseOrder.id,
+      offeringLetterNumber: purchaseOrder.po_number,
+      customerName: purchaseOrder.supplier_name,
+      fuelTotalPrice: purchaseOrder.total,
       transportPrice: 0,
-      dateCreated: po.created_at,
-      dateChanged: po.updated_at,
-      status: po.status,
-    }))
+      dateCreated: purchaseOrder.created_at.toString(),
+      dateChanged: purchaseOrder.updated_at.toString(),
+      status: purchaseOrder.status,
+    }));
   },
   { default: () => [] },
 );
@@ -81,8 +85,11 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
         <div class="flex items-center gap-2">
           <UButton
             :to="`/marketing/detail-supplier/po-supplier-${row.original.id}`"
-            variant="solid" size="md" color="primary"
-          >Lihat Surat</UButton>
+            variant="solid"
+            size="md"
+            color="primary"
+            >Lihat Surat</UButton
+          >
         </div>
       </template>
     </UTable>

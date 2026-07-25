@@ -3,6 +3,7 @@ import { getPaginationRowModel } from "@tanstack/vue-table";
 import { h, resolveComponent } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import type { FinanceInvoiceOverview } from "~/types";
+import type { Invoices } from "~/types/finance";
 
 const UBadge = resolveComponent("UBadge");
 const UButton = resolveComponent("UButton");
@@ -14,17 +15,20 @@ const { get } = useApi();
 const { data: InvoiceData } = await useAsyncData(
   "invoices",
   async () => {
-    const res = await get<{ items: any[] }>("/invoices", { page: 1, page_size: 50 })
-    return (res.items || []).map((inv: any) => ({
+    const res = await get<{ items: Invoices[] }>("/invoices", {
+      page: 1,
+      page_size: 50,
+    });
+    return res.items.map((inv: Invoices) => ({
       id: inv.id,
       invoiceNumber: inv.invoice_number,
       customerName: inv.customer_name,
       termsDay: inv.terms_day,
-      dateCreated: inv.created_at,
+      dateCreated: inv.created_at.toString(),
       grandTotal: inv.grand_total,
       invoiceStatus: inv.invoice_status,
       deadlineStatus: inv.deadline_status,
-    }))
+    }));
   },
   { default: () => [] },
 );
@@ -54,18 +58,42 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
     accessorKey: "invoiceStatus",
     header: "Status Invoice",
     cell: ({ row }) => {
-      const color = { unpaid: "warning" as const, paid: "success" as const, overdue: "error" as const }[row.getValue("invoiceStatus") as string];
-      const label = { unpaid: "Belum Lunas", paid: "Lunas", overdue: "Jatuh Tempo" }[row.getValue("invoiceStatus") as string];
-      return h(UBadge, { class: "capitalize", variant: "soft", color }, () => label);
+      const color = {
+        unpaid: "warning" as const,
+        paid: "success" as const,
+        overdue: "error" as const,
+      }[row.getValue("invoiceStatus") as string];
+      const label = {
+        unpaid: "Belum Lunas",
+        paid: "Lunas",
+        overdue: "Jatuh Tempo",
+      }[row.getValue("invoiceStatus") as string];
+      return h(
+        UBadge,
+        { class: "capitalize", variant: "soft", color },
+        () => label,
+      );
     },
   },
   {
     accessorKey: "deadlineStatus",
     header: "Tenggat",
     cell: ({ row }) => {
-      const color = { on_time: "info" as const, due_soon: "warning" as const, overdue: "error" as const }[row.getValue("deadlineStatus") as string];
-      const label = { on_time: "Tepat Waktu", due_soon: "Segera", overdue: "Terlewat" }[row.getValue("deadlineStatus") as string];
-      return h(UBadge, { class: "capitalize", variant: "soft", color }, () => label);
+      const color = {
+        on_time: "info" as const,
+        due_soon: "warning" as const,
+        overdue: "error" as const,
+      }[row.getValue("deadlineStatus") as string];
+      const label = {
+        on_time: "Tepat Waktu",
+        due_soon: "Segera",
+        overdue: "Terlewat",
+      }[row.getValue("deadlineStatus") as string];
+      return h(
+        UBadge,
+        { class: "capitalize", variant: "soft", color },
+        () => label,
+      );
     },
   },
   {
@@ -98,8 +126,11 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
       <template #actions-cell="{ row }">
         <UButton
           :to="`/finance/detail/invoice-${row.original.id}`"
-          variant="solid" size="md" color="primary"
-        >Detail</UButton>
+          variant="solid"
+          size="md"
+          color="primary"
+          >Detail</UButton
+        >
       </template>
     </UTable>
 
