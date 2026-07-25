@@ -1,14 +1,3 @@
-export type Role = "admin" | "operations" | "marketing" | "finance";
-
-export interface AuthUser {
-  name: string;
-  email: string;
-  password: string;
-  role: Role;
-  token: string;
-  loggedInAt: string;
-}
-
 export function useAuth() {
   const user = ref<AuthUser | null>(null);
 
