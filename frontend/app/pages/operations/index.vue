@@ -2,6 +2,7 @@
 import { sub } from "date-fns";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import type { Period, Range } from "~/types";
+import type { Notifications } from "~/types/notification";
 
 const { isNotificationsSlideoverOpen } = useDashboard();
 
@@ -26,11 +27,21 @@ const range = shallowRef<Range>({
 });
 const period = ref<Period>("daily");
 
-definePageMeta({ layout: "operations" });
+const { get } = useApi();
+const { data: opsNotif } = await useAsyncData(
+  "notifications",
+  async () => {
+    const res = await get<Notifications[]>("/notifications");
+    return res;
+  },
+  { default: () => [] },
+);
 
 function setNotificationsSlideoverOpen(value: boolean) {
   isNotificationsSlideoverOpen.value = value;
 }
+
+definePageMeta({ layout: "operations" });
 </script>
 
 <template>
@@ -83,4 +94,6 @@ function setNotificationsSlideoverOpen(value: boolean) {
       <!-- <OperationsTable :period="period" :range="range" /> -->
     </template>
   </UDashboardPanel>
+
+  <NotificationsSlideover :notifications="opsNotif" />
 </template>

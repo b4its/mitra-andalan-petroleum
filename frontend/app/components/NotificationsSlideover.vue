@@ -1,25 +1,11 @@
 <script setup lang="ts">
 import type { Notifications } from "~/types/notification";
 
-const { isNotificationsSlideoverOpen } = useDashboard();
-const { get } = useApi();
+defineProps<{
+  notifications: Notifications[];
+}>();
 
-const { data: notifications } = await useAsyncData(
-  "notifications",
-  async () => {
-    const res = await get<Notifications[]>("/notifications");
-    return (res || []).map((notif: Notifications) => ({
-      id: notif.id,
-      sender: {
-        name: notif.title,
-        avatar: { src: "", alt: notif.title },
-      },
-      body: notif.message,
-      date: notif.created_at,
-    }));
-  },
-  { default: () => [] },
-);
+const { isNotificationsSlideoverOpen } = useDashboard();
 </script>
 
 <template>
@@ -38,16 +24,20 @@ const { data: notifications } = await useAsyncData(
         <div @click="" class="text-sm flex-1">
           <p class="flex items-center justify-between">
             <span class="text-highlighted font-medium">{{
-              notification.sender.name
+              notification.title
             }}</span>
             <time
-              :datetime="formatDate(notification.date)"
+              :datetime="formatDate(notification.created_at)"
               class="text-muted text-xs"
             >
-              {{ notification.date ? formatDate(notification.date) : "" }}
+              {{
+                notification.created_at
+                  ? formatDate(notification.created_at)
+                  : ""
+              }}
             </time>
           </p>
-          <p class="text-dimmed">{{ notification.body }}</p>
+          <p class="text-dimmed">{{ notification.message }}</p>
         </div>
       </NuxtLink>
     </template>

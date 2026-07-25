@@ -76,7 +76,5 @@ const links = [
     </UDashboardSidebar>
 
     <slot />
-
-    <NotificationsSlideover />
   </UDashboardGroup>
 </template>

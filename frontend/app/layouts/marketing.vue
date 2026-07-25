@@ -99,6 +99,6 @@ const links = [
 
     <slot />
 
-    <NotificationsSlideover />
+    <!-- <NotificationsSlideover /> -->
   </UDashboardGroup>
 </template>
