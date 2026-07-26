@@ -1,3 +1,6 @@
+import json
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +18,14 @@ from app.schemas.delivery_order import (
 router = APIRouter()
 
 
+def _details_to_str(details: dict[str, Any] | None) -> str | None:
+    return json.dumps(details) if details else None
+
+
+def _details_from_str(details: str | None) -> dict[str, Any] | None:
+    return json.loads(details) if details else None
+
+
 async def _get_customer_name(db, customer_id):
     if not customer_id:
         return ""
@@ -29,11 +40,17 @@ def _to_response(do, customer_name):
         customer_id=do.customer_id, customer_name=customer_name,
         po_number=do.po_number, transport_name=do.transport_name,
         fuel_total=do.fuel_total, status=do.status,
+        details=_details_from_str(do.details),
         created_at=do.created_at, updated_at=do.updated_at,
     )
 
 
-@router.get("/delivery-orders", response_model=PaginatedResponse[DeliveryOrderResponse])
+@router.get(
+    "/delivery-orders",
+    response_model=PaginatedResponse[DeliveryOrderResponse],
+    summary="List delivery orders",
+    description="Daftar delivery order dengan pagination. Menyertakan nama customer.",
+)
 async def list_delivery_orders(
     page: int = 1, page_size: int = 20, db: AsyncSession = Depends(get_db)
 ):
@@ -51,7 +68,12 @@ async def list_delivery_orders(
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
 
-@router.get("/delivery-orders/{id}", response_model=DeliveryOrderResponse)
+@router.get(
+    "/delivery-orders/{id}",
+    response_model=DeliveryOrderResponse,
+    summary="Detail delivery order",
+    description="Detail DO termasuk field `details` JSON.",
+)
 async def get_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
@@ -61,9 +83,17 @@ async def get_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     return _to_response(do, cn)
 
 
-@router.post("/delivery-orders", response_model=DeliveryOrderResponse, status_code=201)
+@router.post(
+    "/delivery-orders",
+    response_model=DeliveryOrderResponse,
+    status_code=201,
+    summary="Buat delivery order",
+    description="Membuat DO baru. Field `details` untuk data form frontend (driverInfo, fuelDelivery, dll).",
+)
 async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = Depends(get_db)):
-    do = DeliveryOrder(**body.model_dump())
+    data = body.model_dump()
+    data["details"] = _details_to_str(data.pop("details", None))
+    do = DeliveryOrder(**data)
     db.add(do)
     await db.flush()
     await db.refresh(do)
@@ -71,13 +101,20 @@ async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = De
     return _to_response(do, cn)
 
 
-@router.put("/delivery-orders/{id}", response_model=DeliveryOrderResponse)
+@router.put(
+    "/delivery-orders/{id}",
+    response_model=DeliveryOrderResponse,
+    summary="Update delivery order",
+    description="Update DO (status, details, dll).",
+)
 async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Not found")
     for key, val in body.model_dump(exclude_unset=True).items():
+        if key == "details":
+            val = _details_to_str(val)
         setattr(do, key, val)
     await db.flush()
     await db.refresh(do)
@@ -85,7 +122,12 @@ async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSes
     return _to_response(do, cn)
 
 
-@router.delete("/delivery-orders/{id}", response_model=MessageResponse)
+@router.delete(
+    "/delivery-orders/{id}",
+    response_model=MessageResponse,
+    summary="Hapus delivery order",
+    description="Hapus DO berdasarkan ID.",
+)
 async def delete_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()

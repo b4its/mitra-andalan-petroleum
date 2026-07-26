@@ -11,7 +11,12 @@ from app.schemas.stats import SingleStat, StatsResponse
 router = APIRouter()
 
 
-@router.get("/stats/marketing", response_model=StatsResponse)
+@router.get(
+    "/stats/marketing",
+    response_model=StatsResponse,
+    summary="Marketing dashboard stats",
+    description="Statistik untuk dashboard marketing: total penawaran, pending, PO customer, PO logistik.",
+)
 async def marketing_stats(db: AsyncSession = Depends(get_db)):
     total_ol = await _count(db, select(OfferingLetter))
     pending_ol = await _count(db, select(OfferingLetter).where(OfferingLetter.status == "created"))
@@ -26,7 +31,12 @@ async def marketing_stats(db: AsyncSession = Depends(get_db)):
     ])
 
 
-@router.get("/stats/operations", response_model=StatsResponse)
+@router.get(
+    "/stats/operations",
+    response_model=StatsResponse,
+    summary="Operations dashboard stats",
+    description="Statistik untuk dashboard operations: total DO.",
+)
 async def operations_stats(db: AsyncSession = Depends(get_db)):
     total_do = await _count(db, select(DeliveryOrder))
 
@@ -35,7 +45,12 @@ async def operations_stats(db: AsyncSession = Depends(get_db)):
     ])
 
 
-@router.get("/stats/finance", response_model=StatsResponse)
+@router.get(
+    "/stats/finance",
+    response_model=StatsResponse,
+    summary="Finance dashboard stats",
+    description="Statistik untuk dashboard finance: DO diterima, invoice belum dibuat, invoice belum lunas.",
+)
 async def finance_stats(db: AsyncSession = Depends(get_db)):
     do_diterima = await _count(db, select(DeliveryOrder))
     unpaid = await _count(db, select(Invoice).where(Invoice.invoice_status == "unpaid"))
@@ -49,7 +64,12 @@ async def finance_stats(db: AsyncSession = Depends(get_db)):
     ])
 
 
-@router.get("/stats/home", response_model=StatsResponse)
+@router.get(
+    "/stats/home",
+    response_model=StatsResponse,
+    summary="Home dashboard stats",
+    description="Statistik halaman utama: total customer, revenue, orders.",
+)
 async def home_stats(db: AsyncSession = Depends(get_db)):
     total_customers = await _count(db, select(OfferingLetter).distinct(OfferingLetter.customer_id))
     total_revenue_result = await db.execute(select(func.coalesce(func.sum(Invoice.grand_total), 0)))

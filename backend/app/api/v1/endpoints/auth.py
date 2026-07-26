@@ -10,7 +10,12 @@ from app.schemas.auth import LoginRequest, LoginResponse
 router = APIRouter()
 
 
-@router.post("/auth/login", response_model=LoginResponse)
+@router.post(
+    "/auth/login",
+    response_model=LoginResponse,
+    summary="Login user",
+    description="Autentikasi user dengan email & password. Password plain text (development).\n\nAkun default:\n- `admin@email.com` / `admin123` (admin)\n- `ops@email.com` / `ops123` (operations)\n- `marketing@email.com` / `marketing123` (marketing)\n- `finance@email.com` / `finance123` (finance)",
+)
 async def login(body: LoginRequest, db=Depends(get_db)):
     result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()

@@ -1,3 +1,6 @@
+import json
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +18,14 @@ from app.schemas.invoice import (
 router = APIRouter()
 
 
+def _details_to_str(details: dict[str, Any] | None) -> str | None:
+    return json.dumps(details) if details else None
+
+
+def _details_from_str(details: str | None) -> dict[str, Any] | None:
+    return json.loads(details) if details else None
+
+
 async def _get_customer_name(db, customer_id):
     if not customer_id:
         return ""
@@ -29,11 +40,17 @@ def _to_response(inv, customer_name):
         customer_id=inv.customer_id, customer_name=customer_name,
         terms_day=inv.terms_day, grand_total=inv.grand_total,
         invoice_status=inv.invoice_status, deadline_status=inv.deadline_status,
+        details=_details_from_str(inv.details),
         created_at=inv.created_at, updated_at=inv.updated_at,
     )
 
 
-@router.get("/invoices", response_model=PaginatedResponse[InvoiceResponse])
+@router.get(
+    "/invoices",
+    response_model=PaginatedResponse[InvoiceResponse],
+    summary="List invoices",
+    description="Daftar invoice dengan pagination. Menyertakan nama customer.",
+)
 async def list_invoices(
     page: int = 1, page_size: int = 20, db: AsyncSession = Depends(get_db)
 ):
@@ -51,7 +68,12 @@ async def list_invoices(
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
 
-@router.get("/invoices/{id}", response_model=InvoiceResponse)
+@router.get(
+    "/invoices/{id}",
+    response_model=InvoiceResponse,
+    summary="Detail invoice",
+    description="Detail invoice termasuk field `details` JSON.",
+)
 async def get_invoice(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
@@ -61,9 +83,17 @@ async def get_invoice(id: str, db: AsyncSession = Depends(get_db)):
     return _to_response(inv, cn)
 
 
-@router.post("/invoices", response_model=InvoiceResponse, status_code=201)
+@router.post(
+    "/invoices",
+    response_model=InvoiceResponse,
+    status_code=201,
+    summary="Buat invoice",
+    description="Membuat invoice baru. Field `details` untuk data form frontend (products, paymentStatus, dll).",
+)
 async def create_invoice(body: InvoiceCreate, db: AsyncSession = Depends(get_db)):
-    inv = Invoice(**body.model_dump())
+    data = body.model_dump()
+    data["details"] = _details_to_str(data.pop("details", None))
+    inv = Invoice(**data)
     db.add(inv)
     await db.flush()
     await db.refresh(inv)
@@ -71,13 +101,20 @@ async def create_invoice(body: InvoiceCreate, db: AsyncSession = Depends(get_db)
     return _to_response(inv, cn)
 
 
-@router.put("/invoices/{id}", response_model=InvoiceResponse)
+@router.put(
+    "/invoices/{id}",
+    response_model=InvoiceResponse,
+    summary="Update invoice",
+    description="Update invoice (status, details, dll).",
+)
 async def update_invoice(id: str, body: InvoiceUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
     if not inv:
         raise HTTPException(status_code=404, detail="Not found")
     for key, val in body.model_dump(exclude_unset=True).items():
+        if key == "details":
+            val = _details_to_str(val)
         setattr(inv, key, val)
     await db.flush()
     await db.refresh(inv)
@@ -85,7 +122,12 @@ async def update_invoice(id: str, body: InvoiceUpdate, db: AsyncSession = Depend
     return _to_response(inv, cn)
 
 
-@router.delete("/invoices/{id}", response_model=MessageResponse)
+@router.delete(
+    "/invoices/{id}",
+    response_model=MessageResponse,
+    summary="Hapus invoice",
+    description="Hapus invoice berdasarkan ID.",
+)
 async def delete_invoice(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()

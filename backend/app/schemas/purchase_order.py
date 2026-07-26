@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -16,6 +17,7 @@ class PurchaseOrderResponse(BaseModel):
     date: str | None = None
     total: float = 0
     status: str = "created"
+    details: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -28,6 +30,7 @@ class PurchaseOrderCreate(BaseModel):
     date: str | None = None
     total: float = 0
     status: str = "created"
+    details: dict[str, Any] | None = None
 
 
 class PurchaseOrderUpdate(BaseModel):
@@ -38,3 +41,4 @@ class PurchaseOrderUpdate(BaseModel):
     date: str | None = None
     total: float | None = None
     status: str | None = None
+    details: dict[str, Any] | None = None

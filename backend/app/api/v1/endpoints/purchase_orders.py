@@ -1,3 +1,6 @@
+import json
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +17,14 @@ from app.schemas.purchase_order import (
 )
 
 router = APIRouter()
+
+
+def _details_to_str(details: dict[str, Any] | None) -> str | None:
+    return json.dumps(details) if details else None
+
+
+def _details_from_str(details: str | None) -> dict[str, Any] | None:
+    return json.loads(details) if details else None
 
 
 async def _resolve_names(db, po):
@@ -38,11 +49,17 @@ def _to_response(po, customer_name, supplier_name):
         customer_id=po.customer_id, supplier_id=po.supplier_id,
         customer_name=customer_name, supplier_name=supplier_name,
         date=po.date, total=po.total, status=po.status,
+        details=_details_from_str(po.details),
         created_at=po.created_at, updated_at=po.updated_at,
     )
 
 
-@router.get("/purchase-orders", response_model=PaginatedResponse[PurchaseOrderResponse])
+@router.get(
+    "/purchase-orders",
+    response_model=PaginatedResponse[PurchaseOrderResponse],
+    summary="List purchase orders",
+    description="Daftar purchase order. Filter `type=customer` atau `type=supplier`. Menyertakan nama customer/supplier.",
+)
 async def list_purchase_orders(
     page: int = 1, page_size: int = 20, type: str | None = None,
     db: AsyncSession = Depends(get_db)
@@ -64,7 +81,12 @@ async def list_purchase_orders(
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
 
-@router.get("/purchase-orders/{id}", response_model=PurchaseOrderResponse)
+@router.get(
+    "/purchase-orders/{id}",
+    response_model=PurchaseOrderResponse,
+    summary="Detail purchase order",
+    description="Detail PO termasuk field `details` JSON.",
+)
 async def get_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
@@ -74,9 +96,17 @@ async def get_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     return _to_response(po, cn, sn)
 
 
-@router.post("/purchase-orders", response_model=PurchaseOrderResponse, status_code=201)
+@router.post(
+    "/purchase-orders",
+    response_model=PurchaseOrderResponse,
+    status_code=201,
+    summary="Buat purchase order",
+    description="Membuat PO baru. Field `details` untuk data tambahan dari frontend.",
+)
 async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = Depends(get_db)):
-    po = PurchaseOrder(**body.model_dump())
+    data = body.model_dump()
+    data["details"] = _details_to_str(data.pop("details", None))
+    po = PurchaseOrder(**data)
     db.add(po)
     await db.flush()
     await db.refresh(po)
@@ -84,13 +114,20 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
     return _to_response(po, cn, sn)
 
 
-@router.put("/purchase-orders/{id}", response_model=PurchaseOrderResponse)
+@router.put(
+    "/purchase-orders/{id}",
+    response_model=PurchaseOrderResponse,
+    summary="Update purchase order",
+    description="Update PO (status, details, dll).",
+)
 async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
         raise HTTPException(status_code=404, detail="Not found")
     for key, val in body.model_dump(exclude_unset=True).items():
+        if key == "details":
+            val = _details_to_str(val)
         setattr(po, key, val)
     await db.flush()
     await db.refresh(po)
@@ -98,7 +135,12 @@ async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSes
     return _to_response(po, cn, sn)
 
 
-@router.delete("/purchase-orders/{id}", response_model=MessageResponse)
+@router.delete(
+    "/purchase-orders/{id}",
+    response_model=MessageResponse,
+    summary="Hapus purchase order",
+    description="Hapus PO berdasarkan ID.",
+)
 async def delete_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()

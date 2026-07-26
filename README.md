@@ -4,33 +4,34 @@ Sistem manajemen internal untuk perusahaan bahan bakar minyak.
 
 ## Tech Stack
 
-- **Backend:** Python FastAPI + SQLAlchemy (async) + MySQL
+- **Backend:** Python FastAPI + SQLAlchemy async + MySQL
 - **Frontend:** Nuxt.js (Vue 3) + Nuxt UI
 - **Containerization:** Docker + Docker Compose
-- **Dokumentasi API:** Swagger UI (otomatis dari FastAPI)
+- **API Dokumentasi:** Swagger UI (otomatis dari FastAPI)
 
 ## Struktur Proyek
 
 ```
 mandalan/
-├── backend/           # FastAPI backend
+├── backend/
 │   ├── app/
-│   │   ├── api/       # API routes (v1)
-│   │   ├── core/      # Konfigurasi, database
-│   │   ├── db/        # Seed data
-│   │   ├── models/    # SQLAlchemy models
-│   │   └── schemas/   # Pydantic schemas
+│   │   ├── api/v1/endpoints/   # Route handlers
+│   │   ├── core/               # Config, database
+│   │   ├── db/                 # Seed data
+│   │   ├── models/             # SQLAlchemy models
+│   │   └── schemas/            # Pydantic request/response schemas
 │   ├── Dockerfile
 │   └── requirements.txt
-├── frontend/          # Nuxt.js frontend
-│   ├── pages/         # Halaman aplikasi
-│   ├── components/    # UI components
+├── frontend/
+│   ├── pages/                  # Nuxt pages per role
+│   ├── components/             # UI components
+│   ├── types/                  # TypeScript interfaces & Zod schemas
 │   ├── Dockerfile
 │   └── nuxt.config.ts
 ├── docker-compose.yml
 └── documentation/
-    ├── setup.md       # Panduan instalasi & setup
-    └── api_setup.md   # Dokumentasi API
+    ├── setup.md
+    └── api_setup.md
 ```
 
 ## Memulai Cepat
@@ -39,8 +40,18 @@ mandalan/
 docker compose --profile full up -d
 ```
 
-Backend: http://localhost:8000
-Frontend: http://localhost:3000
-Swagger UI: http://localhost:8000/docs
+| Service | URL |
+|---------|-----|
+| Backend API | http://localhost:8000 |
+| Frontend | http://localhost:8080 |
+| Swagger UI | http://localhost:8000/docs |
+| ReDoc | http://localhost:8000/redoc |
 
-Lihat [documentation/setup.md](documentation/setup.md) untuk panduan lengkap.
+## Akun Default
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@email.com | admin123 |
+| Marketing | marketing@email.com | marketing123 |
+| Finance | finance@email.com | finance123 |
+| Operations | ops@email.com | ops123 |

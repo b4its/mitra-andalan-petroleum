@@ -10,13 +10,23 @@ from app.schemas.common import MessageResponse
 router = APIRouter()
 
 
-@router.get("/sales", response_model=list[SaleResponse])
+@router.get(
+    "/sales",
+    response_model=list[SaleResponse],
+    summary="List sales",
+    description="Daftar sales terbaru (limit default 5).",
+)
 async def list_sales(limit: int = 5, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sale).order_by(Sale.created_at.desc()).limit(limit))
     return result.scalars().all()
 
 
-@router.get("/sales/{id}", response_model=SaleResponse)
+@router.get(
+    "/sales/{id}",
+    response_model=SaleResponse,
+    summary="Detail sale",
+    description="Detail data penjualan.",
+)
 async def get_sale(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sale).where(Sale.id == id))
     s = result.scalar_one_or_none()
@@ -25,7 +35,13 @@ async def get_sale(id: str, db: AsyncSession = Depends(get_db)):
     return s
 
 
-@router.post("/sales", response_model=SaleResponse, status_code=201)
+@router.post(
+    "/sales",
+    response_model=SaleResponse,
+    status_code=201,
+    summary="Buat sale",
+    description="Mencatat data penjualan baru.",
+)
 async def create_sale(body: SaleCreate, db: AsyncSession = Depends(get_db)):
     s = Sale(**body.model_dump())
     db.add(s)
@@ -34,7 +50,12 @@ async def create_sale(body: SaleCreate, db: AsyncSession = Depends(get_db)):
     return s
 
 
-@router.put("/sales/{id}", response_model=SaleResponse)
+@router.put(
+    "/sales/{id}",
+    response_model=SaleResponse,
+    summary="Update sale",
+    description="Update data penjualan.",
+)
 async def update_sale(id: str, body: SaleUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sale).where(Sale.id == id))
     s = result.scalar_one_or_none()
@@ -47,7 +68,12 @@ async def update_sale(id: str, body: SaleUpdate, db: AsyncSession = Depends(get_
     return s
 
 
-@router.delete("/sales/{id}", response_model=MessageResponse)
+@router.delete(
+    "/sales/{id}",
+    response_model=MessageResponse,
+    summary="Hapus sale",
+    description="Hapus data penjualan.",
+)
 async def delete_sale(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sale).where(Sale.id == id))
     s = result.scalar_one_or_none()

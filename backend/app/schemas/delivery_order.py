@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -14,6 +15,7 @@ class DeliveryOrderResponse(BaseModel):
     transport_name: str | None = None
     fuel_total: float = 0
     status: str = "created"
+    details: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -25,6 +27,7 @@ class DeliveryOrderCreate(BaseModel):
     transport_name: str | None = None
     fuel_total: float = 0
     status: str = "created"
+    details: dict[str, Any] | None = None
 
 
 class DeliveryOrderUpdate(BaseModel):
@@ -34,3 +37,4 @@ class DeliveryOrderUpdate(BaseModel):
     transport_name: str | None = None
     fuel_total: float | None = None
     status: str | None = None
+    details: dict[str, Any] | None = None
