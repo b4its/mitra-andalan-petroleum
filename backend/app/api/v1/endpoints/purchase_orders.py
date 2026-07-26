@@ -9,6 +9,7 @@ from app.api.deps import get_db
 from app.models.purchase_order import PurchaseOrder
 from app.models.customer import Customer
 from app.models.supplier import Supplier
+from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.purchase_order import (
     PurchaseOrderResponse,
@@ -135,17 +136,33 @@ async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSes
     return _to_response(po, cn, sn)
 
 
+async def _delete_upload_files(uploads: list[Upload]):
+    from pathlib import Path
+    MEDIA_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "media"
+    for u in uploads:
+        fp = MEDIA_DIR / u.folder / u.stored_filename
+        if fp.exists():
+            fp.unlink()
+
+
 @router.delete(
     "/purchase-orders/{id}",
     response_model=MessageResponse,
     summary="Hapus purchase order",
-    description="Hapus PO berdasarkan ID.",
+    description="Hapus PO berdasarkan ID. Upload terkait juga ikut terhapus.",
 )
 async def delete_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
         raise HTTPException(status_code=404, detail="Not found")
+    upl_result = await db.execute(
+        select(Upload).where(Upload.document_type == "po", Upload.document_id == id)
+    )
+    uploads = upl_result.scalars().all()
+    await _delete_upload_files(uploads)
+    for u in uploads:
+        await db.delete(u)
     await db.delete(po)
     await db.flush()
     return MessageResponse(message="Deleted", code=200)

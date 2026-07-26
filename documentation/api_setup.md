@@ -1364,9 +1364,11 @@ curl -X DELETE http://localhost:8000/api/v1/notifications/uuid-notif-baru
 
 ## Uploads
 
-Upload file signature, dokumen, atau lampiran lainnya. File disimpan di `backend/media/` dan bisa diakses via URL langsung.
+Upload file signature, dokumen, atau lampiran lainnya. Setiap upload memiliki record di database dan bisa dikaitkan ke dokumen induk (OL, PO, DO, Invoice) melalui `document_type` dan `document_id`.
 
-### POST /upload — Upload file
+Jika dokumen induk dihapus, seluruh upload terkait akan ikut terhapus (file + record).
+
+### POST /upload — Upload file + buat record
 
 Request: `multipart/form-data`
 
@@ -1374,39 +1376,153 @@ Request: `multipart/form-data`
 |-------|------|----------|-------------|
 | `file` | File | Ya | File yang akan diupload (max 50MB) |
 | `folder` | String | Tidak | Subfolder tujuan (`signatures`, `documents`, `returned`, `general`) |
+| `document_type` | String | Tidak | Tipe dokumen induk: `ol`, `po`, `do`, `invoice` |
+| `document_id` | String | Tidak | UUID dokumen induk (wajib jika `document_type` diisi) |
 
 Format file yang diizinkan: JPG, JPEG, PNG, GIF, BMP, WebP, SVG, PDF, DOC, DOCX, XLS, XLSX.
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/upload \
-  -F "file=@/path/to/signature.png"
+  -F "file=@/path/to/signature.png" \
+  -F "folder=signatures" \
+  -F "document_type=ol" \
+  -F "document_id=uuid-ol-1"
 ```
 
 ```json
 {
-  "filename": "a1b2c3d4e5f6.png",
-  "url": "/media/general/a1b2c3d4e5f6.png",
-  "size": 102400
+  "id": "uuid-upload-1",
+  "original_filename": "signature.png",
+  "stored_filename": "a1b2c3d4e5f6.png",
+  "folder": "signatures",
+  "mime_type": "image/png",
+  "size": 102400,
+  "url": "/media/signatures/a1b2c3d4e5f6.png",
+  "document_type": "ol",
+  "document_id": "uuid-ol-1",
+  "created_at": "2026-07-26T14:00:00",
+  "updated_at": "2026-07-26T14:00:00"
 }
 ```
 
-Dengan folder:
+Upload tanpa dokumen induk:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/upload \
-  -F "file=@/path/to/signature.png" \
-  -F "folder=signatures"
+  -F "file=@/path/to/document.pdf" \
+  -F "folder=documents"
 ```
 
 ```json
 {
-  "filename": "f6e5d4c3b2a1.png",
-  "url": "/media/signatures/f6e5d4c3b2a1.png",
-  "size": 102400
+  "id": "uuid-upload-2",
+  "original_filename": "document.pdf",
+  "stored_filename": "f6e5d4c3b2a1.pdf",
+  "folder": "documents",
+  "mime_type": "application/pdf",
+  "size": 512000,
+  "url": "/media/documents/f6e5d4c3b2a1.pdf",
+  "document_type": null,
+  "document_id": null,
+  "created_at": "2026-07-26T14:05:00",
+  "updated_at": "2026-07-26T14:05:00"
 }
 ```
 
-Akses file: `http://localhost:8000/media/signatures/f6e5d4c3b2a1.png`
+### GET /uploads — List semua upload
+
+Query params: `?document_type=ol&document_id=uuid-ol-1`
+
+```bash
+curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
+```
+
+```json
+[
+  {
+    "id": "uuid-upload-1",
+    "original_filename": "signature.png",
+    "stored_filename": "a1b2c3d4e5f6.png",
+    "folder": "signatures",
+    "mime_type": "image/png",
+    "size": 102400,
+    "url": "/media/signatures/a1b2c3d4e5f6.png",
+    "document_type": "ol",
+    "document_id": "uuid-ol-1",
+    "created_at": "2026-07-26T14:00:00",
+    "updated_at": "2026-07-26T14:00:00"
+  }
+]
+```
+
+### GET /uploads/{id} — Detail upload
+
+```bash
+curl -X GET http://localhost:8000/api/v1/uploads/uuid-upload-1
+```
+
+```json
+{
+  "id": "uuid-upload-1",
+  "original_filename": "signature.png",
+  "stored_filename": "a1b2c3d4e5f6.png",
+  "folder": "signatures",
+  "mime_type": "image/png",
+  "size": 102400,
+  "url": "/media/signatures/a1b2c3d4e5f6.png",
+  "document_type": "ol",
+  "document_id": "uuid-ol-1",
+  "created_at": "2026-07-26T14:00:00",
+  "updated_at": "2026-07-26T14:00:00"
+}
+```
+
+### PUT /uploads/{id} — Update metadata
+
+Update folder, kaitkan ke dokumen induk, atau pindahkan folder. File ikut dipindahkan di disk.
+
+```bash
+curl -X PUT http://localhost:8000/api/v1/uploads/uuid-upload-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "folder": "returned",
+    "document_type": "do",
+    "document_id": "uuid-do-1"
+  }'
+```
+
+```json
+{
+  "id": "uuid-upload-1",
+  "original_filename": "signature.png",
+  "stored_filename": "a1b2c3d4e5f6.png",
+  "folder": "returned",
+  "mime_type": "image/png",
+  "size": 102400,
+  "url": "/media/returned/a1b2c3d4e5f6.png",
+  "document_type": "do",
+  "document_id": "uuid-do-1",
+  "created_at": "2026-07-26T14:00:00",
+  "updated_at": "2026-07-26T14:10:00"
+}
+```
+
+### DELETE /uploads/{id} — Hapus upload
+
+Hapus record dan file dari disk.
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/uploads/uuid-upload-1
+```
+
+```json
+{
+  "message": "Deleted",
+  "code": 200
+}
+```
+
+Akses file: `http://localhost:8000/media/signatures/a1b2c3d4e5f6.png`
 
 ---
 

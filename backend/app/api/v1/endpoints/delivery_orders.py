@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.models.delivery_order import DeliveryOrder
 from app.models.customer import Customer
+from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.delivery_order import (
     DeliveryOrderResponse,
@@ -122,17 +123,33 @@ async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSes
     return _to_response(do, cn)
 
 
+async def _delete_upload_files(uploads: list[Upload]):
+    from pathlib import Path
+    MEDIA_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "media"
+    for u in uploads:
+        fp = MEDIA_DIR / u.folder / u.stored_filename
+        if fp.exists():
+            fp.unlink()
+
+
 @router.delete(
     "/delivery-orders/{id}",
     response_model=MessageResponse,
     summary="Hapus delivery order",
-    description="Hapus DO berdasarkan ID.",
+    description="Hapus DO berdasarkan ID. Upload terkait juga ikut terhapus.",
 )
 async def delete_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Not found")
+    upl_result = await db.execute(
+        select(Upload).where(Upload.document_type == "do", Upload.document_id == id)
+    )
+    uploads = upl_result.scalars().all()
+    await _delete_upload_files(uploads)
+    for u in uploads:
+        await db.delete(u)
     await db.delete(do)
     await db.flush()
     return MessageResponse(message="Deleted", code=200)
