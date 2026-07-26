@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -14,6 +15,7 @@ class InvoiceResponse(BaseModel):
     grand_total: float = 0
     invoice_status: str = "unpaid"
     deadline_status: str = "on_time"
+    details: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -25,6 +27,7 @@ class InvoiceCreate(BaseModel):
     grand_total: float = 0
     invoice_status: str = "unpaid"
     deadline_status: str = "on_time"
+    details: dict[str, Any] | None = None
 
 
 class InvoiceUpdate(BaseModel):
@@ -34,3 +37,4 @@ class InvoiceUpdate(BaseModel):
     grand_total: float | None = None
     invoice_status: str | None = None
     deadline_status: str | None = None
+    details: dict[str, Any] | None = None

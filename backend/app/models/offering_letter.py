@@ -16,3 +16,4 @@ class OfferingLetter(BaseModel):
     fuel_total_price: Mapped[float] = mapped_column(Float, default=0)
     transport_price: Mapped[float] = mapped_column(Float, default=0)
     status: Mapped[str] = mapped_column(String(30), default="created")
+    details: Mapped[str] = mapped_column(Text, nullable=True, comment="JSON: full form data per schemas.ts")

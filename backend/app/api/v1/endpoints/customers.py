@@ -14,13 +14,23 @@ from app.schemas.customer import (
 router = APIRouter()
 
 
-@router.get("/customers", response_model=list[CustomerResponse])
+@router.get(
+    "/customers",
+    response_model=list[CustomerResponse],
+    summary="List customers",
+    description="Daftar semua customer (diurutkan berdasarkan nama).",
+)
 async def list_customers(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Customer).order_by(Customer.name))
     return result.scalars().all()
 
 
-@router.get("/customers/{id}", response_model=CustomerResponse)
+@router.get(
+    "/customers/{id}",
+    response_model=CustomerResponse,
+    summary="Detail customer",
+    description="Detail customer berdasarkan ID.",
+)
 async def get_customer(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Customer).where(Customer.id == id))
     c = result.scalar_one_or_none()
@@ -29,7 +39,13 @@ async def get_customer(id: str, db: AsyncSession = Depends(get_db)):
     return c
 
 
-@router.post("/customers", response_model=CustomerResponse, status_code=201)
+@router.post(
+    "/customers",
+    response_model=CustomerResponse,
+    status_code=201,
+    summary="Buat customer",
+    description="Mendaftarkan customer baru.",
+)
 async def create_customer(body: CustomerCreate, db: AsyncSession = Depends(get_db)):
     c = Customer(**body.model_dump())
     db.add(c)
@@ -38,7 +54,12 @@ async def create_customer(body: CustomerCreate, db: AsyncSession = Depends(get_d
     return c
 
 
-@router.put("/customers/{id}", response_model=CustomerResponse)
+@router.put(
+    "/customers/{id}",
+    response_model=CustomerResponse,
+    summary="Update customer",
+    description="Update data customer.",
+)
 async def update_customer(id: str, body: CustomerUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Customer).where(Customer.id == id))
     c = result.scalar_one_or_none()
@@ -51,7 +72,12 @@ async def update_customer(id: str, body: CustomerUpdate, db: AsyncSession = Depe
     return c
 
 
-@router.delete("/customers/{id}", response_model=MessageResponse)
+@router.delete(
+    "/customers/{id}",
+    response_model=MessageResponse,
+    summary="Hapus customer",
+    description="Hapus customer berdasarkan ID.",
+)
 async def delete_customer(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Customer).where(Customer.id == id))
     c = result.scalar_one_or_none()

@@ -19,10 +19,53 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
+openapi_tags = [
+    {"name": "health", "description": "Cek status server"},
+    {"name": "auth", "description": "Login user"},
+    {"name": "customers", "description": "CRUD data customer"},
+    {"name": "suppliers", "description": "CRUD data supplier"},
+    {"name": "profiles", "description": "CRUD user/profile management"},
+    {"name": "offering-letters", "description": "Surat penawaran harga (marketing)"},
+    {"name": "purchase-orders", "description": "Purchase order ke customer/supplier"},
+    {"name": "delivery-orders", "description": "Delivery order (operational)"},
+    {"name": "invoices", "description": "Invoice/penagihan (finance)"},
+    {"name": "sales", "description": "Data penjualan"},
+    {"name": "notifications", "description": "Notifikasi sistem"},
+    {"name": "stats", "description": "Statistik untuk dashboard"},
+]
+
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
+    summary="API Backend Mitra Andalan Petroleum",
+    description="""
+Sistem manajemen internal untuk perusahaan bahan bakar minyak.
+
+## Modul
+- **Marketing** — Offering Letters, Purchase Orders, Stats
+- **Operations** — Delivery Orders, Sales, Stats
+- **Finance** — Invoices, Delivery Orders, Sales, Stats
+- **Admin** — User/Profile Management
+
+## Auth
+Login via `POST /api/v1/auth/login` — dapatkan token untuk autentikasi.
+Belum ada middleware token, semua endpoint publik untuk development.
+
+## Data Format
+Dokumen (OL, PO, DO, Invoice) mendukung field `details` JSON
+untuk menyimpan data form yang kompleks dari frontend.
+""",
+    openapi_tags=openapi_tags,
     lifespan=lifespan,
+    contact={
+        "name": "Mitra Andalan Petroleum",
+        "email": "marketing.mapetroleum@gmail.com",
+    },
+    license_info={
+        "name": "Proprietary",
+    },
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 app.add_middleware(

@@ -2,83 +2,83 @@
 
 ## Prasyarat
 
-- Docker & Docker Compose
-- Git
+- Docker & Docker Compose (recommended)
+- Python 3.12 (manual backend)
+- Node.js 22 + pnpm (manual frontend)
+- MySQL 8.0 (manual backend)
 
-## Instalasi
+## Instalasi & Menjalankan
+
+### Dengan Docker (recommended)
 
 ```bash
-git clone <repo-url> mandalan
 cd mandalan
+docker compose --profile full up -d
 ```
 
-## Menjalankan Aplikasi
+Service akan berjalan di:
 
-### Dengan Docker (produksi)
+| Service | Port |
+|---------|------|
+| Backend (FastAPI) | 8000 |
+| Frontend (Nuxt) | 8080 |
+| MySQL | 3306 |
+| Swagger UI | http://localhost:8000/docs |
 
-Menjalankan backend + frontend bersama MySQL:
+### Hanya backend + DB (untuk development frontend lokal)
 
 ```bash
-docker compose --profile up -d
+docker compose --profile core up -d
 ```
 
-Hanya backend (untuk development frontend lokal):
+### Manual (backend)
 
 ```bash
-docker compose --profile backend up -d
+cd mandalan/backend
+cp .env.example .env   # edit DATABASE_URL sesuai lokal
+python3.12 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-Hanya MySQL (untuk development backend lokal):
+### Manual (frontend)
 
 ```bash
-docker compose --profile backend up -d
+cd mandalan/frontend
+pnpm install
+pnpm dev
 ```
 
-### Tanpa Docker (development backend)
+## Environment Variables
 
-1. Pastikan MySQL sudah berjalan dan database `mandalan` sudah dibuat.
-2. Atur environment variable di `backend/.env`:
+### Backend (`backend/.env`)
 
 ```env
 DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/mandalan
 ```
 
-3. Jalankan backend:
+### Frontend (`frontend/.env`)
 
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-### Tanpa Docker (development frontend)
-
-```bash
-cd frontend
-pnpm install
-pnpm dev
+```env
+NUXT_PUBLIC_SITE_URL=
 ```
 
 ## Seed Data
 
-Database akan otomatis diisi dengan data awal saat pertama kali backend dijalankan, termasuk:
-- Akun admin default
-- Contoh customers, suppliers, offering letters, purchase orders, delivery orders, invoices, sales, notifications
+Database otomatis terisi data awal saat pertama kali backend dijalankan:
 
-## Akun Login Default
+- 4 user (admin, marketing, finance, operations)
+- 3 customer, 2 supplier
+- 15 offering letters, 10 purchase orders
+- 15 delivery orders, 15 invoices
+- 5 sales, 4 notifications
+
+## Akun Default
 
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | admin@email.com | admin123 |
-| Operations | ops@email.com | ops123 |
 | Marketing | marketing@email.com | marketing123 |
 | Finance | finance@email.com | finance123 |
-
-## Port
-
-| Service | Port |
-|---------|------|
-| Backend (FastAPI) | 8000 |
-| Frontend (Nuxt) | 3000 |
-| MySQL | 3306 |
-| Swagger UI | http://localhost:8000/docs |
+| Operations | ops@email.com | ops123 |

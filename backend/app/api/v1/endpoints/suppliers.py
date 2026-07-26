@@ -14,13 +14,23 @@ from app.schemas.supplier import (
 router = APIRouter()
 
 
-@router.get("/suppliers", response_model=list[SupplierResponse])
+@router.get(
+    "/suppliers",
+    response_model=list[SupplierResponse],
+    summary="List suppliers",
+    description="Daftar semua supplier (diurutkan berdasarkan nama).",
+)
 async def list_suppliers(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Supplier).order_by(Supplier.name))
     return result.scalars().all()
 
 
-@router.get("/suppliers/{id}", response_model=SupplierResponse)
+@router.get(
+    "/suppliers/{id}",
+    response_model=SupplierResponse,
+    summary="Detail supplier",
+    description="Detail supplier berdasarkan ID.",
+)
 async def get_supplier(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Supplier).where(Supplier.id == id))
     s = result.scalar_one_or_none()
@@ -29,7 +39,13 @@ async def get_supplier(id: str, db: AsyncSession = Depends(get_db)):
     return s
 
 
-@router.post("/suppliers", response_model=SupplierResponse, status_code=201)
+@router.post(
+    "/suppliers",
+    response_model=SupplierResponse,
+    status_code=201,
+    summary="Buat supplier",
+    description="Mendaftarkan supplier baru.",
+)
 async def create_supplier(body: SupplierCreate, db: AsyncSession = Depends(get_db)):
     s = Supplier(**body.model_dump())
     db.add(s)
@@ -38,7 +54,12 @@ async def create_supplier(body: SupplierCreate, db: AsyncSession = Depends(get_d
     return s
 
 
-@router.put("/suppliers/{id}", response_model=SupplierResponse)
+@router.put(
+    "/suppliers/{id}",
+    response_model=SupplierResponse,
+    summary="Update supplier",
+    description="Update data supplier.",
+)
 async def update_supplier(id: str, body: SupplierUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Supplier).where(Supplier.id == id))
     s = result.scalar_one_or_none()
@@ -51,7 +72,12 @@ async def update_supplier(id: str, body: SupplierUpdate, db: AsyncSession = Depe
     return s
 
 
-@router.delete("/suppliers/{id}", response_model=MessageResponse)
+@router.delete(
+    "/suppliers/{id}",
+    response_model=MessageResponse,
+    summary="Hapus supplier",
+    description="Hapus supplier berdasarkan ID.",
+)
 async def delete_supplier(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Supplier).where(Supplier.id == id))
     s = result.scalar_one_or_none()

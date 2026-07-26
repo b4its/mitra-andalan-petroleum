@@ -1,3 +1,6 @@
+import json
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +18,32 @@ from app.schemas.offering_letter import (
 router = APIRouter()
 
 
-@router.get("/offering-letters", response_model=PaginatedResponse[OfferingLetterResponse])
+def _details_to_str(details: dict[str, Any] | None) -> str | None:
+    return json.dumps(details) if details else None
+
+
+def _details_from_str(details: str | None) -> dict[str, Any] | None:
+    return json.loads(details) if details else None
+
+
+def _to_response(ol: OfferingLetter, customer_name: str) -> OfferingLetterResponse:
+    return OfferingLetterResponse(
+        id=ol.id, offering_letter_number=ol.offering_letter_number,
+        customer_id=ol.customer_id, customer_name=customer_name,
+        location=ol.location, date=ol.date, regarding=ol.regarding,
+        receiver=ol.receiver, fuel_total_price=ol.fuel_total_price,
+        transport_price=ol.transport_price, status=ol.status,
+        details=_details_from_str(ol.details),
+        created_at=ol.created_at, updated_at=ol.updated_at,
+    )
+
+
+@router.get(
+    "/offering-letters",
+    response_model=PaginatedResponse[OfferingLetterResponse],
+    summary="List offering letters",
+    description="Menampilkan daftar surat penawaran dengan pagination. Menyertakan nama customer.",
+)
 async def list_offering_letters(
     page: int = 1, page_size: int = 20, db: AsyncSession = Depends(get_db)
 ):
@@ -32,27 +60,16 @@ async def list_offering_letters(
     result = await db.execute(stmt)
     rows = result.all()
 
-    items = []
-    for ol, customer_name in rows:
-        items.append(OfferingLetterResponse(
-            id=ol.id,
-            offering_letter_number=ol.offering_letter_number,
-            customer_id=ol.customer_id,
-            customer_name=customer_name,
-            location=ol.location,
-            date=ol.date,
-            regarding=ol.regarding,
-            receiver=ol.receiver,
-            fuel_total_price=ol.fuel_total_price,
-            transport_price=ol.transport_price,
-            status=ol.status,
-            created_at=ol.created_at,
-            updated_at=ol.updated_at,
-        ))
+    items = [_to_response(ol, cn) for ol, cn in rows]
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
 
-@router.get("/offering-letters/{id}", response_model=OfferingLetterResponse)
+@router.get(
+    "/offering-letters/{id}",
+    response_model=OfferingLetterResponse,
+    summary="Detail offering letter",
+    description="Mendapatkan detail surat penawaran termasuk field `details` JSON.",
+)
 async def get_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     stmt = (
         select(OfferingLetter, Customer.name.label("customer_name"))
@@ -64,57 +81,56 @@ async def get_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="Not found")
     ol, customer_name = row
-    return OfferingLetterResponse(
-        id=ol.id, offering_letter_number=ol.offering_letter_number,
-        customer_id=ol.customer_id, customer_name=customer_name,
-        location=ol.location, date=ol.date, regarding=ol.regarding,
-        receiver=ol.receiver, fuel_total_price=ol.fuel_total_price,
-        transport_price=ol.transport_price, status=ol.status,
-        created_at=ol.created_at, updated_at=ol.updated_at,
-    )
+    return _to_response(ol, customer_name)
 
 
-@router.post("/offering-letters", response_model=OfferingLetterResponse, status_code=201)
+@router.post(
+    "/offering-letters",
+    response_model=OfferingLetterResponse,
+    status_code=201,
+    summary="Buat offering letter",
+    description="Membuat surat penawaran baru. Field `details` bisa diisi dengan form data dari frontend (supplyPoint, fuelPrices, personInCharge, dll).",
+)
 async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = Depends(get_db)):
-    ol = OfferingLetter(**body.model_dump())
+    data = body.model_dump()
+    data["details"] = _details_to_str(data.pop("details", None))
+    ol = OfferingLetter(**data)
     db.add(ol)
     await db.flush()
     await db.refresh(ol)
     customer = await db.execute(select(Customer).where(Customer.id == ol.customer_id))
     c = customer.scalar_one_or_none()
-    return OfferingLetterResponse(
-        id=ol.id, offering_letter_number=ol.offering_letter_number,
-        customer_id=ol.customer_id, customer_name=c.name if c else "",
-        location=ol.location, date=ol.date, regarding=ol.regarding,
-        receiver=ol.receiver, fuel_total_price=ol.fuel_total_price,
-        transport_price=ol.transport_price, status=ol.status,
-        created_at=ol.created_at, updated_at=ol.updated_at,
-    )
+    return _to_response(ol, c.name if c else "")
 
 
-@router.put("/offering-letters/{id}", response_model=OfferingLetterResponse)
+@router.put(
+    "/offering-letters/{id}",
+    response_model=OfferingLetterResponse,
+    summary="Update offering letter",
+    description="Update field tertentu pada surat penawaran (status, details, dll).",
+)
 async def update_offering_letter(id: str, body: OfferingLetterUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
     if not ol:
         raise HTTPException(status_code=404, detail="Not found")
     for key, val in body.model_dump(exclude_unset=True).items():
+        if key == "details":
+            val = _details_to_str(val)
         setattr(ol, key, val)
     await db.flush()
     await db.refresh(ol)
     customer = await db.execute(select(Customer).where(Customer.id == ol.customer_id))
     c = customer.scalar_one_or_none()
-    return OfferingLetterResponse(
-        id=ol.id, offering_letter_number=ol.offering_letter_number,
-        customer_id=ol.customer_id, customer_name=c.name if c else "",
-        location=ol.location, date=ol.date, regarding=ol.regarding,
-        receiver=ol.receiver, fuel_total_price=ol.fuel_total_price,
-        transport_price=ol.transport_price, status=ol.status,
-        created_at=ol.created_at, updated_at=ol.updated_at,
-    )
+    return _to_response(ol, c.name if c else "")
 
 
-@router.delete("/offering-letters/{id}", response_model=MessageResponse)
+@router.delete(
+    "/offering-letters/{id}",
+    response_model=MessageResponse,
+    summary="Hapus offering letter",
+    description="Menghapus surat penawaran berdasarkan ID.",
+)
 async def delete_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
