@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
-import { type MarketingPOCustomerState } from "~/types/schemas";
+import { type OperationsDOState } from "~/types/schemas";
 
 const items: StepperItem[] = [
   {
@@ -10,8 +10,9 @@ const items: StepperItem[] = [
   },
 ];
 
-const doReturned = reactive<MarketingPOCustomerState>({
-  offeringLetterNumber: "722/MAP/II-06/26",
+const doReturned = reactive<OperationsDOState>({
+  deliveryOrderNumber: "1086/DO/MAP/V/2026",
+  doDocument: undefined,
 });
 
 function onDoSubmit() {
@@ -60,7 +61,8 @@ definePageMeta({ layout: "operations" });
     <template #body>
       <UStepper disabled ref="stepper" :items>
         <template #doReturned>
-          <MarketingPOCustomerForm v-model="doReturned" @submit="onDoSubmit" />
+          <!-- <MarketingPOCustomerForm v-model="doReturned" @submit="onDoSubmit" /> -->
+          <OperationsDOReturnedForm v-model="doReturned" @submit="onDoSubmit" />
         </template>
       </UStepper>
     </template>
