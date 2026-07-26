@@ -47,7 +47,7 @@ const offeringLetters = ref([
     <UPageCard variant="soft">
       <UFormField name="offeringLetter" label="Nomor Surat Penawaran" required>
         <USelect
-          v-model="value"
+          v-model="state.offeringLetterNumber"
           :items="offeringLetters"
           placeholder="Pilih Surat Penawaran"
           value-key="value"
@@ -64,6 +64,7 @@ const offeringLetters = ref([
 
       <UFormField name="poFile" label="File Purchase Order Customer" required>
         <UFileUpload
+          v-model="state.poDocument"
           label="Upload File Purchase Order"
           description="Format file .pdf dengan max 5MB"
         />

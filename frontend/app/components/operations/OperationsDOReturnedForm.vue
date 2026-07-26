@@ -14,57 +14,44 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
 
 const value = ref<string>();
 
-// todo: change to fetch offering letter data
-const { data: users, execute } = await useLazyFetch(
-  "https://jsonplaceholder.typicode.com/users",
+const deliveryOrders = ref([
   {
-    key: "typicode-users-email",
-    transform: (data: { id: number; name: string; email: string }[]) => {
-      return data?.map((user) => ({
-        label: user.name,
-        email: user.email,
-        value: String(user.id),
-      }));
-    },
-    immediate: false,
+    label: "PT. MIGAS KUKAR MANDIRI",
+    value: "1086/DO/MAP/V/2026",
   },
-);
-
-function onOpen() {
-  if (!users.value?.length) {
-    execute();
-  }
-}
+  {
+    label: "PT. BERAU MINERAL ENERGI",
+    value: "1092/DO/BME/V/2026",
+  },
+  {
+    label: "PT. KALTIM OIL SERVICES",
+    value: "1098/DO/KOS/V/2026",
+  },
+]);
 </script>
 
 <template>
   <UForm
-    id="do-returned"
+    id="po-customer"
     :schema="operationsDOSchema"
     :state="state"
     :ui="{ base: 'lg:w-full lg:max-w-2xl lg:mx-auto mt-8' }"
     @submit="onSubmit"
   >
     <UPageCard variant="soft">
-      <UFormField name="doReturnedNumber" label="Nomor Surat DO" required>
+      <UFormField name="deliveryOrder" label="Nomor Delivery Order" required>
         <USelect
-          v-model="value"
-          :items="users"
-          placeholder="Pilih Surat DO"
+          v-model="state.deliveryOrderNumber"
+          :items="deliveryOrders"
+          placeholder="Pilih "
           value-key="value"
           :ui="{ content: 'min-w-fit' }"
           class="w-full"
-          @update:open="onOpen"
         >
           <template #item-label="{ item }">
-            <!-- company name  -->
             {{ item.label }}
 
-            <span class="text-muted text-xs">
-              <!-- {{ item.email }} -->
-              <!-- offering letter Id from fetch -->
-              (722/MAP/II-06/26)
-            </span>
+            <span class="text-muted text-xs"> ({{ item.value }}) </span>
           </template>
         </USelect>
       </UFormField>
@@ -75,6 +62,7 @@ function onOpen() {
         required
       >
         <UFileUpload
+          v-model="state.doDocument"
           label="Upload File Delivery Order"
           description="Format file .pdf dengan max 5MB"
         />
@@ -82,7 +70,7 @@ function onOpen() {
 
       <div class="flex justify-end pt-4">
         <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-          Upload Surat DO
+          Upload DO
         </UButton>
       </div>
     </UPageCard>

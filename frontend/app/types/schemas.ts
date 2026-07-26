@@ -26,6 +26,7 @@ export type PasswordState = z.infer<typeof passwordSchema>;
 
 export const marketingPOCustomerSchema = z.object({
   offeringLetterNumber: z.string(),
+  poDocument: z.file().optional(),
 });
 
 export type MarketingPOCustomerState = z.infer<
@@ -34,6 +35,7 @@ export type MarketingPOCustomerState = z.infer<
 
 export const operationsDOSchema = z.object({
   deliveryOrderNumber: z.string(),
+  doDocument: z.file().optional(),
 });
 
 export type OperationsDOState = z.infer<typeof operationsDOSchema>;

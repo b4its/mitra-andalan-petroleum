@@ -12,6 +12,7 @@ const items: StepperItem[] = [
 
 const poCustomer = reactive<MarketingPOCustomerState>({
   offeringLetterNumber: "722/MAP/II-06/26",
+  poDocument: undefined,
 });
 
 function onPoCustomerSubmit() {
