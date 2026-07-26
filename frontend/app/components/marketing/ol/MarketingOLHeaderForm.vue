@@ -70,7 +70,6 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLHeaderState>) {
       <UFormField name="offeringLetterNumber" label="Nomor Surat" required>
         <UInput
           v-model="state.offeringLetterNumber"
-          v-maska="options"
           placeholder="Contoh 722/MAP/II-06/26"
           type="text"
           autocomplete="off"

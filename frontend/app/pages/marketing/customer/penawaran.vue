@@ -7,6 +7,8 @@ import {
   type MarketingOLHeaderState,
 } from "~/types/schemas";
 
+const { user } = useAuth();
+
 const items: StepperItem[] = [
   { title: "Kop Surat Penawaran", slot: "letterHeader" },
   { title: "Rincian Penawaran", slot: "letterOfferDetails" },
@@ -16,34 +18,33 @@ const items: StepperItem[] = [
 const letterHeader = reactive<MarketingOLHeaderState>({
   location: "Samarinda",
   date: `${new Date().toISOString().split("T")[0]}`,
-  offeringLetterNumber: "722/MAP/II-06/26",
+  offeringLetterNumber: "000/MAP/I-00/00",
   regarding: "Surat Penawaran Harga Bahan Bakar Minyak Bio diesel",
   receiver: "",
 });
 
 const letterOfferDetails = reactive<MarketingOLDetailsState>({
-  supplyPoint: "Terminal Bahan Bakar Minyak (TBBM) Palaran",
-  qualityAssurance: "Sesuai dengan spesifikasi SK Dirjen Migas",
-  custodyTransfer:
-    "Flowmeter terkalibrasi oleh instansi berwenang di TBBM Palaran",
-  unloadingProcedure: "Jarum Tera/Sounding Tanki Truck di lokasi penerima",
+  supplyPoint: "ABC",
+  qualityAssurance: "ABC",
+  custodyTransfer: "ABC",
+  unloadingProcedure: "ABC",
   volumeUnit: "Liter observed",
   volumeTolerance: 0.025,
   paymentTerm: 7,
   latePenalty: 0.02,
-  servicePattern: "Franco Penerima",
+  servicePattern: "ABC",
   personInCharge: {
-    name: "Stenly",
+    name: user.value?.name || "User",
     phoneNumber: "08123456789",
   },
   paymentAddress: {
-    bankName: "BANK MANDIRI cab Segiri",
-    accountNumber: "1480002719998",
+    bankName: "BANK BCA",
+    accountNumber: "1234567",
     accountName: "PT. MITRA ANDALAN PETROLEUM",
   },
   fuelPrices: {
-    logisticInformation: "TRUCK 10 KL Site BSSR / BAS Tanah Datar",
-    productName: "Bio Diesel B50 / B40 if stock still",
+    logisticInformation: "TRUCK",
+    productName: "Bio Diesel",
     basePrice: 17950,
     totalPrice: 0,
     sellingPrice: {
@@ -62,12 +63,12 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
 const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: 30,
   offeror: {
-    name: "Stenly Boseke",
+    name: user.value?.name || "User",
     signature: undefined,
   },
   companyInformation: {
-    address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
-    phoneNumber: "0541-2832313",
+    address: "Jl. Belatuk Samarinda, Indonesia",
+    phoneNumber: "0541-1234567",
     email: "marketing.mapetroleum@gmail.com",
   },
 });
