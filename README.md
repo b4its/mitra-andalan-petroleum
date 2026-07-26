@@ -9,6 +9,24 @@ Sistem manajemen internal untuk perusahaan bahan bakar minyak.
 - **Containerization:** Docker + Docker Compose
 - **API Dokumentasi:** Swagger UI (otomatis dari FastAPI)
 
+## API Endpoints (27 routes)
+
+| Modul | Endpoints | Keterangan |
+|-------|-----------|------------|
+| Health | `GET /health` | Cek status server |
+| Auth | `POST /auth/login` | Login user |
+| Customers | CRUD `/customers` | Data customer |
+| Suppliers | CRUD `/suppliers` | Data supplier |
+| Profiles | CRUD `/profiles` | Manajemen user |
+| Offering Letters | CRUD `/offering-letters` | Surat penawaran (marketing) |
+| Purchase Orders | CRUD `/purchase-orders` | PO customer/supplier |
+| Delivery Orders | CRUD `/delivery-orders` | Delivery order (operational) |
+| Invoices | CRUD `/invoices` | Invoice/penagihan (finance) |
+| Sales | CRUD `/sales` | Data penjualan |
+| Notifications | CRUD `/notifications` | Notifikasi sistem |
+| Stats | GET `/stats/*` | Statistik dashboard |
+| Uploads | CRUD `/upload`, `/uploads` | File upload (signature, dokumen) |
+
 ## Struktur Proyek
 
 ```
@@ -20,7 +38,7 @@ mandalan/
 │   │   ├── db/                 # Seed data
 │   │   ├── models/             # SQLAlchemy models
 │   │   └── schemas/            # Pydantic request/response schemas
-│   ├── media/                  # Uploaded files (signatures, documents)
+│   ├── media/                  # Uploaded files (signatures, documents, returned)
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
@@ -31,9 +49,16 @@ mandalan/
 │   └── nuxt.config.ts
 ├── docker-compose.yml
 └── documentation/
-    ├── setup.md
-    └── api_setup.md
+    ├── setup.md                # Panduan instalasi
+    └── api_setup.md            # Dokumentasi API lengkap + skenario upload
 ```
+
+## Key Features
+
+- **File Upload** — Multi-file upload (max 50MB), kaitkan ke dokumen via `document_type` + `document_id`, cascade delete otomatis
+- **Notifikasi** — Field `to` untuk redirect path, `is_read` untuk status baca
+- **Details JSON** — Setiap dokumen punya field `details` fleksibel untuk data form frontend
+- **Relasi Upload** — OL, PO, DO, Invoice punya `uploads` one-to-many (nullable)
 
 ## Memulai Cepat
 
@@ -47,6 +72,7 @@ docker compose --profile full up -d
 | Frontend | http://localhost:8080 |
 | Swagger UI | http://localhost:8000/docs |
 | ReDoc | http://localhost:8000/redoc |
+| Uploaded Files | http://localhost:8000/media/... |
 
 ## Akun Default
 

@@ -28,25 +28,7 @@ def _delete_file(upload: Upload):
         file_path.unlink()
 
 
-@router.post(
-    "/upload",
-    response_model=UploadResponse,
-    status_code=201,
-    summary="Upload file",
-    description="Upload file (max 50MB). Kaitkan ke dokumen dengan `document_type` (ol/po/do/invoice) dan `document_id`.",
-)
-async def upload_file(
-    file: UploadFile = File(...),
-    folder: str = Form("general"),
-    document_type: str | None = Form(None),
-    document_id: str | None = Form(None),
-    db: AsyncSession = Depends(get_db),
-):
-    if document_type and document_type not in DOCUMENT_TYPES:
-        raise HTTPException(status_code=400, detail=f"document_type must be one of {DOCUMENT_TYPES}")
-    if (document_type and not document_id) or (document_id and not document_type):
-        raise HTTPException(status_code=400, detail="Both document_type and document_id must be provided together")
-
+async def _process_single_file(file: UploadFile, folder: str, document_type: str | None, document_id: str | None, db: AsyncSession) -> Upload:
     ext = Path(file.filename or "").suffix.lower()
     if not ext:
         raise HTTPException(status_code=400, detail="File must have an extension")
@@ -82,6 +64,32 @@ async def upload_file(
     await db.flush()
     await db.refresh(upload)
     return upload
+
+
+@router.post(
+    "/upload",
+    response_model=list[UploadResponse],
+    status_code=201,
+    summary="Upload file(s)",
+    description="Upload satu atau banyak file (max 50MB per file). Kaitkan ke dokumen dengan `document_type` (ol/po/do/invoice) dan `document_id`.",
+)
+async def upload_files(
+    files: list[UploadFile] = File(..., description="Satu atau banyak file"),
+    folder: str = Form("general"),
+    document_type: str | None = Form(None),
+    document_id: str | None = Form(None),
+    db: AsyncSession = Depends(get_db),
+):
+    if document_type and document_type not in DOCUMENT_TYPES:
+        raise HTTPException(status_code=400, detail=f"document_type must be one of {DOCUMENT_TYPES}")
+    if (document_type and not document_id) or (document_id and not document_type):
+        raise HTTPException(status_code=400, detail="Both document_type and document_id must be provided together")
+
+    results = []
+    for file in files:
+        upload = await _process_single_file(file, folder, document_type, document_id, db)
+        results.append(upload)
+    return results
 
 
 @router.get(

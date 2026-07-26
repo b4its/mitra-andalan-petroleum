@@ -24,6 +24,7 @@ Service akan berjalan di:
 | Frontend (Nuxt) | 8080 |
 | MySQL | 3306 |
 | Swagger UI | http://localhost:8000/docs |
+| Uploaded Files | http://localhost:8000/media/... |
 
 ### Hanya backend + DB (untuk development frontend lokal)
 
