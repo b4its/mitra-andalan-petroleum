@@ -1,8 +1,25 @@
 <script setup lang="ts">
+import type { PurchaseOrdersDetails } from "~/types/marketing";
+
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
 const idPoLetter = route.params.id;
 const { user } = useAuth();
+
+const { get } = useApi();
+
+const { data: poDetails } = await useAsyncData("po-details", async () => {
+  const res = await get<PurchaseOrdersDetails>(
+    `/purchase-orders/${idPoLetter}`,
+  );
+  {
+    return {
+      id: res.id,
+      purchaseOrderNumber: res.po_number,
+      customerName: res.supplier_name,
+    };
+  }
+});
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
@@ -11,7 +28,7 @@ const loadPdf = async () => {
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Purchase Order ${idPoLetter}`,
+        title: `Purchase Order (${poDetails.value?.purchaseOrderNumber}) | ${poDetails.value?.customerName}`,
         author: "PT. Mitra Andalan Petroleum",
         creator: user.value?.name,
         producer: "PT. Mitra Andalan Petroleum",
@@ -119,7 +136,7 @@ const loadPdf = async () => {
                 {},
                 {},
                 {
-                  text: `PO Number : ${idPoLetter}`,
+                  text: `PO Number : \n${poDetails.value?.purchaseOrderNumber}`,
                   bold: true,
                   border: [true, false, true, true],
                 },
