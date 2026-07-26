@@ -20,6 +20,7 @@ Interactive docs: [Swagger UI](http://localhost:8000/docs) | [ReDoc](http://loca
 - [Invoices](#invoices)
 - [Sales](#sales)
 - [Notifications](#notifications)
+- [Uploads](#uploads)
 - [Stats](#stats)
 - [Field `details` JSON](#field-details-json)
 - [Common Response Format](#common-response-format)
@@ -1269,6 +1270,7 @@ curl -X GET http://localhost:8000/api/v1/notifications
     "message": "PO dari customer PT Bintang Jaya telah masuk",
     "type": "info",
     "sender_id": null,
+    "to": "/marketing/customer",
     "created_at": "2026-07-26T10:00:00"
   }
 ]
@@ -1287,6 +1289,7 @@ curl -X GET http://localhost:8000/api/v1/notifications/uuid-notif-1
   "message": "PO dari customer PT Bintang Jaya telah masuk",
   "type": "info",
   "sender_id": null,
+  "to": "/marketing/customer",
   "created_at": "2026-07-26T10:00:00"
 }
 ```
@@ -1300,7 +1303,8 @@ curl -X POST http://localhost:8000/api/v1/notifications \
     "title": "Invoice Jatuh Tempo",
     "message": "Invoice INV/MAP/VI-26/001 akan jatuh tempo dalam 3 hari",
     "type": "warning",
-    "sender_id": "uuid-user-1"
+    "sender_id": "uuid-user-1",
+    "to": "/finance/invoice/data-invoice-customer"
   }'
 ```
 
@@ -1311,6 +1315,7 @@ curl -X POST http://localhost:8000/api/v1/notifications \
   "message": "Invoice INV/MAP/VI-26/001 akan jatuh tempo dalam 3 hari",
   "type": "warning",
   "sender_id": "uuid-user-1",
+  "to": "/finance/invoice/data-invoice-customer",
   "created_at": "2026-07-26T10:30:00"
 }
 ```
@@ -1332,6 +1337,7 @@ curl -X PUT http://localhost:8000/api/v1/notifications/uuid-notif-baru \
   "message": "Invoice INV/MAP/VI-26/001 akan jatuh tempo dalam 3 hari",
   "type": "read",
   "sender_id": "uuid-user-1",
+  "to": "/finance/invoice/data-invoice-customer",
   "created_at": "2026-07-26T10:30:00"
 }
 ```
@@ -1348,6 +1354,54 @@ curl -X DELETE http://localhost:8000/api/v1/notifications/uuid-notif-baru
   "code": 200
 }
 ```
+
+---
+
+## Uploads
+
+Upload file signature, dokumen, atau lampiran lainnya. File disimpan di `backend/media/` dan bisa diakses via URL langsung.
+
+### POST /upload — Upload file
+
+Request: `multipart/form-data`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `file` | File | Ya | File yang akan diupload (max 50MB) |
+| `folder` | String | Tidak | Subfolder tujuan (`signatures`, `documents`, `returned`, `general`) |
+
+Format file yang diizinkan: JPG, JPEG, PNG, GIF, BMP, WebP, SVG, PDF, DOC, DOCX, XLS, XLSX.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "file=@/path/to/signature.png"
+```
+
+```json
+{
+  "filename": "a1b2c3d4e5f6.png",
+  "url": "/media/general/a1b2c3d4e5f6.png",
+  "size": 102400
+}
+```
+
+Dengan folder:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "file=@/path/to/signature.png" \
+  -F "folder=signatures"
+```
+
+```json
+{
+  "filename": "f6e5d4c3b2a1.png",
+  "url": "/media/signatures/f6e5d4c3b2a1.png",
+  "size": 102400
+}
+```
+
+Akses file: `http://localhost:8000/media/signatures/f6e5d4c3b2a1.png`
 
 ---
 

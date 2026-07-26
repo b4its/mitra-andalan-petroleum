@@ -1,16 +1,27 @@
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from app.api.v1 import v1_router
 from app.core.config import settings
 from app.core.database import engine, Base, async_session_factory
 
+MEDIA_DIR = Path(__file__).resolve().parent.parent / "media"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    MEDIA_DIR.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
+        try:
+            await conn.execute(text("ALTER TABLE notifications ADD COLUMN `to` VARCHAR(500) NULL"))
+        except Exception:
+            pass
         await conn.run_sync(Base.metadata.create_all)
     async with async_session_factory() as session:
         from app.db.seed import seed_database
@@ -32,6 +43,7 @@ openapi_tags = [
     {"name": "sales", "description": "Data penjualan"},
     {"name": "notifications", "description": "Notifikasi sistem"},
     {"name": "stats", "description": "Statistik untuk dashboard"},
+    {"name": "uploads", "description": "Upload file (signature, dokumen, dll)"},
 ]
 
 app = FastAPI(
@@ -77,3 +89,4 @@ app.add_middleware(
 )
 
 app.include_router(v1_router)
+app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")

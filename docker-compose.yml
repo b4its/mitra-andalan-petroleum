@@ -29,6 +29,8 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: mysql+aiomysql://mandalan:mandalan@db:3306/mandalan
+    volumes:
+      - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -50,3 +52,4 @@ services:
 
 volumes:
   mysqldata:
+  media_data:

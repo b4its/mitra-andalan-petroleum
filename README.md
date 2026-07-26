@@ -20,6 +20,7 @@ mandalan/
 │   │   ├── db/                 # Seed data
 │   │   ├── models/             # SQLAlchemy models
 │   │   └── schemas/            # Pydantic request/response schemas
+│   ├── media/                  # Uploaded files (signatures, documents)
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
