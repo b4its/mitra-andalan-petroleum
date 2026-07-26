@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.models.offering_letter import OfferingLetter
 from app.models.customer import Customer
+from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.offering_letter import (
     OfferingLetterResponse,
@@ -125,17 +126,33 @@ async def update_offering_letter(id: str, body: OfferingLetterUpdate, db: AsyncS
     return _to_response(ol, c.name if c else "")
 
 
+async def _delete_upload_files(uploads: list[Upload]):
+    from pathlib import Path
+    MEDIA_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "media"
+    for u in uploads:
+        fp = MEDIA_DIR / u.folder / u.stored_filename
+        if fp.exists():
+            fp.unlink()
+
+
 @router.delete(
     "/offering-letters/{id}",
     response_model=MessageResponse,
     summary="Hapus offering letter",
-    description="Menghapus surat penawaran berdasarkan ID.",
+    description="Menghapus surat penawaran berdasarkan ID. Upload terkait juga ikut terhapus.",
 )
 async def delete_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
     if not ol:
         raise HTTPException(status_code=404, detail="Not found")
+    upl_result = await db.execute(
+        select(Upload).where(Upload.document_type == "ol", Upload.document_id == id)
+    )
+    uploads = upl_result.scalars().all()
+    await _delete_upload_files(uploads)
+    for u in uploads:
+        await db.delete(u)
     await db.delete(ol)
     await db.flush()
     return MessageResponse(message="Deleted", code=200)

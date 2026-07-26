@@ -8,6 +8,7 @@ from app.models.delivery_order import DeliveryOrder
 from app.models.invoice import Invoice
 from app.models.notification import Notification
 from app.models.sale import Sale
+from app.models.upload import Upload
 
 __all__ = [
     "BaseModel",
@@ -20,4 +21,5 @@ __all__ = [
     "Invoice",
     "Notification",
     "Sale",
+    "Upload",
 ]

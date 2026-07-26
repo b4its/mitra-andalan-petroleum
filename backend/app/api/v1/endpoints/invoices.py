@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.models.invoice import Invoice
 from app.models.customer import Customer
+from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.invoice import (
     InvoiceResponse,
@@ -122,17 +123,33 @@ async def update_invoice(id: str, body: InvoiceUpdate, db: AsyncSession = Depend
     return _to_response(inv, cn)
 
 
+async def _delete_upload_files(uploads: list[Upload]):
+    from pathlib import Path
+    MEDIA_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "media"
+    for u in uploads:
+        fp = MEDIA_DIR / u.folder / u.stored_filename
+        if fp.exists():
+            fp.unlink()
+
+
 @router.delete(
     "/invoices/{id}",
     response_model=MessageResponse,
     summary="Hapus invoice",
-    description="Hapus invoice berdasarkan ID.",
+    description="Hapus invoice berdasarkan ID. Upload terkait juga ikut terhapus.",
 )
 async def delete_invoice(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
     if not inv:
         raise HTTPException(status_code=404, detail="Not found")
+    upl_result = await db.execute(
+        select(Upload).where(Upload.document_type == "invoice", Upload.document_id == id)
+    )
+    uploads = upl_result.scalars().all()
+    await _delete_upload_files(uploads)
+    for u in uploads:
+        await db.delete(u)
     await db.delete(inv)
     await db.flush()
     return MessageResponse(message="Deleted", code=200)
