@@ -1271,6 +1271,7 @@ curl -X GET http://localhost:8000/api/v1/notifications
     "type": "info",
     "sender_id": null,
     "to": "/marketing/customer",
+    "is_read": true,
     "created_at": "2026-07-26T10:00:00"
   }
 ]
@@ -1290,6 +1291,7 @@ curl -X GET http://localhost:8000/api/v1/notifications/uuid-notif-1
   "type": "info",
   "sender_id": null,
   "to": "/marketing/customer",
+  "is_read": true,
   "created_at": "2026-07-26T10:00:00"
 }
 ```
@@ -1304,7 +1306,8 @@ curl -X POST http://localhost:8000/api/v1/notifications \
     "message": "Invoice INV/MAP/VI-26/001 akan jatuh tempo dalam 3 hari",
     "type": "warning",
     "sender_id": "uuid-user-1",
-    "to": "/finance/invoice/data-invoice-customer"
+    "to": "/finance/invoice/data-invoice-customer",
+    "is_read": true
   }'
 ```
 
@@ -1316,17 +1319,18 @@ curl -X POST http://localhost:8000/api/v1/notifications \
   "type": "warning",
   "sender_id": "uuid-user-1",
   "to": "/finance/invoice/data-invoice-customer",
+  "is_read": true,
   "created_at": "2026-07-26T10:30:00"
 }
 ```
 
-### PUT /notifications/{id} — Update (misal: mark read)
+### PUT /notifications/{id} — Update (misal: mark as read)
 
 ```bash
 curl -X PUT http://localhost:8000/api/v1/notifications/uuid-notif-baru \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "read"
+    "is_read": true
   }'
 ```
 
@@ -1335,9 +1339,10 @@ curl -X PUT http://localhost:8000/api/v1/notifications/uuid-notif-baru \
   "id": "uuid-notif-baru",
   "title": "Invoice Jatuh Tempo",
   "message": "Invoice INV/MAP/VI-26/001 akan jatuh tempo dalam 3 hari",
-  "type": "read",
+  "type": "warning",
   "sender_id": "uuid-user-1",
   "to": "/finance/invoice/data-invoice-customer",
+  "is_read": true,
   "created_at": "2026-07-26T10:30:00"
 }
 ```
