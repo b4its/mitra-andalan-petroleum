@@ -66,7 +66,7 @@ const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: 30,
   offeror: {
     name: "Stenly Boseke",
-    signature: "map-signature.png",
+    signature: undefined,
   },
   companyInformation: {
     address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
