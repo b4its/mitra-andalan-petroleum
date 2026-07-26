@@ -37,14 +37,14 @@ openapi_tags = [
     {"name": "customers", "description": "CRUD data customer"},
     {"name": "suppliers", "description": "CRUD data supplier"},
     {"name": "profiles", "description": "CRUD user/profile management"},
-    {"name": "offering-letters", "description": "Surat penawaran harga (marketing)"},
-    {"name": "purchase-orders", "description": "Purchase order ke customer/supplier"},
-    {"name": "delivery-orders", "description": "Delivery order (operational)"},
-    {"name": "invoices", "description": "Invoice/penagihan (finance)"},
+    {"name": "offering-letters", "description": "Surat penawaran harga (marketing). Memiliki relasi `uploads` (one-to-many) untuk file signature, dokumen pendukung."},
+    {"name": "purchase-orders", "description": "Purchase order ke customer/supplier. Memiliki relasi `uploads` (one-to-many) untuk dokumen PO, lampiran."},
+    {"name": "delivery-orders", "description": "Delivery order (operational). Memiliki relasi `uploads` (one-to-many) untuk foto bukti, dokumen return."},
+    {"name": "invoices", "description": "Invoice/penagihan (finance). Memiliki relasi `uploads` (one-to-many) untuk lampiran invoice."},
     {"name": "sales", "description": "Data penjualan"},
-    {"name": "notifications", "description": "Notifikasi sistem"},
+    {"name": "notifications", "description": "Notifikasi sistem. Field: `to` (redirect path), `is_read` (status baca)."},
     {"name": "stats", "description": "Statistik untuk dashboard"},
-    {"name": "uploads", "description": "Upload file (signature, dokumen, dll)"},
+    {"name": "uploads", "description": "Upload file (signature, dokumen, foto, dll). Multi-file, max 50MB/file. Kaitkan ke parent via `document_type` + `document_id`. Cascade delete otomatis saat parent dihapus."},
 ]
 
 app = FastAPI(
@@ -65,8 +65,9 @@ Login via `POST /api/v1/auth/login` — dapatkan token untuk autentikasi.
 Belum ada middleware token, semua endpoint publik untuk development.
 
 ## Data Format
-Dokumen (OL, PO, DO, Invoice) mendukung field `details` JSON
-untuk menyimpan data form yang kompleks dari frontend.
+- Dokumen (OL, PO, DO, Invoice) — field `details` JSON untuk data form frontend, dan `uploads` (relasi one-to-many ke file upload)
+- Notifikasi — field `to` (redirect path) dan `is_read` (status baca)
+- Upload — support multi-file, max 50MB per file, otomatis cascade delete saat parent dihapus
 """,
     openapi_tags=openapi_tags,
     lifespan=lifespan,

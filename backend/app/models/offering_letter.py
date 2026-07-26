@@ -1,5 +1,5 @@
 from sqlalchemy import Float, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
 
@@ -17,3 +17,9 @@ class OfferingLetter(BaseModel):
     transport_price: Mapped[float] = mapped_column(Float, default=0)
     status: Mapped[str] = mapped_column(String(30), default="created")
     details: Mapped[str] = mapped_column(Text, nullable=True, comment="JSON: full form data per schemas.ts")
+
+    uploads: Mapped[list["Upload"]] = relationship(
+        "Upload",
+        primaryjoin="and_(Upload.document_type == 'ol', foreign(Upload.document_id) == OfferingLetter.id)",
+        uselist=True, viewonly=True,
+    )

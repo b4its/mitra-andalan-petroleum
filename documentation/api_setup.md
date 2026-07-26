@@ -21,6 +21,7 @@ Interactive docs: [Swagger UI](http://localhost:8000/docs) | [ReDoc](http://loca
 - [Sales](#sales)
 - [Notifications](#notifications)
 - [Uploads](#uploads)
+- [Skenario Upload per Dokumen](#skenario-upload-per-dokumen)
 - [Stats](#stats)
 - [Field `details` JSON](#field-details-json)
 - [Common Response Format](#common-response-format)
@@ -1364,69 +1365,89 @@ curl -X DELETE http://localhost:8000/api/v1/notifications/uuid-notif-baru
 
 ## Uploads
 
-Upload file signature, dokumen, atau lampiran lainnya. Setiap upload memiliki record di database dan bisa dikaitkan ke dokumen induk (OL, PO, DO, Invoice) melalui `document_type` dan `document_id`.
+Upload file signature, dokumen, atau lampiran lainnya. Setiap upload memiliki record di database dan bisa dikaitkan ke dokumen induk melalui `document_type` + `document_id`.
 
-Jika dokumen induk dihapus, seluruh upload terkait akan ikut terhapus (file + record).
+**Relasi:** Setiap dokumen (OL, PO, DO, Invoice) memiliki `uploads` (one-to-many, nullable). Dokumen tanpa upload akan mengembalikan `uploads: []`. Jika dokumen induk dihapus, seluruh upload terkait ikut terhapus (file + record).
 
-### POST /upload — Upload file + buat record
+### POST /upload — Upload satu atau banyak file + buat record
 
 Request: `multipart/form-data`
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `file` | File | Ya | File yang akan diupload (max 50MB) |
+| `files` | File[] | Ya | Satu atau banyak file (max 50MB per file) |
 | `folder` | String | Tidak | Subfolder tujuan (`signatures`, `documents`, `returned`, `general`) |
 | `document_type` | String | Tidak | Tipe dokumen induk: `ol`, `po`, `do`, `invoice` |
 | `document_id` | String | Tidak | UUID dokumen induk (wajib jika `document_type` diisi) |
 
 Format file yang diizinkan: JPG, JPEG, PNG, GIF, BMP, WebP, SVG, PDF, DOC, DOCX, XLS, XLSX.
 
+Upload banyak file:
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/upload \
-  -F "file=@/path/to/signature.png" \
-  -F "folder=signatures" \
+  -F "files=@/path/to/signature.png" \
+  -F "files=@/path/to/document.pdf" \
+  -F "folder=documents" \
   -F "document_type=ol" \
   -F "document_id=uuid-ol-1"
 ```
 
 ```json
-{
-  "id": "uuid-upload-1",
-  "original_filename": "signature.png",
-  "stored_filename": "a1b2c3d4e5f6.png",
-  "folder": "signatures",
-  "mime_type": "image/png",
-  "size": 102400,
-  "url": "/media/signatures/a1b2c3d4e5f6.png",
-  "document_type": "ol",
-  "document_id": "uuid-ol-1",
-  "created_at": "2026-07-26T14:00:00",
-  "updated_at": "2026-07-26T14:00:00"
-}
+[
+  {
+    "id": "uuid-upload-1",
+    "original_filename": "signature.png",
+    "stored_filename": "a1b2c3d4e5f6.png",
+    "folder": "documents",
+    "mime_type": "image/png",
+    "size": 102400,
+    "url": "/media/documents/a1b2c3d4e5f6.png",
+    "document_type": "ol",
+    "document_id": "uuid-ol-1",
+    "created_at": "2026-07-26T14:00:00",
+    "updated_at": "2026-07-26T14:00:00"
+  },
+  {
+    "id": "uuid-upload-2",
+    "original_filename": "document.pdf",
+    "stored_filename": "f6e5d4c3b2a1.pdf",
+    "folder": "documents",
+    "mime_type": "application/pdf",
+    "size": 512000,
+    "url": "/media/documents/f6e5d4c3b2a1.pdf",
+    "document_type": "ol",
+    "document_id": "uuid-ol-1",
+    "created_at": "2026-07-26T14:00:00",
+    "updated_at": "2026-07-26T14:00:00"
+  }
+]
 ```
 
-Upload tanpa dokumen induk:
+Upload satu file tanpa dokumen induk:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/upload \
-  -F "file=@/path/to/document.pdf" \
+  -F "files=@/path/to/document.pdf" \
   -F "folder=documents"
 ```
 
 ```json
-{
-  "id": "uuid-upload-2",
-  "original_filename": "document.pdf",
-  "stored_filename": "f6e5d4c3b2a1.pdf",
-  "folder": "documents",
-  "mime_type": "application/pdf",
-  "size": 512000,
-  "url": "/media/documents/f6e5d4c3b2a1.pdf",
-  "document_type": null,
-  "document_id": null,
-  "created_at": "2026-07-26T14:05:00",
-  "updated_at": "2026-07-26T14:05:00"
-}
+[
+  {
+    "id": "uuid-upload-3",
+    "original_filename": "document.pdf",
+    "stored_filename": "b2a1f6e5d4c3.pdf",
+    "folder": "documents",
+    "mime_type": "application/pdf",
+    "size": 512000,
+    "url": "/media/documents/b2a1f6e5d4c3.pdf",
+    "document_type": null,
+    "document_id": null,
+    "created_at": "2026-07-26T14:05:00",
+    "updated_at": "2026-07-26T14:05:00"
+  }
+]
 ```
 
 ### GET /uploads — List semua upload
@@ -1523,6 +1544,186 @@ curl -X DELETE http://localhost:8000/api/v1/uploads/uuid-upload-1
 ```
 
 Akses file: `http://localhost:8000/media/signatures/a1b2c3d4e5f6.png`
+
+---
+
+## Skenario Upload per Dokumen
+
+### Offering Letter (OL)
+
+Frontend: `marketingolfooterform` — upload signature/tanda tangan, dokumen pendukung.
+
+**Skenario 1: Upload 1 file (signature) saat buat OL**
+
+```bash
+# 1. Buat OL
+curl -X POST http://localhost:8000/api/v1/offering-letters \
+  -H "Content-Type: application/json" \
+  -d '{
+    "offering_letter_number": "OL/2026/001",
+    "customer_id": "uuid-customer-1",
+    "status": "created"
+  }'
+# → Response: id = "uuid-ol-1"
+
+# 2. Upload signature file, kaitkan ke OL
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "files=@signature.png" \
+  -F "folder=signatures" \
+  -F "document_type=ol" \
+  -F "document_id=uuid-ol-1"
+# → Response: [{ "url": "/media/signatures/abc.png", "document_type": "ol", "document_id": "uuid-ol-1" }]
+
+# 3. Update details OL dengan URL signature
+curl -X PUT http://localhost:8000/api/v1/offering-letters/uuid-ol-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "details": {
+      "offeror": {
+        "name": "Andi",
+        "signature": "/media/signatures/abc.png"
+      },
+      "companyInformation": {
+        "address": "Jl. Contoh",
+        "phoneNumber": "081234",
+        "email": "map@email.com"
+      }
+    }
+  }'
+```
+
+**Skenario 2: Upload 3 file sekaligus untuk 1 OL**
+
+```bash
+# Upload 3 file dalam 1 request
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "files=@signature.png" \
+  -F "files=@dokumen-pendukung.pdf" \
+  -F "files=@lampiran.jpg" \
+  -F "folder=documents" \
+  -F "document_type=ol" \
+  -F "document_id=uuid-ol-1"
+# → Response: [3 objek upload, semua dengan document_type="ol", document_id="uuid-ol-1"]
+```
+
+**Cek semua upload milik OL:**
+
+```bash
+curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
+# → Response: [semua upload milik OL ini]
+```
+
+---
+
+### Purchase Order (PO)
+
+Frontend: `marketingpocustomerform` — upload dokumen PO, lampiran customer/supplier.
+
+**Skenario: Upload dokumen saat buat PO**
+
+```bash
+# 1. Buat PO
+curl -X POST http://localhost:8000/api/v1/purchase-orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "po_number": "PO/2026/001",
+    "type": "customer",
+    "customer_id": "uuid-customer-1",
+    "status": "created"
+  }'
+# → Response: id = "uuid-po-1"
+
+# 2. Upload dokumen perusahaan + lampiran
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "files=@company-doc.pdf" \
+  -F "files=@npwp.jpg" \
+  -F "folder=documents" \
+  -F "document_type=po" \
+  -F "document_id=uuid-po-1"
+
+# 3. Simpan URL di details PO
+curl -X PUT http://localhost:8000/api/v1/purchase-orders/uuid-po-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "details": {
+      "companyInformation": {
+        "name": "PT Mitra Andalan",
+        "npwp": "/media/documents/npwp.jpg",
+        "attachment": "/media/documents/company-doc.pdf"
+      }
+    }
+  }'
+```
+
+**Cek upload PO:**
+```bash
+curl "http://localhost:8000/api/v1/uploads?document_type=po&document_id=uuid-po-1"
+```
+
+---
+
+### Delivery Order (DO)
+
+Frontend: `operationdoreturnedform` — upload dokumen return, foto bukti pengiriman.
+
+**Skenario: Upload foto bukti + dokumen return**
+
+```bash
+# 1. Buat DO
+curl -X POST http://localhost:8000/api/v1/delivery-orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "do_number": "DO/2026/001",
+    "customer_id": "uuid-customer-1",
+    "status": "created"
+  }'
+# → Response: id = "uuid-do-1"
+
+# 2. Upload foto bukti (bisa banyak file)
+curl -X POST http://localhost:8000/api/v1/upload \
+  -F "files=@foto-bukti1.jpg" \
+  -F "files=@foto-bukti2.jpg" \
+  -F "files=@dokumen-return.pdf" \
+  -F "folder=returned" \
+  -F "document_type=do" \
+  -F "document_id=uuid-do-1"
+
+# 3. Update DO dengan URL foto bukti
+curl -X PUT http://localhost:8000/api/v1/delivery-orders/uuid-do-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "document_returned",
+    "details": {
+      "additional": {
+        "notes": [{ "note": "Foto bukti pengiriman" }],
+        "fuelReceived": 15000
+      },
+      "footer": {
+        "attachments": "/media/returned/foto-bukti1.jpg"
+      }
+    }
+  }'
+```
+
+**Cek upload DO:**
+```bash
+curl "http://localhost:8000/api/v1/uploads?document_type=do&document_id=uuid-do-1"
+```
+
+---
+
+### Cascade Delete (Upload ikut terhapus)
+
+Ketika dokumen induk dihapus, semua upload terkait otomatis ikut terhapus (record DB + file di disk).
+
+```bash
+# Hapus OL → upload milik OL itu juga terhapus
+curl -X DELETE http://localhost:8000/api/v1/offering-letters/uuid-ol-1
+
+# Verifikasi: upload sudah tidak ada
+curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
+# → Response: []
+```
 
 ---
 
