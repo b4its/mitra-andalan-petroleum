@@ -182,10 +182,10 @@ async def _seed_notifications(db: AsyncSession):
         return
 
     notifications = [
-        Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Bina Karya Sentosa telah masuk.", type="info", to="/marketing/customer"),
-        Notification(title="Invoice Jatuh Tempo", message="Invoice INV/2025/VI/001 akan jatuh tempo dalam 3 hari.", type="warning", to="/finance/invoice/data-invoice-customer"),
-        Notification(title="DO Selesai", message="Delivery Order 001/DO/VI/2025 telah selesai diproses.", type="success", to="/operations"),
-        Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2025 memerlukan revisi.", type="error", to="/marketing/customer"),
+        Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Bina Karya Sentosa telah masuk.", type="info", to="/marketing/customer", is_read=True),
+        Notification(title="Invoice Jatuh Tempo", message="Invoice INV/2025/VI/001 akan jatuh tempo dalam 3 hari.", type="warning", to="/finance/invoice/data-invoice-customer", is_read=True),
+        Notification(title="DO Selesai", message="Delivery Order 001/DO/VI/2025 telah selesai diproses.", type="success", to="/operations", is_read=True),
+        Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2025 memerlukan revisi.", type="error", to="/marketing/customer", is_read=True),
     ]
     for n in notifications:
         db.add(n)

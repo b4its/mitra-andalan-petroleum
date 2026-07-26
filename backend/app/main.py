@@ -18,10 +18,11 @@ MEDIA_DIR = Path(__file__).resolve().parent.parent / "media"
 async def lifespan(app: FastAPI):
     MEDIA_DIR.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
-        try:
-            await conn.execute(text("ALTER TABLE notifications ADD COLUMN `to` VARCHAR(500) NULL"))
-        except Exception:
-            pass
+        for col in ["`to` VARCHAR(500) NULL", "`is_read` TINYINT(1) NOT NULL DEFAULT 0"]:
+            try:
+                await conn.execute(text(f"ALTER TABLE notifications ADD COLUMN {col}"))
+            except Exception:
+                pass
         await conn.run_sync(Base.metadata.create_all)
     async with async_session_factory() as session:
         from app.db.seed import seed_database

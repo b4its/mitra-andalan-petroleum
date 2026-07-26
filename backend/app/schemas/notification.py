@@ -12,6 +12,7 @@ class NotificationResponse(BaseModel):
     type: str = "info"
     sender_id: str | None = None
     to: str | None = None
+    is_read: bool = False
     created_at: datetime
 
 
@@ -21,6 +22,7 @@ class NotificationCreate(BaseModel):
     type: str = "info"
     sender_id: str | None = None
     to: str | None = None
+    is_read: bool = False
 
 
 class NotificationUpdate(BaseModel):
@@ -29,3 +31,4 @@ class NotificationUpdate(BaseModel):
     type: str | None = None
     sender_id: str | None = None
     to: str | None = None
+    is_read: bool | None = None
