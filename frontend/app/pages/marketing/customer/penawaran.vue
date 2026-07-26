@@ -91,18 +91,20 @@ const { post } = useApi();
 
 async function onFooterSubmit() {
   try {
-    const res = await post<any, OfferingLetterPost>("/offering-letters", {
-      customer_id: letterHeader.receiver,
-      date: letterHeader.date,
-      location: letterHeader.location,
-      offering_letter_number: letterHeader.offeringLetterNumber,
-      regarding: letterHeader.regarding,
-      receiver: letterHeader.receiver,
-      status: "created",
-      transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
-      fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
-    });
-    console.log(res);
+    // const res = await post<any, OfferingLetterPost>("/offering-letters", {
+    //   customer_id: letterHeader.receiver,
+    //   date: letterHeader.date,
+    //   location: letterHeader.location,
+    //   offering_letter_number: letterHeader.offeringLetterNumber,
+    //   regarding: letterHeader.regarding,
+    //   receiver: letterHeader.receiver,
+    //   status: "created",
+    //   transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
+    //   fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
+    // });
+    // console.log(res);
+
+    console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
   } catch (e: any) {
     toast.add({ title: "Error", description: e.message, color: "error" });
   }
