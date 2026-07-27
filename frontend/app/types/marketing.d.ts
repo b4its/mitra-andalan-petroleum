@@ -1,13 +1,86 @@
+export interface Customer {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+}
+
+export interface OfferingLetterDetails {
+  location: string;
+  date: Date | string;
+  offeringLetterNumber: string;
+  regarding: string;
+  receiver: string;
+  supplyPoint: string;
+  qualityAssurance: string;
+  custodyTransfer: string;
+  unloadingProcedure: string;
+  volumeUnit: string;
+  volumeTolerance: number;
+  paymentTerm: number;
+  latePenalty: number;
+  servicePattern: string;
+  personInCharge: PersonInCharge;
+  paymentAddress: PaymentAddress;
+  fuelPrices: FuelPrices;
+  purchaseOrderDeadline: number;
+  offeror: Offeror;
+  companyInformation: CompanyInformation;
+}
+
+export interface CompanyInformation {
+  address: string;
+  phoneNumber: string;
+  email: string;
+}
+
+export interface FuelPrices {
+  logisticInformation: string;
+  productName: string;
+  basePrice: number;
+  totalPrice: number;
+  sellingPrice: {
+    ppkb: number;
+    oat: number;
+    ppn: number;
+  };
+  percentageNum: {
+    ppkb: number;
+    oat: number;
+    ppn: number;
+  };
+}
+
+export interface Offeror {
+  name: string;
+  signature: Signature;
+}
+
+export interface Signature {}
+
+export interface PaymentAddress {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
+export interface PersonInCharge {
+  name: string;
+  phoneNumber: string;
+}
+
 export interface OfferingLetterPost {
   offering_letter_number: string;
   customer_id: string;
   location: string | null;
   date: string | null;
   regarding: string | null;
-  receiver: string | null;
+  receiver: string;
   fuel_total_price: number;
   transport_price: number;
   status: string;
+  details: OfferingLetterDetails;
 }
 
 export interface OfferingLetters {
@@ -16,7 +89,7 @@ export interface OfferingLetters {
   customer_id: string;
   customer_name: CustomerName;
   location: Location;
-  date: Date;
+  date: Date | string;
   regarding: Regarding;
   receiver: CustomerName;
   fuel_total_price: number;
@@ -24,6 +97,7 @@ export interface OfferingLetters {
   status: Status;
   created_at: Date | string;
   updated_at: Date | string;
+  details: OfferingLetterDetails;
 }
 
 export interface PurchaseOrdersSupplier {
@@ -41,10 +115,20 @@ export interface PurchaseOrdersSupplier {
   updated_at: Date;
 }
 
+export interface PurchaseOrdersCustomerPost {
+  po_number: string;
+  type: "customer" | "supplier";
+  customer_id: string | null;
+  supplier_id: string | null;
+  date: string;
+  total: number;
+  status: string;
+}
+
 export interface PurchaseOrdersDetails {
   id: string;
   po_number: string;
-  type: string;
+  type: "customer" | "supplier";
   customer_id: string | null;
   supplier_id: string;
   customer_name: string;

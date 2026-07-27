@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
-import type { OfferingLetterPost } from "~/types/marketing";
+import type { Uploads } from "~/types";
+import type { OfferingLetterPost, Customer } from "~/types/marketing";
 import {
   type MarketingOLDetailsState,
   type MarketingOLFooterState,
@@ -8,6 +9,28 @@ import {
 } from "~/types/schemas";
 
 const { user } = useAuth();
+const { get } = useApi();
+
+const { data: customerList } = await useAsyncData("customers", async () => {
+  const res = await get<Customer[]>("/customers");
+  return res.map((receiver: Customer) => ({
+    id: receiver.id,
+    name: receiver.name,
+    address: receiver.address,
+    phone: receiver.phone,
+    email: receiver.email,
+  }));
+});
+
+const receivers = ref(
+  customerList.value?.map((receiver: Customer) => {
+    return {
+      label: receiver.name,
+      value: receiver.id,
+      address: receiver.address,
+    };
+  }),
+);
 
 const items: StepperItem[] = [
   { title: "Kop Surat Penawaran", slot: "letterHeader" },
@@ -88,24 +111,49 @@ function onDetailsSubmit() {
 }
 
 const toast = useToast();
-const { post } = useApi();
+const { post, postFile } = useApi();
 
 async function onFooterSubmit() {
   try {
-    // const res = await post<any, OfferingLetterPost>("/offering-letters", {
-    //   customer_id: letterHeader.receiver,
-    //   date: letterHeader.date,
-    //   location: letterHeader.location,
-    //   offering_letter_number: letterHeader.offeringLetterNumber,
-    //   regarding: letterHeader.regarding,
-    //   receiver: letterHeader.receiver,
-    //   status: "created",
-    //   transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
-    //   fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
-    // });
-    // console.log(res);
+    const res = await post<any, OfferingLetterPost>("/offering-letters", {
+      customer_id: letterHeader.receiver,
+      date: letterHeader.date,
+      location: letterHeader.location,
+      offering_letter_number: letterHeader.offeringLetterNumber,
+      regarding: letterHeader.regarding,
+      receiver: letterHeader.receiver,
+      status: "created",
+      transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
+      fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
+      details: {
+        ...letterHeader,
+        ...letterOfferDetails,
+        ...letterFooter,
+      },
+    });
+    console.log(res);
 
-    console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
+    const signature = letterFooter.offeror.signature;
+    if (!signature) {
+      throw new Error("Tanda tangan belum diunggah");
+    }
+
+    const resUpload = await postFile<Uploads>("/upload", {
+      files: [signature],
+      folder: "marketing",
+      document_type: "ol",
+      document_id: letterHeader.offeringLetterNumber,
+    });
+
+    console.log(resUpload);
+
+    toast.add({
+      title: "Sukses",
+      description: "Data Penawaran berhasil dibuat",
+      color: "success",
+    });
+
+    // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
   } catch (e: any) {
     toast.add({ title: "Error", description: e.message, color: "error" });
   }
@@ -118,6 +166,7 @@ definePageMeta({ layout: "marketing" });
   <UStepper disabled ref="stepper" :items>
     <template #letterHeader>
       <MarketingOLHeaderForm
+        :receivers="receivers"
         v-model="letterHeader"
         :hasPrevious="stepper?.hasPrev"
         @previous="previousNavigation"

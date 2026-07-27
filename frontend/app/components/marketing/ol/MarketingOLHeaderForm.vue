@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from "@nuxt/ui";
+import type { Customer } from "~/types/marketing";
 import {
   marketingOLHeaderSchema,
   type MarketingOLHeaderState,
@@ -7,6 +8,7 @@ import {
 
 defineProps<{
   hasPrevious: boolean | undefined;
+  receivers: any;
 }>();
 
 const emit = defineEmits<{
@@ -76,13 +78,32 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLHeaderState>) {
         />
       </UFormField>
 
-      <UFormField name="receiver" label="Yang Terhormat" required>
+      <!-- <UFormField name="receiver" label="Yang Terhormat" required>
         <UInput
           v-model="state.receiver"
           type="text"
           autocomplete="off"
           placeholder="PT. XYZ"
         />
+      </UFormField> -->
+
+      <UFormField name="receiver" label="Yang Terhormat" required>
+        <USelectMenu
+          v-model="state.receiver"
+          :items="receivers"
+          placeholder="Pilih Customer"
+          value-key="value"
+          :ui="{ content: 'min-w-fit' }"
+          class="w-full"
+        >
+          <template #item-label="{ item }">
+            {{ item.label }}
+
+            <span v-if="item.address" class="text-muted text-xs">
+              ({{ item.address }})
+            </span>
+          </template>
+        </USelectMenu>
       </UFormField>
 
       <div class="flex justify-between pt-4">
