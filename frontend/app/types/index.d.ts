@@ -100,3 +100,30 @@ export interface Range {
   start: Date;
   end: Date;
 }
+
+export interface Uploads {
+  files: File[];
+  folder: string;
+  document_type: string;
+  document_id: string;
+}
+
+export interface UpdateFileUploads {
+  folder: string;
+  document_type: string;
+  document_id: string;
+}
+
+export interface ResUploads {
+  id: string;
+  original_filename: string;
+  stored_filename: string;
+  folder: string;
+  mime_type: string;
+  size: number;
+  url: string;
+  document_type: string;
+  document_id: string;
+  created_at: string;
+  updated_at: string;
+}
