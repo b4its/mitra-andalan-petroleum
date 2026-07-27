@@ -2,6 +2,7 @@ import type {
   FinanceInvoiceOverview,
   MarketingOfferingLetterOverview,
   OperationsDeliveryOrderOverview,
+  Uploads,
 } from "~/types";
 
 const API_BASE = "http://localhost:8000/api/v1";
@@ -25,10 +26,13 @@ export function useApi() {
     return res.json();
   }
 
-  async function post<T, U>(path: string, body: U): Promise<T> {
-    const res = await fetch(`${API_BASE_POST}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+  async function put<T, U>(path: string, body: U): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -38,7 +42,89 @@ export function useApi() {
     return res.json();
   }
 
-  return { get, post };
+  async function post<T, U>(path: string, body: U): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || `API error: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  async function postFile<T>(path: string, payload: Uploads): Promise<T> {
+    const formData = new FormData();
+
+    payload.files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    if (payload.folder !== undefined) {
+      formData.append("folder", payload.folder);
+    }
+
+    if (payload.document_type) {
+      formData.append("document_type", payload.document_type);
+    }
+
+    if (payload.document_id) {
+      formData.append("document_id", payload.document_id);
+    }
+
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || `API error: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  async function putFile<T>(path: string, payload: Uploads): Promise<T> {
+    const formData = new FormData();
+
+    payload.files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    if (payload.folder !== undefined) {
+      formData.append("folder", payload.folder);
+    }
+
+    if (payload.document_type) {
+      formData.append("document_type", payload.document_type);
+    }
+
+    if (payload.document_id) {
+      formData.append("document_id", payload.document_id);
+    }
+
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: "PUT",
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || `API error: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  return { get, post, put, putFile, postFile };
 }
 
 export interface ApiOfferingLetter {
