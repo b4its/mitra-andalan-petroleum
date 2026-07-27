@@ -168,6 +168,10 @@ const pagination = ref({
             Lihat Surat
           </UButton>
           <UButton
+            v-if="
+              row.original.status === 'created' ||
+              row.original.status === 'under_revision'
+            "
             :to="`/marketing/detail/revisi-surat-penawaran-${row.original.id}`"
             variant="soft"
             size="md"
