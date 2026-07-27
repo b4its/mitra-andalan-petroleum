@@ -1,10 +1,36 @@
 <script setup lang="ts">
 import type { StepperItem } from "@nuxt/ui";
+import type { ResUploads, Uploads } from "~/types";
+import type { Customer, OfferingLetterPost } from "~/types/marketing";
 import {
   type MarketingOLDetailsState,
   type MarketingOLFooterState,
   type MarketingOLHeaderState,
 } from "~/types/schemas";
+
+const toast = useToast();
+const { get, put, postFile } = useApi();
+
+const { data: customerList } = await useAsyncData("customers", async () => {
+  const res = await get<Customer[]>("/customers");
+  return res.map((receiver: Customer) => ({
+    id: receiver.id,
+    name: receiver.name,
+    address: receiver.address,
+    phone: receiver.phone,
+    email: receiver.email,
+  }));
+});
+
+const receivers = ref(
+  customerList.value?.map((receiver: Customer) => {
+    return {
+      label: receiver.name,
+      value: receiver.id,
+      address: receiver.address,
+    };
+  }),
+);
 
 const items: StepperItem[] = [
   { title: "Kop Surat Penawaran", slot: "letterHeader" },
@@ -16,64 +42,102 @@ const items: StepperItem[] = [
 const route = useRoute();
 const idOfferingLetter = route.params.id;
 
+const { data: offeringLetter } = await useAsyncData(
+  "offering-letter",
+  async () => {
+    const res = await get<OfferingLetterPost>(
+      `/offering-letters/${idOfferingLetter}`,
+    );
+    return res;
+  },
+);
+
 const letterHeader = reactive<MarketingOLHeaderState>({
-  location: "Samarinda",
-  date: `${new Date().toISOString().split("T")[0]}`,
-  offeringLetterNumber: "722/MAP/II-06/26",
-  regarding: "Surat Penawaran Harga Bahan Bakar Minyak Bio diesel",
-  receiver: "",
+  location: offeringLetter.value?.details.location || "",
+  date:
+    new Date(offeringLetter.value?.details.date || new Date())
+      .toISOString()
+      .split("T")[0] ?? "",
+  offeringLetterNumber: offeringLetter.value?.offering_letter_number || "",
+  regarding: offeringLetter.value?.details.regarding || "",
+  receiver: offeringLetter.value?.details.receiver || "",
 });
 
 const letterOfferDetails = reactive<MarketingOLDetailsState>({
-  supplyPoint: "Terminal Bahan Bakar Minyak (TBBM) Palaran",
-  qualityAssurance: "Sesuai dengan spesifikasi SK Dirjen Migas",
-  custodyTransfer:
-    "Flowmeter terkalibrasi oleh instansi berwenang di TBBM Palaran",
-  unloadingProcedure: "Jarum Tera/Sounding Tanki Truck di lokasi penerima",
-  volumeUnit: "Liter observed",
-  volumeTolerance: 0.025,
-  paymentTerm: 7,
-  latePenalty: 0.02,
-  servicePattern: "Franco Penerima",
+  supplyPoint: offeringLetter.value?.details.supplyPoint || "",
+  qualityAssurance: offeringLetter.value?.details.qualityAssurance || "",
+  custodyTransfer: offeringLetter.value?.details.custodyTransfer || "",
+  unloadingProcedure: offeringLetter.value?.details.unloadingProcedure || "",
+  volumeUnit: offeringLetter.value?.details.volumeUnit || "",
+  volumeTolerance: offeringLetter.value?.details.volumeTolerance || 0,
+  paymentTerm: offeringLetter.value?.details.paymentTerm || 0,
+  latePenalty: offeringLetter.value?.details.latePenalty || 0,
+  servicePattern: offeringLetter.value?.details.servicePattern || "",
   personInCharge: {
-    name: "Stenly",
-    phoneNumber: "08123456789",
+    name: offeringLetter.value?.details.personInCharge.name || "",
+    phoneNumber: offeringLetter.value?.details.personInCharge.phoneNumber || "",
   },
   paymentAddress: {
-    bankName: "BANK MANDIRI cab Segiri",
-    accountNumber: "1480002719998",
-    accountName: "PT. MITRA ANDALAN PETROLEUM",
+    bankName: offeringLetter.value?.details.paymentAddress.bankName || "",
+    accountNumber:
+      offeringLetter.value?.details.paymentAddress.accountNumber || "",
+    accountName: offeringLetter.value?.details.paymentAddress.accountName || "",
   },
   fuelPrices: {
-    logisticInformation: "TRUCK 10 KL Site BSSR / BAS Tanah Datar",
-    productName: "Bio Diesel B50 / B40 if stock still",
-    basePrice: 17950,
-    totalPrice: 0,
+    logisticInformation:
+      offeringLetter.value?.details.fuelPrices.logisticInformation || "",
+    productName: offeringLetter.value?.details.fuelPrices.productName || "",
+    basePrice: offeringLetter.value?.details.fuelPrices.basePrice || 0,
+    totalPrice: offeringLetter.value?.details.fuelPrices.totalPrice || 0,
     sellingPrice: {
-      ppkb: 0,
-      oat: 0,
-      ppn: 0,
+      ppkb: offeringLetter.value?.details.fuelPrices.sellingPrice.ppkb || 0,
+      oat: offeringLetter.value?.details.fuelPrices.sellingPrice.oat || 0,
+      ppn: offeringLetter.value?.details.fuelPrices.sellingPrice.ppn || 0,
     },
     percentageNum: {
-      oat: 0,
-      ppkb: 0.1,
-      ppn: 0.11,
+      oat: offeringLetter.value?.details.fuelPrices.percentageNum.oat || 0,
+      ppkb: offeringLetter.value?.details.fuelPrices.percentageNum.ppkb || 0,
+      ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0,
     },
   },
 });
 
 const letterFooter = reactive<MarketingOLFooterState>({
-  purchaseOrderDeadline: 30,
+  purchaseOrderDeadline:
+    offeringLetter.value?.details.purchaseOrderDeadline || 0,
   offeror: {
-    name: "Stenly Boseke",
+    name: offeringLetter.value?.details.offeror.name || "",
     signature: undefined,
   },
   companyInformation: {
-    address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
-    phoneNumber: "0541-2832313", // add masking
-    email: "marketing.mapetroleum@gmail.com",
+    address: offeringLetter.value?.details.companyInformation.address || "",
+    phoneNumber:
+      offeringLetter.value?.details.companyInformation.phoneNumber || "", // add masking
+    email: offeringLetter.value?.details.companyInformation.email || "",
   },
 });
+
+const { data: signature } = await useAsyncData("signature", async () => {
+  const res = await get<ResUploads[]>(
+    `/uploads?document_type=ol&document_id=${letterHeader.offeringLetterNumber}`,
+  );
+
+  return {
+    url: res[0]?.url,
+  };
+});
+
+async function loadExistingFile() {
+  const url = `http://localhost:8000${signature.value?.url}`;
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const filename = url.split("/").pop()!;
+  letterFooter.offeror.signature = new File([blob], filename, {
+    type: blob.type,
+  });
+}
+
+onMounted(loadExistingFile);
 
 const stepper = useTemplateRef("stepper");
 
@@ -89,9 +153,53 @@ function onDetailsSubmit() {
   stepper.value?.next();
 }
 
-function onFooterSubmit() {
-  console.log("Data submitted");
-  console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
+async function onFooterSubmit() {
+  try {
+    const res = await put<any, OfferingLetterPost>(
+      `/offering-letters/${idOfferingLetter}`,
+      {
+        customer_id: letterHeader.receiver,
+        date: letterHeader.date,
+        location: letterHeader.location,
+        offering_letter_number: letterHeader.offeringLetterNumber,
+        regarding: letterHeader.regarding,
+        receiver: letterHeader.receiver,
+        status: "under_revision",
+        transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
+        fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
+        details: {
+          ...letterHeader,
+          ...letterOfferDetails,
+          ...letterFooter,
+        },
+      },
+    );
+    console.log(res);
+
+    const signature = letterFooter.offeror.signature;
+    if (!signature) {
+      throw new Error("Tanda tangan belum diunggah");
+    }
+
+    const resUpload = await postFile<Uploads>("/upload", {
+      files: [signature],
+      folder: "marketing",
+      document_type: "ol",
+      document_id: letterHeader.offeringLetterNumber,
+    });
+
+    console.log(resUpload);
+
+    toast.add({
+      title: "Sukses",
+      description: "Data Penawaran berhasil dibuat",
+      color: "success",
+    });
+
+    // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
+  } catch (e: any) {
+    toast.add({ title: "Error", description: e.message, color: "error" });
+  }
 }
 
 definePageMeta({ layout: "marketing" });
@@ -101,6 +209,7 @@ definePageMeta({ layout: "marketing" });
   <UStepper disabled ref="stepper" :items>
     <template #letterHeader>
       <MarketingOLHeaderForm
+        :receivers="receivers"
         v-model="letterHeader"
         :hasPrevious="stepper?.hasPrev"
         @previous="previousNavigation"

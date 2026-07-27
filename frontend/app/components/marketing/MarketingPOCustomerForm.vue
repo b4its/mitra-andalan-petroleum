@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from "@nuxt/ui";
+import type { OfferingLetters } from "~/types/marketing";
 import {
   marketingPOCustomerSchema,
   type MarketingPOCustomerState,
 } from "~/types/schemas";
+
+const props = defineProps<{
+  offeringLetters: any;
+}>();
 
 const emit = defineEmits<{
   submit: [];
@@ -14,26 +19,6 @@ const state = defineModel<MarketingPOCustomerState>({ required: true });
 function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
   emit("submit");
 }
-
-const value = ref<string>();
-
-const offeringLetters = ref([
-  {
-    label: "PT. MIGAS KUKAR MANDIRI",
-    value: "722/MAP/II-06/26",
-    deliveryOrderNumbers: ["1086/DO/MAP/V/2026", "1087/DO/MAP/V/2026"],
-  },
-  {
-    label: "PT. BERAU MINERAL ENERGI",
-    value: "723/MAP/II-06/26",
-    deliveryOrderNumbers: ["1092/DO/BME/V/2026", "1093/DO/BME/V/2026"],
-  },
-  {
-    label: "PT. KALTIM OIL SERVICES",
-    value: "724/MAP/II-06/26",
-    deliveryOrderNumbers: ["1098/DO/KOS/V/2026", "1099/DO/KOS/V/2026"],
-  },
-]);
 </script>
 
 <template>
@@ -46,8 +31,8 @@ const offeringLetters = ref([
   >
     <UPageCard variant="soft">
       <UFormField name="offeringLetter" label="Nomor Surat Penawaran" required>
-        <USelect
-          v-model="state.offeringLetterNumber"
+        <USelectMenu
+          v-model="state.selectedOfferingLetter"
           :items="offeringLetters"
           placeholder="Pilih Surat Penawaran"
           value-key="value"
@@ -57,10 +42,37 @@ const offeringLetters = ref([
           <template #item-label="{ item }">
             {{ item.label }}
 
-            <span class="text-muted text-xs"> ({{ item.value }}) </span>
+            <span class="text-muted text-xs"> ({{ item.olNumber }}) </span>
           </template>
-        </USelect>
+        </USelectMenu>
       </UFormField>
+
+      <UFormField
+        name="purchaseOrderNumber"
+        label="Nomor Purchase Order Customer"
+        required
+      >
+        <UInput
+          v-model="state.purchaseOrderNumber"
+          type="text"
+          autocomplete="off"
+        />
+      </UFormField>
+
+      <div class="flex gap-4">
+        <UFormField name="total" label="Total (Liter)" class="w-full" required>
+          <UInputNumber class="w-full" v-model="state.total" :min="1" />
+        </UFormField>
+
+        <UFormField name="poReceivedDate" label="PO Customer Diterima" required>
+          <UInput
+            v-model="state.poReceivedDate"
+            type="date"
+            autocomplete="off"
+            class="w-full"
+          />
+        </UFormField>
+      </div>
 
       <UFormField name="poFile" label="File Purchase Order Customer" required>
         <UFileUpload

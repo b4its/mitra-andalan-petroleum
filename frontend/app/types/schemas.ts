@@ -1,4 +1,5 @@
 import * as z from "zod";
+import type { Customer } from "~/types/marketing";
 
 export const addCustomerSchema = z.object({
   name: z.string().min(2, "Too short"),
@@ -25,8 +26,11 @@ export const passwordSchema = z.object({
 export type PasswordState = z.infer<typeof passwordSchema>;
 
 export const marketingPOCustomerSchema = z.object({
-  offeringLetterNumber: z.string(),
+  selectedOfferingLetter: z.object(),
   poDocument: z.file().optional(),
+  purchaseOrderNumber: z.string().min(1),
+  total: z.number().min(1),
+  poReceivedDate: z.string(),
 });
 
 export type MarketingPOCustomerState = z.infer<
@@ -45,7 +49,7 @@ export const marketingOLHeaderSchema = z.object({
   date: z.iso.date(),
   offeringLetterNumber: z.string(),
   regarding: z.string(),
-  receiver: z.string().min(2),
+  receiver: z.string(),
 });
 
 export type MarketingOLHeaderState = z.infer<typeof marketingOLHeaderSchema>;
