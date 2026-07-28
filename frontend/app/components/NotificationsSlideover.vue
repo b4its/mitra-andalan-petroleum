@@ -1,45 +1,51 @@
 <script setup lang="ts">
-import type { Notifications } from '~/types/notification'
-
-defineProps<{
-  notifications: Notifications[]
-}>()
-
-const { isNotificationsSlideoverOpen } = useDashboard()
+const { notifications, isSlideoverOpen, openDetail, loading } = useNotifications()
 </script>
 
 <template>
-  <USlideover v-model:open="isNotificationsSlideoverOpen" title="Notifications">
+  <USlideover v-model:open="isSlideoverOpen" title="Notifikasi">
     <template #body>
-      <NuxtLink
-        v-for="notification in notifications"
-        :key="notification.id"
-        to="#"
-        class="px-3 py-2.5 rounded-md hover:bg-elevated/50 flex items-center gap-3 relative -mx-3 first:-mt-3 last:-mb-3"
-      >
-        <!-- <UChip color="error" :show="!!notification.unread" inset>
-          <UAvatar :alt="notification.sender.name" size="md" />
-        </UChip> -->
+      <div v-if="loading" class="flex items-center justify-center py-12">
+        <UIcon name="i-lucide-loader" class="size-6 animate-spin text-muted" />
+      </div>
 
-        <div class="text-sm flex-1" @click="">
-          <p class="flex items-center justify-between">
-            <span class="text-highlighted font-medium">{{
-              notification.title
-            }}</span>
-            <time
-              :datetime="formatDate(notification.created_at)"
-              class="text-muted text-xs"
-            >
-              {{
-                notification.created_at
-                  ? formatDate(notification.created_at)
-                  : ""
-              }}
+      <div v-else-if="!notifications.length" class="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <UIcon name="i-lucide-bell-off" class="size-10 text-muted" />
+        <p class="text-sm text-muted">Tidak ada notifikasi</p>
+      </div>
+
+      <div v-else class="flex flex-col gap-1">
+        <button
+          v-for="notification in notifications"
+          :key="notification.id"
+          type="button"
+          class="w-full rounded-lg px-3 py-3 text-left transition hover:bg-elevated/60 focus:outline-none focus:ring-2 focus:ring-primary"
+          :class="{ 'opacity-60': notification.is_read }"
+          @click="openDetail(notification)"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span
+                v-if="!notification.is_read"
+                class="mt-1 size-2 shrink-0 rounded-full bg-error"
+              />
+              <span
+                v-else
+                class="mt-1 size-2 shrink-0 rounded-full bg-transparent"
+              />
+              <p class="truncate text-sm font-medium text-highlighted">
+                {{ notification.title }}
+              </p>
+            </div>
+            <time class="shrink-0 text-xs text-muted">
+              {{ notification.created_at ? formatDate(notification.created_at) : '' }}
             </time>
+          </div>
+          <p class="mt-1 pl-4 text-xs text-dimmed line-clamp-2">
+            {{ notification.message }}
           </p>
-          <p class="text-dimmed">{{ notification.message }}</p>
-        </div>
-      </NuxtLink>
+        </button>
+      </div>
     </template>
   </USlideover>
 </template>
