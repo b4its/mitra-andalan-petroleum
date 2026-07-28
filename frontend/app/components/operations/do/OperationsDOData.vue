@@ -14,13 +14,15 @@ const toast = useToast()
 const { get, put } = useApi()
 const loading = ref(false)
 
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
+
 const { data: DoData, refresh } = await useAsyncData(
   'delivery-orders',
   async () => {
-    const res = await get<{ items: DeliveryOrders[] }>('/delivery-orders', {
-      page: 1,
-      page_size: 50
-    })
+    const params: Record<string, string | number> = { page: 1, page_size: 50 }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const res = await get<{ items: DeliveryOrders[] }>('/delivery-orders', params)
     return (res.items || []).map((d: DeliveryOrders) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
@@ -32,7 +34,7 @@ const { data: DoData, refresh } = await useAsyncData(
       status: d.status
     }))
   },
-  { default: () => [] }
+  { default: () => [], watch: [debouncedSearch] }
 )
 
 const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
@@ -122,6 +124,15 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
 <template>
   <section class="flex flex-col lg:gap-4">
+    <div class="flex items-center gap-2">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="Cari nomor DO, PO, atau transportir..."
+        class="w-72"
+      />
+    </div>
+
     <UTable
       ref="table"
       v-model:pagination="pagination"

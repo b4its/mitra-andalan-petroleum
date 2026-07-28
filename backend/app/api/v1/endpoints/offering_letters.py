@@ -1,8 +1,8 @@
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -46,18 +46,31 @@ def _to_response(ol: OfferingLetter, customer_name: str) -> OfferingLetterRespon
     description="Menampilkan daftar surat penawaran dengan pagination. Menyertakan nama customer.",
 )
 async def list_offering_letters(
-    page: int = 1, page_size: int = 20, db: AsyncSession = Depends(get_db)
+    page: int = 1, page_size: int = 20, search: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db)
 ):
-    total_result = await db.execute(select(func.count()).select_from(select(OfferingLetter).subquery()))
+    base = select(OfferingLetter)
+    if search:
+        base = base.where(or_(
+            OfferingLetter.offering_letter_number.ilike(f"%{search}%"),
+            OfferingLetter.receiver.ilike(f"%{search}%"),
+            OfferingLetter.status.ilike(f"%{search}%"),
+        ))
+    total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0
 
     stmt = (
         select(OfferingLetter, Customer.name.label("customer_name"))
         .join(Customer, OfferingLetter.customer_id == Customer.id)
-        .order_by(OfferingLetter.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
     )
+    if search:
+        stmt = stmt.where(or_(
+            OfferingLetter.offering_letter_number.ilike(f"%{search}%"),
+            OfferingLetter.receiver.ilike(f"%{search}%"),
+            OfferingLetter.status.ilike(f"%{search}%"),
+            Customer.name.ilike(f"%{search}%"),
+        ))
+    stmt = stmt.order_by(OfferingLetter.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     rows = result.all()
 
