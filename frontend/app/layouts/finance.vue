@@ -1,53 +1,53 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute();
-const toast = useToast();
+const route = useRoute()
+const toast = useToast()
 
-const open = ref(false);
+const open = ref(false)
 
 const links = [
   [
     {
-      label: "Beranda",
-      icon: "i-lucide-house",
-      to: "/finance",
+      label: 'Beranda',
+      icon: 'i-lucide-house',
+      to: '/finance',
       onSelect: () => {
-        open.value = false;
-      },
+        open.value = false
+      }
     },
     {
-      label: "Data DO",
-      icon: "i-lucide-truck",
-      to: "/finance/do",
+      label: 'Data DO',
+      icon: 'i-lucide-truck',
+      to: '/finance/do',
       onSelect: () => {
-        open.value = false;
-      },
+        open.value = false
+      }
     },
     {
-      label: "Manajemen Invoice",
-      icon: "i-lucide-receipt",
+      label: 'Manajemen Invoice',
+      icon: 'i-lucide-receipt',
       defaultOpen: true,
       children: [
         {
-          label: "Pembuatan Invoice",
-          to: "/finance/invoice/pembuatan-invoice",
+          label: 'Pembuatan Invoice',
+          to: '/finance/invoice/pembuatan-invoice',
           exact: true,
           onSelect: () => {
-            open.value = false;
-          },
+            open.value = false
+          }
         },
         {
-          label: "Data Invoice Customer",
-          to: "/finance/invoice/data-invoice-customer",
+          label: 'Data Invoice Customer',
+          to: '/finance/invoice/data-invoice-customer',
           onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+            open.value = false
+          }
+        }
+      ]
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 </script>
 
 <template>

@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   operationsDOFooterSchema,
-  type OperationsDOFooterState,
-} from "~/types/schemas";
+  type OperationsDOFooterState
+} from '~/types/schemas'
 
 const props = defineProps<{
-  isLoading: boolean | undefined;
-}>();
+  isLoading: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<OperationsDOFooterState>({ required: true });
+const state = defineModel<OperationsDOFooterState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsDOFooterState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -39,16 +39,16 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOFooterState>) {
       <div class="flex w-full gap-4">
         <UFormField name="companyCoordinator" label="Koordinator MAP" required>
           <UInput
-            type="text"
             v-model="state.companyCoordinator"
+            type="text"
             autocomplete="off"
           />
         </UFormField>
 
         <UFormField name="distributionAdmin" label="Admin Distribusi" required>
           <UInput
-            type="text"
             v-model="state.distributionAdmin"
+            type="text"
             autocomplete="off"
           />
         </UFormField>
@@ -60,11 +60,11 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOFooterState>) {
 
       <div class="flex w-full gap-4">
         <UFormField name="receiver" label="Penerima" required>
-          <UInput type="text" v-model="state.receiver" autocomplete="off" />
+          <UInput v-model="state.receiver" type="text" autocomplete="off" />
         </UFormField>
 
         <UFormField name="driver" label="Driver/Officer" required>
-          <UInput type="text" v-model="state.driver" autocomplete="off" />
+          <UInput v-model="state.driver" type="text" autocomplete="off" />
         </UFormField>
       </div>
 

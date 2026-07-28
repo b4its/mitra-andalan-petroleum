@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { Time } from "@internationalized/date";
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { Time } from '@internationalized/date'
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   operationsDODetailsTransportSchema,
-  type OperationsDODetailsTransportState,
-} from "~/types/schemas";
+  type OperationsDODetailsTransportState
+} from '~/types/schemas'
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
 // Vehicle Number Regex masking
 // const options = {
@@ -24,15 +24,15 @@ const emit = defineEmits<{
 // };
 
 const state = defineModel<OperationsDODetailsTransportState>({
-  required: true,
-});
+  required: true
+})
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -52,7 +52,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       </UFormField>
 
       <UFormField name="total" label="Jumlah (Liter)" required>
-        <UInputNumber class="w-full" v-model="state.total" :min="1" />
+        <UInputNumber v-model="state.total" class="w-full" :min="1" />
       </UFormField>
 
       <USeparator />
@@ -70,8 +70,8 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
 
         <UFormField name="productQty" label="Volume/Kuantitas (Liter)" required>
           <UInputNumber
-            class="w-full"
             v-model="state.productInformation.qty"
+            class="w-full"
             :min="1"
           />
         </UFormField>
@@ -97,12 +97,12 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
 
       <UFormField name="temperature" label="Temperature" required>
         <UInputNumber
-          class="w-full"
           v-model="state.productInformation.temperature"
+          class="w-full"
           :format-options="{
             style: 'unit',
             unit: 'celsius',
-            unitDisplay: 'short',
+            unitDisplay: 'short'
           }"
         />
       </UFormField>
@@ -133,13 +133,13 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       <div class="flex w-full gap-4">
         <UFormField name="topSeal" label="Km. Awal" required>
           <UInputNumber
-            class="w-full"
             v-model="state.transportInformation.startKm"
+            class="w-full"
             :min="1"
             :format-options="{
               style: 'unit',
               unit: 'kilometer',
-              unitDisplay: 'short',
+              unitDisplay: 'short'
             }"
             :increment="false"
             :decrement="false"
@@ -148,13 +148,13 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
 
         <UFormField name="bottomSeal" label="Km. Akhir" required>
           <UInputNumber
-            class="w-full"
             v-model="state.transportInformation.endKm"
+            class="w-full"
             :min="1"
             :format-options="{
               style: 'unit',
               unit: 'kilometer',
-              unitDisplay: 'short',
+              unitDisplay: 'short'
             }"
             :increment="false"
             :decrement="false"
@@ -163,8 +163,8 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
 
         <UFormField name="sgMeter" label="SG Meter" required>
           <UInputNumber
-            class="w-full"
             v-model="state.transportInformation.sgMeter"
+            class="w-full"
             label="contoh: 0.841"
             :increment="false"
             :decrement="false"
@@ -180,17 +180,22 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           required
         >
           <UInputTime
+            v-model="state.transportInformation.timeInformation.departureTime"
             class="w-full justify-center"
             :hour-cycle="24"
-            v-model="state.transportInformation.timeInformation.departureTime"
           />
         </UFormField>
 
-        <UFormField class="w-full" name="arrivalTime" label="Jam Tiba" required>
+        <UFormField
+          class="w-full"
+          name="arrivalTime"
+          label="Jam Tiba"
+          required
+        >
           <UInputTime
+            v-model="state.transportInformation.timeInformation.arrivalTime"
             class="w-full justify-center"
             :hour-cycle="24"
-            v-model="state.transportInformation.timeInformation.arrivalTime"
           />
         </UFormField>
       </div>
@@ -203,9 +208,9 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           required
         >
           <UInputTime
+            v-model="state.transportInformation.timeInformation.unloadingTime"
             class="w-full justify-center"
             :hour-cycle="24"
-            v-model="state.transportInformation.timeInformation.unloadingTime"
           />
         </UFormField>
 
@@ -216,11 +221,11 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           required
         >
           <UInputTime
-            class="w-full justify-center"
-            :hour-cycle="24"
             v-model="
               state.transportInformation.timeInformation.depotArrivalTime
             "
+            class="w-full justify-center"
+            :hour-cycle="24"
           />
         </UFormField>
       </div>

@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   marketingPOCompanySchema,
-  type MarketingPOCompanyState,
-} from "~/types/schemas";
+  type MarketingPOCompanyState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-}>();
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<MarketingPOCompanyState>({ required: true });
+const state = defineModel<MarketingPOCompanyState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingPOCompanyState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 

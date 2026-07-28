@@ -1,73 +1,73 @@
 <script setup lang="ts">
-import * as z from "zod";
-import type { FormSubmitEvent } from "@nuxt/ui";
+import * as z from 'zod'
+import type { FormSubmitEvent } from '@nuxt/ui'
 
 const props = withDefaults(
   defineProps<{
-    showToastTitle?: boolean;
-    toastTitle?: string;
-    successDescription?: string;
+    showToastTitle?: boolean
+    toastTitle?: string
+    successDescription?: string
   }>(),
   {
     showToastTitle: true,
-    toastTitle: "Success",
-    successDescription: "Data Akun Anda berhasil diupdate",
-  },
-);
+    toastTitle: 'Success',
+    successDescription: 'Data Akun Anda berhasil diupdate'
+  }
+)
 
 const emit = defineEmits<{
   submitted: [
     {
-      name: string;
-      email: string;
-      password?: string;
-    },
-  ];
-}>();
+      name: string
+      email: string
+      password?: string
+    }
+  ]
+}>()
 
-const show = ref(false);
-const user = useAuth();
+const show = ref(false)
+const user = useAuth()
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Too short"),
-  email: z.email("Invalid email"),
-  password: z.string().optional(),
-});
+  name: z.string().min(2, 'Too short'),
+  email: z.email('Invalid email'),
+  password: z.string().optional()
+})
 
-type ProfileSchema = z.output<typeof profileSchema>;
+type ProfileSchema = z.output<typeof profileSchema>
 
 const profile = reactive<Partial<ProfileSchema>>({
-  name: "",
-  email: "",
-  password: "",
-});
+  name: '',
+  email: '',
+  password: ''
+})
 
 watch(
   () => user.user.value,
   (currentUser) => {
-    profile.name = currentUser?.name ?? "";
-    profile.email = currentUser?.email ?? "";
-    profile.password = currentUser?.password ?? "";
+    profile.name = currentUser?.name ?? ''
+    profile.email = currentUser?.email ?? ''
+    profile.password = currentUser?.password ?? ''
   },
-  { immediate: true },
-);
+  { immediate: true }
+)
 
-const toast = useToast();
+const toast = useToast()
 
 async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
   toast.add({
     ...(props.showToastTitle ? { title: props.toastTitle } : {}),
     description: props.successDescription,
-    icon: "i-lucide-check",
-    color: "success",
-  });
+    icon: 'i-lucide-check',
+    color: 'success'
+  })
 
-  emit("submitted", event.data);
-  console.log(event.data);
+  emit('submitted', event.data)
+  console.log(event.data)
 }
 
 function toggleShow() {
-  show.value = !show.value;
+  show.value = !show.value
 }
 </script>
 
@@ -90,7 +90,7 @@ function toggleShow() {
         :schema="profileSchema"
         :state="profile"
         :ui="{
-          base: 'lg:max-w-lg',
+          base: 'lg:max-w-lg'
         }"
         @submit="onSubmit"
       >

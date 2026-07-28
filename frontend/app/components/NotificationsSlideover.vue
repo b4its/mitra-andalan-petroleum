@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { Notifications } from "~/types/notification";
+import type { Notifications } from '~/types/notification'
 
 defineProps<{
-  notifications: Notifications[];
-}>();
+  notifications: Notifications[]
+}>()
 
-const { isNotificationsSlideoverOpen } = useDashboard();
+const { isNotificationsSlideoverOpen } = useDashboard()
 </script>
 
 <template>
@@ -21,7 +21,7 @@ const { isNotificationsSlideoverOpen } = useDashboard();
           <UAvatar :alt="notification.sender.name" size="md" />
         </UChip> -->
 
-        <div @click="" class="text-sm flex-1">
+        <div class="text-sm flex-1" @click="">
           <p class="flex items-center justify-between">
             <span class="text-highlighted font-medium">{{
               notification.title

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { NavigationMenuItem } from '@nuxt/ui'
 
 const links = [
   [
@@ -10,19 +10,19 @@ const links = [
     //   exact: true,
     // },
     {
-      label: "Pembuatan Invoice",
-      icon: "i-lucide-receipt",
-      to: "/finance/invoice/pembuatan-invoice",
+      label: 'Pembuatan Invoice',
+      icon: 'i-lucide-receipt',
+      to: '/finance/invoice/pembuatan-invoice'
     },
     {
-      label: "Data Invoice Customer",
-      icon: "i-lucide-users",
-      to: "/finance/invoice/data-invoice-customer",
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+      label: 'Data Invoice Customer',
+      icon: 'i-lucide-users',
+      to: '/finance/invoice/data-invoice-customer'
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
-definePageMeta({ layout: "finance" });
+definePageMeta({ layout: 'finance' })
 </script>
 
 <template>

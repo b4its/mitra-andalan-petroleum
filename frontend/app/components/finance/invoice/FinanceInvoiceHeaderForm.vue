@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   financeInvoiceHeaderSchema,
-  type FinanceInvoiceHeaderState,
-} from "~/types/schemas";
+  type FinanceInvoiceHeaderState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-}>();
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<FinanceInvoiceHeaderState>({ required: true });
+const state = defineModel<FinanceInvoiceHeaderState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<FinanceInvoiceHeaderState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -82,17 +82,17 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceHeaderState>) {
       <div class="flex w-full gap-4">
         <UFormField name="billTo" label="Bill To" required>
           <UTextarea
+            v-model="state.billToInformation"
             class="w-full"
             :rows="4"
-            v-model="state.billToInformation"
           />
         </UFormField>
 
         <UFormField name="deliveryPoint" label="Delivery Point" required>
           <UTextarea
+            v-model="state.deliveryPointInformation"
             class="w-full"
             :rows="4"
-            v-model="state.deliveryPointInformation"
           />
         </UFormField>
       </div>

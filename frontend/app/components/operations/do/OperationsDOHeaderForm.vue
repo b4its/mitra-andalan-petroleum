@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   operationsDOHeaderSchema,
-  type OperationsDOHeaderState,
-} from "~/types/schemas";
+  type OperationsDOHeaderState
+} from '~/types/schemas'
 
 defineProps<{
-  purchaseOrders: any;
-  hasPrevious: boolean | undefined;
-}>();
+  purchaseOrders: any
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<OperationsDOHeaderState>({ required: true });
+const state = defineModel<OperationsDOHeaderState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 

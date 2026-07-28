@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from "@tanstack/vue-table";
-import { h, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
-import type { OperationsDeliveryOrderOverview } from "~/types";
-import type { DeliveryOrders } from "~/types/operations";
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import type { OperationsDeliveryOrderOverview } from '~/types'
+import type { DeliveryOrders } from '~/types/operations'
 
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-const table = useTemplateRef("table");
-const columnPinning = ref({ right: ["actions"] });
+const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const table = useTemplateRef('table')
+const columnPinning = ref({ right: ['actions'] })
 
-const toast = useToast();
-const { get, put } = useApi();
-const loading = ref(false);
+const toast = useToast()
+const { get, put } = useApi()
+const loading = ref(false)
 
 const { data: DoData, refresh } = await useAsyncData(
-  "delivery-orders",
+  'delivery-orders',
   async () => {
-    const res = await get<{ items: DeliveryOrders[] }>("/delivery-orders", {
+    const res = await get<{ items: DeliveryOrders[] }>('/delivery-orders', {
       page: 1,
-      page_size: 50,
-    });
+      page_size: 50
+    })
     return (res.items || []).map((d: DeliveryOrders) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
@@ -29,101 +29,102 @@ const { data: DoData, refresh } = await useAsyncData(
       transportName: d.transport_name,
       dateCreated: d.created_at.toString(),
       dateChanged: d.updated_at.toString(),
-      status: d.status,
-    }));
+      status: d.status
+    }))
   },
-  { default: () => [] },
-);
+  { default: () => [] }
+)
 
 const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
   {
-    accessorKey: "deliveryOrderNumber",
-    header: "Nomor DO",
-    cell: ({ row }) => `${row.getValue("deliveryOrderNumber")}`,
+    accessorKey: 'deliveryOrderNumber',
+    header: 'Nomor DO',
+    cell: ({ row }) => `${row.getValue('deliveryOrderNumber')}`
   },
   {
-    accessorKey: "customerName",
-    header: "Customer",
-    cell: ({ row }) => `${row.getValue("customerName")}`,
+    accessorKey: 'customerName',
+    header: 'Customer',
+    cell: ({ row }) => `${row.getValue('customerName')}`
   },
   {
-    accessorKey: "purchaseOrderNumber",
-    header: "Nomor PO",
-    cell: ({ row }) => `${row.getValue("purchaseOrderNumber")}`,
+    accessorKey: 'purchaseOrderNumber',
+    header: 'Nomor PO',
+    cell: ({ row }) => `${row.getValue('purchaseOrderNumber')}`
   },
   {
-    accessorKey: "transportName",
-    header: "Transportir",
-    cell: ({ row }) => `${row.getValue("transportName")}`,
+    accessorKey: 'transportName',
+    header: 'Transportir',
+    cell: ({ row }) => `${row.getValue('transportName')}`
   },
   {
-    accessorKey: "dateCreated",
-    header: "Dibuat",
-    cell: ({ row }) => `${formatDate(row.getValue("dateCreated"))}`,
+    accessorKey: 'dateCreated',
+    header: 'Dibuat',
+    cell: ({ row }) => `${formatDate(row.getValue('dateCreated'))}`
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ row }) => {
       const color = {
-        created: "info" as const,
-        document_returned: "success" as const,
-      }[row.getValue("status") as string];
-      const label = { created: "Dibuat", document_returned: "Dokumen Kembali" }[
-        row.getValue("status") as string
-      ];
+        created: 'info' as const,
+        document_returned: 'success' as const
+      }[row.getValue('status') as string]
+      const label = { created: 'Dibuat', document_returned: 'Dokumen Kembali' }[
+        row.getValue('status') as string
+      ]
       return h(
         UBadge,
-        { class: "capitalize", variant: "soft", color },
-        () => label,
-      );
-    },
+        { class: 'capitalize', variant: 'soft', color },
+        () => label
+      )
+    }
   },
   {
-    id: "actions",
-    header: "Aksi",
-    size: 180,
-  },
-];
+    id: 'actions',
+    header: 'Aksi',
+    size: 180
+  }
+]
 
 async function updateDoStatus(doId: string) {
   try {
-    if (loading.value) return;
+    if (loading.value) return
 
-    loading.value = true;
+    loading.value = true
 
     const res = await put(`/delivery-orders/${doId}`, {
-      status: "document_returned",
-    });
+      status: 'document_returned'
+    })
 
-    console.log(res);
+    console.log(res)
 
     toast.add({
-      title: "Berhasil",
-      description: "Status DO berhasil diperbarui",
-      icon: "i-lucide-check",
-      color: "success",
-    });
+      title: 'Berhasil',
+      description: 'Status DO berhasil diperbarui',
+      icon: 'i-lucide-check',
+      color: 'success'
+    })
   } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: "Status DO gagal diperbarui",
-      icon: "i-lucide-x",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: 'Status DO gagal diperbarui',
+      icon: 'i-lucide-x',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
-    refresh();
+    loading.value = false
+    refresh()
   }
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 });
+const pagination = ref({ pageIndex: 0, pageSize: 7 })
 </script>
 
 <template>
   <section class="flex flex-col lg:gap-4">
     <UTable
       ref="table"
+      v-model:pagination="pagination"
       :data="DoData"
       :columns="columns"
       :column-pinning="columnPinning"
@@ -132,9 +133,8 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default',
+        td: 'border-b border-default'
       }"
-      v-model:pagination="pagination"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
@@ -144,17 +144,19 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
             variant="solid"
             size="md"
             color="primary"
-            >Detail</UButton
           >
+            Detail
+          </UButton>
 
           <UButton
             v-if="row.original.status === 'created'"
             :loading="loading"
-            @click="updateDoStatus(row.original.id)"
             variant="soft"
             size="md"
             color="success"
-            >Tandai Dokumen Kembali
+            @click="updateDoStatus(row.original.id)"
+          >
+            Tandai Dokumen Kembali
           </UButton>
         </div>
       </template>

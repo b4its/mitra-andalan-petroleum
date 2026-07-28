@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import type { Period, Range, Stat } from "~/types";
+import type { Period, Range, Stat } from '~/types'
 
 const props = defineProps<{
-  period: Period;
-  range: Range;
-}>();
+  period: Period
+  range: Range
+}>()
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  });
+  return value.toLocaleString('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0
+  })
 }
 
-const { data: stats } = await useAsyncData<Stat[]>("finance-stats", async () => {
+const { data: stats } = await useAsyncData<Stat[]>('finance-stats', async () => {
   const { get } = useApi()
-  const res = await get<{ stats: any[] }>("/stats/finance")
+  const res = await get<{ stats: any[] }>('/stats/finance')
   return (res.stats || []).map((s: any) => ({
     title: s.title,
     icon: s.icon,
     value: s.value,
     variation: s.variation,
-    to: s.to,
+    to: s.to
   }))
 }, { watch: [() => props.period, () => props.range], default: () => [] })
 </script>
@@ -41,7 +41,7 @@ const { data: stats } = await useAsyncData<Stat[]>("finance-stats", async () => 
         wrapper: 'items-start',
         leading:
           'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
-        title: 'font-normal text-muted text-xs uppercase',
+        title: 'font-normal text-muted text-xs uppercase'
       }"
       class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
     >

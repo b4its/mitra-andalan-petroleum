@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
-import type { OfferingLetters } from "~/types/marketing";
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type { OfferingLetters } from '~/types/marketing'
 import {
   marketingPOCustomerSchema,
-  type MarketingPOCustomerState,
-} from "~/types/schemas";
+  type MarketingPOCustomerState
+} from '~/types/schemas'
 
 const props = defineProps<{
-  offeringLetters: any;
-}>();
+  offeringLetters: any
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-}>();
+  submit: []
+}>()
 
-const state = defineModel<MarketingPOCustomerState>({ required: true });
+const state = defineModel<MarketingPOCustomerState>({ required: true })
 
 function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -60,8 +60,13 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
       </UFormField>
 
       <div class="flex gap-4">
-        <UFormField name="total" label="Total (Liter)" class="w-full" required>
-          <UInputNumber class="w-full" v-model="state.total" :min="1" />
+        <UFormField
+          name="total"
+          label="Total (Liter)"
+          class="w-full"
+          required
+        >
+          <UInputNumber v-model="state.total" class="w-full" :min="1" />
         </UFormField>
 
         <UFormField name="poReceivedDate" label="PO Customer Diterima" required>

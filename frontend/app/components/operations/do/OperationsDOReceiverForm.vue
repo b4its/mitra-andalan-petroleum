@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   operationsDOReceiverSchema,
-  type OperationsDOReceiverState,
-} from "~/types/schemas";
+  type OperationsDOReceiverState
+} from '~/types/schemas'
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<OperationsDOReceiverState>({ required: true });
+const state = defineModel<OperationsDOReceiverState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 

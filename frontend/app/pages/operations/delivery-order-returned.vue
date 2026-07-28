@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
-import { type OperationsDOState } from "~/types/schemas";
+import type { StepperItem, NavigationMenuItem } from '@nuxt/ui'
+import type { OperationsDOState } from '~/types/schemas'
 
 const items: StepperItem[] = [
   {
-    title: "Upload Surat DO",
-    slot: "doReturned",
-    icon: "i-lucide-receipt-text",
-  },
-];
+    title: 'Upload Surat DO',
+    slot: 'doReturned',
+    icon: 'i-lucide-receipt-text'
+  }
+]
 
 const doReturned = reactive<OperationsDOState>({
-  deliveryOrderNumber: "1086/DO/MAP/V/2026",
-  doDocument: undefined,
-});
+  deliveryOrderNumber: '1086/DO/MAP/V/2026',
+  doDocument: undefined
+})
 
 function onDoSubmit() {
-  console.log("Data submitted");
-  console.log({ ...doReturned });
+  console.log('Data submitted')
+  console.log({ ...doReturned })
 }
 
 const links = [
   [
     {
-      label: "Buat Delivery Order",
-      icon: "i-lucide-truck",
-      to: "/operations/delivery-order",
+      label: 'Buat Delivery Order',
+      icon: 'i-lucide-truck',
+      to: '/operations/delivery-order'
     },
     {
-      label: "Upload Delivery Order (Yang sudah dikembalikan)",
-      icon: "i-lucide-file-output",
-      to: "/operations/delivery-order-returned",
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+      label: 'Upload Delivery Order (Yang sudah dikembalikan)',
+      icon: 'i-lucide-file-output',
+      to: '/operations/delivery-order-returned'
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
-definePageMeta({ layout: "operations" });
+definePageMeta({ layout: 'operations' })
 </script>
 
 <template>
-  <UDashboardPanel :ui="{ body: 'w-full' }" id="do">
+  <UDashboardPanel id="do" :ui="{ body: 'w-full' }">
     <template #header>
       <UDashboardNavbar
         title="Form Pembuatan Delivery Order"
@@ -59,7 +59,7 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #body>
-      <UStepper disabled ref="stepper" :items>
+      <UStepper ref="stepper" disabled :items>
         <template #doReturned>
           <!-- <MarketingPOCustomerForm v-model="doReturned" @submit="onDoSubmit" /> -->
           <OperationsDOReturnedForm v-model="doReturned" @submit="onDoSubmit" />

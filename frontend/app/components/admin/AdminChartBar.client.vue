@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VisXYContainer, VisGroupedBar, VisAxis, VisTooltip } from "@unovis/vue"
+import { VisXYContainer, VisGroupedBar, VisAxis, VisTooltip } from '@unovis/vue'
 
 defineProps<{
   data: {
@@ -11,24 +11,24 @@ defineProps<{
   }[]
 }>()
 
-const categories = ["offering_letters", "purchase_orders", "delivery_orders", "invoices"] as const
-const colors = ["var(--ui-primary)", "var(--ui-info)", "var(--ui-warning)", "var(--ui-success)"]
+const categories = ['offering_letters', 'purchase_orders', 'delivery_orders', 'invoices'] as const
+const colors = ['var(--ui-primary)', 'var(--ui-info)', 'var(--ui-warning)', 'var(--ui-success)']
 const labels: Record<string, string> = {
-  offering_letters: "Surat Penawaran",
-  purchase_orders: "PO",
-  delivery_orders: "DO",
-  invoices: "Invoice",
+  offering_letters: 'Surat Penawaran',
+  purchase_orders: 'PO',
+  delivery_orders: 'DO',
+  invoices: 'Invoice'
 }
 
 const xAccessor = (_d: any, i: number) => i
-const yAccessors = categories.map((cat) => (d: any) => d[cat] ?? 0)
+const yAccessors = categories.map(cat => (d: any) => d[cat] ?? 0)
 const colorAccessor = (_d: any, i: number) => colors[i % colors.length]
 
-function tickFormat(d: any, i: number): string {
-  return d?.month?.split(" ")[0] ?? ""
+function tickFormat(d: any): string {
+  return d?.month?.split(' ')[0] ?? ''
 }
 
-function tooltipTemplate(d: any, i: number, cat: string): string {
+function tooltipTemplate(d: any, _i: number, cat: string): string {
   const label = labels[cat] || cat
   return `${label}: ${d}`
 }
@@ -61,7 +61,12 @@ function tooltipTemplate(d: any, i: number, cat: string): string {
         :bar-padding="0.1"
         :group-padding="0.2"
       />
-      <VisAxis type="x" :x="xAccessor" :tick-format="tickFormat" :num-ticks="data.length" />
+      <VisAxis
+        type="x"
+        :x="xAccessor"
+        :tick-format="tickFormat"
+        :num-ticks="data.length"
+      />
       <VisAxis type="y" :grid-line="true" />
       <VisTooltip :template="tooltipTemplate" />
     </VisXYContainer>
