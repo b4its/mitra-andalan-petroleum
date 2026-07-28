@@ -41,21 +41,9 @@ const typeColor: Record<string, string> = {
 }
 
 const columns: TableColumn<any>[] = [
-  {
-    accessorKey: 'type',
-    header: 'Tipe',
-    cell: ({ row }) => {
-      const t = row.getValue('type') as string
-      return h(resolveComponent('UBadge'), {
-        variant: 'subtle',
-        color: typeColor[t] || 'neutral',
-        class: 'capitalize'
-      }, () => t)
-    }
-  },
+
   { accessorKey: 'title', header: 'Judul' },
   { accessorKey: 'message', header: 'Pesan' },
-  { accessorKey: 'to', header: 'Tujuan' },
   {
     accessorKey: 'is_read',
     header: 'Status',
@@ -67,11 +55,28 @@ const columns: TableColumn<any>[] = [
       }, () => read ? 'Dibaca' : 'Belum')
     }
   },
-  {
-    accessorKey: 'created_at',
-    header: 'Waktu',
-    cell: ({ row }) => row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-'
-  },
+{
+  accessorKey: 'created_at',
+  header: 'Waktu',
+  cell: ({ row }) => {
+    const rawDate = row.getValue('created_at');
+    if (!rawDate) return '-';
+
+    const date = new Date(rawDate);
+    
+    // Ambil YYYY-MM-DD
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    
+    // Ambil Jam dan Menit
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    // Gabungkan sesuai format yang diinginkan
+    return `${dd}-${mm}-${yyyy}, ${hours}:${minutes}`;
+  }
+},
   {
     id: 'action',
     header: '',

@@ -15,18 +15,9 @@ const props = withDefaults(
   }
 )
 
-const emit = defineEmits<{
-  submitted: [
-    {
-      name: string
-      email: string
-      password?: string
-    }
-  ]
-}>()
-
 const show = ref(false)
-const user = useAuth()
+const auth = useAuth()
+const { put } = useApi()
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Too short'),
@@ -43,27 +34,63 @@ const profile = reactive<Partial<ProfileSchema>>({
 })
 
 watch(
-  () => user.user.value,
+  () => auth.user.value,
   (currentUser) => {
     profile.name = currentUser?.name ?? ''
     profile.email = currentUser?.email ?? ''
-    profile.password = currentUser?.password ?? ''
+    profile.password = ''
   },
   { immediate: true }
 )
 
 const toast = useToast()
+const saving = ref(false)
 
 async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
-  toast.add({
-    ...(props.showToastTitle ? { title: props.toastTitle } : {}),
-    description: props.successDescription,
-    icon: 'i-lucide-check',
-    color: 'success'
-  })
+  if (saving.value) return
+  saving.value = true
 
-  emit('submitted', event.data)
-  console.log(event.data)
+  try {
+    const userId = auth.user.value?.id
+    if (!userId) {
+      throw new Error('User ID not found')
+    }
+
+    const body: Record<string, string> = {
+      name: event.data.name,
+      email: event.data.email
+    }
+    if (event.data.password) {
+      body.password = event.data.password
+    }
+
+    const updated = await put<any, typeof body>(`/profiles/${userId}`, body)
+
+    auth.setUser({
+      id: userId,
+      name: updated.name || event.data.name,
+      email: updated.email || event.data.email,
+      password: event.data.password || auth.user.value?.password || '',
+      role: auth.user.value?.role || 'staff',
+      token: auth.user.value?.token || '',
+      loggedInAt: auth.user.value?.loggedInAt || ''
+    })
+
+    toast.add({
+      ...(props.showToastTitle ? { title: props.toastTitle } : {}),
+      description: props.successDescription,
+      icon: 'i-lucide-check',
+      color: 'success'
+    })
+  } catch (err: any) {
+    toast.add({
+      title: 'Error',
+      description: err.message || 'Gagal memperbarui profil',
+      color: 'error'
+    })
+  } finally {
+    saving.value = false
+  }
 }
 
 function toggleShow() {
@@ -75,7 +102,7 @@ function toggleShow() {
   <UDashboardPanel id="profile">
     <template #header>
       <UDashboardNavbar
-        :title="`Profil User ${user.user.value?.name === undefined ? 'User' : user.user.value?.name} | ${user.user.value?.role === undefined ? 'Default' : user.user.value?.role}`"
+        :title="`Profil User ${auth.user.value?.name ?? 'User'} | ${auth.user.value?.role ?? 'Default'}`"
         :ui="{ right: 'gap-3', title: 'capitalize' }"
       >
         <template #leading>

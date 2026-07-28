@@ -14,13 +14,15 @@ const columnPinning = ref({
 
 const { get } = useApi()
 
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
+
 const { data: OlData } = await useAsyncData(
   'offering-letters',
   async () => {
-    const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
-      page: 1,
-      page_size: 50
-    })
+    const params: Record<string, string | number> = { page: 1, page_size: 50 }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const res = await get<{ items: OfferingLetters[] }>('/offering-letters', params)
     return res.items.map((ol: OfferingLetters) => ({
       id: ol.id,
       offeringLetterNumber: ol.offering_letter_number,
@@ -32,9 +34,7 @@ const { data: OlData } = await useAsyncData(
       status: ol.status
     }))
   },
-  {
-    default: () => []
-  }
+  { default: () => [], watch: [debouncedSearch] }
 )
 
 const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
@@ -122,7 +122,14 @@ const pagination = ref({
 
 <template>
   <section class="flex flex-col lg:gap-4">
-    <div class="flex justify-start gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="Cari nomor penawaran atau customer..."
+        class="w-64"
+        @keyup.enter="() => {}"
+      />
       <USelect
         v-model="statusFilter"
         :items="[

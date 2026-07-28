@@ -5,6 +5,7 @@ export type SaleStatus = 'paid' | 'failed' | 'refunded'
 export type Role = 'admin' | 'operations' | 'marketing' | 'finance'
 
 export interface AuthUser {
+  id: string
   name: string
   email: string
   password: string

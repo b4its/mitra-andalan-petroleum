@@ -12,13 +12,15 @@ const columnPinning = ref({ right: ['actions'] })
 
 const { get } = useApi()
 
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
+
 const { data: InvoiceData } = await useAsyncData(
   'invoices',
   async () => {
-    const res = await get<{ items: Invoices[] }>('/invoices', {
-      page: 1,
-      page_size: 50
-    })
+    const params: Record<string, string | number> = { page: 1, page_size: 50 }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const res = await get<{ items: Invoices[] }>('/invoices', params)
     return res.items.map((inv: Invoices) => ({
       id: inv.id,
       invoiceNumber: inv.invoice_number,
@@ -30,7 +32,7 @@ const { data: InvoiceData } = await useAsyncData(
       deadlineStatus: inv.deadline_status
     }))
   },
-  { default: () => [] }
+  { default: () => [], watch: [debouncedSearch] }
 )
 
 const columns: TableColumn<FinanceInvoiceOverview>[] = [
@@ -108,6 +110,15 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
 <template>
   <section class="flex flex-col lg:gap-4">
+    <div class="flex items-center gap-2">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="Cari nomor invoice atau customer..."
+        class="w-72"
+      />
+    </div>
+
     <UTable
       ref="table"
       v-model:pagination="pagination"

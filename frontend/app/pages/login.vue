@@ -40,6 +40,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     const result = await post<
       {
+        id: string
         name: string
         email: string
         role: string
@@ -53,6 +54,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
 
     setUser({
+      id: result.id,
       email: result.email,
       name: result.name,
       password: event.data.password,

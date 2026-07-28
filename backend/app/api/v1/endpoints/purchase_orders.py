@@ -1,8 +1,8 @@
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -63,11 +63,17 @@ def _to_response(po, customer_name, supplier_name):
 )
 async def list_purchase_orders(
     page: int = 1, page_size: int = 20, type: str | None = None,
+    search: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db)
 ):
     base = select(PurchaseOrder)
     if type:
         base = base.where(PurchaseOrder.type == type)
+    if search:
+        base = base.where(or_(
+            PurchaseOrder.po_number.ilike(f"%{search}%"),
+            PurchaseOrder.status.ilike(f"%{search}%"),
+        ))
     total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0
 

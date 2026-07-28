@@ -23,6 +23,7 @@ async def login(body: LoginRequest, db=Depends(get_db)):
     if not user or not bcrypt.verify(body.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     return LoginResponse(
+        id=user.id,
         name=user.name,
         email=user.email,
         role=user.role,

@@ -7,6 +7,7 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
+    id: str
     name: str
     email: str
     role: str

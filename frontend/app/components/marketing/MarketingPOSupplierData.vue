@@ -12,13 +12,15 @@ const columnPinning = ref({ right: ['actions'] })
 
 const { get } = useApi()
 
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
+
 const { data: PoData } = await useAsyncData(
   'purchase-orders-supplier',
   async () => {
-    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
-      '/purchase-orders',
-      { page: 1, page_size: 50, type: 'supplier' }
-    )
+    const params: Record<string, string | number> = { page: 1, page_size: 50, type: 'supplier' }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const res = await get<{ items: PurchaseOrdersSupplier[] }>('/purchase-orders', params)
     return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
       id: purchaseOrder.id,
       offeringLetterNumber: purchaseOrder.po_number,
@@ -30,7 +32,7 @@ const { data: PoData } = await useAsyncData(
       status: purchaseOrder.status
     }))
   },
-  { default: () => [] }
+  { default: () => [], watch: [debouncedSearch] }
 )
 
 const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
@@ -66,6 +68,15 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
 <template>
   <section class="flex flex-col lg:gap-4">
+    <div class="flex items-center gap-2">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="Cari nomor PO atau supplier..."
+        class="w-64"
+      />
+    </div>
+
     <UTable
       ref="table"
       v-model:pagination="pagination"
