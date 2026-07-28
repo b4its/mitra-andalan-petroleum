@@ -1,0 +1,37 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.local
+    container_name: mandalan-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: mysql+aiomysql://mandalan:mandalan@db:3306/mandalan
+    volumes:
+      - ./backend:/app
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - core
+      - full
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.local
+    container_name: mandalan-frontend
+    ports:
+      - "8080:3000"
+      - "24678:24678"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.nuxt
+      - /app/.output
+    depends_on:
+      - backend
+    profiles:
+      - full
