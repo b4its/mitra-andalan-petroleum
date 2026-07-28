@@ -2,10 +2,46 @@
 import angkaTerbilang from "@develoka/angka-terbilang-js";
 import { useChangeCase } from "@vueuse/integrations/useChangeCase.js";
 import logoImage from "~/assets/images/map-logo-only.jpg";
+import type { DeliveryOrdersDetails, Details } from "~/types/operations";
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
 const idDoLetter = route.params.id;
 const { user } = useAuth();
+
+const { get } = useApi();
+
+const { data: doDetails } = await useAsyncData(
+  "delivery-orders-details",
+  async () => {
+    const res = await get<DeliveryOrdersDetails>(
+      `/delivery-orders/${idDoLetter}`,
+    );
+    return res;
+  },
+  { default: () => [] },
+);
+
+const details: Details = doDetails.value?.details;
+
+const tableBodyNotes = [
+  [
+    [
+      {
+        text: "Catatan :",
+        border: [true, false, true, false],
+      },
+    ],
+  ],
+];
+
+for (const note of details.notes) {
+  tableBodyNotes.push([
+    {
+      text: note.note || "",
+      border: [true, false, true, false],
+    },
+  ]);
+}
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
@@ -85,7 +121,7 @@ const loadPdf = async () => {
             body: [
               [
                 {
-                  text: "PT. MITRA ANDALAN PETROLEUM",
+                  text: `${details.companyInformation.name}`,
                   bold: true,
                   border: [true, false, false, false],
                 },
@@ -102,7 +138,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "Distributor Agent for Elnusa Petrofin",
+                  text: `${details.companyInformation.nameSub}`,
                   italics: true,
                   border: [true, false, false, false],
                 },
@@ -114,13 +150,13 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "1124/DO/MAP/VI/2026",
+                  text: `${details.doInformation.doNumber}`,
                   border: [false, false, true, false],
                 },
               ],
               [
                 {
-                  text: "Jl. D.I. Panjaitan No. 25 C-D",
+                  text: `${details.companyInformation.address}`,
                   border: [true, false, false, false],
                 },
                 {
@@ -131,13 +167,13 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: formatDateDoc(new Date()),
+                  text: formatDateDoc(details.doInformation.doDateCreated),
                   border: [false, false, true, false],
                 },
               ],
               [
                 {
-                  text: "Samarinda, 75117, Kalimantan Timur",
+                  text: `${details.companyInformation.phoneNumber}`,
                   border: [true, false, false, false],
                 },
                 {},
@@ -151,7 +187,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "Indonesia",
+                  text: "",
                   border: [true, false, false, false],
                 },
                 {
@@ -162,13 +198,13 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "1200020145",
+                  text: `${details.doInformation.poCustomerNumber.purchaseOrderNumber}`,
                   border: [false, false, true, false],
                 },
               ],
               [
                 {
-                  text: "Telp : 0541-2832313",
+                  text: "",
                   border: [true, false, false, false],
                 },
                 {
@@ -178,7 +214,10 @@ const loadPdf = async () => {
                 {
                   text: ":",
                 },
-                { text: "\n\n", border: [false, false, true, false] },
+                {
+                  text: `${details.doInformation.soNumber || ""}\n\n`,
+                  border: [false, false, true, false],
+                },
               ],
             ],
           },
@@ -216,7 +255,7 @@ const loadPdf = async () => {
                   border: [false, true, false, false],
                 },
                 {
-                  text: "PT BINA SARANA SUKSES",
+                  text: `${details.customerName}`,
                   border: [false, true, false, false],
                 },
                 {
@@ -229,7 +268,7 @@ const loadPdf = async () => {
                   border: [false, true, false, false],
                 },
                 {
-                  text: "PT RISKI JAYA ABADI MANDIRI\n\n\n",
+                  text: `${details.transportName}\n\n\n`,
                   border: [false, true, true, false],
                 },
               ],
@@ -243,7 +282,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "PT BINA SARANA SUKSES",
+                  text: `${details.customerName}`,
                 },
                 {
                   text: "ID",
@@ -254,7 +293,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "",
+                  text: `${details.transportId || ""}`,
                   border: [false, false, true, false],
                 },
               ],
@@ -268,7 +307,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Site CDI - Kutai Barat",
+                  text: `${details.customerAddress || ""}`,
                   border: [false, false, true, false],
                 },
                 {
@@ -280,7 +319,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Samarinda\n\n\n",
+                  text: `${details.transportAddress || ""}\n\n\n`,
                   border: [false, false, true, false],
                 },
               ],
@@ -294,7 +333,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "",
+                  text: `${details.receiverInformation.name || ""}`,
                 },
                 {
                   text: "Driver+HP",
@@ -305,7 +344,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Andika\n\n\n",
+                  text: `${details.driverInformation.name || ""} ${details.driverInformation.phoneNumber ? "-" : ""} ${details.driverInformation.phoneNumber || ""}\n\n\n`,
                   border: [false, false, true, false],
                 },
               ],
@@ -329,7 +368,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "",
+                  text: `${details.helperName || ""}`,
                   border: [false, false, true, false],
                 },
               ],
@@ -343,7 +382,10 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: formatDateDoc(new Date()),
+                  text:
+                    details.receiverDateReceived === undefined
+                      ? formatDateDoc(details.receiverDateReceived)
+                      : "",
                   border: [false, false, true, false],
                 },
                 {
@@ -355,7 +397,10 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: formatDateDoc(new Date()),
+                  text:
+                    details.receiverDateReceived === undefined
+                      ? formatDateDoc(details.transportDateReceived)
+                      : "",
                   border: [false, false, true, false],
                 },
               ],
@@ -409,19 +454,19 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "",
+                  text: `${details.dueDate !== undefined ? formatDateDoc(details.dueDate) : ""}`,
                   colSpan: 2,
                   alignment: "center",
                 },
                 {},
                 {
-                  text: "BIO DIESEL",
+                  text: `${details.productInformation.name || ""}`,
                   colSpan: 2,
                   alignment: "center",
                 },
                 {},
                 {
-                  text: "10,000 Liter",
+                  text: `${formatNumber(details.productInformation.qty || 0)} Liter`,
                   colSpan: 2,
                   alignment: "center",
                 },
@@ -440,7 +485,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "0009031",
+                  text: `${details.productInformation.topSeal || ""}`,
                   rowSpan: 2,
                   verticalAlignment: "middle",
                   alignment: "center",
@@ -460,7 +505,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "KT 8092 NU",
+                  text: `${details.transportInformation.transportNumber || ""}`,
                 },
                 {
                   text: "",
@@ -473,7 +518,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.transportInformation.timeInformation.departureTime || ""}`,
                 },
               ],
               [
@@ -482,7 +527,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.transportInformation.startKm || ""}`,
                 },
                 {
                   text: "Segel Bawah",
@@ -491,7 +536,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "0009032",
+                  text: `${details.productInformation.bottomSeal || ""}`,
                   rowSpan: 2,
                   verticalAlignment: "middle",
                   alignment: "center",
@@ -501,7 +546,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.transportInformation.timeInformation.arrivalTime || ""}`,
                 },
               ],
               [
@@ -510,7 +555,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.transportInformation.endKm || ""}`,
                 },
                 {
                   text: "",
@@ -523,7 +568,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.transportInformation.timeInformation.unloadingTime || ""}`,
                 },
               ],
               [
@@ -532,21 +577,21 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.transportInformation.sgMeter}`,
                 },
                 {
                   text: "Temperatur",
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.productInformation.temperature || ""}`,
                 },
                 {
                   text: "Jam Tiba di Depo",
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.transportInformation.timeInformation.depotArrivalTime || ""}`,
                 },
               ],
               [
@@ -563,7 +608,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `10,000 # (${useChangeCase(angkaTerbilang(10000), "capitalCase").value} Liter) #`,
+                  text: `${formatNumber(details.productInformation.qty || 0)} # (${useChangeCase(angkaTerbilang(details.productInformation.qty), "capitalCase").value} Liter) #`,
                   italics: true,
                   colSpan: 5,
                 },
@@ -596,32 +641,7 @@ const loadPdf = async () => {
           },
           table: {
             widths: ["*"],
-            body: [
-              [
-                {
-                  text: "Catatan :",
-                  border: [true, false, true, false],
-                },
-              ],
-              [
-                {
-                  text: "1. Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SG Meter, kuantitas, kadar air, flow meter yang digunakan",
-                  border: [true, false, true, false],
-                },
-              ],
-              [
-                {
-                  text: "2. Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami",
-                  border: [true, false, true, false],
-                },
-              ],
-              [
-                {
-                  text: "3. Lainnya :",
-                  border: [true, false, true, false],
-                },
-              ],
-            ],
+            body: tableBodyNotes,
           },
         },
         {
@@ -743,22 +763,22 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "Stenly B",
+                  text: `${details.companyCoordinator || ""}`,
                   alignment: "center",
                   bold: true,
                 },
                 {
-                  text: "Inka",
+                  text: `${details.distributionAdmin || ""}`,
                   alignment: "center",
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.receiver || ""}`,
                   alignment: "center",
                   bold: true,
                 },
                 {
-                  text: "",
+                  text: `${details.driver || ""}`,
                   alignment: "center",
                   bold: true,
                 },
