@@ -6,6 +6,7 @@ import {
 } from "~/types/schemas";
 
 defineProps<{
+  purchaseOrders: any;
   hasPrevious: boolean | undefined;
 }>();
 
@@ -69,7 +70,6 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
         <UFormField name="phoneNumber" label="Nomor Telepon" required>
           <UInput
             v-model="state.companyInformation.phoneNumber"
-            v-maska="'0541-#######'"
             type="text"
             autocomplete="off"
           />
@@ -100,13 +100,36 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
       </div>
 
       <div class="flex w-full gap-4">
-        <UFormField name="poCustomerNumber" label="Nomor PO Customer" required>
+        <!-- <UFormField name="poCustomerNumber" label="Nomor PO Customer" required>
           <UInput
             v-model="state.doInformation.poCustomerNumber"
             type="text"
             autocomplete="off"
             placeholder="1086/DO/MAP/V/2026"
           />
+        </UFormField> -->
+
+        <UFormField
+          name="offeringLetter"
+          label="Nomor Surat Penawaran"
+          required
+        >
+          <USelectMenu
+            v-model="state.doInformation.poCustomerNumber"
+            :items="purchaseOrders"
+            placeholder="Pilih Surat Penawaran"
+            value-key="value"
+            :ui="{ content: 'min-w-fit' }"
+            class="w-full"
+          >
+            <template #item-label="{ item }">
+              {{ item.label }}
+
+              <span class="text-muted text-xs">
+                ({{ item.customerName }})
+              </span>
+            </template>
+          </USelectMenu>
         </UFormField>
 
         <UFormField name="soNumber" label="Nomor SO" required>

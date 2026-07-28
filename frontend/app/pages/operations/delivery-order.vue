@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
+import type { Customer, PurchaseOrdersSupplier } from "~/types/marketing";
+import type { DeliveryOrderPost } from "~/types/operations";
 import {
   type OperationsDOAdditionalState,
   type OperationsDODetailsTransportState,
@@ -9,9 +11,35 @@ import {
   type OperationsDOTransportState,
 } from "~/types/schemas";
 
+const { user } = useAuth();
+const { get, put, post } = useApi();
+const toast = useToast();
+const loading = ref(false);
+
+const { data: poCustomer } = await useAsyncData(
+  "purchase-orders-customer",
+  async () => {
+    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
+      "/purchase-orders",
+      { page: 1, page_size: 50, type: "customer" },
+    );
+    return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
+      id: purchaseOrder.id,
+      purchaseOrderNumber: purchaseOrder.po_number,
+      customerName: purchaseOrder.customer_name,
+      customerId: purchaseOrder.customer_id,
+      fuelTotalQty: purchaseOrder.total,
+      dateCreated: purchaseOrder.created_at.toString(),
+      dateChanged: purchaseOrder.updated_at.toString(),
+      status: purchaseOrder.status,
+    }));
+  },
+  { default: () => [] },
+);
+
 const items: StepperItem[] = [
   { title: "Kop Surat Delivery Order", slot: "doHeader" },
-  { title: "Mitra Penerima", slot: "doReceiver" },
+  { title: "Customer Penerima", slot: "doReceiver" },
   { title: "Agen/Transportir", slot: "doTransport" },
   { title: "Rincian Pengiriman", slot: "doDetailsTransport" },
   { title: "Catatan Tambahan", slot: "doAdditional" },
@@ -22,35 +50,36 @@ const doHeader = reactive<OperationsDOHeaderState>({
   companyInformation: {
     name: "PT. MITRA ANDALAN PETROLEUM",
     nameSub: "Distributor for Elnusa Petrofin",
-    address: "Jl. Belatuk No. 63 Samarinda, 75117 Indonesia",
-    phoneNumber: "0541-2832313", // add masking
+    address: "Jl. Belatuk Samarinda, Indonesia",
+    phoneNumber: "0541-1234567", // add masking
   },
   doInformation: {
-    doNumber: "1086/DO/MAP/V/2026",
+    doNumber: "0000/DO/MAP/I/0000",
     doDateCreated: `${new Date().toISOString().split("T")[0]}`,
     poCustomerNumber: undefined,
     soNumber: undefined,
   },
 });
 const doReceiver = reactive<OperationsDOReceiverState>({
-  customerName: "PT. Sinergi Agro Industri",
-  customerId: "PT. Sinergi Agro Industri",
-  address: "Kebun Belidan",
+  customerName: "PT. Sumber Jaya",
+  customerId: "PT. Sumber Jaya Nusantara",
+  customerAddress: "Samarinda",
   receiverInformation: {
     name: undefined,
     phoneNumber: undefined,
   },
-  dateReceived: `${new Date().toISOString().split("T")[0]}`,
+  receiverDateReceived: `${new Date().toISOString().split("T")[0]}`,
 });
 const doTransport = reactive<OperationsDOTransportState>({
-  transportName: "PT. Karya Bersaudara Sinergi",
-  transportId: "PT. Karya Bersaudara Sinergi",
-  address: "Samarinda",
+  transportName: "PT. Transport Logistik",
+  transportId: "PT. Transport Logistik Nusantara",
+  transportAddress: "Samarinda",
   driverInformation: {
-    name: "Heru Irawan",
+    name: "Jaya",
     phoneNumber: undefined,
   },
-  dateReceived: `${new Date().toISOString().split("T")[0]}`,
+  transportDateReceived: `${new Date().toISOString().split("T")[0]}`,
+  helperName: undefined,
 });
 const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
   dueDate: undefined,
@@ -73,17 +102,17 @@ const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
       depotArrivalTime: undefined,
       unloadingTime: undefined,
     },
-    transportNumber: "KT 8518 WB",
+    transportNumber: "KT 1234 AB",
     transportType: undefined,
   },
 });
 const doAdditional = reactive<OperationsDOAdditionalState>({
   notes: [
     {
-      note: "Catatan Tambahan 1",
+      note: "Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan",
     },
     {
-      note: "Catatan Tambahan 2",
+      note: "Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami",
     },
     {
       note: "Lainnya :",
@@ -95,8 +124,8 @@ const doAdditional = reactive<OperationsDOAdditionalState>({
   fuelReceived: 5000,
 });
 const doFooter = reactive<OperationsDOFooterState>({
-  companyCoordinator: "Stenly B",
-  distributionAdmin: "Inka",
+  companyCoordinator: "Admin",
+  distributionAdmin: user.value?.name || "User",
   receiver: undefined,
   driver: undefined,
 });
@@ -111,17 +140,80 @@ function onFormSubmitToNext() {
   stepper.value?.next();
 }
 
-function onFormSubmit() {
-  console.log("Data submitted");
-  console.log({
-    ...doHeader,
-    ...doReceiver,
-    ...doTransport,
-    ...doDetailsTransport,
-    ...doAdditional,
-    ...doFooter,
-  });
+watch(
+  () => doHeader.doInformation.poCustomerNumber,
+  (value) => {
+    if (value) {
+      console.log(value);
+      doReceiver.customerName = value.customerName || "";
+      doReceiver.customerId = value.customerId || "";
+      doDetailsTransport.total = value.fuelTotalQty || 0;
+      doDetailsTransport.productInformation.qty = value.fuelTotalQty || 0;
+      doAdditional.fuelReceived = value.fuelTotalQty || 0;
+    }
+  },
+);
+
+async function onFormSubmit() {
+  try {
+    if (loading.value) return;
+
+    loading.value = true;
+
+    const doData = {
+      ...doHeader,
+      ...doReceiver,
+      ...doTransport,
+      ...doDetailsTransport,
+      ...doAdditional,
+      ...doFooter,
+    };
+    const doPost: DeliveryOrderPost = {
+      do_number: doData.doInformation.doNumber,
+      customer_id: doData.customerId,
+      date: doData.doInformation.doDateCreated,
+      fuel_total: doData.total,
+      po_number:
+        doData.doInformation.poCustomerNumber.purchaseOrderNumber || "",
+      status: "created",
+      transport_name: doData.transportName,
+      details: doData,
+    };
+
+    const res = await post<any, DeliveryOrderPost>("/delivery-orders", doPost);
+
+    console.log("Data submitted");
+    console.log(res);
+    // console.log(doPost);
+    toast.add({
+      title: "Sukses",
+      description: "Data Delivery Order berhasil dibuat",
+      color: "success",
+    });
+  } catch (e: any) {
+    toast.add({ title: "Error", description: e.message, color: "error" });
+  } finally {
+    loading.value = false;
+  }
 }
+
+const purchaseOrders = ref(
+  poCustomer.value.map((po) => {
+    return {
+      label: po.purchaseOrderNumber,
+      value: {
+        id: po.id,
+        purchaseOrderNumber: po.purchaseOrderNumber,
+        customerName: po.customerName,
+        customerId: po.customerId,
+        dateCreated: po.dateCreated,
+        dateChanged: po.dateChanged,
+        fuelTotalQty: po.fuelTotalQty,
+      },
+      customerName: po.customerName,
+    };
+  }),
+);
 
 const links = [
   [
@@ -165,6 +257,7 @@ definePageMeta({ layout: "operations" });
       <UStepper disabled ref="stepper" :items>
         <template #doHeader>
           <OperationsDOHeaderForm
+            :purchase-orders="purchaseOrders"
             v-model="doHeader"
             :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"
@@ -210,6 +303,7 @@ definePageMeta({ layout: "operations" });
 
         <template #doFooter>
           <OperationsDOFooterForm
+            :is-loading="loading"
             v-model="doFooter"
             :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"

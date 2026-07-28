@@ -195,30 +195,30 @@ export const operationsDOHeaderSchema = z.object({
   doInformation: z.object({
     doNumber: z.string(),
     doDateCreated: z.iso.date(),
-    poCustomerNumber: z.string().optional(),
+    poCustomerNumber: z.object(),
     soNumber: z.string().optional(),
   }),
 });
 export const operationsDOReceiverSchema = z.object({
   customerName: z.string(),
   customerId: z.string(),
-  address: z.string(),
+  customerAddress: z.string(),
   receiverInformation: z.object({
     name: z.string().optional(),
     phoneNumber: z.string().optional(),
   }),
-  dateReceived: z.iso.date(),
+  receiverDateReceived: z.iso.date(),
 });
 export const operationsDOTransportSchema = z.object({
   transportName: z.string(),
   transportId: z.string().optional(),
-  address: z.string(),
+  transportAddress: z.string(),
   driverInformation: z.object({
     name: z.string().optional(),
     phoneNumber: z.string().optional(),
   }),
   helperName: z.string().optional(),
-  dateReceived: z.iso.date(),
+  transportDateReceived: z.iso.date(),
 });
 export const operationsDODetailsTransportSchema = z.object({
   dueDate: z.iso.date().optional(),

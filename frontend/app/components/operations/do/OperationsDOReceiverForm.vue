@@ -42,19 +42,19 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
           />
         </UFormField>
 
-        <UFormField name="customerId" label="ID Customer" required>
+        <!-- <UFormField name="customerId" label="ID Customer" required>
           <UInput
             v-model="state.customerId"
             type="text"
             autocomplete="off"
             placeholder="PT. XYZ"
           />
-        </UFormField>
+        </UFormField> -->
       </div>
 
       <UFormField name="address" label="Alamat" required>
         <UInput
-          v-model="state.address"
+          v-model="state.customerAddress"
           type="text"
           autocomplete="off"
           placeholder="Samarinda"
@@ -87,7 +87,11 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
       <USeparator />
 
       <UFormField name="dateReceived" label="Tanggal Diterima" required>
-        <UInput v-model="state.dateReceived" type="date" autocomplete="off" />
+        <UInput
+          v-model="state.receiverDateReceived"
+          type="date"
+          autocomplete="off"
+        />
       </UFormField>
 
       <USeparator />

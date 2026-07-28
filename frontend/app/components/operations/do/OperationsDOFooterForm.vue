@@ -5,6 +5,10 @@ import {
   type OperationsDOFooterState,
 } from "~/types/schemas";
 
+const props = defineProps<{
+  isLoading: boolean | undefined;
+}>();
+
 const emit = defineEmits<{
   submit: [];
   previous: [];
@@ -74,7 +78,11 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOFooterState>) {
           Sebelumnya
         </UButton>
 
-        <UButton type="submit" trailing-icon="i-lucide-arrow-right">
+        <UButton
+          :loading="isLoading"
+          type="submit"
+          trailing-icon="i-lucide-arrow-right"
+        >
           Selesai
         </UButton>
       </div>
