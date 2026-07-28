@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// @ts-ignore
 import type { FormSubmitEvent } from "@nuxt/ui";
 import { ref, watch } from "vue";
 import {

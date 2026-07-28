@@ -23,7 +23,7 @@ const { data: PoData } = await useAsyncData(
       id: purchaseOrder.id,
       offeringLetterNumber: purchaseOrder.po_number,
       customerName: purchaseOrder.supplier_name,
-      fuelTotalPrice: purchaseOrder.total,
+      fuelTotalQty: purchaseOrder.total,
       transportPrice: 0,
       dateCreated: purchaseOrder.created_at.toString(),
       dateChanged: purchaseOrder.updated_at.toString(),
