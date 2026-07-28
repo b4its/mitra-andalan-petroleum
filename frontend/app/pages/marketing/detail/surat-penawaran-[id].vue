@@ -506,7 +506,7 @@ const loadPdf = async () => {
         //   marginBottom: 25,
         // },
         {
-          text: "(Stenly Boseke)",
+          text: `(${details?.offeror.name})`,
           bold: true,
           marginTop: 25,
         },

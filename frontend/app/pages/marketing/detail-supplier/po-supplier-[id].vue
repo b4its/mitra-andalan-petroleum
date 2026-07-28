@@ -427,7 +427,7 @@ const loadPdf = async () => {
                       text: "Created By\n\n\n\n\n\n\n",
                     },
                     {
-                      text: "Fitri",
+                      text: `${details.signed.createdBy || ""}`,
                     },
                   ],
                   border: [true, false, false, true],
@@ -438,7 +438,7 @@ const loadPdf = async () => {
                       text: "Approved By\n\n\n\n\n\n\n",
                     },
                     {
-                      text: "Stenly B",
+                      text: `${details.signed.approvedBy || ""}`,
                     },
                   ],
                   border: [false, false, true, true],
