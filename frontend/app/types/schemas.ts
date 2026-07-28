@@ -300,7 +300,7 @@ export const financeInvoiceDetailsSchema = z.object({
   }),
   customerPurchaseInformation: z.object({
     deliveryOrderNumberData: z.array(z.string()),
-    customerPurchaseOrderNumber: z.string(),
+    customerPurchaseOrderNumber: z.object(),
     taxInvoiceNumber: z.string(),
     salesOrderNumber: z.string().optional(),
   }),
