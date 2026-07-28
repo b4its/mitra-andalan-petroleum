@@ -139,7 +139,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
                 currency: 'IDR',
                 currencyDisplay: 'narrowSymbol',
               }"
-              :step="1000"
               v-model="product.price"
               :min="0"
             />
