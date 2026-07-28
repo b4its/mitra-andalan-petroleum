@@ -15,7 +15,7 @@ const items: StepperItem[] = [
   },
 ];
 
-const { get } = useApi();
+const { get, put, post, postFile } = useApi();
 
 const { data: OlData } = await useAsyncData(
   "offering-letters",
@@ -42,23 +42,25 @@ const { data: OlData } = await useAsyncData(
 );
 
 const offeringLetters = ref(
-  OlData.value.map((ol) => {
-    return {
-      label: ol.customerName,
-      value: {
-        id: ol.id,
-        offeringLetterNumber: ol.offeringLetterNumber,
-        customerName: ol.customerName,
-        customerId: ol.customerId,
-        fuelTotalPrice: ol.fuelTotalPrice,
-        transportPrice: ol.transportPrice,
-        dateCreated: ol.dateCreated,
-        dateChanged: ol.dateChanged,
-        status: ol.status,
-      },
-      olNumber: ol.offeringLetterNumber,
-    };
-  }),
+  OlData.value
+    .filter((ol) => ol.status !== "po_received")
+    .map((ol) => {
+      return {
+        label: ol.customerName,
+        value: {
+          id: ol.id,
+          offeringLetterNumber: ol.offeringLetterNumber,
+          customerName: ol.customerName,
+          customerId: ol.customerId,
+          fuelTotalPrice: ol.fuelTotalPrice,
+          transportPrice: ol.transportPrice,
+          dateCreated: ol.dateCreated,
+          dateChanged: ol.dateChanged,
+          status: ol.status,
+        },
+        olNumber: ol.offeringLetterNumber,
+      };
+    }),
 );
 
 const poCustomer = reactive<MarketingPOCustomerState>({
@@ -70,7 +72,6 @@ const poCustomer = reactive<MarketingPOCustomerState>({
 });
 
 const toast = useToast();
-const { post, postFile } = useApi();
 async function onPoCustomerSubmit() {
   try {
     const poData = {
@@ -91,8 +92,16 @@ async function onPoCustomerSubmit() {
       poPost,
     );
 
+    const olRes = await put<any, { status: "po_received" }>(
+      `/offering-letters/${poData.selectedOfferingLetter.id}`,
+      {
+        status: "po_received",
+      },
+    );
+
     console.log("Data submitted");
     console.log(res);
+    console.log(olRes);
 
     const poDocument = poCustomer.poDocument;
     if (!poDocument) {
