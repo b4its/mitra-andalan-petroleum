@@ -49,3 +49,13 @@ export function toBase64(url: string): Promise<string> {
     img.src = url;
   });
 }
+
+export function formatPercent(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "percent",
+  }).format(value);
+}
+
+export function formatNumber(value: number) {
+  return new Intl.NumberFormat("id-ID").format(value);
+}

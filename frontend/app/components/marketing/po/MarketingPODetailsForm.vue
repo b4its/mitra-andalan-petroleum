@@ -7,6 +7,7 @@ import {
 
 defineProps<{
   hasPrevious: boolean | undefined;
+  offeringLetters: any;
 }>();
 
 const emit = defineEmits<{
@@ -54,6 +55,17 @@ function previous() {
 function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
   emit("submit");
 }
+
+watch(
+  () => state.value.selectedOfferingLetter,
+  (value) => {
+    if (state.value.products[0]) {
+      state.value.products[0].price = value.fuelTotalPrice;
+    }
+
+    console.log(value);
+  },
+);
 </script>
 
 <template>
@@ -139,6 +151,23 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
         </UFormField>
       </div>
 
+      <UFormField name="offeringLetter" label="Nomor Surat Penawaran" required>
+        <USelectMenu
+          v-model="state.selectedOfferingLetter"
+          :items="offeringLetters"
+          placeholder="Pilih Surat Penawaran"
+          value-key="value"
+          :ui="{ content: 'min-w-fit' }"
+          class="w-full"
+        >
+          <template #item-label="{ item }">
+            {{ item.label }}
+
+            <span class="text-muted text-xs"> ({{ item.olNumber }}) </span>
+          </template>
+        </USelectMenu>
+      </UFormField>
+
       <USeparator />
 
       <div class="space-y-3">
@@ -189,9 +218,12 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
                 currency: 'IDR',
                 currencyDisplay: 'narrowSymbol',
               }"
-              :step="1000"
+              :step="1"
               v-model="product.price"
               :min="0"
+              :increment="false"
+              :decrement="false"
+              :disabled="index > 0 ? false : true"
             />
           </UFormField>
 

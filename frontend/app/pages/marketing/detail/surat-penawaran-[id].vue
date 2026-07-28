@@ -1,21 +1,50 @@
 <script setup lang="ts">
+import angkaTerbilang from "@develoka/angka-terbilang-js";
 import logoImage from "~/assets/images/map-logo.jpeg";
+import type { Customer, OfferingLetterPost } from "~/types/marketing";
 
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
+const { get } = useApi();
+
 const idOfferingLetter = route.params.id;
+const { data: offeringLetter } = await useAsyncData(
+  "offering-letter-details",
+  async () => {
+    const res = await get<OfferingLetterPost>(
+      `/offering-letters/${idOfferingLetter}`,
+    );
+    return res;
+  },
+);
+
+const { data: customerDetail } = await useAsyncData(
+  "customer-detail",
+  async () => {
+    const res = await get<Customer>(
+      `/customers/${offeringLetter.value?.details.receiver}`,
+    );
+    return res;
+  },
+);
+
+const details = offeringLetter.value?.details;
+
 const { user } = useAuth();
+
+const baseWithPpkb = computed(() => {
+  if (!details) return 0;
+  return details.fuelPrices.basePrice + details.fuelPrices.sellingPrice.ppkb;
+});
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
   if (!pdfMake) return;
 
-  const issueDate = new Date();
-
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Surat Penawaran #${idOfferingLetter}`,
+        title: `Surat Penawaran (${details?.offeringLetterNumber}) | ${customerDetail.value?.name}`,
         author: "PT. Mitra Andalan Petroleum",
         creator: user.value?.name,
         producer: "PT. Mitra Andalan Petroleum",
@@ -28,7 +57,7 @@ const loadPdf = async () => {
           width: 160,
         },
         {
-          text: `Samarinda, ${formatDateDoc(issueDate)}`,
+          text: `Samarinda, ${formatDateDoc(details?.date || new Date())}`,
           alignment: "right",
           marginTop: 10,
           marginBottom: 15,
@@ -47,11 +76,11 @@ const loadPdf = async () => {
                 },
                 {
                   text: [
-                    "Surat Penawaran Harga Bahan Bakar Minyak Bio diesel ",
-                    {
-                      text: "Periode 01 – 14 Juli 2026",
-                      bold: true,
-                    },
+                    `${details?.regarding}`,
+                    // {
+                    //   text: "Periode 01 – 14 Juli 2026",
+                    //   bold: true,
+                    // },
                   ],
                   decoration: "underline",
                 },
@@ -64,7 +93,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "123/MAP/II-06/26",
+                  text: `${details?.offeringLetterNumber}`,
                 },
               ],
             ],
@@ -73,7 +102,7 @@ const loadPdf = async () => {
         {
           text: [
             "Kepada Yth.\n",
-            { text: "PT. Mitra Andalan Petroleum".toUpperCase(), bold: true },
+            { text: `${customerDetail.value?.name}`.toUpperCase(), bold: true },
           ],
           marginTop: 15,
         },
@@ -113,7 +142,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Terminal Bahan Bakar Minyak (TBBM) Palaran",
+                  text: `${details?.supplyPoint}`,
                 },
               ],
               [
@@ -127,7 +156,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Sesuai dengan spesifikasi SK Dirjen Migas",
+                  text: `${details?.qualityAssurance}`,
                 },
               ],
               [
@@ -141,7 +170,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Flowmeter terkalibrasi oleh instansi berwenangdi TBBM Palaran",
+                  text: `${details?.custodyTransfer}`,
                 },
               ],
               [
@@ -155,7 +184,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Jarum Tera/Sounding Tanki Truck di lokasi penerima",
+                  text: `${details?.unloadingProcedure}`,
                 },
               ],
               [
@@ -169,7 +198,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Liter observed",
+                  text: `${details?.volumeUnit}`,
                 },
               ],
               [
@@ -183,12 +212,68 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "0.25%",
+                  text: formatPercent(details?.volumeTolerance || 0),
                 },
               ],
               [
                 {
                   text: "7.",
+                },
+                {
+                  text: "Term Pembayaran",
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: `${details?.paymentTerm} ${details?.paymentTerm || 0 > 1 ? "Days" : "Day"} after delivery`,
+                },
+              ],
+              [
+                {
+                  text: "8.",
+                },
+                {
+                  text: "Penalty Keterlambatan",
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: `${formatPercent(details?.latePenalty || 0)}`,
+                },
+              ],
+              [
+                {
+                  text: "9.",
+                },
+                {
+                  text: "Pola Pelayanan",
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: `${details?.servicePattern}`,
+                },
+              ],
+              [
+                {
+                  text: "10.",
+                },
+                {
+                  text: "Person In Charge",
+                },
+                {
+                  text: ":",
+                },
+                {
+                  text: `${details?.personInCharge.name} - ${details?.personInCharge.phoneNumber}`,
+                },
+              ],
+              [
+                {
+                  text: "11.",
                 },
                 {
                   text: "Rekening Pembayaran",
@@ -202,7 +287,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "BANK MANDIRI cab Segiri\nNo Rek: 1480002719998\nA/N. PT. MITRA ANDALAN PETROLEUM",
+                  text: `${details?.paymentAddress.bankName}\nNo Rek: ${details?.paymentAddress.accountNumber}\nA/N. ${details?.paymentAddress.accountName}`,
                   bold: true,
                   colSpan: 4,
                   alignment: "center",
@@ -211,7 +296,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "8.",
+                  text: "12.",
                 },
                 {
                   text: "Harga Bahan Bakar Minyak:",
@@ -254,7 +339,7 @@ const loadPdf = async () => {
                   },
                 },
                 {
-                  text: "TRUCK 10 KL\nSite BSSR / BAS Tanah Datar",
+                  text: `${details?.fuelPrices.logisticInformation}`,
                   style: {
                     alignment: "center",
                     bold: true,
@@ -272,7 +357,7 @@ const loadPdf = async () => {
                   text: "",
                 },
                 {
-                  text: "Bio Diesel B50 / B40 if stock still",
+                  text: `${details?.fuelPrices.productName}`,
                   style: {
                     alignment: "center",
                   },
@@ -292,7 +377,7 @@ const loadPdf = async () => {
                   },
                 },
                 {
-                  text: formatCurrency(17950),
+                  text: formatCurrency(baseWithPpkb.value),
                   style: {
                     alignment: "center",
                   },
@@ -312,7 +397,9 @@ const loadPdf = async () => {
                   },
                 },
                 {
-                  text: formatCurrency(450),
+                  text: formatCurrency(
+                    details?.fuelPrices.sellingPrice.oat || 0,
+                  ),
                   style: {
                     alignment: "center",
                   },
@@ -332,7 +419,9 @@ const loadPdf = async () => {
                   },
                 },
                 {
-                  text: formatCurrency(2024),
+                  text: formatCurrency(
+                    details?.fuelPrices.sellingPrice.ppn || 0,
+                  ),
                   style: {
                     alignment: "center",
                   },
@@ -349,7 +438,7 @@ const loadPdf = async () => {
                 },
                 {},
                 {
-                  text: formatCurrency(20424),
+                  text: formatCurrency(details?.fuelPrices.totalPrice || 0),
                   style: {
                     alignment: "center",
                     bold: true,
@@ -394,7 +483,10 @@ const loadPdf = async () => {
         {
           text: [
             "Mohon Purchase Order (PO) dapat dikirimkan minimal ",
-            { text: "3 (tiga) hari ", bold: true },
+            {
+              text: `${details?.purchaseOrderDeadline || 0} (${angkaTerbilang(details?.purchaseOrderDeadline || 0)}) hari `,
+              bold: true,
+            },
             "sebelum pengaliran/muat dari terminal.",
           ],
           marginTop: 15,
@@ -405,16 +497,18 @@ const loadPdf = async () => {
         {
           text: "Hormat Kami,",
           marginTop: 15,
-        },
-        {
-          text: "Placeholder Signature MAP",
-          italics: true,
-          marginTop: 25,
           marginBottom: 25,
         },
+        // {
+        //   text: "Placeholder Signature MAP",
+        //   italics: true,
+        //   marginTop: 25,
+        //   marginBottom: 25,
+        // },
         {
           text: "(Stenly Boseke)",
           bold: true,
+          marginTop: 25,
         },
         {
           layout: {
@@ -441,7 +535,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "Jl. Belatuk No. 63\nSamarinda, 75117\nIndonesia",
+                  text: `${details?.companyInformation.address}`,
                 },
               ],
               [
@@ -452,7 +546,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "0541-1234567",
+                  text: `${details?.companyInformation.phoneNumber}`,
                 },
               ],
               [
@@ -463,7 +557,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: "marketing.map@example.com",
+                  text: `${details?.companyInformation.email}`,
                 },
               ],
             ],

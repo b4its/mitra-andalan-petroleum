@@ -1,8 +1,25 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
+import type { Customer, OfferingLetterPost } from "~/types/marketing";
 
 const route = useRoute();
 const idOfferingLetter = route.params.id;
+const {get} = useApi()
+
+const { data: offeringLetterDetails } = await useAsyncData("purchase-order-details", async () => {
+  const res = await get<OfferingLetterPost>(`/offering-letters/${idOfferingLetter}`);
+  return res;
+});
+
+const { data: customerDetail } = await useAsyncData(
+  "customer-detail",
+  async () => {
+    const res = await get<Customer>(
+      `/customers/${offeringLetterDetails.value?.details.receiver}`,
+    );
+    return res;
+  },
+);
 
 const links = [
   [
@@ -25,7 +42,7 @@ definePageMeta({ layout: "marketing" });
 <template>
   <UDashboardPanel id="offering-letter" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Surat Penawaran Customer ${idOfferingLetter}`"">
+      <UDashboardNavbar :title="`Surat Penawaran Customer (${offeringLetterDetails?.details.offeringLetterNumber}) | ${customerDetail?.name}`"">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { PurchaseOrdersDetails } from "~/types/marketing";
+// @ts-nocheck
+import type {
+  Details,
+  PaymentAddress,
+  Product,
+  PurchaseOrderDetails,
+} from "~/types/marketing";
 
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
@@ -8,18 +14,184 @@ const { user } = useAuth();
 
 const { get } = useApi();
 
-const { data: poDetails } = await useAsyncData("po-details", async () => {
-  const res = await get<PurchaseOrdersDetails>(
-    `/purchase-orders/${idPoLetter}`,
-  );
-  {
-    return {
-      id: res.id,
-      purchaseOrderNumber: res.po_number,
-      customerName: res.supplier_name,
-    };
+const { data: purchaseOrderDetails } = await useAsyncData(
+  "purchase-order-details",
+  async () => {
+    const res = await get<PurchaseOrderDetails>(
+      `/purchase-orders/${idPoLetter}`,
+    );
+    return res;
+  },
+);
+
+const details: Details = purchaseOrderDetails.value?.details;
+const products: Product[] = details.products || [];
+const paymentAddress: PaymentAddress = details.paymentAddress || {};
+
+// 2. Initialize the table body array with the Header row
+const tableBodyDetails = [
+  [
+    {
+      text: "No",
+      bold: true,
+      alignment: "center",
+      border: [true, false, true, true],
+    },
+    {
+      text: "Product",
+      bold: true,
+      alignment: "center",
+      border: [true, false, true, true],
+    },
+    {
+      text: "Qty",
+      bold: true,
+      alignment: "center",
+      border: [true, false, true, true],
+    },
+    {
+      text: "Unit",
+      bold: true,
+      alignment: "center",
+      border: [true, false, true, true],
+    },
+    {
+      text: "Unit Price",
+      bold: true,
+      alignment: "center",
+      border: [true, false, true, true],
+    },
+    {
+      text: "Total",
+      bold: true,
+      alignment: "center",
+      border: [true, false, true, true],
+    },
+  ],
+];
+
+// 3. Generate exactly 8 rows reserved for products
+for (let i = 0; i < 8; i++) {
+  if (i < products.length) {
+    // If product exists, populate the data
+    const product = products[i];
+    tableBodyDetails.push([
+      {
+        text: (i + 1).toString(),
+        alignment: "center",
+        border: [true, false, true, true],
+      },
+      {
+        text: product.name || "",
+        alignment: "left",
+        border: [true, false, true, true],
+      },
+      {
+        text: formatNumber(product.qty || 0),
+        alignment: "center",
+        border: [true, false, true, true],
+      },
+      {
+        text: product.unit || "",
+        alignment: "center",
+        border: [true, false, true, true],
+      },
+      {
+        text: formatCurrency(product.price || 0),
+        alignment: "center",
+        border: [true, false, true, true],
+      },
+      {
+        text: formatCurrency(product?.totalPrice || 0),
+        alignment: "right",
+        border: [true, false, true, true],
+      },
+    ]);
+  } else {
+    // If no product, output a blank row but keep the borders intact for the grid
+    tableBodyDetails.push([
+      { text: "", border: [true, false, true, true] },
+      { text: "", border: [true, false, true, true] },
+      { text: "", border: [true, false, true, true] },
+      { text: "", border: [true, false, true, true] },
+      { text: "", border: [true, false, true, true] },
+      { text: "", border: [true, false, true, true] },
+    ]);
   }
-});
+}
+
+// 4. Blank row ABOVE VAT
+tableBodyDetails.push([{}, {}, {}, {}, {}, {}]);
+
+// 5. VAT Row
+tableBodyDetails.push([
+  {},
+  { text: `Include VAT ${formatPercent(details.vat || 0)}`, bold: true },
+  {},
+  {},
+  {},
+  {},
+]);
+
+// 6. Blank row BELOW VAT
+tableBodyDetails.push([{}, {}, {}, {}, {}, {}]);
+
+// 7. Transfer Detail Header
+tableBodyDetails.push([
+  {},
+  { text: "Transfer Detail :", bold: true },
+  {},
+  {},
+  {},
+  {},
+]);
+
+// 8. 3 Reserved rows for Payment Address details
+tableBodyDetails.push([
+  {},
+  { text: paymentAddress.bankName || "", bold: true },
+  {},
+  {},
+  {},
+  {},
+]);
+tableBodyDetails.push([
+  {},
+  { text: paymentAddress.accountName || "", bold: true },
+  {},
+  {},
+  {},
+  {},
+]);
+tableBodyDetails.push([
+  {},
+  {
+    text: paymentAddress.accountNumber
+      ? `No. Rek. ${paymentAddress.accountNumber}`
+      : "No. Rek. ",
+  },
+  {},
+  {},
+  {},
+  {},
+]);
+
+// 9. Blank row BELOW "No. Rek."
+tableBodyDetails.push([{}, {}, {}, {}, {}, {}]);
+
+// 10. Subtotal Row
+tableBodyDetails.push([
+  { text: "Subtotal", colSpan: 5, bold: true, alignment: "right" },
+  {},
+  {},
+  {},
+  {},
+  {
+    text: formatCurrency(details.totalProductsPrice || 0),
+    alignment: "right",
+    bold: true,
+  },
+]);
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake();
@@ -28,7 +200,7 @@ const loadPdf = async () => {
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Purchase Order (${poDetails.value?.purchaseOrderNumber}) | ${poDetails.value?.customerName}`,
+        title: `Purchase Order (${purchaseOrderDetails.value?.po_number}) | ${purchaseOrderDetails.value?.supplier_name}`,
         author: "PT. Mitra Andalan Petroleum",
         creator: user.value?.name,
         producer: "PT. Mitra Andalan Petroleum",
@@ -66,24 +238,22 @@ const loadPdf = async () => {
                 {
                   text: [
                     {
-                      text: "PT. MIGAS KUKAR MANDIRI\n",
+                      text: `${purchaseOrderDetails.value?.supplier_name}\n`,
                       bold: true,
                     },
-                    "Jl. KH AGUS SALIM No. 32\n",
-                    "SAMARINDA",
+                    `${details.receiver.address || ""}\n`,
                   ],
                 },
                 {
                   text: [
                     {
-                      text: "PT. MITRA ANDALAN PETROLEUM\n",
+                      text: `${details.companyInformation.name || ""}\n`,
                       bold: true,
                     },
-                    "Jl. D.I. Panjaitan No. 25 D\n",
-                    "Samarinda 75117, Indonesia\n",
-                    "Phone: 0541-2832313\n",
-                    "Email: marketing.mapetroleum@gmail.com\n",
-                    "NPWP: 43.170.319.8-722.000",
+                    `${details.companyInformation.address || ""}\n`,
+                    `Phone: ${details.companyInformation.contactPerson || ""}\n`,
+                    `Email: ${details.companyInformation.email || ""}\n`,
+                    `NPWP: ${details.companyInformation.npwp || ""}\n`,
                   ],
                 },
               ],
@@ -124,7 +294,7 @@ const loadPdf = async () => {
                 {},
                 {},
                 {
-                  text: `PO Date : ${formatDate(new Date())}`,
+                  text: `PO Date : ${details.po.date}`,
                   bold: true,
                   border: [true, false, true, true],
                 },
@@ -136,7 +306,7 @@ const loadPdf = async () => {
                 {},
                 {},
                 {
-                  text: `PO Number : \n${poDetails.value?.purchaseOrderNumber}`,
+                  text: `PO Number : \n${details.po.number}`,
                   bold: true,
                   border: [true, false, true, true],
                 },
@@ -165,153 +335,7 @@ const loadPdf = async () => {
           },
           table: {
             widths: ["auto", "*", "auto", "auto", "auto", 100],
-            body: [
-              // PRODUCT LIST
-              // PRODUCT HEADER
-              [
-                {
-                  text: "No",
-                  bold: true,
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "Product",
-                  bold: true,
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "Qty",
-                  bold: true,
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "Unit",
-                  bold: true,
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "Unit Price",
-                  bold: true,
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "Total",
-                  bold: true,
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-              ],
-
-              // PRODUCT BODY
-              [
-                {
-                  text: "1",
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "Bio Diesel",
-                  alignment: "left",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "20000",
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: "Liter",
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: formatCurrency(21800),
-                  alignment: "center",
-                  border: [true, false, true, true],
-                },
-                {
-                  text: formatCurrency(436000000),
-                  alignment: "right",
-                  border: [true, false, true, true],
-                },
-              ],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              // 9 blank columns for products, the rest is for transfer detail
-              [
-                {},
-                {
-                  text: "include VAT 11%",
-                  bold: true,
-                },
-                {},
-                {},
-                {},
-                {},
-              ],
-              [{}, {}, {}, {}, {}, {}],
-              [
-                {},
-                {
-                  text: "Transfer Detail :",
-                  bold: true,
-                },
-                {},
-                {},
-                {},
-                {},
-              ],
-              [
-                {},
-                {
-                  text: "Bank Central Asia (BCA) Cabang Sudirman, Samarinda",
-                  bold: true,
-                },
-                {},
-                {},
-                {},
-                {},
-              ],
-              [
-                {},
-                { text: "PT Migas Kukar Mandiri", bold: true },
-                {},
-                {},
-                {},
-                {},
-              ],
-              [{}, { text: "No. Rek. 012 07878212" }, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [
-                {
-                  text: "Subtotal",
-                  colSpan: 5,
-                  bold: true,
-                  alignment: "right",
-                },
-                {},
-                {},
-                {},
-                {},
-                {
-                  text: formatCurrency(436000000),
-                  alignment: "right",
-                  bold: true,
-                },
-              ],
-            ],
+            body: tableBodyDetails,
           },
         },
         {
@@ -349,7 +373,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "CBD",
+                  text: `${details.termAndCondition}`,
                   border: [true, false, true, true],
                 },
                 {},
@@ -368,11 +392,11 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: "Loading Terminal :\nLoading Date :\nPIC OPERATION MAP : ",
+                  text: `Loading Terminal : ${details.delivery.loadingTerminal || ""}\nLoading Date : ${details.delivery.loadingDate || ""}\nPIC OPERATION MAP : ${details.delivery.picOperationMap || ""}`,
                   border: [true, false, true, true],
                 },
                 {
-                  text: "Trucking : TBA",
+                  text: `Trucking : ${details.forwarder.trucking}`,
                 },
               ],
             ],

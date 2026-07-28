@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from "@nuxt/ui";
+import type {  PurchaseOrdersDetails } from "~/types/marketing";
 
 const route = useRoute();
 const idPoLetter = route.params.id;
+const {get} = useApi()
+
+const { data: purchaseOrderDetails } = await useAsyncData("purchase-order-details", async () => {
+  const res = await get<PurchaseOrdersDetails>(`/purchase-orders/${idPoLetter}`);
+  return res;
+});
 
 const links = [
   [
@@ -20,7 +27,7 @@ definePageMeta({ layout: "marketing" });
 <template>
   <UDashboardPanel id="po-supplier" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Purchase Order Supplier ${idPoLetter}`"">
+      <UDashboardNavbar :title="`Purchase Order Supplier (${purchaseOrderDetails?.po_number}) | ${purchaseOrderDetails?.supplier_name}`"">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
