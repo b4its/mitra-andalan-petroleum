@@ -1,12 +1,75 @@
 <script setup lang="ts">
+// @ts-nocheck
+
 import angkaTerbilang from '@develoka/angka-terbilang-js'
 import { useChangeCase } from '@vueuse/integrations/useChangeCase.js'
 import logoImage from '~/assets/images/map-logo-only.jpg'
+import type { InvoiceDetailsData, InvoiceDetails } from '~/types/finance'
 
 const pdfLink = ref<string | null>(null)
 const route = useRoute()
-const idDoLetter = route.params.id
+const invoiceId = route.params.id
 const { user } = useAuth()
+const { get } = useApi()
+
+const { data: invoiceDetails } = await useAsyncData(
+  'invoice-details',
+  async () => {
+    const res = await get<InvoiceDetails>(`/invoices/${invoiceId}`)
+    return res
+  },
+  { default: () => [] }
+)
+const details: InvoiceDetailsData = invoiceDetails.value?.details
+
+const tableBodyDetails = []
+
+for (let i = 0; i < 6; i++) {
+  if (i < details.products.length) {
+    const product = details.products[i]
+    tableBodyDetails.push([
+      {
+        text: (i + 1).toString(),
+        alignment: 'center',
+        border: [true, false, true, true]
+      },
+      {
+        text: formatNumber(product.qty || 0),
+        alignment: 'center',
+        border: [true, false, true, true]
+      },
+      {
+        text: product.unit || '',
+        alignment: 'center',
+        border: [true, false, true, true]
+      },
+      {
+        text: product.name || '',
+        alignment: 'left',
+        border: [true, false, true, true]
+      },
+      {
+        text: formatNumber(product.price || 0),
+        alignment: 'center',
+        border: [true, false, true, true]
+      },
+      {
+        text: formatNumber(product.totalPrice || 0),
+        alignment: 'center',
+        border: [true, false, true, true]
+      }
+    ])
+  } else {
+    tableBodyDetails.push([
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] }
+    ])
+  }
+}
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake()
@@ -15,7 +78,7 @@ const loadPdf = async () => {
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Delivery Order ${idDoLetter}`,
+        title: `Invoice (${details.invoiceInformation.invoiceNumber}) | ${details.customerPurchaseInformation.customerPurchaseOrderNumber.customerName}`,
         author: 'PT. Mitra Andalan Petroleum',
         creator: user.value?.name,
         producer: 'PT. Mitra Andalan Petroleum'
@@ -161,12 +224,12 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: 'PT. BINA SARANA SUKSES\nPENJARINGAN, JAKARTA UTARA, LANDMARK PLUIT,\nJALAN PLUIT SELATAN RAYA KOMPLEK PERKANTORAN\nNo. D17, PLUIT, JAKARTA UTARA - 14450',
+                  text: `${details.billToInformation}`,
                   bold: true,
                   lineHeight: 1.25
                 },
                 {
-                  text: 'PT. BINA SARANA SUKSES\nTDM (PL02) - DS. MARANG KAYU,\nKEC. TENGGARONG, SEBERANG,\nKAB. KUKAR WORKSHOP BSS KM\n\n',
+                  text: `${details.deliveryPointInformation}`,
                   bold: true,
                   lineHeight: 1.25
                 }
@@ -225,23 +288,24 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: '576/INV/MAP/2026',
+                  text: `${details.invoiceInformation.invoiceNumber}`,
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 },
                 {
-                  text: formatDate(new Date()),
+                  text: formatDate(details.invoiceInformation.invoiceDate),
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 },
                 {
-                  text: '1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1129, 1127, 1125, 1128, 1126, 1124, 1122/DO/MAP/VI/2026',
+                  // map into string like this
+                  text: `${details.customerPurchaseInformation.deliveryOrderNumberData.join(', ')}`,
 
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 },
                 {
-                  text: '1200020145',
+                  text: `${details.customerPurchaseInformation.customerPurchaseOrderNumber.purchaseOrderNumber}`,
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 }
@@ -270,23 +334,23 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: '40 Days After Delivery',
+                  text: `${details.invoiceInformation.terms} ${details.invoiceInformation.terms === 1 ? 'Day' : 'Days'} After Delivery`,
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 },
                 {
-                  text: formatDate(new Date()),
+                  text: formatDate(details.invoiceInformation.invoiceDueDate),
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 },
                 {
-                  text: '04002600249829603',
+                  text: `${details.customerPurchaseInformation.taxInvoiceNumber}`,
 
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 },
                 {
-                  text: '',
+                  text: `${details.customerPurchaseInformation.salesOrderNumber || ''}`,
                   verticalAlignment: 'middle',
                   alignment: 'center'
                 }
@@ -407,64 +471,7 @@ const loadPdf = async () => {
           },
           table: {
             widths: ['6%', '*', '*', '40%', '*', '*'],
-            body: [
-              [
-                {
-                  text: '1',
-                  alignment: 'center'
-                },
-                {
-                  text: '299.845',
-                  alignment: 'center'
-                },
-                {
-                  text: 'LITER',
-                  alignment: 'center'
-                },
-                {
-                  text: 'Extra Diesel B40',
-                  alignment: 'left'
-                },
-                {
-                  text: '19.500,00',
-                  alignment: 'right'
-                },
-                {
-                  text: '5.846.977.500',
-                  alignment: 'right'
-                }
-              ],
-              [
-                {
-                  text: '',
-                  alignment: 'center'
-                },
-                {
-                  text: '',
-                  alignment: 'center'
-                },
-                {
-                  text: '',
-                  alignment: 'center'
-                },
-                {
-                  text: 'BIAYA TRANSPORT BBM',
-                  alignment: 'left'
-                },
-                {
-                  text: '1.200,00',
-                  alignment: 'right'
-                },
-                {
-                  text: '359.814.000',
-                  alignment: 'right'
-                }
-              ],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}],
-              [{}, {}, {}, {}, {}, {}]
-            ]
+            body: tableBodyDetails
           }
         },
         {
@@ -491,8 +498,10 @@ const loadPdf = async () => {
             body: [
               [
                 {
-                  text: useChangeCase(angkaTerbilang(6889538565), 'capitalCase')
-                    .value,
+                  text: useChangeCase(
+                    angkaTerbilang(details.priceSummary.grandTotal),
+                    'capitalCase'
+                  ).value,
                   alignment: 'center',
                   colSpan: 4
                 },
@@ -505,7 +514,7 @@ const loadPdf = async () => {
                   alignment: 'left'
                 },
                 {
-                  text: '6.206.791.500',
+                  text: `${formatNumber(details.priceSummary.subTotal || 0)}`,
                   alignment: 'right'
                 }
               ],
@@ -524,7 +533,7 @@ const loadPdf = async () => {
                   alignment: 'left'
                 },
                 {
-                  text: '',
+                  text: `${formatNumber(details.priceSummary.prePaid || 0)}`,
                   alignment: 'right'
                 }
               ],
@@ -543,7 +552,7 @@ const loadPdf = async () => {
                   alignment: 'left'
                 },
                 {
-                  text: '',
+                  text: `${formatNumber(details.priceSummary.discount || 0)}`,
                   alignment: 'right'
                 }
               ],
@@ -562,7 +571,7 @@ const loadPdf = async () => {
                   alignment: 'left'
                 },
                 {
-                  text: '682.747.065',
+                  text: `${formatNumber(details.priceSummary.ppn || 0)}`,
                   alignment: 'right'
                 }
               ],
@@ -582,7 +591,7 @@ const loadPdf = async () => {
                   alignment: 'left'
                 },
                 {
-                  text: '6.889.538.565',
+                  text: `${formatNumber(details.priceSummary.grandTotal || 0)}`,
                   bold: true,
                   alignment: 'right'
                 }
@@ -638,7 +647,7 @@ const loadPdf = async () => {
                   bold: true
                 },
                 {
-                  text: 'MANDIRI - Cab Segiri',
+                  text: `${details.paymentInformation.bankName}`,
                   bold: true
                 }
               ],
@@ -655,7 +664,7 @@ const loadPdf = async () => {
                   bold: true
                 },
                 {
-                  text: '1480002717776',
+                  text: `${details.paymentInformation.accountNumber}`,
                   bold: true
                 }
               ],
@@ -672,7 +681,7 @@ const loadPdf = async () => {
                   bold: true
                 },
                 {
-                  text: 'PT. MITRA ANDALAN PETROLEUM',
+                  text: `${details.paymentInformation.accountName}`,
                   bold: true
                 }
               ],
@@ -740,14 +749,14 @@ const loadPdf = async () => {
           }
         },
         {
-          text: 'PT. MITRA ANDALAN PETROLEUM',
+          text: `${details.signature.companyName}`,
           bold: true,
           marginTop: 15,
           marginBottom: 30
         },
         {
           marginTop: 30,
-          text: 'Syannet',
+          text: `${details.signature.createdBy}`,
           bold: true,
           decoration: 'underline'
         }

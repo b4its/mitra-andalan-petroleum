@@ -140,7 +140,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
                 currency: 'IDR',
                 currencyDisplay: 'narrowSymbol'
               }"
-              :step="1000"
               :min="0"
             />
           </UFormField>
