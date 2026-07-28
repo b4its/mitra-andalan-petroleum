@@ -5,6 +5,10 @@ import {
   type MarketingPOAdditionalState,
 } from "~/types/schemas";
 
+defineProps<{
+  isLoading: boolean | undefined;
+}>();
+
 const emit = defineEmits<{
   submit: [];
   previous: [];
@@ -116,8 +120,12 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
           Sebelumnya
         </UButton>
 
-        <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-          Selesai
+        <UButton
+          :loading="isLoading"
+          type="submit"
+          trailing-icon="i-lucide-arrow-right"
+        >
+          {{ isLoading ? "Sedang Mengirim Data..." : "Selesai" }}
         </UButton>
       </div>
     </UPageCard>
