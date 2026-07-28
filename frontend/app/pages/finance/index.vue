@@ -66,14 +66,14 @@ definePageMeta({ layout: 'finance' })
             </UButton>
           </UTooltip>
 
-          <UDropdownMenu :items="items">
+          <!-- <UDropdownMenu :items="items">
             <UButton
               icon="i-lucide-plus"
               label="Aksi Cepat"
               size="md"
               class="rounded-full"
             />
-          </UDropdownMenu>
+          </UDropdownMenu> -->
         </template>
       </UDashboardNavbar>
 

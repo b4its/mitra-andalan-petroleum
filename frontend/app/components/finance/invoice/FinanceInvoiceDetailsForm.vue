@@ -6,6 +6,8 @@ import {
 } from '~/types/schemas'
 
 defineProps<{
+  purchaseOrders: any
+  deliveryOrderGroups: SelectMenuItem[][]
   hasPrevious: boolean | undefined
 }>()
 
@@ -13,51 +15,6 @@ const emit = defineEmits<{
   submit: []
   previous: []
 }>()
-
-const deliveryOrderGroups = [
-  [
-    {
-      type: 'label',
-      label: 'PT. MIGAS KUKAR MANDIRI'
-    },
-    {
-      label: '1086/DO/MAP/V/2026',
-      value: '1086/DO/MAP/V/2026'
-    },
-    {
-      label: '1087/DO/MAP/V/2026',
-      value: '1087/DO/MAP/V/2026'
-    }
-  ],
-  [
-    {
-      type: 'label',
-      label: 'PT. BERAU MINERAL ENERGI'
-    },
-    {
-      label: '1092/DO/BME/V/2026',
-      value: '1092/DO/BME/V/2026'
-    },
-    {
-      label: '1093/DO/BME/V/2026',
-      value: '1093/DO/BME/V/2026'
-    }
-  ],
-  [
-    {
-      type: 'label',
-      label: 'PT. KALTIM OIL SERVICES'
-    },
-    {
-      label: '1098/DO/KOS/V/2026',
-      value: '1098/DO/KOS/V/2026'
-    },
-    {
-      label: '1099/DO/KOS/V/2026',
-      value: '1099/DO/KOS/V/2026'
-    }
-  ]
-] satisfies SelectMenuItem[][]
 
 const state = defineModel<FinanceInvoiceDetailsState>({ required: true })
 
@@ -144,7 +101,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
       <p>Customer Purchase Information</p>
 
       <div class="flex w-full gap-4">
-        <UFormField
+        <!-- <UFormField
           name="customerPurchaseOrderNumber"
           label="Customer PO No"
           required
@@ -156,6 +113,31 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
             type="text"
             autocomplete="off"
           />
+        </UFormField> -->
+
+        <UFormField
+          name="offeringLetter"
+          label="Nomor Surat Penawaran"
+          required
+        >
+          <USelectMenu
+            v-model="
+              state.customerPurchaseInformation.customerPurchaseOrderNumber
+            "
+            :items="purchaseOrders"
+            placeholder="Pilih Surat Penawaran"
+            value-key="value"
+            :ui="{ content: 'min-w-fit' }"
+            class="w-full"
+          >
+            <template #item-label="{ item }">
+              {{ item.label }}
+
+              <span class="text-muted text-xs">
+                ({{ item.customerName }})
+              </span>
+            </template>
+          </USelectMenu>
         </UFormField>
 
         <UFormField

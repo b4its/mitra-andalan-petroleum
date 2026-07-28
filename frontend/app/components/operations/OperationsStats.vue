@@ -6,17 +6,21 @@ const props = defineProps<{
   range: Range
 }>()
 
-const { data: stats } = await useAsyncData<Stat[]>('operations-stats', async () => {
-  const { get } = useApi()
-  const res = await get<{ stats: any[] }>('/stats/operations')
-  return (res.stats || []).map((s: any) => ({
-    title: s.title,
-    icon: s.icon,
-    value: s.value,
-    variation: s.variation,
-    to: s.to
-  }))
-}, { watch: [() => props.period, () => props.range], default: () => [] })
+const { data: stats } = await useAsyncData<Stat[]>(
+  'operations-stats',
+  async () => {
+    const { get } = useApi()
+    const res = await get<{ stats: any[] }>('/stats/operations')
+    return (res.stats || []).map((s: any) => ({
+      title: s.title,
+      icon: s.icon,
+      value: s.value,
+      variation: s.variation,
+      to: s.to
+    }))
+  },
+  { watch: [() => props.period, () => props.range], default: () => [] }
+)
 </script>
 
 <template>
@@ -42,13 +46,13 @@ const { data: stats } = await useAsyncData<Stat[]>('operations-stats', async () 
           {{ stat.value }}
         </span>
 
-        <UBadge
+        <!-- <UBadge
           :color="stat.variation > 0 ? 'success' : 'error'"
           variant="subtle"
           class="text-xs"
         >
           {{ stat.variation > 0 ? "+" : "" }}{{ stat.variation }}%
-        </UBadge>
+        </UBadge> -->
       </div>
     </UPageCard>
   </UPageGrid>
