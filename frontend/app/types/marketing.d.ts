@@ -6,6 +6,91 @@ export interface Customer {
   email: string;
 }
 
+export interface PurchaseOrderDetails {
+  id: string;
+  po_number: string;
+  type: "customer" | "supplier";
+  customer_id: null;
+  supplier_id: string;
+  customer_name: string;
+  supplier_name: string;
+  date: Date;
+  total: number;
+  status: string;
+  details: Details;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface Details {
+  companyInformation: CompanyInformation;
+  receiver: CompanyInformation;
+  po: Po;
+  vat: number;
+  paymentAddress: PaymentAddress;
+  selectedOfferingLetter: SelectedOfferingLetter;
+  products: Product[];
+  totalProductsPrice: number;
+  termAndCondition: string;
+  delivery: Delivery;
+  forwarder: Forwarder;
+  signed: Signed;
+}
+
+export interface CompanyInformation {
+  name: string;
+  address: string;
+  npwp: string;
+  contactPerson: string;
+  email: string;
+}
+
+export interface Delivery {
+  loadingTerminal: string;
+  loadingDate: Date;
+  picOperationMap: string;
+}
+
+export interface Forwarder {
+  trucking: string;
+}
+
+export interface PaymentAddress {
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
+export interface Po {
+  date: Date;
+  number: string;
+}
+
+export interface Product {
+  name: string;
+  qty: number;
+  unit: string;
+  price: number;
+  totalPrice: number;
+}
+
+export interface SelectedOfferingLetter {
+  id: string;
+  offeringLetterNumber: string;
+  customerName: string;
+  customerId: string;
+  fuelTotalPrice: number;
+  transportPrice: number;
+  dateCreated: Date;
+  dateChanged: Date;
+  status: string;
+}
+
+export interface Signed {
+  createdBy: string;
+  approvedBy: string;
+}
+
 export interface OfferingLetterDetails {
   location: string;
   date: Date | string;
@@ -123,6 +208,7 @@ export interface PurchaseOrdersCustomerPost {
   date: string;
   total: number;
   status: string;
+  details?: Record<string, any>;
 }
 
 export interface PurchaseOrdersDetails {

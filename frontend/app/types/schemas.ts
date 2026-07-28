@@ -121,9 +121,10 @@ export const marketingPOCompanySchema = z.object({
 export type MarketingPOCompanyState = z.infer<typeof marketingPOCompanySchema>;
 
 export const marketingPOAssociateSchema = z.object({
-  associateInformation: z.object({
+  receiver: z.object({
+    id: z.string(),
     name: z.string(),
-    address: z.string(),
+    address: z.string().optional(),
     npwp: z.string().optional(),
     contactPerson: z.string().optional(),
     email: z.email().optional(),
@@ -145,6 +146,7 @@ export const marketingPODetailsSchema = z.object({
     accountNumber: z.string(),
     accountName: z.string(),
   }),
+  selectedOfferingLetter: z.object(),
   products: z
     .array(
       z.object({
