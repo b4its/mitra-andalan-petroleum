@@ -1,25 +1,6 @@
 <script setup lang="ts">
 import { sub } from 'date-fns'
-import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Period, Range } from '~/types'
-import type { Notifications } from '~/types/notification'
-
-const { isNotificationsSlideoverOpen } = useDashboard()
-
-const items = [
-  [
-    {
-      label: 'New mail',
-      icon: 'i-lucide-send',
-      to: '/inbox'
-    },
-    {
-      label: 'New customer',
-      icon: 'i-lucide-user-plus',
-      to: '/customers'
-    }
-  ]
-] satisfies DropdownMenuItem[][]
 
 const range = shallowRef<Range>({
   start: sub(new Date(), { days: 14 }),
@@ -27,19 +8,9 @@ const range = shallowRef<Range>({
 })
 const period = ref<Period>('daily')
 
-const { get } = useApi()
-const { data: financeNotif } = await useAsyncData(
-  'notifications',
-  async () => {
-    const res = await get<Notifications[]>('/notifications')
-    return res
-  },
-  { default: () => [] }
-)
+const { isSlideoverOpen, unreadCount, fetchNotifications } = useNotifications()
 
-function setNotificationsSlideoverOpen(value: boolean) {
-  isNotificationsSlideoverOpen.value = value
-}
+onMounted(() => fetchNotifications())
 
 definePageMeta({ layout: 'finance' })
 </script>
@@ -53,38 +24,27 @@ definePageMeta({ layout: 'finance' })
         </template>
 
         <template #right>
-          <UTooltip text="Notifications" :shortcuts="['N']">
+          <UTooltip text="Notifikasi">
             <UButton
               color="neutral"
               variant="ghost"
               square
-              @click="setNotificationsSlideoverOpen(true)"
+              aria-label="Buka notifikasi"
+              @click="isSlideoverOpen = true"
             >
-              <!-- <UChip color="error" inset> -->
-              <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              <!-- </UChip> -->
+              <div class="relative">
+                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
+                <span
+                  v-if="unreadCount > 0"
+                  class="absolute -right-2 -top-2 flex min-w-[1.1rem] items-center justify-center rounded-full bg-error px-1 py-px text-[10px] font-bold leading-none text-white"
+                >
+                  {{ unreadCount > 99 ? '99+' : unreadCount }}
+                </span>
+              </div>
             </UButton>
           </UTooltip>
-
-          <!-- <UDropdownMenu :items="items">
-            <UButton
-              icon="i-lucide-plus"
-              label="Aksi Cepat"
-              size="md"
-              class="rounded-full"
-            />
-          </UDropdownMenu> -->
         </template>
       </UDashboardNavbar>
-
-      <!-- <UDashboardToolbar>
-        <template #left>
-           NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here.
-          <HomeDateRangePicker v-model="range" class="-ms-1" />
-
-          <HomePeriodSelect v-model="period" :range="range" />
-        </template>
-      </UDashboardToolbar> -->
     </template>
 
     <template #body>
@@ -92,10 +52,9 @@ definePageMeta({ layout: 'finance' })
         Rekap Data Finance
       </h1>
       <FinanceStats :period="period" :range="range" />
-      <!-- <HomeChart :period="period" :range="range" /> -->
-      <!-- <FinanceTable :period="period" :range="range" /> -->
     </template>
   </UDashboardPanel>
 
-  <NotificationsSlideover :notifications="financeNotif" />
+  <NotificationsSlideover />
+  <NotificationDetailModal />
 </template>
