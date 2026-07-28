@@ -8,7 +8,10 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@develoka/angka-terbilang-js": "^1.4.2",
@@ -36,9 +39,12 @@
   "devDependencies": {
     "@faker-js/faker": "^10.5.0",
     "@nuxt/eslint": "^1.16.0",
+    "@playwright/test": "^1.62.0",
     "eslint": "^10.6.0",
+    "happy-dom": "^20.11.1",
     "nuxt-pdfmake": "^0.1.1",
     "typescript": "^6.0.3",
+    "vitest": "^4.1.10",
     "vue-tsc": "^3.3.5"
   },
   "packageManager": "pnpm@11.9.0"
