@@ -1,3 +1,4 @@
+from passlib.hash import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,10 +32,10 @@ async def _seed_users(db: AsyncSession):
         return
 
     users = [
-        User(name="Admin", email="admin@email.com", password="admin123", role="admin"),
-        User(name="Baits", email="ops@email.com", password="ops123", role="operations"),
-        User(name="Nico", email="marketing@email.com", password="marketing123", role="marketing"),
-        User(name="Alea", email="finance@email.com", password="finance123", role="finance"),
+        User(name="Admin", email="admin@email.com", password=bcrypt.hash("admin123"), role="admin"),
+        User(name="Baits", email="ops@email.com", password=bcrypt.hash("ops123"), role="operations"),
+        User(name="Nico", email="marketing@email.com", password=bcrypt.hash("marketing123"), role="marketing"),
+        User(name="Alea", email="finance@email.com", password=bcrypt.hash("finance123"), role="finance"),
     ]
     for u in users:
         db.add(u)
