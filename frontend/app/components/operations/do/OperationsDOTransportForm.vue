@@ -54,7 +54,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOTransportState>) {
 
       <UFormField name="address" label="Alamat" required>
         <UInput
-          v-model="state.address"
+          v-model="state.transportAddress"
           type="text"
           autocomplete="off"
           placeholder="Samarinda"
@@ -77,7 +77,6 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOTransportState>) {
         <UFormField name="phoneNumber" label="Nomor Telepon" required>
           <UInput
             v-model="state.driverInformation.phoneNumber"
-            v-maska="'#### #### ####'"
             type="text"
             autocomplete="off"
           />
@@ -87,7 +86,11 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOTransportState>) {
       <USeparator />
 
       <UFormField name="dateReceived" label="Tanggal Diterima" required>
-        <UInput v-model="state.dateReceived" type="date" autocomplete="off" />
+        <UInput
+          v-model="state.transportDateReceived"
+          type="date"
+          autocomplete="off"
+        />
       </UFormField>
 
       <USeparator />

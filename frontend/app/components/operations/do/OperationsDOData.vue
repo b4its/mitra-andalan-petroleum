@@ -10,9 +10,11 @@ const UButton = resolveComponent("UButton");
 const table = useTemplateRef("table");
 const columnPinning = ref({ right: ["actions"] });
 
-const { get } = useApi();
+const toast = useToast();
+const { get, put } = useApi();
+const loading = ref(false);
 
-const { data: DoData } = await useAsyncData(
+const { data: DoData, refresh } = await useAsyncData(
   "delivery-orders",
   async () => {
     const res = await get<{ items: DeliveryOrders[] }>("/delivery-orders", {
@@ -84,6 +86,37 @@ const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
   },
 ];
 
+async function updateDoStatus(doId: string) {
+  try {
+    if (loading.value) return;
+
+    loading.value = true;
+
+    const res = await put(`/delivery-orders/${doId}`, {
+      status: "document_returned",
+    });
+
+    console.log(res);
+
+    toast.add({
+      title: "Berhasil",
+      description: "Status DO berhasil diperbarui",
+      icon: "i-lucide-check",
+      color: "success",
+    });
+  } catch (err) {
+    toast.add({
+      title: "Gagal",
+      description: "Status DO gagal diperbarui",
+      icon: "i-lucide-x",
+      color: "error",
+    });
+  } finally {
+    loading.value = false;
+    refresh();
+  }
+}
+
 const pagination = ref({ pageIndex: 0, pageSize: 7 });
 </script>
 
@@ -105,13 +138,25 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
-        <UButton
-          :to="`/operations/detail/delivery-order-${row.original.id}`"
-          variant="solid"
-          size="md"
-          color="primary"
-          >Detail</UButton
-        >
+        <div class="flex gap-2">
+          <UButton
+            :to="`/operations/detail/delivery-order-${row.original.id}`"
+            variant="solid"
+            size="md"
+            color="primary"
+            >Detail</UButton
+          >
+
+          <UButton
+            v-if="row.original.status === 'created'"
+            :loading="loading"
+            @click="updateDoStatus(row.original.id)"
+            variant="soft"
+            size="md"
+            color="success"
+            >Tandai Dokumen Kembali
+          </UButton>
+        </div>
       </template>
     </UTable>
 
