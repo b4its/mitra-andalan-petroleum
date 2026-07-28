@@ -1,44 +1,44 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   financeInvoiceFooterSchema,
-  type FinanceInvoiceFooterState,
-} from "~/types/schemas";
+  type FinanceInvoiceFooterState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-}>();
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<FinanceInvoiceFooterState>({ required: true });
+const state = defineModel<FinanceInvoiceFooterState>({ required: true })
 
 function emptyNote() {
-  return { term: "" };
+  return { term: '' }
 }
 
-const termAndConditions = computed(() => state.value.termsAndCondition);
+const termAndConditions = computed(() => state.value.termsAndCondition)
 
 function addNote() {
   if (!state.value.termsAndCondition) {
-    state.value.termsAndCondition = [];
+    state.value.termsAndCondition = []
   }
-  state.value.termsAndCondition.push(emptyNote());
+  state.value.termsAndCondition.push(emptyNote())
 }
 
 function removeNote(index: number) {
-  state.value.termsAndCondition.splice(index, 1);
+  state.value.termsAndCondition.splice(index, 1)
 }
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<FinanceInvoiceFooterState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -124,16 +124,16 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceFooterState>) {
       <div class="flex w-full gap-4">
         <UFormField name="companyName" label="Nama Perusahaan" required>
           <UInput
-            type="text"
             v-model="state.signature.companyName"
+            type="text"
             autocomplete="off"
           />
         </UFormField>
 
         <UFormField name="createdBy" label="Dibuat Oleh" required>
           <UInput
-            type="text"
             v-model="state.signature.createdBy"
+            type="text"
             autocomplete="off"
           />
         </UFormField>

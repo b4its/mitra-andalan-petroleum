@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from "@tanstack/vue-table";
-import { h, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
-import type { MarketingOfferingLetterOverview } from "~/types";
-import type { PurchaseOrdersSupplier } from "~/types/marketing";
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import type { MarketingOfferingLetterOverview } from '~/types'
+import type { PurchaseOrdersSupplier } from '~/types/marketing'
 
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-const table = useTemplateRef("table");
-const columnPinning = ref({ right: ["actions"] });
+const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const table = useTemplateRef('table')
+const columnPinning = ref({ right: ['actions'] })
 
-const { get } = useApi();
+const { get } = useApi()
 
 const { data: PoData } = await useAsyncData(
-  "purchase-orders-supplier",
+  'purchase-orders-supplier',
   async () => {
     const res = await get<{ items: PurchaseOrdersSupplier[] }>(
-      "/purchase-orders",
-      { page: 1, page_size: 50, type: "supplier" },
-    );
+      '/purchase-orders',
+      { page: 1, page_size: 50, type: 'supplier' }
+    )
     return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
       id: purchaseOrder.id,
       offeringLetterNumber: purchaseOrder.po_number,
@@ -27,47 +27,48 @@ const { data: PoData } = await useAsyncData(
       transportPrice: 0,
       dateCreated: purchaseOrder.created_at.toString(),
       dateChanged: purchaseOrder.updated_at.toString(),
-      status: purchaseOrder.status,
-    }));
+      status: purchaseOrder.status
+    }))
   },
-  { default: () => [] },
-);
+  { default: () => [] }
+)
 
 const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
   {
-    accessorKey: "offeringLetterNumber",
-    header: "Nomor PO",
-    cell: ({ row }) => `${row.getValue("offeringLetterNumber")}`,
+    accessorKey: 'offeringLetterNumber',
+    header: 'Nomor PO',
+    cell: ({ row }) => `${row.getValue('offeringLetterNumber')}`
   },
   {
-    accessorKey: "customerName",
-    header: "Supplier",
-    cell: ({ row }) => `${row.getValue("customerName")}`,
+    accessorKey: 'customerName',
+    header: 'Supplier',
+    cell: ({ row }) => `${row.getValue('customerName')}`
   },
   {
-    accessorKey: "fuelTotalPrice",
-    header: "Total",
-    cell: ({ row }) => `${formatCurrency(row.getValue("fuelTotalPrice"))}`,
+    accessorKey: 'fuelTotalPrice',
+    header: 'Total',
+    cell: ({ row }) => `${formatCurrency(row.getValue('fuelTotalPrice'))}`
   },
   {
-    accessorKey: "dateCreated",
-    header: "Dibuat",
-    cell: ({ row }) => `${formatDate(row.getValue("dateCreated"))}`,
+    accessorKey: 'dateCreated',
+    header: 'Dibuat',
+    cell: ({ row }) => `${formatDate(row.getValue('dateCreated'))}`
   },
   {
-    id: "actions",
-    header: "Aksi",
-    size: 220,
-  },
-];
+    id: 'actions',
+    header: 'Aksi',
+    size: 220
+  }
+]
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 });
+const pagination = ref({ pageIndex: 0, pageSize: 7 })
 </script>
 
 <template>
   <section class="flex flex-col lg:gap-4">
     <UTable
       ref="table"
+      v-model:pagination="pagination"
       :data="PoData"
       :columns="columns"
       :column-pinning="columnPinning"
@@ -76,9 +77,8 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default',
+        td: 'border-b border-default'
       }"
-      v-model:pagination="pagination"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
@@ -88,8 +88,9 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
             variant="solid"
             size="md"
             color="primary"
-            >Lihat Surat</UButton
           >
+            Lihat Surat
+          </UButton>
         </div>
       </template>
     </UTable>

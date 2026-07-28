@@ -1,72 +1,72 @@
 <script setup lang="ts">
-import type { FormSubmitEvent, SelectMenuItem } from "@nuxt/ui";
+import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import {
   financeInvoiceDetailsSchema,
-  type FinanceInvoiceDetailsState,
-} from "~/types/schemas";
+  type FinanceInvoiceDetailsState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-}>();
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
 const deliveryOrderGroups = [
   [
     {
-      type: "label",
-      label: "PT. MIGAS KUKAR MANDIRI",
+      type: 'label',
+      label: 'PT. MIGAS KUKAR MANDIRI'
     },
     {
-      label: "1086/DO/MAP/V/2026",
-      value: "1086/DO/MAP/V/2026",
+      label: '1086/DO/MAP/V/2026',
+      value: '1086/DO/MAP/V/2026'
     },
     {
-      label: "1087/DO/MAP/V/2026",
-      value: "1087/DO/MAP/V/2026",
-    },
+      label: '1087/DO/MAP/V/2026',
+      value: '1087/DO/MAP/V/2026'
+    }
   ],
   [
     {
-      type: "label",
-      label: "PT. BERAU MINERAL ENERGI",
+      type: 'label',
+      label: 'PT. BERAU MINERAL ENERGI'
     },
     {
-      label: "1092/DO/BME/V/2026",
-      value: "1092/DO/BME/V/2026",
+      label: '1092/DO/BME/V/2026',
+      value: '1092/DO/BME/V/2026'
     },
     {
-      label: "1093/DO/BME/V/2026",
-      value: "1093/DO/BME/V/2026",
-    },
+      label: '1093/DO/BME/V/2026',
+      value: '1093/DO/BME/V/2026'
+    }
   ],
   [
     {
-      type: "label",
-      label: "PT. KALTIM OIL SERVICES",
+      type: 'label',
+      label: 'PT. KALTIM OIL SERVICES'
     },
     {
-      label: "1098/DO/KOS/V/2026",
-      value: "1098/DO/KOS/V/2026",
+      label: '1098/DO/KOS/V/2026',
+      value: '1098/DO/KOS/V/2026'
     },
     {
-      label: "1099/DO/KOS/V/2026",
-      value: "1099/DO/KOS/V/2026",
-    },
-  ],
-] satisfies SelectMenuItem[][];
+      label: '1099/DO/KOS/V/2026',
+      value: '1099/DO/KOS/V/2026'
+    }
+  ]
+] satisfies SelectMenuItem[][]
 
-const state = defineModel<FinanceInvoiceDetailsState>({ required: true });
+const state = defineModel<FinanceInvoiceDetailsState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -96,14 +96,14 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
           required
         >
           <UInputNumber
-            class="w-full"
             v-model="state.invoiceInformation.terms"
+            class="w-full"
             :min="1"
             locale="id-ID"
             :format-options="{
               style: 'unit',
               unit: 'day',
-              unitDisplay: 'long',
+              unitDisplay: 'long'
             }"
           />
         </UFormField>

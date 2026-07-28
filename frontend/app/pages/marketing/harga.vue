@@ -1,28 +1,28 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { NavigationMenuItem } from '@nuxt/ui'
 
 const links = [
   [
     {
-      label: "Rekap",
-      icon: "i-lucide-square-chart-gantt",
-      to: "/marketing/harga",
-      exact: true,
+      label: 'Rekap',
+      icon: 'i-lucide-square-chart-gantt',
+      to: '/marketing/harga',
+      exact: true
     },
     {
-      label: "Harga Solar",
-      icon: "i-lucide-fuel",
-      to: "/marketing/harga/solar",
+      label: 'Harga Solar',
+      icon: 'i-lucide-fuel',
+      to: '/marketing/harga/solar'
     },
     {
-      label: "Harga Pengiriman",
-      icon: "i-lucide-truck",
-      to: "/marketing/harga/pengiriman",
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+      label: 'Harga Pengiriman',
+      icon: 'i-lucide-truck',
+      to: '/marketing/harga/pengiriman'
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
-definePageMeta({ layout: "marketing" });
+definePageMeta({ layout: 'marketing' })
 </script>
 
 <template>

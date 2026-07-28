@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
-import type {  PurchaseOrdersDetails } from "~/types/marketing";
+import type { NavigationMenuItem } from '@nuxt/ui'
+import type { PurchaseOrdersDetails } from '~/types/marketing'
 
-const route = useRoute();
-const idPoLetter = route.params.id;
-const {get} = useApi()
+const route = useRoute()
+const idPoLetter = route.params.id
+const { get } = useApi()
 
-const { data: purchaseOrderDetails } = await useAsyncData("purchase-order-details", async () => {
-  const res = await get<PurchaseOrdersDetails>(`/purchase-orders/${idPoLetter}`);
-  return res;
-});
+const { data: purchaseOrderDetails } = await useAsyncData('purchase-order-details', async () => {
+  const res = await get<PurchaseOrdersDetails>(`/purchase-orders/${idPoLetter}`)
+  return res
+})
 
 const links = [
   [
     {
-      label: "Detail Purchase Order Supplier",
-      icon: "i-lucide-receipt-text",
-      to: `/marketing/detail-supplier/po-supplier-${idPoLetter}`,
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+      label: 'Detail Purchase Order Supplier',
+      icon: 'i-lucide-receipt-text',
+      to: `/marketing/detail-supplier/po-supplier-${idPoLetter}`
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
-definePageMeta({ layout: "marketing" });
+definePageMeta({ layout: 'marketing' })
 </script>
 
 <template>

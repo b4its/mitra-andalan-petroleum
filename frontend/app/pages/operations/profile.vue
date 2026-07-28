@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: "operations" });
+definePageMeta({ layout: 'operations' })
 </script>
 
 <template>

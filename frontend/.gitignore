@@ -1,3 +1,11 @@
+
+
+
+# Environment
+.env
+.env.local
+.env.*.local
+
 # Nuxt dev/build outputs
 .output
 .data
@@ -6,8 +14,11 @@
 .cache
 dist
 
-# Node dependencies
-node_modules
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnpm-store
+
 
 # Logs
 logs
@@ -25,3 +36,6 @@ logs
 
 # VSC
 .history
+
+test-results/
+test-results

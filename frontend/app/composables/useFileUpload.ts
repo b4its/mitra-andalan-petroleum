@@ -36,20 +36,20 @@ export function useFileUpload() {
   async function uploadAll(
     folder: string,
     documentType?: string,
-    documentId?: string,
+    documentId?: string
   ): Promise<ResUploads[]> {
     if (pendingFiles.value.length === 0) return []
     isUploading.value = true
 
     try {
       const payload: Uploads = {
-        files: pendingFiles.value.map((f) => f.file),
+        files: pendingFiles.value.map(f => f.file),
         folder,
-        document_type: documentType || "general",
-        document_id: documentId || "",
+        document_type: documentType || 'general',
+        document_id: documentId || ''
       }
 
-      const results = await postFile<ResUploads[]>("/upload", payload)
+      const results = await postFile<ResUploads[]>('/upload', payload)
 
       for (const item of pendingFiles.value) {
         URL.revokeObjectURL(item.previewUrl)
@@ -75,6 +75,6 @@ export function useFileUpload() {
     addFiles,
     removeFile,
     cancelAll,
-    uploadAll,
+    uploadAll
   }
 }

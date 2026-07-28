@@ -26,6 +26,8 @@ services:
     ports:
       - "8080:3000"
       - "24678:24678"
+    environment:
+      NUXT_API_PROXY_TARGET: http://backend:8000/api/v1
     volumes:
       - ./frontend:/app
       - /app/node_modules

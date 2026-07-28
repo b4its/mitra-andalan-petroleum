@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from "@tanstack/vue-table";
-import { h, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
-import type { OperationsDeliveryOrderOverview } from "~/types";
-import type { FinanceDeliveryOrders } from "~/types/finance";
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import type { OperationsDeliveryOrderOverview } from '~/types'
+import type { FinanceDeliveryOrders } from '~/types/finance'
 
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-const table = useTemplateRef("table");
-const columnPinning = ref({ right: ["actions"] });
+const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const table = useTemplateRef('table')
+const columnPinning = ref({ right: ['actions'] })
 
-const { get } = useApi();
+const { get } = useApi()
 
 const { data: DoData } = await useAsyncData(
-  "finance-delivery-orders",
+  'finance-delivery-orders',
   async () => {
     const res = await get<{ items: FinanceDeliveryOrders[] }>(
-      "/delivery-orders",
+      '/delivery-orders',
       {
         page: 1,
-        page_size: 50,
-      },
-    );
+        page_size: 50
+      }
+    )
     return res.items.map((d: FinanceDeliveryOrders) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
@@ -30,70 +30,71 @@ const { data: DoData } = await useAsyncData(
       transportName: d.transport_name,
       dateCreated: d.created_at.toString(),
       dateChanged: d.updated_at.toString(),
-      status: d.status,
-    }));
+      status: d.status
+    }))
   },
-  { default: () => [] },
-);
+  { default: () => [] }
+)
 
 const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
   {
-    accessorKey: "deliveryOrderNumber",
-    header: "Nomor DO",
-    cell: ({ row }) => `${row.getValue("deliveryOrderNumber")}`,
+    accessorKey: 'deliveryOrderNumber',
+    header: 'Nomor DO',
+    cell: ({ row }) => `${row.getValue('deliveryOrderNumber')}`
   },
   {
-    accessorKey: "customerName",
-    header: "Customer",
-    cell: ({ row }) => `${row.getValue("customerName")}`,
+    accessorKey: 'customerName',
+    header: 'Customer',
+    cell: ({ row }) => `${row.getValue('customerName')}`
   },
   {
-    accessorKey: "purchaseOrderNumber",
-    header: "Nomor PO",
-    cell: ({ row }) => `${row.getValue("purchaseOrderNumber")}`,
+    accessorKey: 'purchaseOrderNumber',
+    header: 'Nomor PO',
+    cell: ({ row }) => `${row.getValue('purchaseOrderNumber')}`
   },
   {
-    accessorKey: "transportName",
-    header: "Transportir",
-    cell: ({ row }) => `${row.getValue("transportName")}`,
+    accessorKey: 'transportName',
+    header: 'Transportir',
+    cell: ({ row }) => `${row.getValue('transportName')}`
   },
   {
-    accessorKey: "dateCreated",
-    header: "Dibuat",
-    cell: ({ row }) => `${formatDate(row.getValue("dateCreated"))}`,
+    accessorKey: 'dateCreated',
+    header: 'Dibuat',
+    cell: ({ row }) => `${formatDate(row.getValue('dateCreated'))}`
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ row }) => {
       const color = {
-        created: "info" as const,
-        document_returned: "success" as const,
-      }[row.getValue("status") as string];
-      const label = { created: "Dibuat", document_returned: "Dokumen Kembali" }[
-        row.getValue("status") as string
-      ];
+        created: 'info' as const,
+        document_returned: 'success' as const
+      }[row.getValue('status') as string]
+      const label = { created: 'Dibuat', document_returned: 'Dokumen Kembali' }[
+        row.getValue('status') as string
+      ]
       return h(
         UBadge,
-        { class: "capitalize", variant: "soft", color },
-        () => label,
-      );
-    },
+        { class: 'capitalize', variant: 'soft', color },
+        () => label
+      )
+    }
   },
   {
-    id: "actions",
-    header: "Aksi",
-    size: 180,
-  },
-];
+    id: 'actions',
+    header: 'Aksi',
+    size: 180
+  }
+]
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 });
+const pagination = ref({ pageIndex: 0, pageSize: 7 })
 </script>
 
 <template>
   <section class="flex flex-col lg:gap-4">
     <UTable
       ref="table"
+      v-model:pagination="pagination"
       :data="DoData"
       :columns="columns"
       :column-pinning="columnPinning"
@@ -102,9 +103,8 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default',
+        td: 'border-b border-default'
       }"
-      v-model:pagination="pagination"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">

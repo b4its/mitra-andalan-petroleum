@@ -1,111 +1,74 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute();
-const toast = useToast();
-
-const open = ref(false);
+const open = ref(false)
+const notificationsOpen = ref(false)
 
 const links = [
   [
     {
-      label: "Beranda",
-      icon: "i-lucide-house",
-      to: "/marketing",
+      label: 'Dashboard',
+      icon: 'i-lucide-house',
+      to: '/admin',
       onSelect: () => {
-        open.value = false;
-      },
+        open.value = false
+      }
     },
     {
-      label: "Marketing",
-      icon: "i-lucide-flag-triangle-right",
-
+      label: 'Marketing',
+      icon: 'i-lucide-flag-triangle-right',
       defaultOpen: true,
       children: [
         {
-          label: "Rekap Keseluruhan",
-          to: "/",
+          label: 'Rekap Keseluruhan',
+          to: '/admin/marketing',
           exact: true,
           onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Data Surat Penawaran",
-          to: "/",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Data Purchase Order Customer",
-          to: "/",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Data Purchase Order Supplier",
-          to: "/",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
+            open.value = false
+          }
+        }
+      ]
     },
     {
-      label: "Operations",
-      icon: "i-lucide-truck",
-
+      label: 'Operations',
+      icon: 'i-lucide-truck',
       defaultOpen: true,
       children: [
         {
-          label: "Rekap Keseluruhan",
-          to: "/",
+          label: 'Rekap Keseluruhan',
+          to: '/admin/operations',
           exact: true,
           onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Data Delivery Order",
-          to: "/",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
+            open.value = false
+          }
+        }
+      ]
     },
     {
-      label: "Finance",
-      icon: "i-lucide-receipt-text",
-
+      label: 'Finance',
+      icon: 'i-lucide-receipt-text',
       defaultOpen: true,
       children: [
         {
-          label: "Rekap Keseluruhan",
-          to: "/",
+          label: 'Rekap Keseluruhan',
+          to: '/admin/finance',
           exact: true,
           onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: "Data Invoice",
-          to: "/",
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
+            open.value = false
+          }
+        }
+      ]
     },
-  ],
-] satisfies NavigationMenuItem[][];
+    {
+      label: 'Profil',
+      icon: 'i-lucide-user',
+      to: '/admin/profile',
+      onSelect: () => {
+        open.value = false
+      }
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 </script>
 
 <template>
@@ -131,10 +94,21 @@ const links = [
           popover
         />
       </template>
+
+      <template #footer="{ collapsed }">
+        <UButton
+          :icon="'i-lucide-bell'"
+          :label="collapsed ? undefined : 'Notifikasi'"
+          color="neutral"
+          variant="ghost"
+          :square="collapsed"
+          @click="notificationsOpen = true"
+        />
+      </template>
     </UDashboardSidebar>
 
     <slot />
 
-    <!-- <NotificationsSlideover /> -->
+    <AdminNotificationsModal v-model:open="notificationsOpen" />
   </UDashboardGroup>
 </template>

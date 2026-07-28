@@ -1,47 +1,47 @@
 <script setup lang="ts">
-import { sub } from "date-fns";
-import type { DropdownMenuItem } from "@nuxt/ui";
-import type { Period, Range } from "~/types";
-import type { Notifications } from "~/types/notification";
+import { sub } from 'date-fns'
+import type { DropdownMenuItem } from '@nuxt/ui'
+import type { Period, Range } from '~/types'
+import type { Notifications } from '~/types/notification'
 
-const { isNotificationsSlideoverOpen } = useDashboard();
+const { isNotificationsSlideoverOpen } = useDashboard()
 
 const items = [
   [
     {
-      label: "New mail",
-      icon: "i-lucide-send",
-      to: "/inbox",
+      label: 'New mail',
+      icon: 'i-lucide-send',
+      to: '/inbox'
     },
     {
-      label: "New customer",
-      icon: "i-lucide-user-plus",
-      to: "/customers",
-    },
-  ],
-] satisfies DropdownMenuItem[][];
+      label: 'New customer',
+      icon: 'i-lucide-user-plus',
+      to: '/customers'
+    }
+  ]
+] satisfies DropdownMenuItem[][]
 
 const range = shallowRef<Range>({
   start: sub(new Date(), { days: 14 }),
-  end: new Date(),
-});
-const period = ref<Period>("daily");
+  end: new Date()
+})
+const period = ref<Period>('daily')
 
-const { get } = useApi();
+const { get } = useApi()
 const { data: opsNotif } = await useAsyncData(
-  "notifications",
+  'notifications',
   async () => {
-    const res = await get<Notifications[]>("/notifications");
-    return res;
+    const res = await get<Notifications[]>('/notifications')
+    return res
   },
-  { default: () => [] },
-);
+  { default: () => [] }
+)
 
 function setNotificationsSlideoverOpen(value: boolean) {
-  isNotificationsSlideoverOpen.value = value;
+  isNotificationsSlideoverOpen.value = value
 }
 
-definePageMeta({ layout: "operations" });
+definePageMeta({ layout: 'operations' })
 </script>
 
 <template>

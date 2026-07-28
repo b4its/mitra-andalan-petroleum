@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
-import { operationsDOSchema, type OperationsDOState } from "~/types/schemas";
+import type { FormSubmitEvent } from '@nuxt/ui'
+import { operationsDOSchema, type OperationsDOState } from '~/types/schemas'
 
 const emit = defineEmits<{
-  submit: [];
-}>();
+  submit: []
+}>()
 
-const state = defineModel<OperationsDOState>({ required: true });
+const state = defineModel<OperationsDOState>({ required: true })
 
 function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
-  emit("submit");
+  emit('submit')
 }
 
-const value = ref<string>();
+const value = ref<string>()
 
 const deliveryOrders = ref([
   {
-    label: "PT. MIGAS KUKAR MANDIRI",
-    value: "1086/DO/MAP/V/2026",
+    label: 'PT. MIGAS KUKAR MANDIRI',
+    value: '1086/DO/MAP/V/2026'
   },
   {
-    label: "PT. BERAU MINERAL ENERGI",
-    value: "1092/DO/BME/V/2026",
+    label: 'PT. BERAU MINERAL ENERGI',
+    value: '1092/DO/BME/V/2026'
   },
   {
-    label: "PT. KALTIM OIL SERVICES",
-    value: "1098/DO/KOS/V/2026",
-  },
-]);
+    label: 'PT. KALTIM OIL SERVICES',
+    value: '1098/DO/KOS/V/2026'
+  }
+])
 </script>
 
 <template>

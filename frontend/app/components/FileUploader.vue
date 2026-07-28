@@ -25,7 +25,7 @@ function onFileChange(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files?.length) {
     addFiles(target.files)
-    target.value = ""
+    target.value = ''
   }
 }
 
@@ -40,18 +40,18 @@ function onCancelAll() {
 async function onUploadAll() {
   const results = await uploadAll(props.folder, props.documentType, props.documentId)
   if (results.length) {
-    emit("uploaded", results)
+    emit('uploaded', results)
   }
 }
 
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B"
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
 function isImage(mime: string): boolean {
-  return mime.startsWith("image/")
+  return mime.startsWith('image/')
 }
 </script>
 
@@ -65,8 +65,12 @@ function isImage(mime: string): boolean {
       @drop.prevent="onDrop($dataTransfer?.files)"
     >
       <UIcon name="i-lucide-upload" class="mb-2 size-8 text-neutral-400" />
-      <p class="text-sm font-medium">{{ label || "Upload File" }}</p>
-      <p v-if="description" class="mt-1 text-xs text-neutral-400">{{ description }}</p>
+      <p class="text-sm font-medium">
+        {{ label || "Upload File" }}
+      </p>
+      <p v-if="description" class="mt-1 text-xs text-neutral-400">
+        {{ description }}
+      </p>
       <UButton
         tag="label"
         size="sm"
@@ -87,9 +91,16 @@ function isImage(mime: string): boolean {
     <!-- Preview grid -->
     <div v-if="pendingFiles.length" class="space-y-3">
       <div class="flex items-center justify-between">
-        <p class="text-sm font-medium">{{ pendingFiles.length }} file dipilih</p>
+        <p class="text-sm font-medium">
+          {{ pendingFiles.length }} file dipilih
+        </p>
         <div class="flex gap-2">
-          <UButton size="xs" color="error" variant="ghost" @click="onCancelAll">
+          <UButton
+            size="xs"
+            color="error"
+            variant="ghost"
+            @click="onCancelAll"
+          >
             Batal Semua
           </UButton>
           <UButton
@@ -126,8 +137,12 @@ function isImage(mime: string): boolean {
 
           <!-- File info -->
           <div class="p-2">
-            <p class="truncate text-xs font-medium">{{ item.file.name }}</p>
-            <p class="text-xs text-neutral-400">{{ formatSize(item.file.size) }}</p>
+            <p class="truncate text-xs font-medium">
+              {{ item.file.name }}
+            </p>
+            <p class="text-xs text-neutral-400">
+              {{ formatSize(item.file.size) }}
+            </p>
           </div>
 
           <!-- Remove button -->
@@ -143,7 +158,9 @@ function isImage(mime: string): boolean {
 
     <!-- Uploaded files -->
     <div v-if="uploadedFiles.length" class="space-y-2">
-      <p class="text-sm font-medium text-green-600">Telah diupload:</p>
+      <p class="text-sm font-medium text-green-600">
+        Telah diupload:
+      </p>
       <div
         v-for="upload in uploadedFiles"
         :key="upload.id"
@@ -151,7 +168,9 @@ function isImage(mime: string): boolean {
       >
         <UIcon name="i-lucide-check-circle" class="size-5 shrink-0 text-green-500" />
         <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-medium">{{ upload.original_filename }}</p>
+          <p class="truncate text-sm font-medium">
+            {{ upload.original_filename }}
+          </p>
           <a
             :href="upload.url"
             target="_blank"
