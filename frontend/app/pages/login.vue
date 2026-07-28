@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
 import { z } from "zod";
+import type { Role } from "~/types";
 
 const toast = useToast();
 const router = useRouter();
@@ -37,13 +38,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true;
 
   try {
-    const result = await post<{
-      name: string;
-      email: string;
-      role: string;
-      token: string;
-      logged_in_at: string;
-    }>("/auth/login", {
+    const result = await post<
+      {
+        name: string;
+        email: string;
+        role: string;
+        token: string;
+        logged_in_at: string;
+      },
+      {}
+    >("/auth/login", {
       email: event.data.email,
       password: event.data.password,
     });

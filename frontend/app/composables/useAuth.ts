@@ -1,3 +1,5 @@
+import type { AuthUser } from "~/types";
+
 export function useAuth() {
   const user = ref<AuthUser | null>(null);
 
