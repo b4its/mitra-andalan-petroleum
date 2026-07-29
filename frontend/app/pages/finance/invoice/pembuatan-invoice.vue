@@ -270,6 +270,7 @@ async function onFormSubmit() {
 
     toast.add({
       title: "Success",
+      icon: "i-lucide-check-circle",
       description: "Invoice berhasil dibuat",
       color: "success",
     });

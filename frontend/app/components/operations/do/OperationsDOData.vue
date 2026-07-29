@@ -100,8 +100,8 @@ async function updateDoStatus(doId: string) {
 
     toast.add({
       title: "Berhasil",
-      description: "Status DO berhasil diperbarui",
-      icon: "i-lucide-check",
+      description: "Status Delivery Order berhasil diperbarui",
+      icon: "i-lucide-check-circle",
       color: "success",
     });
   } catch (err) {

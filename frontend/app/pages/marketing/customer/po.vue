@@ -120,6 +120,7 @@ async function onPoCustomerSubmit() {
     // console.log(poPost);
     toast.add({
       title: "Sukses",
+      icon: "i-lucide-check-circle",
       description: "Data Purchase Order Customer berhasil ditambahkan",
       color: "success",
     });
