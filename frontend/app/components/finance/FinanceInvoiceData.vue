@@ -10,25 +10,36 @@ const UButton = resolveComponent("UButton");
 const table = useTemplateRef("table");
 const columnPinning = ref({ right: ["actions"] });
 
-const { get } = useApi();
+const toast = useToast();
+const { get, put } = useApi();
+const loading = ref(false);
 
-const { data: InvoiceData } = await useAsyncData(
+const { data: InvoiceData, refresh } = await useAsyncData(
   "invoices",
   async () => {
     const res = await get<{ items: Invoices[] }>("/invoices", {
       page: 1,
       page_size: 50,
     });
-    return res.items.map((inv: Invoices) => ({
-      id: inv.id,
-      invoiceNumber: inv.invoice_number,
-      customerName: inv.customer_name,
-      termsDay: inv.terms_day,
-      dateCreated: inv.created_at.toString(),
-      grandTotal: inv.grand_total,
-      invoiceStatus: inv.invoice_status,
-      deadlineStatus: inv.deadline_status,
-    }));
+    return res.items.map((inv: Invoices) => {
+      // Check the real-time status every time data is fetched
+      const { invoiceStatus, deadlineStatus } = calculateDynamicStatus(
+        inv.created_at,
+        inv.terms_day,
+        inv.invoice_status,
+      );
+
+      return {
+        id: inv.id,
+        invoiceNumber: inv.invoice_number,
+        customerName: inv.customer_name,
+        termsDay: inv.terms_day,
+        dateCreated: inv.created_at.toString(),
+        grandTotal: inv.grand_total,
+        invoiceStatus: invoiceStatus, // Replaced with dynamic status
+        deadlineStatus: deadlineStatus, // Replaced with dynamic status
+      };
+    });
   },
   { default: () => [] },
 );
@@ -55,8 +66,25 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
     cell: ({ row }) => `${formatDate(row.getValue("dateCreated"))}`,
   },
   {
+    accessorKey: "termsDay",
+    header: "Tenggat Hari",
+    meta: {
+      class: {
+        th: "text-center",
+        td: "text-center",
+      },
+    },
+    cell: ({ row }) => `${row.getValue("termsDay")} Hari`,
+  },
+  {
     accessorKey: "invoiceStatus",
     header: "Status Invoice",
+    meta: {
+      class: {
+        th: "text-center",
+        td: "text-center",
+      },
+    },
     cell: ({ row }) => {
       const color = {
         unpaid: "warning" as const,
@@ -77,7 +105,13 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
   },
   {
     accessorKey: "deadlineStatus",
-    header: "Tenggat",
+    header: "Status Tenggat Waktu",
+    meta: {
+      class: {
+        th: "text-center",
+        td: "text-center",
+      },
+    },
     cell: ({ row }) => {
       const color = {
         on_time: "info" as const,
@@ -96,12 +130,58 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
       );
     },
   },
+
   {
     id: "actions",
     header: "Aksi",
-    size: 180,
+    // size: 100,
   },
 ];
+
+async function updateInvoiceStatus(
+  invoiceId: string,
+  invoiceData: {
+    dateCreated: string;
+    terms: number;
+    currentStatus: string;
+  },
+) {
+  try {
+    if (loading.value) return;
+    loading.value = true;
+
+    // Use the helper to get the exact payload to send to your backend
+    const { invoiceStatus, deadlineStatus } = calculateDynamicStatus(
+      invoiceData.dateCreated,
+      invoiceData.terms,
+      invoiceData.currentStatus,
+    );
+
+    const res = await put(`/invoices/${invoiceId}`, {
+      invoice_status: "paid",
+      deadline_status: deadlineStatus,
+    });
+
+    console.log(res);
+
+    toast.add({
+      title: "Berhasil",
+      description: "Status Invoice berhasil diperbarui",
+      icon: "i-lucide-check-circle",
+      color: "success",
+    });
+  } catch (err) {
+    toast.add({
+      title: "Gagal",
+      description: "Status Invoice gagal diperbarui",
+      icon: "i-lucide-x",
+      color: "error",
+    });
+  } finally {
+    loading.value = false;
+    refresh();
+  }
+}
 
 const pagination = ref({ pageIndex: 0, pageSize: 7 });
 </script>
@@ -124,13 +204,34 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
-        <UButton
-          :to="`/finance/detail/invoice-${row.original.id}`"
-          variant="solid"
-          size="md"
-          color="primary"
-          >Detail</UButton
-        >
+        <div class="flex gap-2">
+          <UButton
+            :to="`/finance/detail/invoice-${row.original.id}`"
+            variant="solid"
+            size="md"
+            color="primary"
+            >Detail</UButton
+          >
+
+          <UButton
+            v-if="
+              row.original.invoiceStatus === 'unpaid' ||
+              row.original.invoiceStatus === 'overdue'
+            "
+            :loading="loading"
+            @click="
+              updateInvoiceStatus(row.original.id, {
+                dateCreated: row.original.dateCreated,
+                terms: row.original.termsDay,
+                currentStatus: row.original.invoiceStatus, // Add this line
+              })
+            "
+            variant="soft"
+            size="md"
+            color="success"
+            >Tandai Invoice Lunas
+          </UButton>
+        </div>
       </template>
     </UTable>
 
