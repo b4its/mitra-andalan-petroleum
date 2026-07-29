@@ -31,12 +31,17 @@ function onChartViewRecords(metric: any) {
 
 // ── Data fetch ────────────────────────────────────────────────
 const { data, pending, refresh } = useAsyncData('admin-finance', async () => {
-  const [stats, invResult] = await Promise.all([
+  const [stats, invResult, doResult] = await Promise.all([
     get<any>('/stats/admin'),
-    get<any>('/invoices', { page: 1, page_size: 100 })
+    get<any>('/invoices', { page: 1, page_size: 100 }),
+    get<any>('/delivery-orders', { page: 1, page_size: 100 })
   ])
-  return { stats, invList: invResult?.items || [] }
-}, { default: () => ({ stats: null, invList: [] }), lazy: true })
+  return {
+    stats,
+    invList: invResult?.items || [],
+    doList: doResult?.items || []
+  }
+}, { default: () => ({ stats: null, invList: [], doList: [] }), lazy: true })
 
 // ── Stats cards ───────────────────────────────────────────────
 const invStats = computed(() => {
@@ -44,6 +49,17 @@ const invStats = computed(() => {
   return (data.value.stats.metrics as any[]).filter(m =>
     ['invoice_value', 'paid_value', 'outstanding_value', 'overdue_value'].includes(m.key)
   )
+})
+
+// ── Ringkasan alur DO dari sisi Finance ──────────────────────
+const doFinanceStats = computed(() => {
+  const list: any[] = data.value?.doList || []
+  return {
+    belumRilisDana: list.filter(d => !d.status_rilis_dana).length,
+    menantiSelesaiKirim: list.filter(d => d.status_rilis_dana && !d.status_selesai_dikirim).length,
+    menunggakLunas: list.filter(d => d.status_selesai_dikirim && !d.status_lunas_ongkir).length,
+    sudahLunas: list.filter(d => d.status_lunas_ongkir).length,
+  }
 })
 
 // ── Charts ────────────────────────────────────────────────────
@@ -54,13 +70,13 @@ const invDistValues = computed(() => data.value?.stats?.distributions?.invoices?
 const deadlineDistLabels = computed(() => data.value?.stats?.distributions?.invoice_deadlines?.map((d: any) => d.label) || [])
 const deadlineDistValues = computed(() => data.value?.stats?.distributions?.invoice_deadlines?.map((d: any) => d.value) || [])
 
-// ── Table: search + pagination ────────────────────────────────
-const search = ref('')
-const page = ref(1)
+// ── Invoice table: search + pagination ────────────────────────
+const invSearch = ref('')
+const invPage = ref(1)
 const PAGE_SIZE = 7
 
-const filtered = computed(() => {
-  const q = search.value.trim().toLowerCase()
+const invFiltered = computed(() => {
+  const q = invSearch.value.trim().toLowerCase()
   const list: any[] = data.value?.invList || []
   if (!q) return list
   return list.filter(inv =>
@@ -70,18 +86,46 @@ const filtered = computed(() => {
     inv.deadline_status?.toLowerCase().includes(q)
   )
 })
-const paged = computed(() => {
-  const start = (page.value - 1) * PAGE_SIZE
-  return filtered.value.slice(start, start + PAGE_SIZE)
+const invPaged = computed(() => {
+  const start = (invPage.value - 1) * PAGE_SIZE
+  return invFiltered.value.slice(start, start + PAGE_SIZE)
 })
-watch(search, () => { page.value = 1 })
+watch(invSearch, () => { invPage.value = 1 })
 
+// ── DO table: search + pagination ─────────────────────────────
+const doSearch = ref('')
+const doPage = ref(1)
+
+const doFiltered = computed(() => {
+  const q = doSearch.value.trim().toLowerCase()
+  const list: any[] = data.value?.doList || []
+  if (!q) return list
+  return list.filter(d =>
+    d.do_number?.toLowerCase().includes(q) ||
+    d.customer_name?.toLowerCase().includes(q) ||
+    d.po_number?.toLowerCase().includes(q)
+  )
+})
+const doPaged = computed(() => {
+  const start = (doPage.value - 1) * PAGE_SIZE
+  return doFiltered.value.slice(start, start + PAGE_SIZE)
+})
+watch(doSearch, () => { doPage.value = 1 })
+
+// ── Status helpers ────────────────────────────────────────────
 const invStatusLabel: Record<string, string> = { unpaid: 'Belum Lunas', paid: 'Lunas', overdue: 'Jatuh Tempo' }
 const invStatusColor: Record<string, string> = { unpaid: 'warning', paid: 'success', overdue: 'error' }
 const deadlineLabel: Record<string, string> = { on_time: 'Tepat Waktu', due_soon: 'Segera Jatuh Tempo', overdue: 'Terlewat' }
 const deadlineColor: Record<string, string> = { on_time: 'info', due_soon: 'warning', overdue: 'error' }
 
-const columns: TableColumn<any>[] = [
+function alurBadge(done: boolean, at: any) {
+  return h('div', { class: 'flex flex-col gap-0.5' }, [
+    h(UBadge, { variant: 'subtle', color: done ? 'success' : 'neutral', class: 'text-xs' }, () => done ? '✓' : '-'),
+    done && at ? h('span', { class: 'text-[10px] text-muted' }, formatDate(at)) : null,
+  ])
+}
+
+const invColumns: TableColumn<any>[] = [
   { accessorKey: 'invoice_number', header: 'Nomor Invoice' },
   { accessorKey: 'customer_name', header: 'Customer' },
   {
@@ -110,12 +154,49 @@ const columns: TableColumn<any>[] = [
     header: 'Dibuat',
     cell: ({ row }: any) => row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-'
   },
-  { id: 'actions', header: 'Aksi' }
+  { id: 'invActions', header: 'Aksi' }
+]
+
+const doColumns: TableColumn<any>[] = [
+  { accessorKey: 'do_number', header: 'Nomor DO' },
+  { accessorKey: 'customer_name', header: 'Customer' },
+  { accessorKey: 'po_number', header: 'Nomor PO' },
+  {
+    accessorKey: 'status_rilis_dana',
+    header: 'Rilis Dana',
+    cell: ({ row }: any) => alurBadge(row.original.status_rilis_dana, row.original.rilis_dana_at)
+  },
+  {
+    accessorKey: 'status_ready_order',
+    header: 'Siap Kirim',
+    cell: ({ row }: any) => alurBadge(row.original.status_ready_order, row.original.ready_order_at)
+  },
+  {
+    accessorKey: 'status_selesai_dikirim',
+    header: 'Selesai',
+    cell: ({ row }: any) => alurBadge(row.original.status_selesai_dikirim, row.original.selesai_dikirim_at)
+  },
+  {
+    accessorKey: 'status_lunas_ongkir',
+    header: 'Lunas Ongkir',
+    cell: ({ row }: any) => alurBadge(row.original.status_lunas_ongkir, row.original.lunas_ongkir_at)
+  },
+  {
+    accessorKey: 'fuel_total',
+    header: 'Volume (L)',
+    cell: ({ row }: any) => formatNumber(row.getValue('fuel_total') ?? 0)
+  },
+  { id: 'doActions', header: 'Aksi' }
 ]
 
 const detailOpen = ref(false)
 const detailId = ref<string | null>(null)
-function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
+const detailType = ref<'invoice' | 'do'>('invoice')
+function openDetail(id: string, type: 'invoice' | 'do') {
+  detailId.value = id
+  detailType.value = type
+  detailOpen.value = true
+}
 </script>
 
 <template>
@@ -137,15 +218,20 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <USkeleton v-for="i in 4" :key="i" class="h-28 rounded-xl" />
           </div>
-          <div class="grid gap-6 lg:grid-cols-2">
+          <div class="grid gap-4 sm:grid-cols-4">
+            <USkeleton v-for="i in 4" :key="i" class="h-20 rounded-xl" />
+          </div>
+          <div class="grid gap-6 lg:grid-cols-3">
+            <USkeleton class="h-72 rounded-xl" />
             <USkeleton class="h-72 rounded-xl" />
             <USkeleton class="h-72 rounded-xl" />
           </div>
           <USkeleton class="h-64 rounded-xl" />
+          <USkeleton class="h-64 rounded-xl" />
         </template>
 
         <template v-else>
-          <!-- Stats: invoice value, paid, outstanding, overdue — nilai & label berbeda tiap kartu -->
+          <!-- Stats invoice -->
           <div v-if="invStats.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <UCard v-for="m in invStats" :key="m.key" variant="subtle">
               <template #leading>
@@ -157,7 +243,27 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
             </UCard>
           </div>
 
-          <!-- Charts: tren invoice + distribusi status bayar + distribusi tenggat -->
+          <!-- Ringkasan alur DO dari sisi Finance -->
+          <div class="grid gap-3 sm:grid-cols-4">
+            <UCard variant="subtle" class="text-center">
+              <p class="text-xs text-muted mb-1">Belum Rilis Dana</p>
+              <p class="text-2xl font-bold text-warning">{{ doFinanceStats.belumRilisDana }}</p>
+            </UCard>
+            <UCard variant="subtle" class="text-center">
+              <p class="text-xs text-muted mb-1">Menanti Selesai Kirim</p>
+              <p class="text-2xl font-bold text-info">{{ doFinanceStats.menantiSelesaiKirim }}</p>
+            </UCard>
+            <UCard variant="subtle" class="text-center">
+              <p class="text-xs text-muted mb-1">Menunggu Lunas Ongkir</p>
+              <p class="text-2xl font-bold text-amber-500">{{ doFinanceStats.menunggakLunas }}</p>
+            </UCard>
+            <UCard variant="subtle" class="text-center">
+              <p class="text-xs text-muted mb-1">Ongkir Lunas</p>
+              <p class="text-2xl font-bold text-success">{{ doFinanceStats.sudahLunas }}</p>
+            </UCard>
+          </div>
+
+          <!-- Charts -->
           <div class="grid gap-6 lg:grid-cols-3">
             <UCard class="lg:col-span-1">
               <template #header>
@@ -207,13 +313,13 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
             </UCard>
           </div>
 
-          <!-- Tabel Invoice + Search + Pagination -->
+          <!-- Tabel Invoice -->
           <UCard>
             <template #header>
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <p class="font-medium">Data Invoice</p>
                 <UInput
-                  v-model="search"
+                  v-model="invSearch"
                   icon="i-lucide-search"
                   placeholder="Cari nomor invoice, customer, status..."
                   size="sm"
@@ -221,23 +327,57 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
                 />
               </div>
             </template>
-            <UTable :data="paged" :columns="columns">
-              <template #actions-cell="{ row }">
+            <UTable :data="invPaged" :columns="invColumns">
+              <template #invActions-cell="{ row }">
                 <UButton
                   icon="i-lucide-eye"
                   size="xs"
                   color="neutral"
                   variant="ghost"
-                  @click="openDetail(row.original.id)"
+                  @click="openDetail(row.original.id, 'invoice')"
                 >
                   Selengkapnya
                 </UButton>
               </template>
             </UTable>
-            <UEmpty v-if="!paged.length" icon="i-lucide-file-search" title="Tidak ada data" />
-            <div v-if="filtered.length > PAGE_SIZE" class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2">
-              <p class="text-xs text-muted">{{ filtered.length }} total</p>
-              <UPagination v-model:page="page" :total="filtered.length" :items-per-page="PAGE_SIZE" />
+            <UEmpty v-if="!invPaged.length" icon="i-lucide-file-search" title="Tidak ada data" />
+            <div v-if="invFiltered.length > PAGE_SIZE" class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2">
+              <p class="text-xs text-muted">{{ invFiltered.length }} total</p>
+              <UPagination v-model:page="invPage" :total="invFiltered.length" :items-per-page="PAGE_SIZE" />
+            </div>
+          </UCard>
+
+          <!-- Tabel Delivery Order + Status Alur -->
+          <UCard>
+            <template #header>
+              <div class="flex items-center justify-between gap-3 flex-wrap">
+                <p class="font-medium">Data Delivery Order — Alur & Status Ongkir</p>
+                <UInput
+                  v-model="doSearch"
+                  icon="i-lucide-search"
+                  placeholder="Cari nomor DO, customer, PO..."
+                  size="sm"
+                  class="w-64"
+                />
+              </div>
+            </template>
+            <UTable :data="doPaged" :columns="doColumns">
+              <template #doActions-cell="{ row }">
+                <UButton
+                  icon="i-lucide-eye"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  @click="openDetail(row.original.id, 'do')"
+                >
+                  Selengkapnya
+                </UButton>
+              </template>
+            </UTable>
+            <UEmpty v-if="!doPaged.length" icon="i-lucide-file-search" title="Tidak ada data" />
+            <div v-if="doFiltered.length > PAGE_SIZE" class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2">
+              <p class="text-xs text-muted">{{ doFiltered.length }} total</p>
+              <UPagination v-model:page="doPage" :total="doFiltered.length" :items-per-page="PAGE_SIZE" />
             </div>
           </UCard>
         </template>
@@ -259,5 +399,9 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
     :date-from="new Date(Date.now() - 30 * 86400000).toISOString()"
     :date-to="new Date().toISOString()"
   />
-  <RecordDetailModal v-model:open="detailOpen" type="invoice" :id="detailId" />
+  <RecordDetailModal
+    v-model:open="detailOpen"
+    :type="detailType"
+    :id="detailId"
+  />
 </template>

@@ -87,7 +87,9 @@ async function onPoCustomerSubmit() {
       date: poData.poReceivedDate,
       total: poData.total,
       status: 'created',
-      created_by: user.value?.id ?? null
+      created_by: user.value?.id ?? null,
+      // Simpan ID OL yang terpilih sebagai JSON array
+      id_offering_letters: JSON.stringify([poData.selectedOfferingLetter.id].filter(Boolean))
     }
 
     const res = await post<any, PurchaseOrdersCustomerPost>(

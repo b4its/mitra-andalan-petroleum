@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// @ts-nocheck
 import angkaTerbilang from '@develoka/angka-terbilang-js'
 import { useChangeCase } from '@vueuse/integrations/useChangeCase.js'
 import logoImage from '~/assets/images/map-logo-only.jpg'
@@ -18,30 +19,37 @@ const { data: doDetails } = await useAsyncData(
       `/delivery-orders/${idDoLetter}`
     )
     return res
-  },
-  { default: () => [] }
+  }
 )
 
+// Ambil details langsung dari response — pola sama seperti surat OL dan PO
 const details: Details = doDetails.value?.details
 
 const tableBodyNotes = [
   [
-    [
-      {
-        text: 'Catatan :',
-        border: [true, false, true, false]
-      }
-    ]
+    {
+      text: 'Catatan :',
+      border: [true, false, true, false]
+    }
   ]
 ]
 
-for (const note of details.notes) {
-  tableBodyNotes.push([
-    {
-      text: note.note || '',
-      border: [true, false, true, false]
-    }
-  ])
+for (let i = 0; i < 3; i++) {
+  if (details?.notes && i < details.notes.length) {
+    tableBodyNotes.push([
+      {
+        text: details.notes[i].note || '',
+        border: [true, false, true, false]
+      }
+    ])
+  } else {
+    tableBodyNotes.push([
+      {
+        text: '',
+        border: [true, false, true, false]
+      }
+    ])
+  }
 }
 
 const loadPdf = async () => {
@@ -802,13 +810,38 @@ const loadPdf = async () => {
     .getDataUrl()
 }
 
+// Cek apakah details sudah berisi data form lengkap
+const detailsLengkap = computed(() => !!(details && details.companyInformation))
+
 onMounted(() => {
-  loadPdf()
+  if (detailsLengkap.value) {
+    loadPdf()
+  }
 })
 </script>
 
 <template>
   <main class="h-180 w-full">
-    <iframe v-if="pdfLink" :src="pdfLink" class="h-full w-full" />
+    <iframe v-if="pdfLink && detailsLengkap" :src="pdfLink" class="h-full w-full" />
+
+    <!-- Tampilkan pesan jika data belum lengkap -->
+    <div v-else-if="!detailsLengkap" class="flex flex-col items-center justify-center h-full gap-6 p-8 text-center">
+      <UIcon name="i-lucide-file-warning" class="size-16 text-warning" />
+      <div>
+        <p class="text-xl font-semibold">Data DO Belum Lengkap</p>
+        <p class="mt-2 text-sm text-muted max-w-sm">
+          Delivery Order ini belum memiliki data detail pengiriman yang diperlukan untuk mencetak surat.
+          Kembali ke halaman Delivery Order dan gunakan tombol
+          <span class="font-medium text-warning">"Lengkapi Data"</span> untuk mengisi data.
+        </p>
+      </div>
+      <UButton to="/operations/rekap" color="primary" icon="i-lucide-arrow-left">
+        Kembali ke Data DO
+      </UButton>
+    </div>
+
+    <div v-else class="flex items-center justify-center h-full">
+      <UIcon name="i-lucide-loader" class="size-8 animate-spin text-muted" />
+    </div>
   </main>
 </template>

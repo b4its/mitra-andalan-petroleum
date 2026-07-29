@@ -187,6 +187,53 @@ async function downloadFile(upload: any) {
             <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Diperbarui</p><p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p></div>
             <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">ID</p><p class="font-mono text-xs text-muted truncate">{{ data.id }}</p></div>
           </div>
+
+          <!-- Status alur pengiriman -->
+          <div class="border-t border-default pt-3">
+            <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Status Alur Pengiriman</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="rounded-lg border border-default p-3 space-y-1">
+                <div class="flex items-center gap-2">
+                  <UIcon name="i-lucide-circle-dollar-sign" class="size-4 shrink-0" :class="data.status_rilis_dana ? 'text-success' : 'text-muted'" />
+                  <p class="text-xs font-medium">Rilis Dana</p>
+                  <UBadge :color="data.status_rilis_dana ? 'success' : 'warning'" variant="subtle" class="ml-auto text-xs">
+                    {{ data.status_rilis_dana ? 'Sudah' : 'Belum' }}
+                  </UBadge>
+                </div>
+                <p v-if="data.rilis_dana_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.rilis_dana_at) }}</p>
+              </div>
+              <div class="rounded-lg border border-default p-3 space-y-1">
+                <div class="flex items-center gap-2">
+                  <UIcon name="i-lucide-package" class="size-4 shrink-0" :class="data.status_ready_order ? 'text-info' : 'text-muted'" />
+                  <p class="text-xs font-medium">Siap Kirim</p>
+                  <UBadge :color="data.status_ready_order ? 'info' : 'neutral'" variant="subtle" class="ml-auto text-xs">
+                    {{ data.status_ready_order ? 'Siap' : '-' }}
+                  </UBadge>
+                </div>
+                <p v-if="data.ready_order_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.ready_order_at) }}</p>
+              </div>
+              <div class="rounded-lg border border-default p-3 space-y-1">
+                <div class="flex items-center gap-2">
+                  <UIcon name="i-lucide-check-circle" class="size-4 shrink-0" :class="data.status_selesai_dikirim ? 'text-success' : 'text-muted'" />
+                  <p class="text-xs font-medium">Selesai Dikirim</p>
+                  <UBadge :color="data.status_selesai_dikirim ? 'success' : 'neutral'" variant="subtle" class="ml-auto text-xs">
+                    {{ data.status_selesai_dikirim ? 'Selesai' : '-' }}
+                  </UBadge>
+                </div>
+                <p v-if="data.selesai_dikirim_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.selesai_dikirim_at) }}</p>
+              </div>
+              <div class="rounded-lg border border-default p-3 space-y-1">
+                <div class="flex items-center gap-2">
+                  <UIcon name="i-lucide-truck" class="size-4 shrink-0" :class="data.status_lunas_ongkir ? 'text-success' : 'text-muted'" />
+                  <p class="text-xs font-medium">Lunas Ongkir</p>
+                  <UBadge :color="data.status_lunas_ongkir ? 'success' : 'neutral'" variant="subtle" class="ml-auto text-xs">
+                    {{ data.status_lunas_ongkir ? 'Lunas' : '-' }}
+                  </UBadge>
+                </div>
+                <p v-if="data.lunas_ongkir_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.lunas_ongkir_at) }}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ── Invoice ── -->

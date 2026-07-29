@@ -2,95 +2,137 @@
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { OperationsDeliveryOrderOverview } from '~/types'
-import type { FinanceDeliveryOrders } from '~/types/finance'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const table = useTemplateRef('table')
 const columnPinning = ref({ right: ['actions'] })
-
-const { get } = useApi()
+const toast = useToast()
+const { get, post } = useApi()
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
 
-const { data: DoData } = await useAsyncData(
+const { data: DoData, refresh } = await useAsyncData(
   'finance-delivery-orders',
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 50 }
+    const params: Record<string, string | number> = { page: 1, page_size: 100 }
     if (debouncedSearch.value) params.search = debouncedSearch.value
-    const res = await get<{ items: FinanceDeliveryOrders[] }>('/delivery-orders', params)
-    return res.items.map((d: FinanceDeliveryOrders) => ({
+    const res = await get<{ items: any[] }>('/delivery-orders', params)
+    return (res.items || []).map((d: any) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
       customerName: d.customer_name,
       purchaseOrderNumber: d.po_number,
       transportName: d.transport_name,
-      dateCreated: d.created_at.toString(),
-      dateChanged: d.updated_at.toString(),
-      status: d.status
+      dateCreated: d.created_at?.toString() || '',
+      status: d.status,
+      statusRilisDana: d.status_rilis_dana ?? false,
+      rilisDanaAt: d.rilis_dana_at,
+      statusReadyOrder: d.status_ready_order ?? false,
+      readyOrderAt: d.ready_order_at,
+      statusSelesaiDikirim: d.status_selesai_dikirim ?? false,
+      selesaiDikirimAt: d.selesai_dikirim_at,
+      statusLunasOngkir: d.status_lunas_ongkir ?? false,
+      lunasOngkirAt: d.lunas_ongkir_at,
     }))
   },
   { default: () => [], watch: [debouncedSearch] }
 )
 
-const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
-  {
-    accessorKey: 'deliveryOrderNumber',
-    header: 'Nomor DO',
-    cell: ({ row }) => `${row.getValue('deliveryOrderNumber')}`
-  },
-  {
-    accessorKey: 'customerName',
-    header: 'Customer',
-    cell: ({ row }) => `${row.getValue('customerName')}`
-  },
-  {
-    accessorKey: 'purchaseOrderNumber',
-    header: 'Nomor PO',
-    cell: ({ row }) => `${row.getValue('purchaseOrderNumber')}`
-  },
-  {
-    accessorKey: 'transportName',
-    header: 'Transportir',
-    cell: ({ row }) => `${row.getValue('transportName')}`
-  },
-  {
-    accessorKey: 'dateCreated',
-    header: 'Dibuat',
-    cell: ({ row }) => `${formatDate(row.getValue('dateCreated'))}`
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const color = {
-        created: 'info' as const,
-        document_returned: 'success' as const
-      }[row.getValue('status') as string]
-      const label = { created: 'Dibuat', document_returned: 'Dokumen Kembali' }[
-        row.getValue('status') as string
-      ]
-      return h(
-        UBadge,
-        { class: 'capitalize', variant: 'soft', color },
-        () => label
-      )
-    }
-  },
-  {
-    id: 'actions',
-    header: 'Aksi',
-    size: 180
+// ── Modal Rilis Dana ──────────────────────────────────────────
+const rilisDanaOpen = ref(false)
+const rilisDanaTarget = ref<any>(null)
+const rilisDanaLoading = ref(false)
+
+function openRilisDana(row: any) { rilisDanaTarget.value = row; rilisDanaOpen.value = true }
+
+async function confirmRilisDana() {
+  if (rilisDanaLoading.value || !rilisDanaTarget.value) return
+  rilisDanaLoading.value = true
+  try {
+    await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {})
+    toast.add({ title: 'Berhasil', description: 'Dana telah dirilis. DO tersedia di Operations.', color: 'success' })
+    rilisDanaOpen.value = false
+    rilisDanaTarget.value = null
+    refresh()
+  } catch (err: any) {
+    toast.add({ title: 'Gagal', description: err.message || 'Gagal merilis dana.', color: 'error' })
+  } finally {
+    rilisDanaLoading.value = false
   }
-]
+}
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 })
+// ── Modal Lunas Ongkir ────────────────────────────────────────
+const lunasOngkirOpen = ref(false)
+const lunasOngkirTarget = ref<any>(null)
+const lunasOngkirLoading = ref(false)
 
+function openLunasOngkir(row: any) { lunasOngkirTarget.value = row; lunasOngkirOpen.value = true }
+
+async function confirmLunasOngkir() {
+  if (lunasOngkirLoading.value || !lunasOngkirTarget.value) return
+  lunasOngkirLoading.value = true
+  try {
+    await post(`/delivery-orders/${lunasOngkirTarget.value.id}/lunas-ongkir`, {})
+    toast.add({ title: 'Berhasil', description: 'Ongkir telah dilunasi.', color: 'success' })
+    lunasOngkirOpen.value = false
+    lunasOngkirTarget.value = null
+    refresh()
+  } catch (err: any) {
+    toast.add({ title: 'Gagal', description: err.message || 'Gagal melunasi ongkir.', color: 'error' })
+  } finally {
+    lunasOngkirLoading.value = false
+  }
+}
+
+// ── Detail modal ──────────────────────────────────────────────
 const detailOpen = ref(false)
 const detailId = ref<string | null>(null)
 function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
+
+// ── Status badge helper ───────────────────────────────────────
+function statusBadge(done: boolean, label: string, at: any) {
+  return h('div', { class: 'flex flex-col gap-0.5' }, [
+    h(UBadge, { variant: 'subtle', color: done ? 'success' : 'neutral', class: 'text-xs' }, () => done ? label : '-'),
+    done && at ? h('span', { class: 'text-[10px] text-muted' }, formatDate(at)) : null,
+  ])
+}
+
+const pagination = ref({ pageIndex: 0, pageSize: 7 })
+
+const columns: TableColumn<any>[] = [
+  { accessorKey: 'deliveryOrderNumber', header: 'Nomor DO' },
+  { accessorKey: 'customerName', header: 'Customer' },
+  { accessorKey: 'purchaseOrderNumber', header: 'Nomor PO' },
+  {
+    accessorKey: 'statusRilisDana',
+    header: 'Rilis Dana',
+    cell: ({ row }) => {
+      const val = row.original.statusRilisDana as boolean
+      return h('div', { class: 'flex flex-col gap-0.5' }, [
+        h(UBadge, { variant: 'subtle', color: val ? 'success' : 'warning', class: 'text-xs' }, () => val ? 'Dirilis' : 'Belum'),
+        val && row.original.rilisDanaAt ? h('span', { class: 'text-[10px] text-muted' }, formatDate(row.original.rilisDanaAt)) : null,
+      ])
+    }
+  },
+  {
+    accessorKey: 'statusReadyOrder',
+    header: 'Siap Kirim',
+    cell: ({ row }) => statusBadge(row.original.statusReadyOrder, 'Siap', row.original.readyOrderAt)
+  },
+  {
+    accessorKey: 'statusSelesaiDikirim',
+    header: 'Selesai Kirim',
+    cell: ({ row }) => statusBadge(row.original.statusSelesaiDikirim, 'Selesai', row.original.selesaiDikirimAt)
+  },
+  {
+    accessorKey: 'statusLunasOngkir',
+    header: 'Lunas Ongkir',
+    cell: ({ row }) => statusBadge(row.original.statusLunasOngkir, 'Lunas', row.original.lunasOngkirAt)
+  },
+  { id: 'actions', header: 'Aksi', size: 220 }
+]
 </script>
 
 <template>
@@ -120,23 +162,33 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
-        <div class="flex items-center gap-2">
-          <UButton
-            icon="i-lucide-eye"
-            size="sm"
-            color="neutral"
-            variant="ghost"
-            @click="openDetail(row.original.id)"
-          >
-            Selengkapnya
+        <div class="flex flex-wrap items-center gap-1.5">
+          <UButton icon="i-lucide-eye" size="xs" color="neutral" variant="ghost" @click="openDetail(row.original.id)">
+            Lihat
           </UButton>
           <UButton
             :to="`/finance/detail-operations/delivery-order-${row.original.id}`"
-            variant="solid"
-            size="sm"
-            color="primary"
+            size="xs" color="primary" variant="outline"
           >
-            Lihat Surat
+            Surat
+          </UButton>
+          <!-- Rilis Dana: belum dirilis -->
+          <UButton
+            v-if="!row.original.statusRilisDana"
+            size="xs" color="success" variant="soft"
+            icon="i-lucide-circle-dollar-sign"
+            @click="openRilisDana(row.original)"
+          >
+            Rilis Dana
+          </UButton>
+          <!-- Lunasi Ongkir: muncul setelah siap dikirim (ready_order=true) dan belum lunas -->
+          <UButton
+            v-if="row.original.statusReadyOrder && !row.original.statusLunasOngkir"
+            size="xs" color="warning" variant="soft"
+            icon="i-lucide-truck"
+            @click="openLunasOngkir(row.original)"
+          >
+            Lunasi Ongkir
           </UButton>
         </div>
       </template>
@@ -151,6 +203,62 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
       />
     </div>
   </section>
+
+  <!-- ── Modal Konfirmasi Rilis Dana ── -->
+  <UModal v-model:open="rilisDanaOpen" :ui="{ content: 'max-w-md' }">
+    <template #title>
+      <div class="flex items-center gap-2 text-success">
+        <UIcon name="i-lucide-circle-dollar-sign" class="size-5" />
+        Konfirmasi Rilis Dana
+      </div>
+    </template>
+    <template #body>
+      <p class="text-sm text-muted">
+        Apakah Anda yakin ingin <span class="font-semibold text-highlighted">merilis dana</span>
+        untuk Delivery Order
+        <span class="font-semibold text-highlighted">{{ rilisDanaTarget?.deliveryOrderNumber }}</span>?
+      </p>
+      <p class="mt-2 text-xs text-dimmed">
+        Setelah dirilis, DO akan muncul di halaman Operations dan tim dapat menyiapkan pengantaran.
+      </p>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <UButton color="neutral" variant="ghost" @click="rilisDanaOpen = false">Batal</UButton>
+        <UButton color="success" :loading="rilisDanaLoading" icon="i-lucide-check" @click="confirmRilisDana">
+          Ya, Rilis Dana
+        </UButton>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- ── Modal Konfirmasi Lunas Ongkir ── -->
+  <UModal v-model:open="lunasOngkirOpen" :ui="{ content: 'max-w-md' }">
+    <template #title>
+      <div class="flex items-center gap-2 text-warning">
+        <UIcon name="i-lucide-truck" class="size-5" />
+        Konfirmasi Pelunasan Ongkir
+      </div>
+    </template>
+    <template #body>
+      <p class="text-sm text-muted">
+        Apakah Anda ingin <span class="font-semibold text-highlighted">melunasi ongkir</span>
+        untuk Delivery Order
+        <span class="font-semibold text-highlighted">{{ lunasOngkirTarget?.deliveryOrderNumber }}</span>?
+      </p>
+      <p class="mt-2 text-xs text-dimmed">
+        Tindakan ini akan menandai pelunasan ongkir dengan waktu saat ini (WITA) dan tidak dapat dibatalkan.
+      </p>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <UButton color="neutral" variant="ghost" @click="lunasOngkirOpen = false">Batal</UButton>
+        <UButton color="warning" :loading="lunasOngkirLoading" icon="i-lucide-check" @click="confirmLunasOngkir">
+          Ya, Lunasi Ongkir
+        </UButton>
+      </div>
+    </template>
+  </UModal>
 
   <RecordDetailModal v-model:open="detailOpen" type="do" :id="detailId" />
 </template>
