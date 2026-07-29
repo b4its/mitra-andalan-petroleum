@@ -166,6 +166,7 @@ export interface OfferingLetterPost {
   transport_price: number
   status: string
   details: OfferingLetterDetails
+  created_by?: string | null
 }
 
 export interface OfferingLetters {
@@ -209,6 +210,7 @@ export interface PurchaseOrdersCustomerPost {
   total: number
   status: string
   details?: Record<string, any>
+  created_by?: string | null
 }
 
 export interface PurchaseOrdersDetails {

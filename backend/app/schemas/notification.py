@@ -11,6 +11,7 @@ class NotificationResponse(BaseModel):
     message: str
     type: str = "info"
     sender_id: str | None = None
+    user_name: str | None = None
     to: str | None = None
     is_read: bool = False
     created_at: datetime

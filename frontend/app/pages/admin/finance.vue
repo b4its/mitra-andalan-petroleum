@@ -3,151 +3,243 @@ import { h } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
 import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
+import type { ChartClickPayload } from '~/components/admin/AdminChartDetailModal.vue'
 
 definePageMeta({ layout: 'admin' })
 
 const UBadge = resolveComponent('UBadge')
+const { get } = useApi()
 
-const { data, pending } = useAsyncData('admin-finance', async () => {
-  const { get } = useApi()
+// ── Chart modal state ──────────────────────────────────────────
+const chartDetailOpen = ref(false)
+const chartPayload = ref<ChartClickPayload | null>(null)
+const drillMetric = ref<any>(null)
+const drillOpen = ref(false)
+
+function onBarClick(p: { label: string, datasetLabel: string, value: number, datasetIndex: number, labelIndex: number }) {
+  chartPayload.value = { chartType: 'bar', label: p.label, datasetLabel: p.datasetLabel, value: p.value }
+  chartDetailOpen.value = true
+}
+function onPieClick(p: { label: string, value: number, index: number }) {
+  chartPayload.value = { chartType: 'pie', segmentLabel: p.label, segmentValue: p.value }
+  chartDetailOpen.value = true
+}
+function onChartViewRecords(metric: any) {
+  drillMetric.value = metric
+  drillOpen.value = true
+}
+
+// ── Data fetch ────────────────────────────────────────────────
+const { data, pending, refresh } = useAsyncData('admin-finance', async () => {
   const [stats, invResult] = await Promise.all([
     get<any>('/stats/admin'),
-    get<any>('/invoices', { page: 1, page_size: 10 })
+    get<any>('/invoices', { page: 1, page_size: 100 })
   ])
   return { stats, invList: invResult?.items || [] }
 }, { default: () => ({ stats: null, invList: [] }), lazy: true })
 
-const invList = computed(() => data.value?.invList || [])
-
+// ── Stats cards ───────────────────────────────────────────────
 const invStats = computed(() => {
-  if (!data.value?.stats?.stats) return []
-  return data.value.stats.stats.filter((s: any) =>
-    ['Invoice', 'Total Revenue'].includes(s.title)
+  if (!data.value?.stats?.metrics) return []
+  return (data.value.stats.metrics as any[]).filter(m =>
+    ['invoice_value', 'paid_value', 'outstanding_value', 'overdue_value'].includes(m.key)
   )
 })
 
-const invTrendMonths = computed(() =>
-  data.value?.stats?.monthly_trends?.map((m: any) => m.month.split(' ')[0]) || []
-)
+// ── Charts ────────────────────────────────────────────────────
+const trendLabels = computed(() => data.value?.stats?.trends?.map((t: any) => t.label) || [])
+const invTrendData = computed(() => data.value?.stats?.trends?.map((t: any) => t.invoices) || [])
+const invDistLabels = computed(() => data.value?.stats?.distributions?.invoices?.map((d: any) => d.label) || [])
+const invDistValues = computed(() => data.value?.stats?.distributions?.invoices?.map((d: any) => d.value) || [])
+const deadlineDistLabels = computed(() => data.value?.stats?.distributions?.invoice_deadlines?.map((d: any) => d.label) || [])
+const deadlineDistValues = computed(() => data.value?.stats?.distributions?.invoice_deadlines?.map((d: any) => d.value) || [])
 
-const invTrendData = computed(() =>
-  data.value?.stats?.monthly_trends?.map((m: any) => m.invoices) || []
-)
+// ── Table: search + pagination ────────────────────────────────
+const search = ref('')
+const page = ref(1)
+const PAGE_SIZE = 7
 
-const invDistLabels = computed(() =>
-  data.value?.stats?.invoice_status_distribution?.map((d: any) => d.label) || []
-)
+const filtered = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  const list: any[] = data.value?.invList || []
+  if (!q) return list
+  return list.filter(inv =>
+    inv.invoice_number?.toLowerCase().includes(q) ||
+    inv.customer_name?.toLowerCase().includes(q) ||
+    inv.invoice_status?.toLowerCase().includes(q) ||
+    inv.deadline_status?.toLowerCase().includes(q)
+  )
+})
+const paged = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return filtered.value.slice(start, start + PAGE_SIZE)
+})
+watch(search, () => { page.value = 1 })
 
-const invDistValues = computed(() =>
-  data.value?.stats?.invoice_status_distribution?.map((d: any) => d.value) || []
-)
+const invStatusLabel: Record<string, string> = { unpaid: 'Belum Lunas', paid: 'Lunas', overdue: 'Jatuh Tempo' }
+const invStatusColor: Record<string, string> = { unpaid: 'warning', paid: 'success', overdue: 'error' }
+const deadlineLabel: Record<string, string> = { on_time: 'Tepat Waktu', due_soon: 'Segera Jatuh Tempo', overdue: 'Terlewat' }
+const deadlineColor: Record<string, string> = { on_time: 'info', due_soon: 'warning', overdue: 'error' }
 
 const columns: TableColumn<any>[] = [
   { accessorKey: 'invoice_number', header: 'Nomor Invoice' },
+  { accessorKey: 'customer_name', header: 'Customer' },
   {
     accessorKey: 'grand_total',
-    header: 'Total',
-    cell: ({ row }: any) =>
-      new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(row.getValue('grand_total'))
+    header: 'Grand Total',
+    cell: ({ row }: any) => formatCurrency(row.getValue('grand_total') ?? 0)
   },
   {
     accessorKey: 'invoice_status',
-    header: 'Status',
+    header: 'Status Bayar',
     cell: ({ row }: any) => {
-      const color: Record<string, string> = { unpaid: 'warning', paid: 'success', overdue: 'error' }
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color: color[row.getValue('invoice_status') as string] || 'neutral' }, () => row.getValue('invoice_status'))
+      const s = row.getValue('invoice_status') as string
+      return h(UBadge, { variant: 'subtle', color: invStatusColor[s] ?? 'neutral' }, () => invStatusLabel[s] ?? s)
     }
   },
   {
     accessorKey: 'deadline_status',
     header: 'Tenggat',
     cell: ({ row }: any) => {
-      const color: Record<string, string> = { on_time: 'success', due_soon: 'warning', overdue: 'error' }
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color: color[row.getValue('deadline_status') as string] || 'neutral' }, () => row.getValue('deadline_status'))
+      const s = row.getValue('deadline_status') as string
+      return h(UBadge, { variant: 'subtle', color: deadlineColor[s] ?? 'neutral' }, () => deadlineLabel[s] ?? s)
     }
+  },
+  {
+    accessorKey: 'created_at',
+    header: 'Dibuat',
+    cell: ({ row }: any) => row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-'
   }
 ]
 </script>
 
 <template>
-  <div class="w-full max-w-full overflow-x-hidden p-4 sm:p-6 space-y-4 sm:space-y-6">
-    <UDashboardNavbar title="Overview Finance" :ui="{ right: 'gap-2' }">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
+  <UDashboardPanel id="admin-finance">
+    <template #header>
+      <UDashboardNavbar title="Finance — Rekap" :ui="{ right: 'gap-2' }">
+        <template #leading><UDashboardSidebarCollapse /></template>
         <template #right>
-          <UButton
-            icon="i-lucide-refresh-cw"
-            color="neutral"
-            variant="ghost"
-            @click="reloadDashboard"
-          />
+          <UButton icon="i-lucide-refresh-cw" color="neutral" variant="ghost" @click="refresh()" />
         </template>
       </UDashboardNavbar>
-    <h1 class="text-3xl font-bold">
-      Finance - Rekap Keseluruhan
-    </h1>
-
-    <div v-if="pending" class="flex items-center justify-center py-20">
-      <UIcon name="i-lucide-loader" class="size-8 animate-spin text-muted" />
-    </div>
-
-    <template v-else>
-      <div v-if="invStats.length" class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <UCard v-for="s in invStats" :key="s.title" variant="subtle">
-          <template #title>
-            <p class="truncate text-xs text-muted">
-              {{ s.title }}
-            </p>
-          </template>
-          <span class="text-2xl font-semibold">{{ s.value }}</span>
-        </UCard>
-      </div>
-
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <UCard>
-          <template #header>
-            <p class="text-sm font-medium">
-              Tren Invoice
-            </p>
-          </template>
-          <AdminBarChart
-            v-if="invTrendMonths.length"
-            :labels="invTrendMonths"
-            :datasets="[
-              { label: 'Invoice', data: invTrendData, backgroundColor: 'rgba(239,68,68,0.7)' }
-            ]"
-          />
-          <div v-else class="flex h-64 items-center justify-center text-sm text-muted">
-            Belum ada data
-          </div>
-        </UCard>
-
-        <UCard>
-          <template #header>
-            <p class="text-sm font-medium">
-              Status Invoice
-            </p>
-          </template>
-          <AdminPieChart
-            v-if="invDistLabels.length"
-            :labels="invDistLabels"
-            :data="invDistValues"
-          />
-          <div v-else class="flex h-64 items-center justify-center text-sm text-muted">
-            Belum ada data
-          </div>
-        </UCard>
-      </div>
-
-      <UCard>
-        <template #header>
-          <p class="text-sm font-medium">
-            Invoice Terbaru
-          </p>
-        </template>
-        <UTable :data="invList" :columns="columns" class="shrink-0" />
-      </UCard>
     </template>
-  </div>
+
+    <template #body>
+      <div class="space-y-6 p-4 lg:p-6">
+
+        <!-- Skeleton -->
+        <template v-if="pending">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <USkeleton v-for="i in 4" :key="i" class="h-28 rounded-xl" />
+          </div>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <USkeleton class="h-72 rounded-xl" />
+            <USkeleton class="h-72 rounded-xl" />
+          </div>
+          <USkeleton class="h-64 rounded-xl" />
+        </template>
+
+        <template v-else>
+          <!-- Stats: invoice value, paid, outstanding, overdue — nilai & label berbeda tiap kartu -->
+          <div v-if="invStats.length" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <UCard v-for="m in invStats" :key="m.key" variant="subtle">
+              <template #leading>
+                <UIcon :name="m.icon" class="size-5 text-primary" />
+              </template>
+              <template #title>{{ m.title }}</template>
+              <p class="text-2xl font-semibold tabular-nums">{{ formatCurrency(m.value) }}</p>
+              <p class="text-xs text-muted mt-1">{{ m.description }}</p>
+            </UCard>
+          </div>
+
+          <!-- Charts: tren invoice + distribusi status bayar + distribusi tenggat -->
+          <div class="grid gap-6 lg:grid-cols-3">
+            <UCard class="lg:col-span-1">
+              <template #header>
+                <div class="flex items-center justify-between">
+                  <p class="font-medium">Tren Invoice per Periode</p>
+                  <p class="text-xs text-muted">Klik bar</p>
+                </div>
+              </template>
+              <AdminBarChart
+                v-if="trendLabels.length"
+                :labels="trendLabels"
+                :datasets="[{ label: 'Invoice', data: invTrendData, backgroundColor: 'rgba(239,68,68,0.7)' }]"
+                @bar-click="onBarClick"
+              />
+              <UEmpty v-else icon="i-lucide-chart-bar" title="Belum ada data tren" />
+            </UCard>
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between">
+                  <p class="font-medium">Status Pembayaran</p>
+                  <p class="text-xs text-muted">Klik segment</p>
+                </div>
+              </template>
+              <AdminPieChart
+                v-if="invDistLabels.length"
+                :labels="invDistLabels"
+                :data="invDistValues"
+                @segment-click="onPieClick"
+              />
+              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+            </UCard>
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between">
+                  <p class="font-medium">Status Tenggat</p>
+                  <p class="text-xs text-muted">Klik segment</p>
+                </div>
+              </template>
+              <AdminPieChart
+                v-if="deadlineDistLabels.length"
+                :labels="deadlineDistLabels"
+                :data="deadlineDistValues"
+                :background-color="['rgba(16,185,129,0.8)','rgba(245,158,11,0.8)','rgba(239,68,68,0.8)']"
+                @segment-click="onPieClick"
+              />
+              <UEmpty v-else icon="i-lucide-clock" title="Belum ada data" />
+            </UCard>
+          </div>
+
+          <!-- Tabel Invoice + Search + Pagination -->
+          <UCard>
+            <template #header>
+              <div class="flex items-center justify-between gap-3 flex-wrap">
+                <p class="font-medium">Data Invoice</p>
+                <UInput
+                  v-model="search"
+                  icon="i-lucide-search"
+                  placeholder="Cari nomor invoice, customer, status..."
+                  size="sm"
+                  class="w-64"
+                />
+              </div>
+            </template>
+            <UTable :data="paged" :columns="columns" />
+            <UEmpty v-if="!paged.length" icon="i-lucide-file-search" title="Tidak ada data" />
+            <div v-if="filtered.length > PAGE_SIZE" class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2">
+              <p class="text-xs text-muted">{{ filtered.length }} total</p>
+              <UPagination v-model:page="page" :total="filtered.length" :items-per-page="PAGE_SIZE" />
+            </div>
+          </UCard>
+        </template>
+      </div>
+    </template>
+  </UDashboardPanel>
+
+  <AdminChartDetailModal
+    v-model:open="chartDetailOpen"
+    :payload="chartPayload"
+    :date-from="new Date(Date.now() - 30 * 86400000).toISOString()"
+    :date-to="new Date().toISOString()"
+    @view-records="onChartViewRecords"
+  />
+  <AdminDrilldownModal
+    v-if="drillMetric"
+    v-model:open="drillOpen"
+    :metric="drillMetric"
+    :date-from="new Date(Date.now() - 30 * 86400000).toISOString()"
+    :date-to="new Date().toISOString()"
+  />
 </template>

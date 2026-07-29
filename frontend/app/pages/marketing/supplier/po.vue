@@ -188,6 +188,7 @@ async function onFormSubmit() {
         date: poData.po.date,
         total: poData.totalProductsPrice,
         status: 'created',
+        created_by: user.value?.id ?? null,
         details: {
           ...letterCompanyMain,
           ...letterCompanyAssociate,

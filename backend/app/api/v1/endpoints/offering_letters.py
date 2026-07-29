@@ -15,6 +15,7 @@ from app.schemas.offering_letter import (
     OfferingLetterCreate,
     OfferingLetterUpdate,
 )
+from app.utils.notifications import create_document_notification
 
 router = APIRouter()
 
@@ -35,6 +36,7 @@ def _to_response(ol: OfferingLetter, customer_name: str) -> OfferingLetterRespon
         receiver=ol.receiver, fuel_total_price=ol.fuel_total_price,
         transport_price=ol.transport_price, status=ol.status,
         details=_details_from_str(ol.details),
+        created_by=ol.created_by,
         created_at=ol.created_at, updated_at=ol.updated_at,
     )
 
@@ -114,7 +116,16 @@ async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = 
     await db.refresh(ol)
     customer = await db.execute(select(Customer).where(Customer.id == ol.customer_id))
     c = customer.scalar_one_or_none()
-    return _to_response(ol, c.name if c else "")
+    customer_name = c.name if c else ""
+    await create_document_notification(
+        db,
+        title="Surat Penawaran Baru Dibuat",
+        message=f"Surat penawaran {ol.offering_letter_number} untuk {customer_name} telah dibuat.",
+        type="info",
+        sender_id=ol.created_by,
+        to="/marketing/customer",
+    )
+    return _to_response(ol, customer_name)
 
 
 @router.put(

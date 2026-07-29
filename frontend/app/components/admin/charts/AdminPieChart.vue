@@ -17,6 +17,10 @@ const props = defineProps<{
   height?: number
 }>()
 
+const emit = defineEmits<{
+  segmentClick: [payload: { label: string, value: number, index: number }]
+}>()
+
 const isDark = ref(false)
 
 const defaultColors = [
@@ -44,6 +48,16 @@ const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   cutout: '55%',
+  onClick: (_event: any, elements: any[]) => {
+    if (!elements.length) return
+    const el = elements[0]
+    const index = el.index
+    emit('segmentClick', {
+      label: props.labels[index] ?? '',
+      value: props.data[index] ?? 0,
+      index
+    })
+  },
   plugins: {
     legend: {
       position: 'bottom' as const,
@@ -73,7 +87,7 @@ const chartOptions = computed(() => ({
 </script>
 
 <template>
-  <div :style="{ height: (height || 260) + 'px' }" class="w-full">
+  <div :style="{ height: (height || 260) + 'px' }" class="w-full cursor-pointer">
     <Doughnut :data="chartData" :options="chartOptions" />
   </div>
 </template>

@@ -18,9 +18,19 @@ MEDIA_DIR = Path(__file__).resolve().parent.parent / "media"
 async def lifespan(app: FastAPI):
     MEDIA_DIR.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
+        # Kolom lama yang ditambahkan sebelumnya
         for col in ["`to` VARCHAR(500) NULL", "`is_read` TINYINT(1) NOT NULL DEFAULT 0"]:
             try:
                 await conn.execute(text(f"ALTER TABLE notifications ADD COLUMN {col}"))
+            except Exception:
+                pass
+        # Kolom created_by untuk tracking user input dokumen
+        for table in ["offering_letters", "purchase_orders", "delivery_orders"]:
+            try:
+                await conn.execute(text(
+                    f"ALTER TABLE `{table}` ADD COLUMN `created_by` VARCHAR(36) NULL "
+                    f"COMMENT 'ID user yang membuat dokumen'"
+                ))
             except Exception:
                 pass
         await conn.run_sync(Base.metadata.create_all)

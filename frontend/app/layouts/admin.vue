@@ -60,6 +60,14 @@ const links = [
       ]
     },
     {
+      label: 'Pengguna',
+      icon: 'i-lucide-users',
+      to: '/admin/users',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
       label: 'Profil',
       icon: 'i-lucide-user',
       to: '/admin/profile',

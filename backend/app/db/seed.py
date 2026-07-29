@@ -77,25 +77,25 @@ async def _seed_offering_letters(db: AsyncSession):
         return
 
     customers = (await db.execute(select(Customer))).scalars().all()
+    users = (await db.execute(select(User).where(User.role == "marketing"))).scalars().all()
     ol_numbers = ["001/OL/VI/2025", "002/OL/VI/2025", "003/OL/VI/2025", "004/OL/VI/2025"]
 
-    letters = []
     for i in range(15):
         customer = customers[i % len(customers)]
+        creator = users[i % len(users)] if users else None
         ol = OfferingLetter(
             offering_letter_number=ol_numbers[i % len(ol_numbers)],
             customer_id=customer.id,
-            location="Jakarta",
+            location="Samarinda",
             date="2025-06-01",
             regarding="Penawaran BBM Solar Industri",
             receiver=customer.name,
             fuel_total_price=50000000 + (i * 1000000),
             transport_price=2500000 + (i * 100000),
             status=["created", "under_revision", "po_received"][i % 3],
+            created_by=creator.id if creator else None,
         )
-        letters.append(ol)
-    for l in letters:
-        db.add(l)
+        db.add(ol)
     await db.flush()
 
 
@@ -106,8 +106,10 @@ async def _seed_purchase_orders(db: AsyncSession):
 
     customers = (await db.execute(select(Customer))).scalars().all()
     suppliers = (await db.execute(select(Supplier))).scalars().all()
+    users = (await db.execute(select(User).where(User.role == "marketing"))).scalars().all()
 
     for i in range(5):
+        creator = users[i % len(users)] if users else None
         po = PurchaseOrder(
             po_number=f"PO/2025/VI/{100 + i}",
             type="customer",
@@ -115,10 +117,12 @@ async def _seed_purchase_orders(db: AsyncSession):
             date="2025-06-01",
             total=50000000,
             status="created",
+            created_by=creator.id if creator else None,
         )
         db.add(po)
 
     for i in range(5):
+        creator = users[i % len(users)] if users else None
         po = PurchaseOrder(
             po_number=f"PO-SUP/2025/VI/{100 + i}",
             type="supplier",
@@ -126,6 +130,7 @@ async def _seed_purchase_orders(db: AsyncSession):
             date="2025-06-01",
             total=45000000,
             status="created",
+            created_by=creator.id if creator else None,
         )
         db.add(po)
     await db.flush()
@@ -137,11 +142,13 @@ async def _seed_delivery_orders(db: AsyncSession):
         return
 
     customers = (await db.execute(select(Customer))).scalars().all()
+    users = (await db.execute(select(User).where(User.role == "operations"))).scalars().all()
     do_numbers = ["001/DO/VI/2025", "002/DO/VI/2025", "003/DO/VI/2025", "004/DO/VI/2025"]
     po_numbers = ["PO/2025/VI/100", "PO/2025/VI/101", "PO/2025/VI/102"]
     transports = ["PT. Transport Logistik", "CV. Angkutan Cepat", "PT. Distribusi Mandiri"]
 
     for i in range(15):
+        creator = users[i % len(users)] if users else None
         do = DeliveryOrder(
             do_number=do_numbers[i % len(do_numbers)],
             customer_id=customers[i % len(customers)].id,
@@ -149,6 +156,7 @@ async def _seed_delivery_orders(db: AsyncSession):
             transport_name=transports[i % len(transports)],
             fuel_total=8000 + (i * 500),
             status=["created", "document_returned"][i % 2],
+            created_by=creator.id if creator else None,
         )
         db.add(do)
     await db.flush()
@@ -182,11 +190,18 @@ async def _seed_notifications(db: AsyncSession):
     if result.scalar_one_or_none():
         return
 
+    users = {u.role: u for u in (await db.execute(select(User))).scalars().all()}
+    marketing_user = users.get("marketing")
+    ops_user = users.get("operations")
+    finance_user = users.get("finance")
+
     notifications = [
-        Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Bina Karya Sentosa telah masuk.", type="info", to="/marketing/customer", is_read=True),
-        Notification(title="Invoice Jatuh Tempo", message="Invoice INV/2025/VI/001 akan jatuh tempo dalam 3 hari.", type="warning", to="/finance/invoice/data-invoice-customer", is_read=True),
-        Notification(title="DO Selesai", message="Delivery Order 001/DO/VI/2025 telah selesai diproses.", type="success", to="/operations", is_read=True),
-        Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2025 memerlukan revisi.", type="error", to="/marketing/customer", is_read=True),
+        Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Bina Karya Sentosa telah masuk.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
+        Notification(title="Invoice Jatuh Tempo", message="Invoice INV/2025/VI/001 akan jatuh tempo dalam 3 hari.", type="warning", sender_id=finance_user.id if finance_user else None, to="/finance/invoice/data-invoice-customer", is_read=True),
+        Notification(title="DO Selesai", message="Delivery Order 001/DO/VI/2025 telah selesai diproses.", type="success", sender_id=ops_user.id if ops_user else None, to="/operations", is_read=True),
+        Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2025 memerlukan revisi.", type="error", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
+        Notification(title="Penawaran Baru", message="Surat penawaran 003/OL/VI/2025 berhasil dibuat oleh tim marketing.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=False),
+        Notification(title="PO Supplier Dibuat", message="Purchase Order ke PT. Supplier Logistik Mandiri berhasil dibuat.", type="success", sender_id=marketing_user.id if marketing_user else None, to="/marketing/supplier", is_read=False),
     ]
     for n in notifications:
         db.add(n)

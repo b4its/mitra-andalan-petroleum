@@ -125,6 +125,7 @@ async function onFooterSubmit() {
       status: 'created',
       transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
       fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
+      created_by: user.value?.id ?? null,
       details: {
         ...letterHeader,
         ...letterOfferDetails,

@@ -16,6 +16,7 @@ class DeliveryOrderResponse(BaseModel):
     fuel_total: float = 0
     status: str = "created"
     details: dict[str, Any] | None = None
+    created_by: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -28,6 +29,7 @@ class DeliveryOrderCreate(BaseModel):
     fuel_total: float = 0
     status: str = "created"
     details: dict[str, Any] | None = None
+    created_by: str | None = None
 
 
 class DeliveryOrderUpdate(BaseModel):
