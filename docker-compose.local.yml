@@ -28,6 +28,7 @@ services:
       - "24678:24678"
     environment:
       NUXT_API_PROXY_TARGET: http://backend:8000/api/v1
+      NUXT_MEDIA_PROXY_TARGET: http://backend:8000/media
     volumes:
       - ./frontend:/app
       - /app/node_modules

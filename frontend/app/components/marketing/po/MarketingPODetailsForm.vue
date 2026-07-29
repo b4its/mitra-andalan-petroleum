@@ -161,11 +161,11 @@ watch(
         </UFormField>
       </div>
 
-      <UFormField name="offeringLetter" label="Nomor Surat Penawaran" required>
+      <UFormField name="offeringLetter" label="Nomor Surat PO Customer" required>
         <USelectMenu
           v-model="state.selectedOfferingLetter"
           :items="offeringLetters"
-          placeholder="Pilih Surat Penawaran"
+          placeholder="Pilih Surat PO Customer"
           value-key="value"
           :ui="{ content: 'min-w-fit' }"
           class="w-full"

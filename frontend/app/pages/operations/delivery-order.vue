@@ -188,6 +188,7 @@ async function onFormSubmit() {
     // console.log(doPost);
     toast.add({
       title: 'Sukses',
+      icon: 'i-lucide-check-circle',
       description: 'Data Delivery Order berhasil dibuat',
       color: 'success'
     })

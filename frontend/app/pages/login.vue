@@ -64,7 +64,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
 
     toast.add({
-      title: 'Logged in',
+      title: 'Berhasil Masuk',
+      icon: 'i-lucide-check-circle',
       description: `Welcome, ${result.name}! (${result.role})`,
       color: 'success'
     })
@@ -72,7 +73,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     router.push(`/${result.role}`)
   } catch (err: any) {
     toast.add({
-      title: 'Login failed',
+      title: 'Login Gagal',
       description: err.message || 'Invalid email or password.',
       color: 'error'
     })
