@@ -110,14 +110,14 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
         </UFormField> -->
 
         <UFormField
-          name="offeringLetter"
-          label="Nomor Surat Penawaran"
+          name="poCustomerNumber"
+          label="Nomor Surat PO Customer"
           required
         >
           <USelectMenu
             v-model="state.doInformation.poCustomerNumber"
             :items="purchaseOrders"
-            placeholder="Pilih Surat Penawaran"
+            placeholder="Pilih Surat PO"
             value-key="value"
             :ui="{ content: 'min-w-fit' }"
             class="w-full"
