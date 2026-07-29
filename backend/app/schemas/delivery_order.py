@@ -17,6 +17,18 @@ class DeliveryOrderResponse(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
+    # Rilis dana
+    rilis_dana_at: datetime | None = None
+    status_rilis_dana: bool = False
+    # Ready order (Operations siapkan pengantaran)
+    ready_order_at: datetime | None = None
+    status_ready_order: bool = False
+    # Selesai dikirim (Operations konfirmasi pengiriman)
+    selesai_dikirim_at: datetime | None = None
+    status_selesai_dikirim: bool = False
+    # Lunas ongkir (Finance lunasi setelah selesai dikirim)
+    lunas_ongkir_at: datetime | None = None
+    status_lunas_ongkir: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -40,3 +52,11 @@ class DeliveryOrderUpdate(BaseModel):
     fuel_total: float | None = None
     status: str | None = None
     details: dict[str, Any] | None = None
+    rilis_dana_at: datetime | None = None
+    status_rilis_dana: bool | None = None
+    ready_order_at: datetime | None = None
+    status_ready_order: bool | None = None
+    selesai_dikirim_at: datetime | None = None
+    status_selesai_dikirim: bool | None = None
+    lunas_ongkir_at: datetime | None = None
+    status_lunas_ongkir: bool | None = None

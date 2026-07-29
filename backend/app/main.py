@@ -33,6 +33,32 @@ async def lifespan(app: FastAPI):
                 ))
             except Exception:
                 pass
+        # Kolom baru delivery_orders: rilis dana + lunas ongkir
+        do_new_cols = [
+            "`rilis_dana_at` DATETIME NULL COMMENT 'Waktu rilis dana (WITA)'",
+            "`status_rilis_dana` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika dana sudah dirilis'",
+            "`ready_order_at` DATETIME NULL COMMENT 'Waktu pengantaran disiapkan (WITA)'",
+            "`status_ready_order` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika pengantaran sudah disiapkan'",
+            "`selesai_dikirim_at` DATETIME NULL COMMENT 'Waktu selesai dikirim (WITA)'",
+            "`status_selesai_dikirim` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika pengiriman sudah selesai'",
+            "`lunas_ongkir_at` DATETIME NULL COMMENT 'Waktu pelunasan ongkir (WITA)'",
+            "`status_lunas_ongkir` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika ongkir sudah dilunasi'",
+        ]
+        for col in do_new_cols:
+            try:
+                await conn.execute(text(f"ALTER TABLE `delivery_orders` ADD COLUMN {col}"))
+            except Exception:
+                pass
+        # Kolom baru purchase_orders: relasi ke OL dan DO
+        po_new_cols = [
+            "`id_offering_letters` TEXT NULL COMMENT 'JSON array: ID offering letter terkait'",
+            "`id_delivery_order` VARCHAR(36) NULL COMMENT 'ID delivery order yang dibuat otomatis'",
+        ]
+        for col in po_new_cols:
+            try:
+                await conn.execute(text(f"ALTER TABLE `purchase_orders` ADD COLUMN {col}"))
+            except Exception:
+                pass
         await conn.run_sync(Base.metadata.create_all)
     async with async_session_factory() as session:
         from app.db.seed import seed_database

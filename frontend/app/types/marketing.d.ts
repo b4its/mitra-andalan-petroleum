@@ -211,6 +211,7 @@ export interface PurchaseOrdersCustomerPost {
   status: string
   details?: Record<string, any>
   created_by?: string | null
+  id_offering_letters?: string | null
 }
 
 export interface PurchaseOrdersDetails {

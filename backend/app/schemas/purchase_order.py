@@ -19,6 +19,8 @@ class PurchaseOrderResponse(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
+    id_offering_letters: str | None = None
+    id_delivery_order: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -33,6 +35,7 @@ class PurchaseOrderCreate(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
+    id_offering_letters: str | None = None
 
 
 class PurchaseOrderUpdate(BaseModel):
@@ -44,3 +47,4 @@ class PurchaseOrderUpdate(BaseModel):
     total: float | None = None
     status: str | None = None
     details: dict[str, Any] | None = None
+    id_delivery_order: str | None = None

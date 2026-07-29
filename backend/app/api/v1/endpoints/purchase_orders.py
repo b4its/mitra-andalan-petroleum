@@ -1,4 +1,5 @@
 import json
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.models.purchase_order import PurchaseOrder
+from app.models.delivery_order import DeliveryOrder
 from app.models.customer import Customer
 from app.models.supplier import Supplier
 from app.models.upload import Upload
@@ -53,6 +55,8 @@ def _to_response(po, customer_name, supplier_name):
         date=po.date, total=po.total, status=po.status,
         details=_details_from_str(po.details),
         created_by=po.created_by,
+        id_offering_letters=po.id_offering_letters,
+        id_delivery_order=po.id_delivery_order,
         created_at=po.created_at, updated_at=po.updated_at,
     )
 
@@ -61,7 +65,6 @@ def _to_response(po, customer_name, supplier_name):
     "/purchase-orders",
     response_model=PaginatedResponse[PurchaseOrderResponse],
     summary="List purchase orders",
-    description="Daftar purchase order. Filter `type=customer` atau `type=supplier`. Menyertakan nama customer/supplier.",
 )
 async def list_purchase_orders(
     page: int = 1, page_size: int = 20, type: str | None = None,
@@ -94,7 +97,6 @@ async def list_purchase_orders(
     "/purchase-orders/{id}",
     response_model=PurchaseOrderResponse,
     summary="Detail purchase order",
-    description="Detail PO termasuk field `details` JSON.",
 )
 async def get_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
@@ -110,7 +112,7 @@ async def get_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     response_model=PurchaseOrderResponse,
     status_code=201,
     summary="Buat purchase order",
-    description="Membuat PO baru. Field `details` untuk data tambahan dari frontend.",
+    description="Membuat PO baru. Jika type=customer, otomatis membuat DO draft dan menyimpan relasinya.",
 )
 async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = Depends(get_db)):
     data = body.model_dump()
@@ -121,6 +123,26 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
     await db.refresh(po)
     cn, sn = await _resolve_names(db, po)
     party = cn if po.type == "customer" else sn
+
+    # ── Buat DO draft otomatis untuk PO Customer ───────────────
+    if po.type == "customer" and po.customer_id:
+        # Nomor DO draft: DO-DRAFT-{po_number}
+        draft_do_number = f"DO-DRAFT-{po.po_number}"
+        draft_do = DeliveryOrder(
+            do_number=draft_do_number,
+            customer_id=po.customer_id,
+            po_number=po.po_number,
+            fuel_total=po.total or 0,
+            status="draft",
+            created_by=po.created_by,
+        )
+        db.add(draft_do)
+        await db.flush()
+        await db.refresh(draft_do)
+        # Simpan relasi di PO
+        po.id_delivery_order = draft_do.id
+        await db.flush()
+
     await create_document_notification(
         db,
         title=f"Purchase Order {po.type.capitalize()} Baru",
@@ -136,7 +158,6 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
     "/purchase-orders/{id}",
     response_model=PurchaseOrderResponse,
     summary="Update purchase order",
-    description="Update PO (status, details, dll).",
 )
 async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
@@ -166,7 +187,6 @@ async def _delete_upload_files(uploads: list[Upload]):
     "/purchase-orders/{id}",
     response_model=MessageResponse,
     summary="Hapus purchase order",
-    description="Hapus PO berdasarkan ID. Upload terkait juga ikut terhapus.",
 )
 async def delete_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
