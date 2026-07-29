@@ -24,6 +24,10 @@ const props = defineProps<{
   height?: number
 }>()
 
+const emit = defineEmits<{
+  barClick: [payload: { label: string, datasetLabel: string, value: number, datasetIndex: number, labelIndex: number }]
+}>()
+
 const isDark = ref(false)
 
 const chartData = computed(() => ({
@@ -39,6 +43,21 @@ const chartData = computed(() => ({
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  onClick: (_event: any, elements: any[]) => {
+    if (!elements.length) return
+    const el = elements[0]
+    const datasetIndex = el.datasetIndex
+    const labelIndex = el.index
+    const dataset = props.datasets[datasetIndex]
+    if (!dataset) return
+    emit('barClick', {
+      label: props.labels[labelIndex] ?? '',
+      datasetLabel: dataset.label,
+      value: dataset.data[labelIndex] ?? 0,
+      datasetIndex,
+      labelIndex
+    })
+  },
   plugins: {
     legend: { display: props.datasets.length > 1 },
     title: { display: false },
@@ -68,7 +87,7 @@ const chartOptions = computed(() => ({
 </script>
 
 <template>
-  <div :style="{ height: (height || 280) + 'px' }" class="w-full">
+  <div :style="{ height: (height || 280) + 'px' }" class="w-full cursor-pointer">
     <Bar :data="chartData" :options="chartOptions" />
   </div>
 </template>

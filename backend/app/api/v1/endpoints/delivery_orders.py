@@ -10,6 +10,7 @@ from app.models.delivery_order import DeliveryOrder
 from app.models.customer import Customer
 from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
+from app.utils.notifications import create_document_notification
 from app.schemas.delivery_order import (
     DeliveryOrderResponse,
     DeliveryOrderCreate,
@@ -42,6 +43,7 @@ def _to_response(do, customer_name):
         po_number=do.po_number, transport_name=do.transport_name,
         fuel_total=do.fuel_total, status=do.status,
         details=_details_from_str(do.details),
+        created_by=do.created_by,
         created_at=do.created_at, updated_at=do.updated_at,
     )
 
@@ -109,6 +111,14 @@ async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = De
     await db.flush()
     await db.refresh(do)
     cn = await _get_customer_name(db, do.customer_id)
+    await create_document_notification(
+        db,
+        title="Delivery Order Baru Dibuat",
+        message=f"DO {do.do_number} untuk {cn} telah dibuat.",
+        type="info",
+        sender_id=do.created_by,
+        to="/operations",
+    )
     return _to_response(do, cn)
 
 

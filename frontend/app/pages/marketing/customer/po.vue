@@ -7,6 +7,8 @@ import type {
 } from '~/types/marketing'
 import type { MarketingPOCustomerState } from '~/types/schemas'
 
+const { user } = useAuth()
+
 const items: StepperItem[] = [
   {
     title: 'Upload PO Customer',
@@ -84,7 +86,8 @@ async function onPoCustomerSubmit() {
       supplier_id: null,
       date: poData.poReceivedDate,
       total: poData.total,
-      status: 'created'
+      status: 'created',
+      created_by: user.value?.id ?? null
     }
 
     const res = await post<any, PurchaseOrdersCustomerPost>(

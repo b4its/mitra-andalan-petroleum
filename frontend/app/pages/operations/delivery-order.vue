@@ -177,6 +177,7 @@ async function onFormSubmit() {
         doData.doInformation.poCustomerNumber.purchaseOrderNumber || '',
       status: 'created',
       transport_name: doData.transportName,
+      created_by: user.value?.id ?? null,
       details: doData
     }
 

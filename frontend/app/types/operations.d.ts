@@ -112,6 +112,7 @@ export interface DeliveryOrderPost {
   fuel_total: number
   status: string
   details: Record<string, any>
+  created_by?: string | null
 }
 
 export interface DeliveryOrders {

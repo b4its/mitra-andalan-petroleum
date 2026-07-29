@@ -11,6 +11,7 @@ from app.models.customer import Customer
 from app.models.supplier import Supplier
 from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
+from app.utils.notifications import create_document_notification
 from app.schemas.purchase_order import (
     PurchaseOrderResponse,
     PurchaseOrderCreate,
@@ -51,6 +52,7 @@ def _to_response(po, customer_name, supplier_name):
         customer_name=customer_name, supplier_name=supplier_name,
         date=po.date, total=po.total, status=po.status,
         details=_details_from_str(po.details),
+        created_by=po.created_by,
         created_at=po.created_at, updated_at=po.updated_at,
     )
 
@@ -118,6 +120,15 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
     await db.flush()
     await db.refresh(po)
     cn, sn = await _resolve_names(db, po)
+    party = cn if po.type == "customer" else sn
+    await create_document_notification(
+        db,
+        title=f"Purchase Order {po.type.capitalize()} Baru",
+        message=f"PO {po.po_number} untuk {party} telah dibuat.",
+        type="info",
+        sender_id=po.created_by,
+        to="/marketing/customer" if po.type == "customer" else "/marketing/supplier",
+    )
     return _to_response(po, cn, sn)
 
 

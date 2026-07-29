@@ -14,6 +14,7 @@ class DeliveryOrder(BaseModel):
     fuel_total: Mapped[float] = mapped_column(Float, default=0)
     status: Mapped[str] = mapped_column(String(30), default="created")
     details: Mapped[str] = mapped_column(Text, nullable=True, comment="JSON: full form data per schemas.ts")
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=True, comment="ID user yang membuat dokumen")
 
     uploads: Mapped[list["Upload"]] = relationship(
         "Upload",
