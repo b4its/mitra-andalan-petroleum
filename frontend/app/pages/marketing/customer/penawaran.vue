@@ -149,6 +149,7 @@ async function onFooterSubmit() {
 
     toast.add({
       title: "Sukses",
+      icon: "i-lucide-check-circle",
       description: "Data Penawaran berhasil dibuat",
       color: "success",
     });
