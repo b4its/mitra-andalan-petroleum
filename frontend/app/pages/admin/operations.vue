@@ -104,8 +104,13 @@ const columns: TableColumn<any>[] = [
     accessorKey: 'created_at',
     header: 'Dibuat',
     cell: ({ row }: any) => row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-'
-  }
+  },
+  { id: 'actions', header: 'Aksi' }
 ]
+
+const detailOpen = ref(false)
+const detailId = ref<string | null>(null)
+function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
 </script>
 
 <template>
@@ -197,7 +202,19 @@ const columns: TableColumn<any>[] = [
                 />
               </div>
             </template>
-            <UTable :data="paged" :columns="columns" />
+            <UTable :data="paged" :columns="columns">
+              <template #actions-cell="{ row }">
+                <UButton
+                  icon="i-lucide-eye"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  @click="openDetail(row.original.id)"
+                >
+                  Selengkapnya
+                </UButton>
+              </template>
+            </UTable>
             <UEmpty v-if="!paged.length" icon="i-lucide-file-search" title="Tidak ada data" />
             <div v-if="filtered.length > PAGE_SIZE" class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2">
               <p class="text-xs text-muted">{{ filtered.length }} total</p>
@@ -223,4 +240,5 @@ const columns: TableColumn<any>[] = [
     :date-from="new Date(Date.now() - 30 * 86400000).toISOString()"
     :date-to="new Date().toISOString()"
   />
+  <RecordDetailModal v-model:open="detailOpen" type="do" :id="detailId" />
 </template>

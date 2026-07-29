@@ -102,8 +102,8 @@ async function updateDoStatus(doId: string) {
 
     toast.add({
       title: 'Berhasil',
-      description: 'Status DO berhasil diperbarui',
-      icon: 'i-lucide-check',
+      description: 'Status Delivery Order berhasil diperbarui',
+      icon: 'i-lucide-check-circle',
       color: 'success'
     })
   } catch (err) {
@@ -120,6 +120,10 @@ async function updateDoStatus(doId: string) {
 }
 
 const pagination = ref({ pageIndex: 0, pageSize: 7 })
+
+const detailOpen = ref(false)
+const detailId = ref<string | null>(null)
+function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
 </script>
 
 <template>
@@ -151,19 +155,27 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 })
       <template #actions-cell="{ row }">
         <div class="flex gap-2">
           <UButton
+            icon="i-lucide-eye"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            @click="openDetail(row.original.id)"
+          >
+            Selengkapnya
+          </UButton>
+          <UButton
             :to="`/operations/detail/delivery-order-${row.original.id}`"
             variant="solid"
-            size="md"
+            size="sm"
             color="primary"
           >
             Detail
           </UButton>
-
           <UButton
             v-if="row.original.status === 'created'"
             :loading="loading"
             variant="soft"
-            size="md"
+            size="sm"
             color="success"
             @click="updateDoStatus(row.original.id)"
           >
@@ -182,4 +194,6 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 })
       />
     </div>
   </section>
+
+  <RecordDetailModal v-model:open="detailOpen" type="do" :id="detailId" />
 </template>

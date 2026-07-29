@@ -59,3 +59,49 @@ export function formatPercent(value: number) {
 export function formatNumber(value: number) {
   return new Intl.NumberFormat('id-ID').format(value)
 }
+
+export function calculateDynamicStatus(
+  dateCreated: string | Date,
+  termsDay: number,
+  currentInvoiceStatus: string
+) {
+  // If it's already marked as paid in the database, keep it paid.
+  if (currentInvoiceStatus === 'paid') {
+    return {
+      invoiceStatus: 'paid',
+      deadlineStatus: 'on_time'
+    }
+  }
+
+  const createdDate = new Date(dateCreated)
+  const deadline = new Date(createdDate)
+  deadline.setDate(deadline.getDate() + termsDay)
+
+  // Use UTC to avoid timezone Daylight Saving Time issues
+  const today = new Date()
+  const todayUTC = Date.UTC(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  )
+  const deadlineUTC = Date.UTC(
+    deadline.getFullYear(),
+    deadline.getMonth(),
+    deadline.getDate()
+  )
+
+  const msPerDay = 1000 * 60 * 60 * 24
+  const daysRemaining = Math.floor((deadlineUTC - todayUTC) / msPerDay)
+
+  let invoiceStatus = 'unpaid'
+  let deadlineStatus = 'on_time'
+
+  if (daysRemaining < 0) {
+    invoiceStatus = 'overdue'
+    deadlineStatus = 'overdue'
+  } else if (daysRemaining <= 7) {
+    deadlineStatus = 'due_soon'
+  }
+
+  return { invoiceStatus, deadlineStatus }
+}

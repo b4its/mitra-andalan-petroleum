@@ -87,6 +87,10 @@ const columns: TableColumn<OperationsDeliveryOrderOverview>[] = [
 ]
 
 const pagination = ref({ pageIndex: 0, pageSize: 7 })
+
+const detailOpen = ref(false)
+const detailId = ref<string | null>(null)
+function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
 </script>
 
 <template>
@@ -118,9 +122,18 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 })
       <template #actions-cell="{ row }">
         <div class="flex items-center gap-2">
           <UButton
+            icon="i-lucide-eye"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            @click="openDetail(row.original.id)"
+          >
+            Selengkapnya
+          </UButton>
+          <UButton
             :to="`/finance/detail-operations/delivery-order-${row.original.id}`"
             variant="solid"
-            size="md"
+            size="sm"
             color="primary"
           >
             Lihat Surat
@@ -138,4 +151,6 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 })
       />
     </div>
   </section>
+
+  <RecordDetailModal v-model:open="detailOpen" type="do" :id="detailId" />
 </template>

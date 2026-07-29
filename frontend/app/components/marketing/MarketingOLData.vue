@@ -118,6 +118,14 @@ const pagination = ref({
   pageIndex: 0,
   pageSize: 7
 })
+
+const detailOpen = ref(false)
+const detailId = ref<string | null>(null)
+
+function openDetail(id: string) {
+  detailId.value = id
+  detailOpen.value = true
+}
 </script>
 
 <template>
@@ -167,9 +175,18 @@ const pagination = ref({
       <template #actions-cell="{ row }">
         <div class="flex items-center gap-2">
           <UButton
+            icon="i-lucide-eye"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            @click="openDetail(row.original.id)"
+          >
+            Selengkapnya
+          </UButton>
+          <UButton
             :to="`/marketing/detail/surat-penawaran-${row.original.id}`"
             variant="solid"
-            size="md"
+            size="sm"
             color="primary"
           >
             Lihat Surat
@@ -181,10 +198,10 @@ const pagination = ref({
             "
             :to="`/marketing/detail/revisi-surat-penawaran-${row.original.id}`"
             variant="soft"
-            size="md"
+            size="sm"
             color="neutral"
           >
-            Revisi Penawaran
+            Revisi
           </UButton>
         </div>
       </template>
@@ -199,4 +216,6 @@ const pagination = ref({
       />
     </div>
   </section>
+
+  <RecordDetailModal v-model:open="detailOpen" type="ol" :id="detailId" />
 </template>
