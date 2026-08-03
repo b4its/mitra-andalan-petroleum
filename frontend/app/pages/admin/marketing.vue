@@ -36,7 +36,7 @@ const { data, pending, refresh } = useAsyncData('admin-marketing', async () => {
     get<any>('/offering-letters', { page: 1, page_size: 100 })
   ])
   return { stats, olList: olResult?.items || [] }
-}, { default: () => ({ stats: null, olList: [] }), lazy: true })
+}, { default: () => ({ stats: null, olList: [] }), lazy: true, server: false })
 
 // ── Stats cards ───────────────────────────────────────────────
 const olStats = computed(() => {

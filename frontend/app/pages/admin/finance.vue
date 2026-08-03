@@ -41,7 +41,7 @@ const { data, pending, refresh } = useAsyncData('admin-finance', async () => {
     invList: invResult?.items || [],
     doList: doResult?.items || []
   }
-}, { default: () => ({ stats: null, invList: [], doList: [] }), lazy: true })
+}, { default: () => ({ stats: null, invList: [], doList: [] }), lazy: true, server: false })
 
 // ── Stats cards ───────────────────────────────────────────────
 const invStats = computed(() => {
