@@ -20,7 +20,7 @@ const items: StepperItem[] = [
 const { get, put, post, postFile } = useApi()
 
 const { data: OlData } = await useAsyncData(
-  'offering-letters',
+  'offering-letters-po',
   async () => {
     const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
       page: 1,

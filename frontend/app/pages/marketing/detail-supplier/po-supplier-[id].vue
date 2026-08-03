@@ -15,7 +15,7 @@ const { user } = useAuth()
 const { get } = useApi()
 
 const { data: purchaseOrderDetails } = await useAsyncData(
-  'purchase-order-details',
+  'purchase-order-detail-po-supplier',
   async () => {
     const res = await get<PurchaseOrderDetails>(
       `/purchase-orders/${idPoLetter}`
