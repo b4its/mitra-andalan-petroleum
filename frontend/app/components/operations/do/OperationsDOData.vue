@@ -9,7 +9,7 @@ const table = useTemplateRef('table')
 const columnPinning = ref({ right: ['actions'] })
 
 const toast = useToast()
-const { get, put, post } = useApi()
+const { get, put, post, postFile } = useApi()
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
@@ -57,6 +57,8 @@ const editLoading = ref(false)
 async function openEdit(row: any) {
   editLoading.value = true
   lengkapiTarget.value = row
+  lengkapiForm.receiver_sign_file = null
+  lengkapiForm.driver_sign_file = null
   try {
     // Fetch detail DO untuk pre-fill form dengan data yang sudah ada
     const detail = await get<any>(`/delivery-orders/${row.id}`)
@@ -77,7 +79,6 @@ async function openEdit(row: any) {
     lengkapiForm.transport_date = d.transportDateReceived || new Date().toISOString().split('T')[0] || ''
     lengkapiForm.driver_name = d.driverInformation?.name || ''
     lengkapiForm.driver_phone = d.driverInformation?.phoneNumber || ''
-    lengkapiForm.helper_name = d.helperName || ''
     lengkapiForm.product_name = d.productInformation?.name || 'Bio Diesel'
     lengkapiForm.fuel_qty = d.productInformation?.qty || d.total || 0
     lengkapiForm.due_date = d.dueDate || new Date().toISOString().split('T')[0] || ''
@@ -106,6 +107,8 @@ async function openEdit(row: any) {
 
 function openLengkapi(row: any) {
   lengkapiTarget.value = row
+  lengkapiForm.receiver_sign_file = null
+  lengkapiForm.driver_sign_file = null
   lengkapiForm.do_number = row.deliveryOrderNumber || ''
   lengkapiForm.transport_name = row.transportName || ''
   lengkapiForm.do_date = new Date().toISOString().split('T')[0] || ''
@@ -138,7 +141,6 @@ const lengkapiForm = reactive({
   // Driver
   driver_name: '',
   driver_phone: '',
-  helper_name: '',
   // Produk
   product_name: 'Bio Diesel',
   fuel_qty: 0,
@@ -159,6 +161,9 @@ const lengkapiForm = reactive({
   distribution_admin: '',
   receiver_sign: '',
   driver_sign: '',
+  // File upload signatures
+  receiver_sign_file: null as File | null,
+  driver_sign_file: null as File | null,
 })
 
 const { user } = useAuth()
@@ -171,6 +176,31 @@ async function submitLengkapi() {
   }
   lengkapiSaving.value = true
   try {
+    // ── Upload file signatures jika ada ────────────────────────
+    let receiverSignUrl = ''
+    let driverSignUrl = ''
+    const doId = lengkapiTarget.value.id
+
+    if (lengkapiForm.receiver_sign_file) {
+      const uploadRes = await postFile<any>('/upload', {
+        files: [lengkapiForm.receiver_sign_file],
+        folder: 'do',
+        document_type: 'do',
+        document_id: doId,
+      })
+      if (uploadRes?.length) receiverSignUrl = uploadRes[0].url || ''
+    }
+    if (lengkapiForm.driver_sign_file) {
+      const uploadRes = await postFile<any>('/upload', {
+        files: [lengkapiForm.driver_sign_file],
+        folder: 'do',
+        document_type: 'do',
+        document_id: doId,
+      })
+      if (uploadRes?.length) driverSignUrl = uploadRes[0].url || ''
+    }
+
+    // ── Simpan data DO ─────────────────────────────────────────
     const details = {
       companyInformation: {
         name: 'PT. MITRA ANDALAN PETROLEUM',
@@ -200,7 +230,6 @@ async function submitLengkapi() {
         phoneNumber: lengkapiForm.driver_phone || '',
       },
       transportDateReceived: lengkapiForm.transport_date,
-      helperName: lengkapiForm.helper_name || '',
       dueDate: lengkapiForm.due_date,
       total: lengkapiForm.fuel_qty,
       productInformation: {
@@ -232,10 +261,12 @@ async function submitLengkapi() {
       companyCoordinator: lengkapiForm.company_coordinator || 'Admin',
       distributionAdmin: lengkapiForm.distribution_admin || user.value?.name || '',
       receiver: lengkapiForm.receiver_sign || '',
+      receiver_sign_url: receiverSignUrl,
       driver: lengkapiForm.driver_sign || '',
+      driver_sign_url: driverSignUrl,
     }
 
-    await put(`/delivery-orders/${lengkapiTarget.value.id}`, {
+    await put(`/delivery-orders/${doId}`, {
       do_number: lengkapiForm.do_number,
       transport_name: lengkapiForm.transport_name,
       fuel_total: lengkapiForm.fuel_qty,
@@ -611,10 +642,6 @@ const columns: TableColumn<any>[] = [
               <UInput v-model="lengkapiForm.driver_phone" placeholder="08xxxxxxxxxx" size="sm" />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1">Kenet / Helper</label>
-              <UInput v-model="lengkapiForm.helper_name" placeholder="Nama kenet" size="sm" />
-            </div>
-            <div>
               <label class="block text-xs text-muted mb-1">Tanggal Transportir Terima</label>
               <UInput v-model="lengkapiForm.transport_date" type="date" size="sm" />
             </div>
@@ -708,12 +735,36 @@ const columns: TableColumn<any>[] = [
               <UInput v-model="lengkapiForm.distribution_admin" :placeholder="user?.name || ''" size="sm" />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1">Nama Penerima (Ttd)</label>
+              <label class="block text-xs text-muted mb-1">Nama Penerima</label>
               <UInput v-model="lengkapiForm.receiver_sign" placeholder="Nama penerima" size="sm" />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1">Nama Driver/Officer (Ttd)</label>
+              <label class="block text-xs text-muted mb-1">Tanda Tangan Penerima</label>
+              <UFileUpload
+                v-model="lengkapiForm.receiver_sign_file"
+                label="Upload Tanda Tangan"
+                description="Format .png/.jpg, max 2MB"
+                accept="image/*"
+              />
+              <span v-if="lengkapiForm.receiver_sign && !lengkapiForm.receiver_sign_file" class="text-[10px] text-muted">
+                {{ lengkapiForm.receiver_sign }}
+              </span>
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Nama Driver/Officer</label>
               <UInput v-model="lengkapiForm.driver_sign" placeholder="Nama driver" size="sm" />
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Tanda Tangan Driver</label>
+              <UFileUpload
+                v-model="lengkapiForm.driver_sign_file"
+                label="Upload Tanda Tangan"
+                description="Format .png/.jpg, max 2MB"
+                accept="image/*"
+              />
+              <span v-if="lengkapiForm.driver_sign && !lengkapiForm.driver_sign_file" class="text-[10px] text-muted">
+                {{ lengkapiForm.driver_sign }}
+              </span>
             </div>
           </div>
         </div>
