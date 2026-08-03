@@ -18,7 +18,7 @@ const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
 
 const { data: OlData } = await useAsyncData(
-  'offering-letters',
+  'offering-letters-data',
   async () => {
     const params: Record<string, string | number> = { page: 1, page_size: 50 }
     if (debouncedSearch.value) params.search = debouncedSearch.value

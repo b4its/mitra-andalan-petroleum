@@ -15,7 +15,7 @@ const columnPinning = ref({
 const { get } = useApi()
 
 const { data: OlData } = await useAsyncData(
-  'offering-letters',
+  'offering-letters-revision',
   async () => {
     const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
       page: 1,

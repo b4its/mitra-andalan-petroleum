@@ -29,7 +29,7 @@ const { data: supplierList } = await useAsyncData('suppliers', async () => {
 })
 
 const { data: OlData } = await useAsyncData(
-  'offering-letters',
+  'offering-letters-supplier-po',
   async () => {
     const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
       page: 1,

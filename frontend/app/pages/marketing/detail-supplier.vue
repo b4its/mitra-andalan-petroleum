@@ -6,7 +6,7 @@ const route = useRoute()
 const idPoLetter = route.params.id
 const { get } = useApi()
 
-const { data: purchaseOrderDetails } = await useAsyncData('purchase-order-details', async () => {
+const { data: purchaseOrderDetails } = await useAsyncData('purchase-order-detail-supplier', async () => {
   const res = await get<PurchaseOrdersDetails>(`/purchase-orders/${idPoLetter}`)
   return res
 })
@@ -40,7 +40,7 @@ definePageMeta({ layout: 'marketing' })
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full">
+      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
         <NuxtPage />
       </div>
     </template>

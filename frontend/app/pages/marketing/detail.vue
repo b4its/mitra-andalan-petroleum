@@ -6,13 +6,13 @@ const route = useRoute()
 const idOfferingLetter = route.params.id
 const { get } = useApi()
 
-const { data: offeringLetterDetails } = await useAsyncData('purchase-order-details', async () => {
+const { data: offeringLetterDetails } = await useAsyncData('offering-letter-detail', async () => {
   const res = await get<OfferingLetterPost>(`/offering-letters/${idOfferingLetter}`)
   return res
 })
 
 const { data: customerDetail } = await useAsyncData(
-  'customer-detail',
+  'customer-detail-offering',
   async () => {
     const res = await get<Customer>(
       `/customers/${offeringLetterDetails.value?.details.receiver}`
@@ -55,7 +55,7 @@ definePageMeta({ layout: 'marketing' })
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full">
+      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
         <NuxtPage />
       </div>
     </template>
