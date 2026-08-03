@@ -42,7 +42,7 @@ definePageMeta({ layout: 'marketing' })
 
     <template #body>
       <div
-        class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full lg:max-w-7xl mx-auto"
+        class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full lg:max-w-7xl mx-auto px-4 lg:px-6"
       >
         <NuxtPage />
       </div>

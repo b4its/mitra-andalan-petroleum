@@ -256,7 +256,8 @@ definePageMeta({ layout: 'operations' })
     </template>
 
     <template #body>
-      <UStepper ref="stepper" disabled :items>
+      <div class="p-4 lg:p-6">
+        <UStepper ref="stepper" disabled :items>
         <template #doHeader>
           <OperationsDOHeaderForm
             v-model="doHeader"
@@ -313,6 +314,7 @@ definePageMeta({ layout: 'operations' })
           />
         </template>
       </UStepper>
+      </div>
     </template>
   </UDashboardPanel>
 </template>

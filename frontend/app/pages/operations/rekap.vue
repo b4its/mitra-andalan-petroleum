@@ -16,7 +16,9 @@ definePageMeta({ layout: 'operations' })
     </template>
 
     <template #body>
-      <OperationsDOData />
+      <div class="p-4 lg:p-6">
+        <OperationsDOData />
+      </div>
     </template>
   </UDashboardPanel>
 </template>
