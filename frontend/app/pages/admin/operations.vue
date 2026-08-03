@@ -36,7 +36,7 @@ const { data, pending, refresh } = useAsyncData('admin-operations', async () => 
     get<any>('/delivery-orders', { page: 1, page_size: 100 })
   ])
   return { stats, doList: doResult?.items || [] }
-}, { default: () => ({ stats: null, doList: [] }), lazy: true })
+}, { default: () => ({ stats: null, doList: [] }), lazy: true, server: false })
 
 // ── Stats cards ───────────────────────────────────────────────
 const doStats = computed(() => {
