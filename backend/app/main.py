@@ -81,6 +81,7 @@ openapi_tags = [
     {"name": "notifications", "description": "Notifikasi sistem. Field: `to` (redirect path), `is_read` (status baca)."},
     {"name": "stats", "description": "Statistik untuk dashboard"},
     {"name": "uploads", "description": "Upload file (signature, dokumen, foto, dll). Multi-file, max 50MB/file. Kaitkan ke parent via `document_type` + `document_id`. Cascade delete otomatis saat parent dihapus."},
+    {"name": "accounting", "description": "Modul akuntansi (finance): chart of accounts, jurnal umum, buku besar, pemasukan, pengeluaran, neraca saldo, dan ringkasan keuangan."},
 ]
 
 app = FastAPI(
@@ -93,7 +94,7 @@ Sistem manajemen internal untuk perusahaan bahan bakar minyak.
 ## Modul
 - **Marketing** — Offering Letters, Purchase Orders, Stats
 - **Operations** — Delivery Orders, Sales, Stats
-- **Finance** — Invoices, Delivery Orders, Sales, Stats
+- **Finance** — Invoices, Delivery Orders, Accounting (akun, jurnal, buku besar, pemasukan, pengeluaran), Stats
 - **Admin** — User/Profile Management
 
 ## Auth

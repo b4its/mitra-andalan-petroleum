@@ -9,6 +9,7 @@ from app.models.invoice import Invoice
 from app.models.notification import Notification
 from app.models.sale import Sale
 from app.models.upload import Upload
+from app.models.accounting import Account, JournalEntry, JournalLine
 
 __all__ = [
     "BaseModel",
@@ -22,4 +23,7 @@ __all__ = [
     "Notification",
     "Sale",
     "Upload",
+    "Account",
+    "JournalEntry",
+    "JournalLine",
 ]
