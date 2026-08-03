@@ -29,8 +29,8 @@ class DeliveryOrderResponse(BaseModel):
     # Lunas ongkir (Finance lunasi setelah selesai dikirim)
     lunas_ongkir_at: datetime | None = None
     status_lunas_ongkir: bool = False
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class DeliveryOrderCreate(BaseModel):

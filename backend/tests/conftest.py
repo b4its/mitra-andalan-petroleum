@@ -95,8 +95,9 @@ def seeded_db(client):
 
         ids["do_id"] = str(uuid.uuid4())
         conn.execute(text("""INSERT INTO delivery_orders (id, do_number, customer_id, po_number,
-            transport_name, fuel_total, status, created_at, updated_at)
-            VALUES (:id, :num, :cid, :po, :trans, :ft, :st, :now, :now)"""),
+            transport_name, fuel_total, status, status_rilis_dana, status_ready_order,
+            status_selesai_dikirim, status_lunas_ongkir, created_at, updated_at)
+            VALUES (:id, :num, :cid, :po, :trans, :ft, :st, 0, 0, 0, 0, :now, :now)"""),
             {"id": ids["do_id"], "num": "001/DO/VI/2025", "cid": ids["cust_id"], "po": "PO/2025/VI/100",
              "trans": "PT Express", "ft": 8000, "st": "created", "now": now})
 

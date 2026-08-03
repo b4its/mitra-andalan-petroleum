@@ -21,8 +21,8 @@ class PurchaseOrderResponse(BaseModel):
     created_by: str | None = None
     id_offering_letters: str | None = None
     id_delivery_order: str | None = None
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class PurchaseOrderCreate(BaseModel):
