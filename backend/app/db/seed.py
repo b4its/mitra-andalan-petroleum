@@ -1,3 +1,5 @@
+from datetime import date
+
 from passlib.hash import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +13,7 @@ from app.models.delivery_order import DeliveryOrder
 from app.models.invoice import Invoice
 from app.models.notification import Notification
 from app.models.sale import Sale
+from app.models.accounting import Account, JournalEntry, JournalLine
 
 
 async def seed_database(db: AsyncSession):
@@ -23,12 +26,18 @@ async def seed_database(db: AsyncSession):
     await _seed_invoices(db)
     await _seed_notifications(db)
     await _seed_sales(db)
+    await _seed_accounting(db)
     await db.commit()
 
 
 async def _seed_users(db: AsyncSession):
     result = await db.execute(select(User).limit(1))
     if result.scalar_one_or_none():
+        existing_accounting = await db.execute(select(User).where(User.email == "accounting@email.com"))
+        if existing_accounting.scalar_one_or_none():
+            return
+        db.add(User(name="Rina", email="accounting@email.com", password=bcrypt.hash("accounting123"), role="accounting"))
+        await db.flush()
         return
 
     users = [
@@ -36,6 +45,7 @@ async def _seed_users(db: AsyncSession):
         User(name="Baits", email="ops@email.com", password=bcrypt.hash("ops123"), role="operations"),
         User(name="Nico", email="marketing@email.com", password=bcrypt.hash("marketing123"), role="marketing"),
         User(name="Alea", email="finance@email.com", password=bcrypt.hash("finance123"), role="finance"),
+        User(name="Rina", email="accounting@email.com", password=bcrypt.hash("accounting123"), role="accounting"),
     ]
     for u in users:
         db.add(u)
@@ -224,4 +234,148 @@ async def _seed_sales(db: AsyncSession):
             amount=25000000 + (i * 5000000),
         )
         db.add(sale)
+    await db.flush()
+
+
+ACCOUNT_GROUPS = {
+    "asset": [
+        ("1-1000", "Kas Besar", "Kas tunai di kantor"),
+        ("1-1010", "Kas Kecil", "Kas untuk pengeluaran harian"),
+        ("1-1100", "Bank BCA", "Rekening giro Bank BCA"),
+        ("1-1200", "Piutang Usaha", "Piutang dari pelanggan"),
+        ("1-1300", "Persediaan BBM", "Persediaan bahan bakar minyak"),
+        ("1-1400", "Peralatan Kantor", "Peralatan dan inventaris kantor"),
+    ],
+    "liability": [
+        ("2-1000", "Hutang Usaha", "Hutang kepada supplier"),
+        ("2-1100", "Hutang Pajak", "Hutang PPN / pajak"),
+        ("2-1200", "Hutang Gaji", "Hutang gaji karyawan"),
+    ],
+    "equity": [
+        ("3-1000", "Modal", "Modal pemilik"),
+        ("3-1100", "Prive", "Penarikan pribadi pemilik"),
+        ("3-1200", "Laba Ditahan", "Laba yang ditahan perusahaan"),
+    ],
+    "revenue": [
+        ("4-1000", "Pendapatan Penjualan BBM", "Pendapatan dari penjualan BBM"),
+        ("4-1100", "Pendapatan Jasa Angkut", "Pendapatan dari jasa transportasi"),
+        ("4-1200", "Pendapatan Lain-lain", "Pendapatan di luar usaha utama"),
+    ],
+    "expense": [
+        ("5-1000", "Beban Operasional", "Beban operasional umum"),
+        ("5-1010", "Beban Transportasi", "Beban transportasi & ongkir"),
+        ("5-1020", "Beban Gaji", "Beban gaji karyawan"),
+        ("5-1030", "Beban Listrik & Air", "Beban utilitas"),
+        ("5-1040", "Beban Pemasaran", "Beban promosi dan pemasaran"),
+        ("5-1050", "Beban Perawatan", "Beban perawatan kendaraan/alat"),
+    ],
+}
+
+
+async def _seed_accounting(db: AsyncSession):
+    result = await db.execute(select(Account).limit(1))
+    if result.scalar_one_or_none():
+        return
+
+    accounts: dict[str, Account] = {}
+    for acc_type, items in ACCOUNT_GROUPS.items():
+        for code, name, desc in items:
+            acc = Account(code=code, name=name, type=acc_type, description=desc)
+            db.add(acc)
+            accounts[code] = acc
+    await db.flush()
+
+    journal_result = await db.execute(select(JournalEntry).limit(1))
+    if journal_result.scalar_one_or_none():
+        return
+
+    kas = accounts["1-1000"]
+    bank = accounts["1-1100"]
+    piutang = accounts["1-1200"]
+    pendapatan = accounts["4-1000"]
+    ongkir = accounts["4-1100"]
+    beban_transport = accounts["5-1010"]
+    beban_operasional = accounts["5-1000"]
+
+    entries = [
+        {
+            "entry_number": "JRM-202606-0001",
+            "entry_date": date(2026, 6, 5),
+            "description": "Penjualan BBM tunai ke PT. Bina Karya Sentosa",
+            "reference": "INV/2026/VI/001",
+            "lines": [
+                (kas, None, 50000000, 0),
+                (pendapatan, None, 0, 50000000),
+            ],
+        },
+        {
+            "entry_number": "JRM-202606-0002",
+            "entry_date": date(2026, 6, 10),
+            "description": "Penjualan BBM kredit ke CV. Maju Jaya Abadi",
+            "reference": "INV/2026/VI/002",
+            "lines": [
+                (piutang, None, 75000000, 0),
+                (pendapatan, None, 0, 75000000),
+            ],
+        },
+        {
+            "entry_number": "JRM-202606-0003",
+            "entry_date": date(2026, 6, 15),
+            "description": "Pembayaran jasa angkut transportir",
+            "reference": "DO/2026/VI/003",
+            "lines": [
+                (beban_transport, None, 2500000, 0),
+                (kas, None, 0, 2500000),
+            ],
+        },
+        {
+            "entry_number": "JRM-202606-0004",
+            "entry_date": date(2026, 6, 20),
+            "description": "Penerimaan pembayaran piutang dari CV. Maju Jaya Abadi",
+            "reference": "PAY/2026/VI/004",
+            "lines": [
+                (bank, None, 75000000, 0),
+                (piutang, None, 0, 75000000),
+            ],
+        },
+        {
+            "entry_number": "JRM-202606-0005",
+            "entry_date": date(2026, 6, 25),
+            "description": "Pembayaran beban operasional bulan Juni",
+            "reference": "EXP/2026/VI/005",
+            "lines": [
+                (beban_operasional, None, 8000000, 0),
+                (kas, None, 0, 8000000),
+            ],
+        },
+        {
+            "entry_number": "JRM-202606-0006",
+            "entry_date": date(2026, 6, 28),
+            "description": "Pendapatan jasa angkut diterima tunai",
+            "reference": "TR/2026/VI/006",
+            "lines": [
+                (kas, None, 5000000, 0),
+                (ongkir, None, 0, 5000000),
+            ],
+        },
+    ]
+
+    for e in entries:
+        entry = JournalEntry(
+            entry_number=e["entry_number"],
+            entry_date=e["entry_date"],
+            description=e["description"],
+            reference=e["reference"],
+            status="posted",
+        )
+        db.add(entry)
+        await db.flush()
+        for account, memo, debit, credit in e["lines"]:
+            db.add(JournalLine(
+                journal_entry_id=entry.id,
+                account_id=account.id,
+                description=memo,
+                debit=debit,
+                credit=credit,
+            ))
     await db.flush()
