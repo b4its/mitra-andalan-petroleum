@@ -20,8 +20,8 @@ class OfferingLetterResponse(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class OfferingLetterCreate(BaseModel):

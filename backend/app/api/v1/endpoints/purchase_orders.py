@@ -151,6 +151,7 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
         sender_id=po.created_by,
         to="/marketing/customer" if po.type == "customer" else "/marketing/supplier",
     )
+    await db.refresh(po)
     return _to_response(po, cn, sn)
 
 
