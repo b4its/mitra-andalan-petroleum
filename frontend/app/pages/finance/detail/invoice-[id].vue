@@ -17,15 +17,14 @@ const { data: invoiceDetails } = await useAsyncData(
   async () => {
     const res = await get<InvoiceDetails>(`/invoices/${invoiceId}`)
     return res
-  },
-  { default: () => [] }
+  }
 )
 const details: InvoiceDetailsData = invoiceDetails.value?.details
 
 const tableBodyDetails = []
 
 for (let i = 0; i < 6; i++) {
-  if (i < details.products.length) {
+  if (details?.products && i < details.products.length) {
     const product = details.products[i]
     tableBodyDetails.push([
       {
@@ -770,12 +769,19 @@ const loadPdf = async () => {
 }
 
 onMounted(() => {
-  loadPdf()
+  if (details?.companyInformation) {
+    loadPdf()
+  }
 })
 </script>
 
 <template>
   <main class="h-180 w-full">
     <iframe v-if="pdfLink" :src="pdfLink" class="h-full w-full" />
+    <div v-else-if="!details?.companyInformation" class="flex flex-col items-center justify-center h-full gap-3 text-muted">
+      <UIcon name="i-lucide-file-x" class="size-12" />
+      <p class="text-sm font-medium">Data Invoice Belum Lengkap</p>
+      <p class="text-xs">Lengkapi data invoice terlebih dahulu.</p>
+    </div>
   </main>
 </template>
