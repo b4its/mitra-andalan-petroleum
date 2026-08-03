@@ -59,12 +59,14 @@ definePageMeta({ layout: 'operations' })
     </template>
 
     <template #body>
-      <UStepper ref="stepper" disabled :items>
-        <template #doReturned>
-          <!-- <MarketingPOCustomerForm v-model="doReturned" @submit="onDoSubmit" /> -->
-          <OperationsDOReturnedForm v-model="doReturned" @submit="onDoSubmit" />
-        </template>
-      </UStepper>
+      <div class="p-4 lg:p-6">
+        <UStepper ref="stepper" disabled :items>
+          <template #doReturned>
+            <!-- <MarketingPOCustomerForm v-model="doReturned" @submit="onDoSubmit" /> -->
+            <OperationsDOReturnedForm v-model="doReturned" @submit="onDoSubmit" />
+          </template>
+        </UStepper>
+      </div>
     </template>
   </UDashboardPanel>
 </template>

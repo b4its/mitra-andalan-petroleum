@@ -48,10 +48,12 @@ definePageMeta({ layout: 'marketing' })
     </template>
 
     <template #body>
-      <h1 class="text-3xl font-bold dark:text-neutral-50 text-neutral-900">
-        Rekap Data Marketing
-      </h1>
-      <MarketingStats :period="period" :range="range" />
+      <div class="p-4 lg:p-6 space-y-6">
+        <h1 class="text-3xl font-bold dark:text-neutral-50 text-neutral-900">
+          Rekap Data Marketing
+        </h1>
+        <MarketingStats :period="period" :range="range" />
+      </div>
     </template>
   </UDashboardPanel>
 

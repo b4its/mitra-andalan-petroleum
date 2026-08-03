@@ -13,7 +13,9 @@ definePageMeta({ layout: 'finance' })
     </template>
 
     <template #body>
-      <FinanceDOData />
+      <div class="p-4 lg:p-6">
+        <FinanceDOData />
+      </div>
     </template>
   </UDashboardPanel>
 </template>
