@@ -22,5 +22,11 @@ export const dummyAccounts: DummyAccount[] = [
     password: 'finance123',
     role: 'finance',
     name: 'Alea'
+  },
+  {
+    email: 'accounting@email.com',
+    password: 'accounting123',
+    role: 'accounting',
+    name: 'Rina'
   }
 ]
