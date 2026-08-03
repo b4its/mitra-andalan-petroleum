@@ -41,6 +41,14 @@ const links = [
           onSelect: () => {
             open.value = false
           }
+        },
+        {
+          label: 'Data Delivery Order',
+          to: '/admin/data-do',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
         }
       ]
     },
@@ -52,6 +60,45 @@ const links = [
         {
           label: 'Rekap Keseluruhan',
           to: '/admin/finance',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        },
+
+      ]
+    },
+    {
+      label: 'Accounting',
+      icon: 'i-lucide-book-open',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'Rekap Keseluruhan',
+          to: '/admin/accounting',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        }
+      ]
+    },
+    {
+      label: 'Master Data',
+      icon: 'i-lucide-database',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'Customer',
+          to: '/admin/customers',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Supplier',
+          to: '/admin/suppliers',
           exact: true,
           onSelect: () => {
             open.value = false
