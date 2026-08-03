@@ -49,11 +49,12 @@ const paged = computed(() => {
 watch(search, () => { page.value = 1 })
 
 // ── Role badge ────────────────────────────────────────────────
-const roleColor: Record<string, 'neutral' | 'info' | 'warning' | 'success' | 'error'> = {
+const roleColor: Record<string, 'neutral' | 'info' | 'warning' | 'success' | 'error' | 'primary'> = {
   admin: 'error',
   marketing: 'info',
   operations: 'warning',
-  finance: 'success'
+  finance: 'success',
+  accounting: 'primary'
 }
 
 // ── Kolom tabel ───────────────────────────────────────────────
@@ -78,7 +79,7 @@ const modalMode = ref<ModalMode>('add')
 const selectedUser = ref<User | null>(null)
 
 // ── Form schema ───────────────────────────────────────────────
-const ROLES = ['admin', 'marketing', 'operations', 'finance'] as const
+const ROLES = ['admin', 'marketing', 'operations', 'finance', 'accounting'] as const
 
 const addSchema = z.object({
   name: z.string().min(2, 'Minimal 2 karakter'),

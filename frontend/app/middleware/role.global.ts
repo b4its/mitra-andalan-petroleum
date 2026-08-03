@@ -1,4 +1,4 @@
-const PROTECTED_ROLES = ['admin', 'operations', 'marketing', 'finance']
+const PROTECTED_ROLES = ['admin', 'operations', 'marketing', 'finance', 'accounting']
 
 export default defineNuxtRouteMiddleware((to) => {
   if (import.meta.server) return
