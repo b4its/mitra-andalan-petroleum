@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { NavigationMenuItem } from "@nuxt/ui";
 
-const route = useRoute()
-const idOfferingLetter = route.params.id
+const route = useRoute();
+const idOfferingLetter = route.params.id;
 
 const links = [
   [
     {
-      label: 'Detail Surat Delivery Order',
-      icon: 'i-lucide-truck',
-      to: `/operations/detail/delivery-order-${idOfferingLetter}`
-    }
-  ]
-] satisfies NavigationMenuItem[][]
+      label: "Detail Surat Delivery Order",
+      icon: "i-lucide-truck",
+      to: `/operations/detail/delivery-order-${idOfferingLetter}`,
+    },
+  ],
+] satisfies NavigationMenuItem[][];
 
-definePageMeta({ layout: 'operations' })
+definePageMeta({ layout: "operations" });
 </script>
 
 <template>
   <UDashboardPanel id="delivery-order" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Surat Delivery Order ${idOfferingLetter}`"">
+      <UDashboardNavbar :title="`Surat Delivery Order ${idOfferingLetter}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

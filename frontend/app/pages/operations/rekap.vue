@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'operations' })
+definePageMeta({ layout: "operations" });
 </script>
 
 <template>
@@ -16,9 +16,7 @@ definePageMeta({ layout: 'operations' })
     </template>
 
     <template #body>
-      <div class="p-4 lg:p-6">
-        <OperationsDOData />
-      </div>
+      <OperationsDOData />
     </template>
   </UDashboardPanel>
 </template>
