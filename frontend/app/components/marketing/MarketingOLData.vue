@@ -75,13 +75,15 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
       const color = {
         created: 'info' as const,
         under_revision: 'warning' as const,
-        po_received: 'success' as const
+        po_received: 'success' as const,
+        do_completed: 'primary' as const
       }[row.getValue('status') as string]
 
       const status = {
         created: 'Penawaran Telah Dibuat',
         under_revision: 'Penawaran Dalam Revisi',
-        po_received: 'PO Diterima'
+        po_received: 'PO Diterima',
+        do_completed: 'DO Selesai'
       }[row.getValue('status') as string]
 
       return h(
