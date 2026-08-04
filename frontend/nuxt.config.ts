@@ -16,19 +16,6 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2026-06-30',
 
-  nitro: {
-    devProxy: {
-      '/api/v1': {
-        target: process.env.NUXT_API_PROXY_TARGET || ['http://', '[redacted]:8000/api/v1'].join(''),
-        changeOrigin: true
-      },
-      '/media': {
-        target: process.env.NUXT_MEDIA_PROXY_TARGET || ['http://', '[redacted]:8000/media'].join(''),
-        changeOrigin: true
-      }
-    }
-  },
-
   vite: {
     optimizeDeps: {
       include: [
