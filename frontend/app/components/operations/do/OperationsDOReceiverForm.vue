@@ -52,7 +52,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
         </UFormField> -->
       </div>
 
-      <UFormField name="address" label="Alamat" required>
+      <UFormField name="customerAddress" label="Alamat" required>
         <UInput
           v-model="state.customerAddress"
           type="text"
@@ -66,7 +66,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
       <p>Informasi Penerima BBM + HP</p>
 
       <div class="flex w-full gap-4">
-        <UFormField name="fuelReceiver" label="Nama Penerima" required>
+        <UFormField name="receiverInformation.name" label="Nama Penerima" required>
           <UInput
             v-model="state.receiverInformation.name"
             type="text"
@@ -74,7 +74,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
           />
         </UFormField>
 
-        <UFormField name="phoneNumber" label="Nomor Telepon" required>
+        <UFormField name="receiverInformation.phoneNumber" label="Nomor Telepon" required>
           <UInput
             v-model="state.receiverInformation.phoneNumber"
             v-maska="'#### #### ####'"
@@ -86,7 +86,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
 
       <USeparator />
 
-      <UFormField name="dateReceived" label="Tanggal Diterima" required>
+      <UFormField name="receiverDateReceived" label="Tanggal Diterima" required>
         <UInput
           v-model="state.receiverDateReceived"
           type="date"

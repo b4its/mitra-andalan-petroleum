@@ -1,95 +1,115 @@
 <script setup lang="ts">
-import type { StepperItem, NavigationMenuItem } from '@nuxt/ui'
-import type { Customer, PurchaseOrdersSupplier } from '~/types/marketing'
-import type { DeliveryOrderPost } from '~/types/operations'
-import type {
-  OperationsDOAdditionalState,
-  OperationsDODetailsTransportState,
-  OperationsDOFooterState,
-  OperationsDOHeaderState,
-  OperationsDOReceiverState,
-  OperationsDOTransportState
-} from '~/types/schemas'
+import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
+import type { Customer, PurchaseOrdersSupplier } from "~/types/marketing";
+import type { DeliveryOrderPost, DeliveryOrdersDetails } from "~/types/operations";
+import {
+  type OperationsDOAdditionalState,
+  type OperationsDODetailsTransportState,
+  type OperationsDOFooterState,
+  type OperationsDOHeaderState,
+  type OperationsDOReceiverState,
+  type OperationsDOTransportState,
+} from "~/types/schemas";
 
-const { user } = useAuth()
-const { get, put, post } = useApi()
-const toast = useToast()
-const loading = ref(false)
+const { user } = useAuth();
+const { get, put, post } = useApi();
+const toast = useToast();
+const route = useRoute();
+const loading = ref(false);
+const selectedDoId = ref("");
+const editingDoId = computed(() =>
+  (typeof route.query.do_id === "string" ? route.query.do_id : "") || selectedDoId.value
+);
 
-const { data: poCustomer } = await useAsyncData(
-  'purchase-orders-customer',
+const { data: linkedDeliveryOrders } = await useAsyncData(
+  "delivery-orders-from-po-customer",
   async () => {
-    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
-      '/purchase-orders',
-      { page: 1, page_size: 50, type: 'customer' }
-    )
-    return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
-      id: purchaseOrder.id,
-      purchaseOrderNumber: purchaseOrder.po_number,
-      customerName: purchaseOrder.customer_name,
-      customerId: purchaseOrder.customer_id,
-      fuelTotalQty: purchaseOrder.total,
-      dateCreated: purchaseOrder.created_at.toString(),
-      dateChanged: purchaseOrder.updated_at.toString(),
-      status: purchaseOrder.status
-    }))
+    const [posRes, dosRes] = await Promise.all([
+      get<{ items: PurchaseOrdersSupplier[] }>(
+        "/purchase-orders",
+        { page: 1, page_size: 100, type: "customer" },
+      ),
+      get<{ items: DeliveryOrdersDetails[] }>(
+        "/delivery-orders",
+        { page: 1, page_size: 100 },
+      ),
+    ]);
+    const poByNumber = new Map(
+      (posRes.items || []).map((po) => [po.po_number, po] as const),
+    );
+    return (dosRes.items || [])
+      .filter((do_) => poByNumber.has(do_.po_number))
+      .map((do_) => {
+        const po = poByNumber.get(do_.po_number)!;
+        return {
+          id: do_.id,
+          doNumber: do_.do_number,
+          purchaseOrderNumber: do_.po_number,
+          customerName: po.customer_name || do_.customer_name || "",
+          customerId: po.customer_id || do_.customer_id || "",
+          fuelTotalQty: po.total ?? do_.fuel_total ?? 0,
+          dateCreated: po.created_at?.toString() ?? "",
+          dateChanged: po.updated_at?.toString() ?? "",
+          status: do_.status,
+        };
+      });
   },
-  { default: () => [] }
-)
+  { default: () => [], server: false },
+);
 
 const items: StepperItem[] = [
-  { title: 'Kop Surat Delivery Order', slot: 'doHeader' },
-  { title: 'Customer Penerima', slot: 'doReceiver' },
-  { title: 'Agen/Transportir', slot: 'doTransport' },
-  { title: 'Rincian Pengiriman', slot: 'doDetailsTransport' },
-  { title: 'Catatan Tambahan', slot: 'doAdditional' },
-  { title: 'Penutup Surat Delivery Order', slot: 'doFooter' }
-]
+  { title: "Kop Surat Delivery Order", slot: "doHeader" },
+  { title: "Customer Penerima", slot: "doReceiver" },
+  { title: "Agen/Transportir", slot: "doTransport" },
+  { title: "Rincian Pengiriman", slot: "doDetailsTransport" },
+  { title: "Catatan Tambahan", slot: "doAdditional" },
+  { title: "Penutup Surat Delivery Order", slot: "doFooter" },
+];
 
 const doHeader = reactive<OperationsDOHeaderState>({
   companyInformation: {
-    name: 'PT. MITRA ANDALAN PETROLEUM',
-    nameSub: 'Distributor for Elnusa Petrofin',
-    address: 'Jl. Belatuk Samarinda, Indonesia',
-    phoneNumber: '0541-1234567' // add masking
+    name: "PT. MITRA ANDALAN PETROLEUM",
+    nameSub: "Distributor for Elnusa Petrofin",
+    address: "Jl. Belatuk Samarinda, Indonesia",
+    phoneNumber: "0541-1234567", // add masking
   },
   doInformation: {
-    doNumber: '0000/DO/MAP/I/0000',
-    doDateCreated: `${new Date().toISOString().split('T')[0]}`,
+    doNumber: "0000/DO/MAP/I/0000",
+    doDateCreated: `${new Date().toISOString().split("T")[0]}`,
     poCustomerNumber: undefined,
-    soNumber: undefined
-  }
-})
+    soNumber: undefined,
+  },
+});
 const doReceiver = reactive<OperationsDOReceiverState>({
-  customerName: 'PT. Sumber Jaya',
-  customerId: 'PT. Sumber Jaya Nusantara',
-  customerAddress: 'Samarinda',
+  customerName: "PT. Sumber Jaya",
+  customerId: "PT. Sumber Jaya Nusantara",
+  customerAddress: "Samarinda",
   receiverInformation: {
     name: undefined,
-    phoneNumber: undefined
+    phoneNumber: undefined,
   },
-  receiverDateReceived: `${new Date().toISOString().split('T')[0]}`
-})
+  receiverDateReceived: `${new Date().toISOString().split("T")[0]}`,
+});
 const doTransport = reactive<OperationsDOTransportState>({
-  transportName: 'PT. Transport Logistik',
-  transportId: 'PT. Transport Logistik Nusantara',
-  transportAddress: 'Samarinda',
+  transportName: "PT. Transport Logistik",
+  transportId: "PT. Transport Logistik Nusantara",
+  transportAddress: "Samarinda",
   driverInformation: {
-    name: 'Jaya',
-    phoneNumber: undefined
+    name: "Jaya",
+    phoneNumber: undefined,
   },
-  transportDateReceived: `${new Date().toISOString().split('T')[0]}`,
-  helperName: undefined
-})
+  transportDateReceived: `${new Date().toISOString().split("T")[0]}`,
+  helperName: undefined,
+});
 const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
   dueDate: undefined,
   total: 5000,
   productInformation: {
-    name: 'Bio diesel',
+    name: "Bio diesel",
     qty: 5000,
     topSeal: undefined,
     bottomSeal: undefined,
-    temperature: 0
+    temperature: 0,
   },
   transportInformation: {
     startKm: undefined,
@@ -100,65 +120,141 @@ const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
       departureTime: undefined,
       arrivalTime: undefined,
       depotArrivalTime: undefined,
-      unloadingTime: undefined
+      unloadingTime: undefined,
     },
-    transportNumber: 'KT 1234 AB',
-    transportType: undefined
-  }
-})
+    transportNumber: "KT 1234 AB",
+    transportType: undefined,
+  },
+});
 const doAdditional = reactive<OperationsDOAdditionalState>({
   notes: [
     {
-      note: 'Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan'
+      note: "Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan",
     },
     {
-      note: 'Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami'
+      note: "Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami",
     },
     {
-      note: 'Lainnya :'
-    }
+      note: "Lainnya :",
+    },
   ],
   t2Depot: undefined,
   t2Unloading: undefined,
   indexSensitivity: undefined,
-  fuelReceived: 5000
-})
+  fuelReceived: 5000,
+});
 const doFooter = reactive<OperationsDOFooterState>({
-  companyCoordinator: 'Admin',
-  distributionAdmin: user.value?.name || 'User',
+  companyCoordinator: "Admin",
+  distributionAdmin: user.value?.name || "User",
   receiver: undefined,
-  driver: undefined
-})
+  driver: undefined,
+});
 
-const stepper = useTemplateRef('stepper')
+const { data: existingDeliveryOrder } = await useAsyncData(
+  () => `delivery-order-edit-${editingDoId.value}`,
+  async () => {
+    if (!editingDoId.value) return null;
+    return await get<DeliveryOrdersDetails>(`/delivery-orders/${editingDoId.value}`);
+  },
+  { default: () => null, server: false, watch: [editingDoId] },
+);
+
+function hydrateFormFromExistingDeliveryOrder(value: DeliveryOrdersDetails | null) {
+  if (!value) return;
+
+  const details = value.details || {};
+  const existingPo = details.doInformation?.poCustomerNumber;
+  Object.assign(doHeader.companyInformation, details.companyInformation || {});
+  Object.assign(doHeader.doInformation, {
+    ...(details.doInformation || {}),
+    poCustomerNumber: {
+      ...(existingPo || {}),
+      id: value.id,
+      doNumber: value.do_number,
+      purchaseOrderNumber: existingPo?.purchaseOrderNumber ?? value.po_number,
+      customerName: existingPo?.customerName ?? value.customer_name,
+      customerId: existingPo?.customerId ?? value.customer_id,
+      fuelTotalQty: existingPo?.fuelTotalQty ?? value.fuel_total,
+    },
+  });
+
+  Object.assign(doReceiver, {
+    customerName: details.customerName || value.customer_name || "",
+    customerId: details.customerId || value.customer_id || "",
+    customerAddress: details.customerAddress || "",
+    receiverInformation: details.receiverInformation || { name: undefined, phoneNumber: undefined },
+    receiverDateReceived: details.receiverDateReceived || doReceiver.receiverDateReceived,
+  });
+
+  Object.assign(doTransport, {
+    transportName: details.transportName || value.transport_name || "",
+    transportId: details.transportId || "",
+    transportAddress: details.transportAddress || "",
+    driverInformation: details.driverInformation || { name: undefined, phoneNumber: undefined },
+    transportDateReceived: details.transportDateReceived || doTransport.transportDateReceived,
+    helperName: details.helperName || undefined,
+  });
+
+  Object.assign(doDetailsTransport, {
+    dueDate: details.dueDate || undefined,
+    total: details.total || value.fuel_total || 0,
+    productInformation: details.productInformation || doDetailsTransport.productInformation,
+    transportInformation: details.transportInformation || doDetailsTransport.transportInformation,
+  });
+
+  Object.assign(doAdditional, {
+    notes: details.notes || doAdditional.notes,
+    t2Depot: details.t2Depot,
+    t2Unloading: details.t2Unloading,
+    indexSensitivity: details.indexSensitivity,
+    fuelReceived: details.fuelReceived || details.total || value.fuel_total || 0,
+  });
+
+  Object.assign(doFooter, {
+    companyCoordinator: details.companyCoordinator || doFooter.companyCoordinator,
+    distributionAdmin: details.distributionAdmin || doFooter.distributionAdmin,
+    receiver: details.receiver || undefined,
+    driver: details.driver || details.driverInformation?.name || undefined,
+  });
+}
+
+watch(existingDeliveryOrder, hydrateFormFromExistingDeliveryOrder, { immediate: true });
+
+const stepper = useTemplateRef("stepper");
 
 function previousNavigation() {
-  stepper.value?.prev()
+  stepper.value?.prev();
 }
 
 function onFormSubmitToNext() {
-  stepper.value?.next()
+  stepper.value?.next();
 }
 
 watch(
   () => doHeader.doInformation.poCustomerNumber,
   (value) => {
     if (value) {
-      console.log(value)
-      doReceiver.customerName = value.customerName || ''
-      doReceiver.customerId = value.customerId || ''
-      doDetailsTransport.total = value.fuelTotalQty || 0
-      doDetailsTransport.productInformation.qty = value.fuelTotalQty || 0
-      doAdditional.fuelReceived = value.fuelTotalQty || 0
+      console.log(value);
+      doReceiver.customerName = value.customerName || "";
+      doReceiver.customerId = value.customerId || "";
+      doDetailsTransport.total = value.fuelTotalQty || 0;
+      doDetailsTransport.productInformation.qty = value.fuelTotalQty || 0;
+      doAdditional.fuelReceived = value.fuelTotalQty || 0;
+      if (value.id) {
+        selectedDoId.value = value.id;
+      }
+      if (value.doNumber) {
+        doHeader.doInformation.doNumber = value.doNumber;
+      }
     }
-  }
-)
+  },
+);
 
 async function onFormSubmit() {
   try {
-    if (loading.value) return
+    if (loading.value) return;
 
-    loading.value = true
+    loading.value = true;
 
     const doData = {
       ...doHeader,
@@ -166,77 +262,81 @@ async function onFormSubmit() {
       ...doTransport,
       ...doDetailsTransport,
       ...doAdditional,
-      ...doFooter
-    }
+      ...doFooter,
+    };
     const doPost: DeliveryOrderPost = {
       do_number: doData.doInformation.doNumber,
       customer_id: doData.customerId,
       date: doData.doInformation.doDateCreated,
       fuel_total: doData.total,
       po_number:
-        doData.doInformation.poCustomerNumber.purchaseOrderNumber || '',
-      status: 'created',
+        doData.doInformation.poCustomerNumber.purchaseOrderNumber || "",
+      status: "created",
       transport_name: doData.transportName,
-      created_by: user.value?.id ?? null,
-      details: doData
-    }
+      details: doData,
+    };
 
-    const res = await post<any, DeliveryOrderPost>('/delivery-orders', doPost)
+    const res = editingDoId.value
+      ? await put<any, DeliveryOrderPost>(`/delivery-orders/${editingDoId.value}`, doPost)
+      : await post<any, DeliveryOrderPost>("/delivery-orders", doPost);
 
-    console.log('Data submitted')
-    console.log(res)
+    console.log("Data submitted");
+    console.log(res);
     // console.log(doPost);
     toast.add({
-      title: 'Sukses',
-      icon: 'i-lucide-check-circle',
-      description: 'Data Delivery Order berhasil dibuat',
-      color: 'success'
-    })
+      title: "Sukses",
+      icon: "i-lucide-check-circle",
+      description: editingDoId.value
+        ? "Data Delivery Order berhasil dilengkapi"
+        : "Data Delivery Order berhasil dibuat",
+      color: "success",
+    });
   } catch (e: any) {
-    toast.add({ title: 'Error', description: e.message, color: 'error' })
+    toast.add({ title: "Error", description: e.message, color: "error" });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-const purchaseOrders = ref(
-  poCustomer.value.map((po) => {
+const purchaseOrders = computed(() =>
+  linkedDeliveryOrders.value.map((entry) => {
     return {
-      label: po.purchaseOrderNumber,
+      label: entry.doNumber,
       value: {
-        id: po.id,
-        purchaseOrderNumber: po.purchaseOrderNumber,
-        customerName: po.customerName,
-        customerId: po.customerId,
-        dateCreated: po.dateCreated,
-        dateChanged: po.dateChanged,
-        fuelTotalQty: po.fuelTotalQty
+        id: entry.id,
+        doNumber: entry.doNumber,
+        purchaseOrderNumber: entry.purchaseOrderNumber,
+        customerName: entry.customerName,
+        customerId: entry.customerId,
+        dateCreated: entry.dateCreated,
+        dateChanged: entry.dateChanged,
+        fuelTotalQty: entry.fuelTotalQty,
       },
-      customerName: po.customerName
-    }
-  })
-)
+      customerName: entry.customerName,
+    };
+  }),
+);
 
 const links = [
   [
     {
-      label: 'Buat Delivery Order',
-      icon: 'i-lucide-truck',
-      to: '/operations/delivery-order'
+      label: "Buat Delivery Order",
+      icon: "i-lucide-truck",
+      to: "/operations/delivery-order",
     },
     {
-      label: 'Upload Delivery Order (Yang sudah dikembalikan)',
-      icon: 'i-lucide-file-output',
-      to: '/operations/delivery-order-returned'
-    }
-  ]
-] satisfies NavigationMenuItem[][]
+      label: "Upload Delivery Order (Yang sudah dikembalikan)",
+      icon: "i-lucide-file-output",
+      to: "/operations/delivery-order-returned",
+    },
+  ],
+] satisfies NavigationMenuItem[][];
 
-definePageMeta({ layout: 'operations' })
+definePageMeta({ layout: "operations" });
 </script>
 
 <template>
-  <UDashboardPanel id="do" :ui="{ body: 'w-full' }">
+  <UDashboardPanel :ui="{ body: 'w-full' }" id="do">
     <template #header>
       <UDashboardNavbar
         title="Form Pembuatan Delivery Order"
@@ -256,13 +356,12 @@ definePageMeta({ layout: 'operations' })
     </template>
 
     <template #body>
-      <div class="p-4 lg:p-6">
-        <UStepper ref="stepper" disabled :items>
+      <UStepper disabled ref="stepper" :items>
         <template #doHeader>
           <OperationsDOHeaderForm
-            v-model="doHeader"
             :purchase-orders="purchaseOrders"
-            :has-previous="stepper?.hasPrev"
+            v-model="doHeader"
+            :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmitToNext"
           />
@@ -271,7 +370,7 @@ definePageMeta({ layout: 'operations' })
         <template #doReceiver>
           <OperationsDOReceiverForm
             v-model="doReceiver"
-            :has-previous="stepper?.hasPrev"
+            :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmitToNext"
           />
@@ -280,7 +379,7 @@ definePageMeta({ layout: 'operations' })
         <template #doTransport>
           <OperationsDOTransportForm
             v-model="doTransport"
-            :has-previous="stepper?.hasPrev"
+            :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmitToNext"
           />
@@ -289,7 +388,7 @@ definePageMeta({ layout: 'operations' })
         <template #doDetailsTransport>
           <OperationsDODetailsTransportForm
             v-model="doDetailsTransport"
-            :has-previous="stepper?.hasPrev"
+            :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmitToNext"
           />
@@ -298,7 +397,7 @@ definePageMeta({ layout: 'operations' })
         <template #doAdditional>
           <OperationsDOAdditionalForm
             v-model="doAdditional"
-            :has-previous="stepper?.hasPrev"
+            :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmitToNext"
           />
@@ -306,15 +405,14 @@ definePageMeta({ layout: 'operations' })
 
         <template #doFooter>
           <OperationsDOFooterForm
-            v-model="doFooter"
             :is-loading="loading"
-            :has-previous="stepper?.hasPrev"
+            v-model="doFooter"
+            :hasPrevious="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmit"
           />
         </template>
       </UStepper>
-      </div>
     </template>
   </UDashboardPanel>
 </template>

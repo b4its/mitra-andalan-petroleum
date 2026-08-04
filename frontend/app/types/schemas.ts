@@ -224,17 +224,17 @@ export const operationsDODetailsTransportSchema = z.object({
   dueDate: z.iso.date().optional(),
   productInformation: z.object({
     name: z.string().optional(),
-    qty: z.number().optional(),
-    temperature: z.number().optional(),
+    qty: z.coerce.number().optional(),
+    temperature: z.coerce.number().optional(),
     topSeal: z.string().optional(),
     bottomSeal: z.string().optional()
   }),
   transportInformation: z.object({
     transportType: z.string().optional(),
     transportNumber: z.string().optional(),
-    startKm: z.number().optional(),
-    endKm: z.number().optional(),
-    sgMeter: z.number().optional(),
+    startKm: z.coerce.number().optional(),
+    endKm: z.coerce.number().optional(),
+    sgMeter: z.coerce.number().optional(),
     // isWaterFree: z.boolean().optional(), // need to discuss
     timeInformation: z.object({
       departureTime: z.string().optional(),
@@ -243,7 +243,7 @@ export const operationsDODetailsTransportSchema = z.object({
       depotArrivalTime: z.string().optional()
     })
   }),
-  total: z.number()
+  total: z.coerce.number()
 })
 export const operationsDOAdditionalSchema = z.object({
   notes: z.array(
@@ -251,10 +251,10 @@ export const operationsDOAdditionalSchema = z.object({
       note: z.string().optional()
     })
   ),
-  t2Depot: z.number().optional(),
-  t2Unloading: z.number().optional(),
-  indexSensitivity: z.number().optional(),
-  fuelReceived: z.number().optional()
+  t2Depot: z.coerce.number().optional(),
+  t2Unloading: z.coerce.number().optional(),
+  indexSensitivity: z.coerce.number().optional(),
+  fuelReceived: z.coerce.number().optional()
 })
 export const operationsDOFooterSchema = z.object({
   companyCoordinator: z.string(),

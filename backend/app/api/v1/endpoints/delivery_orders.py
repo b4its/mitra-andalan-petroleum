@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.models.delivery_order import DeliveryOrder
 from app.models.customer import Customer
+from app.models.offering_letter import OfferingLetter
+from app.models.purchase_order import PurchaseOrder
 from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.delivery_order import (
@@ -39,6 +41,43 @@ async def _get_customer_name(db, customer_id):
     c = await db.execute(select(Customer).where(Customer.id == customer_id))
     c_obj = c.scalar_one_or_none()
     return c_obj.name if c_obj else ""
+
+
+async def _sync_offering_letters(db: AsyncSession, po_number: str | None, do_id: str) -> None:
+    if not po_number:
+        return
+    po_result = await db.execute(
+        select(PurchaseOrder).where(
+            PurchaseOrder.type == "customer",
+            PurchaseOrder.po_number == po_number,
+        ).limit(1)
+    )
+    po = po_result.scalar_one_or_none()
+    if not po:
+        return
+    try:
+        ol_ids = json.loads(po.id_offering_letters or "[]")
+    except (json.JSONDecodeError, TypeError):
+        return
+    if not isinstance(ol_ids, list):
+        return
+    do_result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == do_id))
+    do_ = do_result.scalar_one_or_none()
+    do_details = _details_from_str(do_.details) if do_ else None
+    if not do_details:
+        return
+    for ol_id in ol_ids:
+        if not isinstance(ol_id, str):
+            continue
+        ol_result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == ol_id))
+        ol = ol_result.scalar_one_or_none()
+        if not ol:
+            continue
+        existing = _details_from_str(ol.details) or {}
+        existing["deliveryOrder"] = do_details
+        ol.details = json.dumps(existing, default=str)
+        ol.status = "do_completed"
+    await db.flush()
 
 
 def _to_response(do, customer_name):
@@ -134,6 +173,7 @@ async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = De
     await db.flush()
     await db.refresh(do)
     cn = await _get_customer_name(db, do.customer_id)
+    await _sync_offering_letters(db, do.po_number, do.id)
     await create_document_notification(
         db,
         title="Delivery Order Baru Dibuat",
@@ -162,6 +202,7 @@ async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSes
     await db.flush()
     await db.refresh(do)
     cn = await _get_customer_name(db, do.customer_id)
+    await _sync_offering_letters(db, do.po_number, do.id)
     return _to_response(do, cn)
 
 
