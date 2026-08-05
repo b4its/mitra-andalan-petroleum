@@ -172,3 +172,23 @@ async def import_database(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail=f"Import SQL gagal: {exc}") from exc
 
     return {"message": "Import SQL berhasil", "statements": len(statements)}
+
+
+@router.post(
+    "/clear",
+    summary="Bersihkan database",
+    description="Hapus seluruh data dari semua tabel aplikasi.",
+)
+async def clear_database():
+    tables = list(Base.metadata.sorted_tables)
+    async with engine.begin() as conn:
+        try:
+            await conn.execute(text("SET FOREIGN_KEY_CHECKS=0"))
+            for table in reversed(tables):
+                await conn.execute(text(f"DELETE FROM {_quote_identifier(table.name)}"))
+            await conn.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+        except Exception as exc:
+            await conn.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+            raise HTTPException(status_code=400, detail=f"Bersihkan database gagal: {exc}") from exc
+
+    return {"message": "Database berhasil dibersihkan", "tables": len(tables)}
