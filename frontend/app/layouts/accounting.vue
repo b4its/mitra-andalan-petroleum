@@ -53,6 +53,14 @@ const links = [
       onSelect: () => {
         open.value = false
       }
+    },
+    {
+      label: 'Profil',
+      icon: 'i-lucide-user',
+      to: '/accounting/profile',
+      onSelect: () => {
+        open.value = false
+      }
     }
   ]
 ] satisfies NavigationMenuItem[][]
