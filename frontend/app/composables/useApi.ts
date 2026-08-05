@@ -30,12 +30,23 @@ async function parseError(res: Response) {
   throw new Error(err.detail || `API error: ${res.status}`)
 }
 
+async function request(input: string, init?: RequestInit) {
+  try {
+    return await fetch(input, init)
+  } catch {
+    const target = import.meta.server
+      ? process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000/api/v1'
+      : API_BASE
+    throw new Error(`Backend tidak terhubung. Pastikan API lokal berjalan di ${target}.`)
+  }
+}
+
 export function useApi() {
   async function get<T>(
     path: string,
     params?: Record<string, any>
   ): Promise<T> {
-    const res = await fetch(apiUrl(path, params))
+    const res = await request(apiUrl(path, params))
     if (!res.ok) {
       await parseError(res)
     }
@@ -43,7 +54,7 @@ export function useApi() {
   }
 
   async function put<T, U>(path: string, body: U): Promise<T> {
-    const res = await fetch(apiUrl(path), {
+    const res = await request(apiUrl(path), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -55,7 +66,7 @@ export function useApi() {
   }
 
   async function post<T, U>(path: string, body: U): Promise<T> {
-    const res = await fetch(apiUrl(path), {
+    const res = await request(apiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -85,7 +96,7 @@ export function useApi() {
       formData.append('document_id', payload.document_id)
     }
 
-    const res = await fetch(apiUrl(path), {
+    const res = await request(apiUrl(path), {
       method: 'POST',
       body: formData
     })
@@ -114,7 +125,7 @@ export function useApi() {
       formData.append('document_id', payload.document_id)
     }
 
-    const res = await fetch(apiUrl(path), {
+    const res = await request(apiUrl(path), {
       method: 'PUT',
       body: formData
     })
@@ -125,7 +136,7 @@ export function useApi() {
   }
 
   async function del<T>(path: string): Promise<T> {
-    const res = await fetch(apiUrl(path), {
+    const res = await request(apiUrl(path), {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' }
     })
