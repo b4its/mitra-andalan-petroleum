@@ -55,12 +55,18 @@ const olDistValues = computed(() => data.value?.stats?.distributions?.offering_l
 
 // ── Table: search + pagination ────────────────────────────────
 const search = ref('')
+const statusFilter = ref('all')
 const page = ref(1)
 const PAGE_SIZE = 7
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
-  const list: any[] = data.value?.olList || []
+  let list: any[] = data.value?.olList || []
+
+  if (statusFilter.value !== 'all') {
+    list = list.filter(ol => ol.status === statusFilter.value)
+  }
+
   if (!q) return list
   return list.filter(ol =>
     ol.offering_letter_number?.toLowerCase().includes(q) ||
@@ -72,7 +78,7 @@ const paged = computed(() => {
   const start = (page.value - 1) * PAGE_SIZE
   return filtered.value.slice(start, start + PAGE_SIZE)
 })
-watch(search, () => { page.value = 1 })
+watch([search, statusFilter], () => { page.value = 1 })
 
 const statusLabel: Record<string, string> = {
   created: 'Dibuat',
@@ -84,6 +90,13 @@ const statusColor: Record<string, string> = {
   under_revision: 'info',
   po_received: 'success'
 }
+
+const statusOptions = [
+  { label: 'Semua Status', value: 'all' },
+  { label: 'Dibuat', value: 'created' },
+  { label: 'Revisi', value: 'under_revision' },
+  { label: 'PO Diterima', value: 'po_received' }
+]
 
 const columns: TableColumn<any>[] = [
   { accessorKey: 'offering_letter_number', header: 'Nomor SP' },
@@ -200,13 +213,22 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
             <template #header>
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <p class="font-medium">Data Surat Penawaran</p>
-                <UInput
-                  v-model="search"
-                  icon="i-lucide-search"
-                  placeholder="Cari nomor SP, customer, status..."
-                  size="sm"
-                  class="w-64"
-                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <USelect
+                    v-model="statusFilter"
+                    :items="statusOptions"
+                    value-key="value"
+                    size="sm"
+                    class="w-44"
+                  />
+                  <UInput
+                    v-model="search"
+                    icon="i-lucide-search"
+                    placeholder="Cari nomor SP, customer, status..."
+                    size="sm"
+                    class="w-64"
+                  />
+                </div>
               </div>
             </template>
             <UTable :data="paged" :columns="columns">

@@ -114,6 +114,7 @@ const accountDistColors = computed(() => {
 
 // ── Tabel Jurnal: search + pagination ────────────────────────
 const journalSearch = ref('')
+const journalStatusFilter = ref('all')
 const journalPage = ref(1)
 const PAGE_SIZE = 7
 
@@ -122,7 +123,12 @@ const totalDebit = (journal: AccountingJournal) =>
 
 const journalFiltered = computed(() => {
   const q = journalSearch.value.trim().toLowerCase()
-  const list: AccountingJournal[] = data.value?.journals || []
+  let list: AccountingJournal[] = data.value?.journals || []
+
+  if (journalStatusFilter.value !== 'all') {
+    list = list.filter(j => (j.status ?? 'posted') === journalStatusFilter.value)
+  }
+
   if (!q) return list
   return list.filter(j =>
     j.entry_number?.toLowerCase().includes(q) ||
@@ -135,7 +141,14 @@ const journalPaged = computed(() => {
   const start = (journalPage.value - 1) * PAGE_SIZE
   return journalFiltered.value.slice(start, start + PAGE_SIZE)
 })
-watch(journalSearch, () => { journalPage.value = 1 })
+watch([journalSearch, journalStatusFilter], () => { journalPage.value = 1 })
+
+const journalStatusOptions = [
+  { label: 'Semua Status', value: 'all' },
+  { label: 'Posted', value: 'posted' },
+  { label: 'Draft', value: 'draft' },
+  { label: 'Void', value: 'void' }
+]
 
 // ── Tabel Neraca Saldo ──────────────────────────────────────
 const trialSearch = ref('')
@@ -335,6 +348,13 @@ const exportItems = (onSelect: (format: 'excel' | 'pdf' | 'csv') => void) => [
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <p class="font-medium">Data Jurnal Umum</p>
                 <div class="flex items-center gap-2">
+                  <USelect
+                    v-model="journalStatusFilter"
+                    :items="journalStatusOptions"
+                    value-key="value"
+                    size="sm"
+                    class="w-36"
+                  />
                   <UInput
                     v-model="journalSearch"
                     icon="i-lucide-search"

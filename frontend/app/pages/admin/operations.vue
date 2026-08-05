@@ -71,6 +71,7 @@ const PAGE_SIZE = 7
 
 // Filter tab
 const filterTab = ref<'all' | 'rilis' | 'ready' | 'selesai' | 'lunas'>('all')
+const statusFilter = ref('all')
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -81,6 +82,10 @@ const filtered = computed(() => {
   else if (filterTab.value === 'ready') list = list.filter(d => d.status_ready_order && !d.status_selesai_dikirim)
   else if (filterTab.value === 'selesai') list = list.filter(d => d.status_selesai_dikirim && !d.status_lunas_ongkir)
   else if (filterTab.value === 'lunas') list = list.filter(d => d.status_lunas_ongkir)
+
+  if (statusFilter.value !== 'all') {
+    list = list.filter(d => d.status === statusFilter.value)
+  }
 
   if (!q) return list
   return list.filter(d =>
@@ -94,11 +99,17 @@ const paged = computed(() => {
   const start = (page.value - 1) * PAGE_SIZE
   return filtered.value.slice(start, start + PAGE_SIZE)
 })
-watch([search, filterTab], () => { page.value = 1 })
+watch([search, filterTab, statusFilter], () => { page.value = 1 })
 
 // ── Status helpers ────────────────────────────────────────────
 const doStatusLabel: Record<string, string> = { created: 'Dibuat', draft: 'Draft', document_returned: 'Dokumen Kembali' }
 const doStatusColor: Record<string, string> = { created: 'info', draft: 'warning', document_returned: 'success' }
+const doStatusOptions = [
+  { label: 'Semua Status DO', value: 'all' },
+  { label: 'Dibuat', value: 'created' },
+  { label: 'Draft', value: 'draft' },
+  { label: 'Dokumen Kembali', value: 'document_returned' }
+]
 
 function alurBadge(done: boolean, at: any) {
   return h('div', { class: 'flex flex-col gap-0.5' }, [
@@ -267,13 +278,22 @@ const filterTabs = [
             <template #header>
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <p class="font-medium">Data Delivery Order — Alur Pengiriman</p>
-                <UInput
-                  v-model="search"
-                  icon="i-lucide-search"
-                  placeholder="Cari nomor DO, customer..."
-                  size="sm"
-                  class="w-64"
-                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <USelect
+                    v-model="statusFilter"
+                    :items="doStatusOptions"
+                    value-key="value"
+                    size="sm"
+                    class="w-48"
+                  />
+                  <UInput
+                    v-model="search"
+                    icon="i-lucide-search"
+                    placeholder="Cari nomor DO, customer..."
+                    size="sm"
+                    class="w-64"
+                  />
+                </div>
               </div>
               <!-- Filter tab alur -->
               <div class="flex flex-wrap gap-2 mt-3">
