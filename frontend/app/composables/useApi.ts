@@ -7,47 +7,61 @@ import type {
 
 const API_BASE = '/api/v1'
 
+function apiUrl(path: string, params?: Record<string, any>) {
+  const search = params
+    ? '?' + new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
+        )
+      ).toString()
+    : ''
+  const url = `${API_BASE}${path}${search}`
+
+  if (import.meta.server) {
+    const serverApiBase = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000/api/v1'
+    return `${serverApiBase}${path}${search}`
+  }
+
+  return url
+}
+
+async function parseError(res: Response) {
+  const err = await res.json().catch(() => ({ detail: res.statusText }))
+  throw new Error(err.detail || `API error: ${res.status}`)
+}
+
 export function useApi() {
   async function get<T>(
     path: string,
     params?: Record<string, any>
   ): Promise<T> {
-    const search = params
-      ? '?' + new URLSearchParams(
-          Object.fromEntries(
-            Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
-          )
-        ).toString()
-      : ''
-    const res = await fetch(`${API_BASE}${path}${search}`)
+    const res = await fetch(apiUrl(path, params))
     if (!res.ok) {
-      throw new Error(`API error: ${res.status} ${res.statusText}`)
+      await parseError(res)
     }
     return res.json()
   }
 
   async function put<T, U>(path: string, body: U): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(apiUrl(path), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }))
-      throw new Error(err.detail || `API error: ${res.status}`)
+      await parseError(res)
     }
     return res.json()
   }
 
   async function post<T, U>(path: string, body: U): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(apiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }))
-      throw new Error(err.detail || `API error: ${res.status}`)
+      await parseError(res)
     }
     return res.json()
   }
@@ -71,13 +85,12 @@ export function useApi() {
       formData.append('document_id', payload.document_id)
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(apiUrl(path), {
       method: 'POST',
       body: formData
     })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }))
-      throw new Error(err.detail || `API error: ${res.status}`)
+      await parseError(res)
     }
     return res.json()
   }
@@ -101,25 +114,23 @@ export function useApi() {
       formData.append('document_id', payload.document_id)
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(apiUrl(path), {
       method: 'PUT',
       body: formData
     })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }))
-      throw new Error(err.detail || `API error: ${res.status}`)
+      await parseError(res)
     }
     return res.json()
   }
 
   async function del<T>(path: string): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(apiUrl(path), {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' }
     })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }))
-      throw new Error(err.detail || `API error: ${res.status}`)
+      await parseError(res)
     }
     return res.json()
   }
