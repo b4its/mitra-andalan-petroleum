@@ -4,14 +4,66 @@ definePageMeta({ layout: 'admin' })
 const toast = useToast()
 const exporting = ref(false)
 const importing = ref(false)
+const clearing = ref(false)
 const sqlFile = ref<File | null>(null)
 const confirmation = ref('')
+const clearConfirmation = ref('')
+const confirmOpen = ref(false)
+const pendingAction = ref<'export' | 'import' | 'clear' | null>(null)
 
 const canImport = computed(() => Boolean(sqlFile.value) && confirmation.value === 'IMPORT SQL')
+const canClear = computed(() => clearConfirmation.value === 'BERSIHKAN DATABASE')
 
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   sqlFile.value = input.files?.[0] ?? null
+}
+
+const confirmContent = computed(() => {
+  if (pendingAction.value === 'export') {
+    return {
+      title: 'Export data SQL?',
+      description: 'Seluruh data tabel database akan disimpan ke file .sql.',
+      confirmLabel: 'Ya, Export SQL',
+      icon: 'i-lucide-download',
+      color: 'primary' as const
+    }
+  }
+  if (pendingAction.value === 'import') {
+    return {
+      title: 'Import data SQL?',
+      description: 'File SQL yang dipilih akan dijalankan dan dapat mengubah data database.',
+      confirmLabel: 'Ya, Import SQL',
+      icon: 'i-lucide-upload',
+      color: 'error' as const
+    }
+  }
+  return {
+    title: 'Bersihkan database?',
+    description: 'Seluruh data tabel aplikasi akan dihapus. Aksi ini tidak bisa dibatalkan tanpa backup SQL.',
+    confirmLabel: 'Ya, Bersihkan',
+    icon: 'i-lucide-trash-2',
+    color: 'error' as const
+  }
+})
+
+const confirming = computed(() => exporting.value || importing.value || clearing.value)
+
+function openConfirm(action: 'export' | 'import' | 'clear') {
+  pendingAction.value = action
+  confirmOpen.value = true
+}
+
+async function runConfirmedAction() {
+  if (pendingAction.value === 'export') {
+    await downloadExport()
+  } else if (pendingAction.value === 'import') {
+    await importSql()
+  } else if (pendingAction.value === 'clear') {
+    await clearDatabase()
+  }
+  confirmOpen.value = false
+  pendingAction.value = null
 }
 
 async function downloadExport() {
@@ -66,12 +118,31 @@ async function importSql() {
     importing.value = false
   }
 }
+
+async function clearDatabase() {
+  if (clearing.value || !canClear.value) return
+  clearing.value = true
+  try {
+    const res = await fetch('/api/v1/admin/database/clear', { method: 'POST' })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(body.detail || 'Gagal membersihkan database')
+    }
+
+    toast.add({ title: 'Database dibersihkan', description: `${body.tables ?? 0} tabel berhasil dikosongkan.`, color: 'success' })
+    clearConfirmation.value = ''
+  } catch (err: any) {
+    toast.add({ title: 'Error', description: err.message || 'Gagal membersihkan database.', color: 'error' })
+  } finally {
+    clearing.value = false
+  }
+}
 </script>
 
 <template>
   <UDashboardPanel id="admin-database">
     <template #header>
-      <UDashboardNavbar title="Export / Import SQL">
+      <UDashboardNavbar title="Database Konfigurasi">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -84,8 +155,8 @@ async function importSql() {
           icon="i-lucide-triangle-alert"
           color="warning"
           variant="subtle"
-          title="Import SQL akan mengubah data database"
-          description="Gunakan fitur ini hanya untuk backup/restore data internal. Simpan export terbaru sebelum melakukan import."
+          title="Aksi database bersifat permanen"
+          description="Simpan export terbaru sebelum import atau membersihkan database. Bersihkan database akan menghapus seluruh data tabel, termasuk user."
         />
 
         <div class="grid gap-6 lg:grid-cols-2">
@@ -107,7 +178,7 @@ async function importSql() {
               <UButton
                 icon="i-lucide-database-backup"
                 :loading="exporting"
-                @click="downloadExport"
+                @click="openConfirm('export')"
               >
                 Export SQL
               </UButton>
@@ -148,14 +219,87 @@ async function importSql() {
                 color="error"
                 :disabled="!canImport"
                 :loading="importing"
-                @click="importSql"
+                @click="openConfirm('import')"
               >
                 Import SQL
               </UButton>
             </div>
           </UCard>
         </div>
+
+        <UCard>
+          <template #header>
+            <div class="flex items-center gap-3">
+              <UIcon name="i-lucide-trash-2" class="size-5 text-error" />
+              <div>
+                <h2 class="font-semibold">Bersihkan Database</h2>
+                <p class="text-sm text-muted">Kosongkan seluruh tabel database aplikasi.</p>
+              </div>
+            </div>
+          </template>
+
+          <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div class="space-y-4">
+              <p class="text-sm text-muted">
+                Aksi ini menghapus seluruh data dari tabel aplikasi. Lakukan export SQL terlebih dahulu jika data masih dibutuhkan.
+              </p>
+              <UFormField label="Konfirmasi" required>
+                <UInput
+                  v-model="clearConfirmation"
+                  placeholder="Ketik BERSIHKAN DATABASE"
+                  class="w-full"
+                />
+              </UFormField>
+            </div>
+
+            <UButton
+              icon="i-lucide-database-x"
+              color="error"
+              :disabled="!canClear"
+              :loading="clearing"
+              @click="openConfirm('clear')"
+            >
+              Bersihkan Database
+            </UButton>
+          </div>
+        </UCard>
       </div>
     </template>
   </UDashboardPanel>
+
+  <UModal v-model:open="confirmOpen" :ui="{ content: 'max-w-md' }">
+    <template #title>
+      <div class="flex items-center gap-2">
+        <UIcon :name="confirmContent.icon" :class="confirmContent.color === 'error' ? 'text-error' : 'text-primary'" />
+        <span>{{ confirmContent.title }}</span>
+      </div>
+    </template>
+
+    <template #body>
+      <p class="text-sm text-muted">
+        {{ confirmContent.description }}
+      </p>
+    </template>
+
+    <template #footer>
+      <div class="flex w-full justify-end gap-2">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          :disabled="confirming"
+          @click="confirmOpen = false"
+        >
+          Batal
+        </UButton>
+        <UButton
+          :color="confirmContent.color"
+          :icon="confirmContent.icon"
+          :loading="confirming"
+          @click="runConfirmedAction"
+        >
+          {{ confirmContent.confirmLabel }}
+        </UButton>
+      </div>
+    </template>
+  </UModal>
 </template>
