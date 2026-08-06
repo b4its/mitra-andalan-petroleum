@@ -103,6 +103,14 @@ const links = [
           onSelect: () => {
             open.value = false
           }
+        },
+        {
+          label: 'Export / Import SQL',
+          to: '/admin/database',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
         }
       ]
     },

@@ -72,12 +72,22 @@ const deadlineDistValues = computed(() => data.value?.stats?.distributions?.invo
 
 // ── Invoice table: search + pagination ────────────────────────
 const invSearch = ref('')
+const invStatusFilter = ref('all')
+const deadlineStatusFilter = ref('all')
 const invPage = ref(1)
 const PAGE_SIZE = 7
 
 const invFiltered = computed(() => {
   const q = invSearch.value.trim().toLowerCase()
-  const list: any[] = data.value?.invList || []
+  let list: any[] = data.value?.invList || []
+
+  if (invStatusFilter.value !== 'all') {
+    list = list.filter(inv => inv.invoice_status === invStatusFilter.value)
+  }
+  if (deadlineStatusFilter.value !== 'all') {
+    list = list.filter(inv => inv.deadline_status === deadlineStatusFilter.value)
+  }
+
   if (!q) return list
   return list.filter(inv =>
     inv.invoice_number?.toLowerCase().includes(q) ||
@@ -90,15 +100,22 @@ const invPaged = computed(() => {
   const start = (invPage.value - 1) * PAGE_SIZE
   return invFiltered.value.slice(start, start + PAGE_SIZE)
 })
-watch(invSearch, () => { invPage.value = 1 })
+watch([invSearch, invStatusFilter, deadlineStatusFilter], () => { invPage.value = 1 })
 
 // ── DO table: search + pagination ─────────────────────────────
 const doSearch = ref('')
+const doFlowFilter = ref('all')
 const doPage = ref(1)
 
 const doFiltered = computed(() => {
   const q = doSearch.value.trim().toLowerCase()
-  const list: any[] = data.value?.doList || []
+  let list: any[] = data.value?.doList || []
+
+  if (doFlowFilter.value === 'belum_rilis') list = list.filter(d => !d.status_rilis_dana)
+  else if (doFlowFilter.value === 'menanti_selesai') list = list.filter(d => d.status_rilis_dana && !d.status_selesai_dikirim)
+  else if (doFlowFilter.value === 'menunggu_lunas') list = list.filter(d => d.status_selesai_dikirim && !d.status_lunas_ongkir)
+  else if (doFlowFilter.value === 'lunas') list = list.filter(d => d.status_lunas_ongkir)
+
   if (!q) return list
   return list.filter(d =>
     d.do_number?.toLowerCase().includes(q) ||
@@ -110,13 +127,32 @@ const doPaged = computed(() => {
   const start = (doPage.value - 1) * PAGE_SIZE
   return doFiltered.value.slice(start, start + PAGE_SIZE)
 })
-watch(doSearch, () => { doPage.value = 1 })
+watch([doSearch, doFlowFilter], () => { doPage.value = 1 })
 
 // ── Status helpers ────────────────────────────────────────────
 const invStatusLabel: Record<string, string> = { unpaid: 'Belum Lunas', paid: 'Lunas', overdue: 'Jatuh Tempo' }
 const invStatusColor: Record<string, string> = { unpaid: 'warning', paid: 'success', overdue: 'error' }
 const deadlineLabel: Record<string, string> = { on_time: 'Tepat Waktu', due_soon: 'Segera Jatuh Tempo', overdue: 'Terlewat' }
 const deadlineColor: Record<string, string> = { on_time: 'info', due_soon: 'warning', overdue: 'error' }
+const invStatusOptions = [
+  { label: 'Semua Pembayaran', value: 'all' },
+  { label: 'Belum Lunas', value: 'unpaid' },
+  { label: 'Lunas', value: 'paid' },
+  { label: 'Jatuh Tempo', value: 'overdue' }
+]
+const deadlineStatusOptions = [
+  { label: 'Semua Tenggat', value: 'all' },
+  { label: 'Tepat Waktu', value: 'on_time' },
+  { label: 'Segera Jatuh Tempo', value: 'due_soon' },
+  { label: 'Terlewat', value: 'overdue' }
+]
+const doFlowOptions = [
+  { label: 'Semua Alur DO', value: 'all' },
+  { label: 'Belum Rilis Dana', value: 'belum_rilis' },
+  { label: 'Menanti Selesai Kirim', value: 'menanti_selesai' },
+  { label: 'Menunggu Lunas Ongkir', value: 'menunggu_lunas' },
+  { label: 'Ongkir Lunas', value: 'lunas' }
+]
 
 function alurBadge(done: boolean, at: any) {
   return h('div', { class: 'flex flex-col gap-0.5' }, [
@@ -318,13 +354,29 @@ function openDetail(id: string, type: 'invoice' | 'do') {
             <template #header>
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <p class="font-medium">Data Invoice</p>
-                <UInput
-                  v-model="invSearch"
-                  icon="i-lucide-search"
-                  placeholder="Cari nomor invoice, customer, status..."
-                  size="sm"
-                  class="w-64"
-                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <USelect
+                    v-model="invStatusFilter"
+                    :items="invStatusOptions"
+                    value-key="value"
+                    size="sm"
+                    class="w-44"
+                  />
+                  <USelect
+                    v-model="deadlineStatusFilter"
+                    :items="deadlineStatusOptions"
+                    value-key="value"
+                    size="sm"
+                    class="w-48"
+                  />
+                  <UInput
+                    v-model="invSearch"
+                    icon="i-lucide-search"
+                    placeholder="Cari nomor invoice, customer, status..."
+                    size="sm"
+                    class="w-64"
+                  />
+                </div>
               </div>
             </template>
             <UTable :data="invPaged" :columns="invColumns">
@@ -352,13 +404,22 @@ function openDetail(id: string, type: 'invoice' | 'do') {
             <template #header>
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <p class="font-medium">Data Delivery Order — Alur & Status Ongkir</p>
-                <UInput
-                  v-model="doSearch"
-                  icon="i-lucide-search"
-                  placeholder="Cari nomor DO, customer, PO..."
-                  size="sm"
-                  class="w-64"
-                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <USelect
+                    v-model="doFlowFilter"
+                    :items="doFlowOptions"
+                    value-key="value"
+                    size="sm"
+                    class="w-56"
+                  />
+                  <UInput
+                    v-model="doSearch"
+                    icon="i-lucide-search"
+                    placeholder="Cari nomor DO, customer, PO..."
+                    size="sm"
+                    class="w-64"
+                  />
+                </div>
               </div>
             </template>
             <UTable :data="doPaged" :columns="doColumns">

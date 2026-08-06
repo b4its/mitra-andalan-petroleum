@@ -82,6 +82,7 @@ openapi_tags = [
     {"name": "stats", "description": "Statistik untuk dashboard"},
     {"name": "uploads", "description": "Upload file (signature, dokumen, foto, dll). Multi-file, max 50MB/file. Kaitkan ke parent via `document_type` + `document_id`. Cascade delete otomatis saat parent dihapus."},
     {"name": "accounting", "description": "Modul akuntansi (finance): chart of accounts, jurnal umum, buku besar, pemasukan, pengeluaran, neraca saldo, dan ringkasan keuangan."},
+    {"name": "admin-database", "description": "Admin database: export dan import data SQL."},
 ]
 
 app = FastAPI(
