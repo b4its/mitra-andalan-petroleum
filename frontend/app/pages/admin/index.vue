@@ -6,9 +6,8 @@ import type { ChartClickPayload } from "~/components/admin/AdminChartDetailModal
 import type { Range } from "~/types";
 
 definePageMeta({ layout: "admin" });
-
-const dateTo = ref(new Date().toISOString());
-const dateFrom = ref(new Date(Date.now() - 30 * 86400000).toISOString());
+const UBadge = resolveComponent("UBadge");
+const carousel = useTemplateRef("carousel");
 const range = ref<Range>({
   start: new Date(Date.now() - 30 * 86400000),
   end: new Date(),
@@ -61,12 +60,6 @@ function onChartViewRecords(metric: {
   modalOpen.value = true;
 }
 
-onMounted(() => {
-  console.log(dateTo.value);
-  console.log(dateFrom.value);
-  console.log(range.value.start.toISOString());
-});
-
 const { data, pending, error, refresh } = await useAsyncData(
   "admin-system-analytics",
   () =>
@@ -76,6 +69,24 @@ const { data, pending, error, refresh } = await useAsyncData(
     }),
   { default: () => null, watch: [range] },
 );
+
+const mappedAnalytics = ref([
+  data.value.metrics.find((d: any) => d.key === "outstanding_value"),
+  data.value.metrics.find((d: any) => d.key === "overdue_value"),
+  data.value.metrics.find((d: any) => d.key === "invoice_value"),
+  data.value.metrics.find((d: any) => d.key === "paid_value"),
+  data.value.metrics.find((d: any) => d.key === "sales_value"),
+  data.value.metrics.find((d: any) => d.key === "fuel_volume"),
+  data.value.metrics.find((d: any) => d.key === "delivery_orders"),
+  data.value.metrics.find((d: any) => d.key === "offering_letters"),
+  data.value.metrics.find((d: any) => d.key === "customer_purchase_orders"),
+  data.value.metrics.find((d: any) => d.key === "supplier_purchase_orders"),
+  data.value.metrics.find((d: any) => d.key === "customers"),
+  data.value.metrics.find((d: any) => d.key === "suppliers"),
+  data.value.metrics.find((d: any) => d.key === "unread_notifications"),
+  data.value.metrics.find((d: any) => d.key === "users"),
+  data.value.metrics.find((d: any) => d.key === "uploads"),
+]);
 
 function showMetric(metric: any) {
   selectedMetric.value = metric;
@@ -89,8 +100,16 @@ function reloadDashboard() {
 // ── Metric formatting ──────────────────────────────────────────
 function metricValue(metric: any): string {
   if (metric.unit === "currency") return formatCurrency(metric.value);
-  if (metric.unit === "volume") return `${formatNumber(metric.value)} L`;
+  if (metric.unit === "volume") return `${formatNumber(metric.value)} Liter`;
   return formatNumber(metric.value);
+}
+
+function onPrev() {
+  carousel.value?.emblaApi?.scrollPrev();
+}
+
+function onNext() {
+  carousel.value?.emblaApi?.scrollNext();
 }
 
 // Colour hint per metric group
@@ -170,13 +189,29 @@ watch(notifSearch, () => {
 });
 
 const notificationColumns: TableColumn<any>[] = [
-  { accessorKey: "title", header: "Judul" },
-  { accessorKey: "subtitle", header: "Pesan" },
+  {
+    accessorKey: "title",
+    header: "Judul",
+    cell: ({ row }) =>
+      h("div", { class: "truncate max-w-[200px]" }, row.getValue("title")),
+  },
+  {
+    accessorKey: "subtitle",
+    header: "Pesan",
+    cell: ({ row }) =>
+      h("div", { class: "truncate" }, row.getValue("subtitle")),
+  },
   {
     accessorKey: "created_at",
     header: "Waktu",
     cell: ({ row }) =>
-      row.getValue("created_at") ? formatDate(row.getValue("created_at")) : "-",
+      h(
+        "div",
+        { class: "truncate" },
+        row.getValue("created_at")
+          ? formatDate(row.getValue("created_at"))
+          : "-",
+      ),
   },
 ];
 
@@ -208,7 +243,29 @@ watch(actSearch, () => {
 const activityColumns: TableColumn<any>[] = [
   { accessorKey: "domain", header: "Domain" },
   { accessorKey: "title", header: "Dokumen" },
-  { accessorKey: "subtitle", header: "Status" },
+  {
+    accessorKey: "subtitle",
+    header: "Status",
+    cell: ({ row }) => {
+      const color = {
+        created: "info" as const,
+        under_revision: "warning" as const,
+        po_received: "success" as const,
+      }[row.getValue("subtitle") as string];
+
+      const status = {
+        created: "Penawaran Telah Dibuat",
+        under_revision: "Penawaran Dalam Revisi",
+        po_received: "PO Diterima",
+      }[row.getValue("subtitle") as string];
+
+      return h(
+        UBadge,
+        { variant: "subtle", color: color, class: "capitalize" },
+        () => status,
+      );
+    },
+  },
   {
     accessorKey: "created_at",
     header: "Waktu",
@@ -244,12 +301,31 @@ const activityColumns: TableColumn<any>[] = [
     <template #body>
       <div class="space-y-6 p-4 lg:p-6">
         <!-- Header -->
-        <div>
-          <h1 class="text-2xl font-semibold">Monitoring Keseluruhan Sistem</h1>
-          <p class="mt-1 text-sm text-muted">
-            Setiap kartu menampilkan metrik berbeda sesuai domain. Klik kartu
-            untuk melihat data penyusunnya.
-          </p>
+        <div class="flex justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold">
+              Monitoring Keseluruhan Sistem
+            </h1>
+            <p class="mt-1 text-sm text-muted">
+              Setiap kartu menampilkan metrik berbeda sesuai domain. Klik kartu
+              untuk melihat data penyusunnya.
+            </p>
+          </div>
+
+          <div class="space-x-2">
+            <UButton
+              variant="subtle"
+              color="neutral"
+              icon="i-lucide-chevron-left"
+              @click="onPrev"
+            ></UButton>
+            <UButton
+              variant="subtle"
+              color="neutral"
+              icon="i-lucide-chevron-right"
+              @click="onNext"
+            ></UButton>
+          </div>
         </div>
 
         <!-- Error -->
@@ -278,50 +354,37 @@ const activityColumns: TableColumn<any>[] = [
         <!-- Content -->
         <template v-else>
           <!-- KPI Cards — setiap kartu menampilkan unit, deskripsi, dan warna ikon berbeda -->
-          <UPageGrid class="sm:grid-cols-2 xl:grid-cols-4">
+          <UCarousel
+            ref="carousel"
+            v-slot="{ item }"
+            :items="mappedAnalytics"
+            :ui="{ item: 'basis-1/4', root: 'w-full' }"
+            :arrows="false"
+            :slides-to-scroll="4"
+            loop
+          >
             <UPageCard
-              v-for="metric in data?.metrics || []"
-              :key="metric.key"
               variant="subtle"
-              class="cursor-pointer transition hover:ring-2 hover:ring-primary"
-              @click="showMetric(metric)"
+              class="cursor-pointer transition"
+              @click="showMetric(item)"
             >
               <template #leading>
                 <UIcon
-                  :name="metric.icon"
+                  :name="item.icon"
                   class="size-5"
-                  :class="metricColor[metric.key] ?? 'text-primary'"
+                  :class="metricColor[item.key] ?? 'text-primary'"
                 />
               </template>
-              <template #title>{{ metric.title }}</template>
-              <!-- Nilai diformat sesuai unit: currency / volume (Liter) / angka biasa -->
+              <template #title>{{ item.title }}</template>
               <p class="text-2xl font-semibold tabular-nums">
-                {{ metricValue(metric) }}
+                {{ metricValue(item) }}
               </p>
+
               <p class="mt-1 text-xs text-muted leading-snug">
-                {{ metric.description }}
-              </p>
-              <!-- Label unit kecil di bawah -->
-              <p
-                v-if="metric.unit === 'volume'"
-                class="mt-1 text-[10px] text-muted uppercase tracking-wide"
-              >
-                Liter
-              </p>
-              <p
-                v-else-if="metric.unit === 'currency'"
-                class="mt-1 text-[10px] text-muted uppercase tracking-wide"
-              >
-                Rupiah
-              </p>
-              <p
-                v-else
-                class="mt-1 text-[10px] text-muted uppercase tracking-wide"
-              >
-                Records
+                {{ item.description }}
               </p>
             </UPageCard>
-          </UPageGrid>
+          </UCarousel>
 
           <!-- Charts -->
           <div class="grid gap-6 xl:grid-cols-3">

@@ -1,174 +1,256 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
-import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
-import type { ChartClickPayload } from '~/components/admin/AdminChartDetailModal.vue'
+import { h } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+import AdminBarChart from "~/components/admin/charts/AdminBarChart.vue";
+import AdminPieChart from "~/components/admin/charts/AdminPieChart.vue";
+import type { ChartClickPayload } from "~/components/admin/AdminChartDetailModal.vue";
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: "admin" });
 
-const UBadge = resolveComponent('UBadge')
-const { get } = useApi()
+const UBadge = resolveComponent("UBadge");
+const { get } = useApi();
 
 // ── Chart modal state ──────────────────────────────────────────
-const chartDetailOpen = ref(false)
-const chartPayload = ref<ChartClickPayload | null>(null)
-const drillMetric = ref<any>(null)
-const drillOpen = ref(false)
+const chartDetailOpen = ref(false);
+const chartPayload = ref<ChartClickPayload | null>(null);
+const drillMetric = ref<any>(null);
+const drillOpen = ref(false);
 
-function onBarClick(p: { label: string, datasetLabel: string, value: number, datasetIndex: number, labelIndex: number }) {
-  chartPayload.value = { chartType: 'bar', label: p.label, datasetLabel: p.datasetLabel, value: p.value }
-  chartDetailOpen.value = true
+function onBarClick(p: {
+  label: string;
+  datasetLabel: string;
+  value: number;
+  datasetIndex: number;
+  labelIndex: number;
+}) {
+  chartPayload.value = {
+    chartType: "bar",
+    label: p.label,
+    datasetLabel: p.datasetLabel,
+    value: p.value,
+  };
+  chartDetailOpen.value = true;
 }
-function onPieClick(p: { label: string, value: number, index: number }) {
-  chartPayload.value = { chartType: 'pie', segmentLabel: p.label, segmentValue: p.value }
-  chartDetailOpen.value = true
+function onPieClick(p: { label: string; value: number; index: number }) {
+  chartPayload.value = {
+    chartType: "pie",
+    segmentLabel: p.label,
+    segmentValue: p.value,
+  };
+  chartDetailOpen.value = true;
 }
 function onChartViewRecords(metric: any) {
-  drillMetric.value = metric
-  drillOpen.value = true
+  drillMetric.value = metric;
+  drillOpen.value = true;
 }
 
 // ── Data fetch ────────────────────────────────────────────────
-const { data, pending, refresh } = useAsyncData('admin-operations', async () => {
-  const [stats, doResult] = await Promise.all([
-    get<any>('/stats/admin'),
-    get<any>('/delivery-orders', { page: 1, page_size: 100 })
-  ])
-  return { stats, doList: doResult?.items || [] }
-}, { default: () => ({ stats: null, doList: [] }), lazy: true, server: false })
+const { data, pending, refresh } = useAsyncData(
+  "admin-operations",
+  async () => {
+    const [stats, doResult] = await Promise.all([
+      get<any>("/stats/admin"),
+      get<any>("/delivery-orders", { page: 1, page_size: 100 }),
+    ]);
+    return { stats, doList: doResult?.items || [] };
+  },
+  { default: () => ({ stats: null, doList: [] }), lazy: true, server: false },
+);
 
 // ── Stats cards ───────────────────────────────────────────────
 const doStats = computed(() => {
-  if (!data.value?.stats?.metrics) return []
-  return (data.value.stats.metrics as any[]).filter(m =>
-    ['delivery_orders', 'fuel_volume'].includes(m.key)
-  )
-})
+  if (!data.value?.stats?.metrics) return [];
+  return (data.value.stats.metrics as any[]).filter((m) =>
+    ["delivery_orders", "fuel_volume"].includes(m.key),
+  );
+});
 
 // ── Ringkasan status alur DO ──────────────────────────────────
 const doAlurStats = computed(() => {
-  const list: any[] = data.value?.doList || []
+  const list: any[] = data.value?.doList || [];
   return {
-    belumRilisDana: list.filter(d => !d.status_rilis_dana).length,
-    sudahRilisDana: list.filter(d => d.status_rilis_dana && !d.status_ready_order).length,
-    sudahReadyOrder: list.filter(d => d.status_ready_order && !d.status_selesai_dikirim).length,
-    sudahSelesaiDikirim: list.filter(d => d.status_selesai_dikirim && !d.status_lunas_ongkir).length,
-    sudahLunasOngkir: list.filter(d => d.status_lunas_ongkir).length,
-  }
-})
+    belumRilisDana: list.filter((d) => !d.status_rilis_dana).length,
+    sudahRilisDana: list.filter(
+      (d) => d.status_rilis_dana && !d.status_ready_order,
+    ).length,
+    sudahReadyOrder: list.filter(
+      (d) => d.status_ready_order && !d.status_selesai_dikirim,
+    ).length,
+    sudahSelesaiDikirim: list.filter(
+      (d) => d.status_selesai_dikirim && !d.status_lunas_ongkir,
+    ).length,
+    sudahLunasOngkir: list.filter((d) => d.status_lunas_ongkir).length,
+  };
+});
 
 // ── Charts ────────────────────────────────────────────────────
-const trendLabels = computed(() => data.value?.stats?.trends?.map((t: any) => t.label) || [])
-const doTrendData = computed(() => data.value?.stats?.trends?.map((t: any) => t.delivery_orders) || [])
-const doDistLabels = computed(() => data.value?.stats?.distributions?.delivery_orders?.map((d: any) => d.label) || [])
-const doDistValues = computed(() => data.value?.stats?.distributions?.delivery_orders?.map((d: any) => d.value) || [])
+const trendLabels = computed(
+  () => data.value?.stats?.trends?.map((t: any) => t.label) || [],
+);
+const doTrendData = computed(
+  () => data.value?.stats?.trends?.map((t: any) => t.delivery_orders) || [],
+);
+const doDistLabels = computed(
+  () =>
+    data.value?.stats?.distributions?.delivery_orders?.map(
+      (d: any) => d.label,
+    ) || [],
+);
+const doDistValues = computed(
+  () =>
+    data.value?.stats?.distributions?.delivery_orders?.map(
+      (d: any) => d.value,
+    ) || [],
+);
 
 // ── Table: search + pagination ────────────────────────────────
-const search = ref('')
-const page = ref(1)
-const PAGE_SIZE = 7
+const search = ref("");
+const page = ref(1);
+const PAGE_SIZE = 7;
 
 // Filter tab
-const filterTab = ref<'all' | 'rilis' | 'ready' | 'selesai' | 'lunas'>('all')
-const statusFilter = ref('all')
+const filterTab = ref<"all" | "rilis" | "ready" | "selesai" | "lunas">("all");
+const statusFilter = ref("all");
 
 const filtered = computed(() => {
-  const q = search.value.trim().toLowerCase()
-  let list: any[] = data.value?.doList || []
+  const q = search.value.trim().toLowerCase();
+  let list: any[] = data.value?.doList || [];
 
   // Filter berdasarkan tab status alur
-  if (filterTab.value === 'rilis') list = list.filter(d => d.status_rilis_dana && !d.status_ready_order)
-  else if (filterTab.value === 'ready') list = list.filter(d => d.status_ready_order && !d.status_selesai_dikirim)
-  else if (filterTab.value === 'selesai') list = list.filter(d => d.status_selesai_dikirim && !d.status_lunas_ongkir)
-  else if (filterTab.value === 'lunas') list = list.filter(d => d.status_lunas_ongkir)
+  if (filterTab.value === "rilis")
+    list = list.filter((d) => d.status_rilis_dana && !d.status_ready_order);
+  else if (filterTab.value === "ready")
+    list = list.filter(
+      (d) => d.status_ready_order && !d.status_selesai_dikirim,
+    );
+  else if (filterTab.value === "selesai")
+    list = list.filter(
+      (d) => d.status_selesai_dikirim && !d.status_lunas_ongkir,
+    );
+  else if (filterTab.value === "lunas")
+    list = list.filter((d) => d.status_lunas_ongkir);
 
-  if (statusFilter.value !== 'all') {
-    list = list.filter(d => d.status === statusFilter.value)
+  if (statusFilter.value !== "all") {
+    list = list.filter((d) => d.status === statusFilter.value);
   }
 
-  if (!q) return list
-  return list.filter(d =>
-    d.do_number?.toLowerCase().includes(q) ||
-    d.customer_name?.toLowerCase().includes(q) ||
-    d.transport_name?.toLowerCase().includes(q) ||
-    d.status?.toLowerCase().includes(q)
-  )
-})
+  if (!q) return list;
+  return list.filter(
+    (d) =>
+      d.do_number?.toLowerCase().includes(q) ||
+      d.customer_name?.toLowerCase().includes(q) ||
+      d.transport_name?.toLowerCase().includes(q) ||
+      d.status?.toLowerCase().includes(q),
+  );
+});
 const paged = computed(() => {
-  const start = (page.value - 1) * PAGE_SIZE
-  return filtered.value.slice(start, start + PAGE_SIZE)
-})
-watch([search, filterTab, statusFilter], () => { page.value = 1 })
+  const start = (page.value - 1) * PAGE_SIZE;
+  return filtered.value.slice(start, start + PAGE_SIZE);
+});
+watch([search, filterTab, statusFilter], () => {
+  page.value = 1;
+});
 
 // ── Status helpers ────────────────────────────────────────────
-const doStatusLabel: Record<string, string> = { created: 'Dibuat', draft: 'Draft', document_returned: 'Dokumen Kembali' }
-const doStatusColor: Record<string, string> = { created: 'info', draft: 'warning', document_returned: 'success' }
+const doStatusLabel: Record<string, string> = {
+  created: "Dibuat",
+  draft: "Draft",
+  document_returned: "Dokumen Kembali",
+};
+const doStatusColor: Record<string, string> = {
+  created: "info",
+  draft: "warning",
+  document_returned: "success",
+};
 const doStatusOptions = [
-  { label: 'Semua Status DO', value: 'all' },
-  { label: 'Dibuat', value: 'created' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Dokumen Kembali', value: 'document_returned' }
-]
+  { label: "All Status", value: "all" },
+  { label: "Dibuat", value: "created" },
+  { label: "Draft", value: "draft" },
+  { label: "Dokumen Kembali", value: "document_returned" },
+];
 
 function alurBadge(done: boolean, at: any) {
-  return h('div', { class: 'flex flex-col gap-0.5' }, [
-    h(UBadge, { variant: 'subtle', color: done ? 'success' : 'neutral', class: 'text-xs' }, () => done ? '✓' : '-'),
-    done && at ? h('span', { class: 'text-[10px] text-muted' }, formatDate(at)) : null,
-  ])
+  return h("div", { class: "flex flex-col gap-0.5" }, [
+    h(
+      UBadge,
+      {
+        variant: "subtle",
+        color: done ? "success" : "neutral",
+        class: "text-xs",
+      },
+      () => (done ? "✓" : "-"),
+    ),
+    done && at
+      ? h("span", { class: "text-[10px] text-muted" }, formatDate(at))
+      : null,
+  ]);
 }
 
 const columns: TableColumn<any>[] = [
-  { accessorKey: 'do_number', header: 'Nomor DO' },
-  { accessorKey: 'customer_name', header: 'Customer' },
-  { accessorKey: 'transport_name', header: 'Transportir' },
+  { accessorKey: "do_number", header: "Nomor DO" },
+  { accessorKey: "customer_name", header: "Customer" },
+  { accessorKey: "transport_name", header: "Transportir" },
   {
-    accessorKey: 'fuel_total',
-    header: 'Volume (L)',
-    cell: ({ row }: any) => formatNumber(row.getValue('fuel_total') ?? 0)
+    accessorKey: "fuel_total",
+    header: "Volume (L)",
+    cell: ({ row }: any) => formatNumber(row.getValue("fuel_total") ?? 0),
   },
   {
-    accessorKey: 'status_rilis_dana',
-    header: 'Rilis Dana',
-    cell: ({ row }: any) => alurBadge(row.original.status_rilis_dana, row.original.rilis_dana_at)
+    accessorKey: "status_rilis_dana",
+    header: "Rilis Dana",
+    cell: ({ row }: any) =>
+      alurBadge(row.original.status_rilis_dana, row.original.rilis_dana_at),
   },
   {
-    accessorKey: 'status_ready_order',
-    header: 'Siap Kirim',
-    cell: ({ row }: any) => alurBadge(row.original.status_ready_order, row.original.ready_order_at)
+    accessorKey: "status_ready_order",
+    header: "Siap Kirim",
+    cell: ({ row }: any) =>
+      alurBadge(row.original.status_ready_order, row.original.ready_order_at),
   },
   {
-    accessorKey: 'status_selesai_dikirim',
-    header: 'Selesai',
-    cell: ({ row }: any) => alurBadge(row.original.status_selesai_dikirim, row.original.selesai_dikirim_at)
+    accessorKey: "status_selesai_dikirim",
+    header: "Selesai",
+    cell: ({ row }: any) =>
+      alurBadge(
+        row.original.status_selesai_dikirim,
+        row.original.selesai_dikirim_at,
+      ),
   },
   {
-    accessorKey: 'status_lunas_ongkir',
-    header: 'Lunas Ongkir',
-    cell: ({ row }: any) => alurBadge(row.original.status_lunas_ongkir, row.original.lunas_ongkir_at)
+    accessorKey: "status_lunas_ongkir",
+    header: "Lunas Ongkir",
+    cell: ({ row }: any) =>
+      alurBadge(row.original.status_lunas_ongkir, row.original.lunas_ongkir_at),
   },
   {
-    accessorKey: 'status',
-    header: 'Status DO',
+    accessorKey: "status",
+    header: "Status DO",
     cell: ({ row }: any) => {
-      const s = row.getValue('status') as string
-      return h(UBadge, { variant: 'soft', color: doStatusColor[s] ?? 'neutral' }, () => doStatusLabel[s] ?? s)
-    }
+      const s = row.getValue("status") as string;
+      return h(
+        UBadge,
+        { variant: "soft", color: doStatusColor[s] ?? "neutral" },
+        () => doStatusLabel[s] ?? s,
+      );
+    },
   },
-  { id: 'actions', header: 'Aksi' }
-]
+  { id: "actions", header: "Aksi" },
+];
 
-const detailOpen = ref(false)
-const detailId = ref<string | null>(null)
-function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
+const detailOpen = ref(false);
+const detailId = ref<string | null>(null);
+function openDetail(id: string) {
+  detailId.value = id;
+  detailOpen.value = true;
+}
 
 const filterTabs = [
-  { key: 'all', label: 'Semua' },
-  { key: 'rilis', label: 'Dana Dirilis' },
-  { key: 'ready', label: 'Siap Kirim' },
-  { key: 'selesai', label: 'Selesai Kirim' },
-  { key: 'lunas', label: 'Lunas Ongkir' },
-]
+  { key: "all", label: "Semua" },
+  { key: "rilis", label: "Dana Dirilis" },
+  { key: "ready", label: "Siap Kirim" },
+  { key: "selesai", label: "Selesai Kirim" },
+  { key: "lunas", label: "Lunas Ongkir" },
+];
 </script>
 
 <template>
@@ -177,14 +259,18 @@ const filterTabs = [
       <UDashboardNavbar title="Operations — Rekap" :ui="{ right: 'gap-2' }">
         <template #leading><UDashboardSidebarCollapse /></template>
         <template #right>
-          <UButton icon="i-lucide-refresh-cw" color="neutral" variant="ghost" @click="refresh()" />
+          <UButton
+            icon="i-lucide-refresh-cw"
+            color="neutral"
+            variant="ghost"
+            @click="refresh()"
+          />
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
       <div class="space-y-6 p-4 lg:p-6">
-
         <!-- Skeleton -->
         <template v-if="pending">
           <div class="grid gap-4 sm:grid-cols-2">
@@ -209,7 +295,11 @@ const filterTabs = [
               </template>
               <template #title>{{ m.title }}</template>
               <p class="text-2xl font-semibold tabular-nums">
-                {{ m.unit === 'volume' ? `${formatNumber(m.value)} L` : formatNumber(m.value) }}
+                {{
+                  m.unit === "volume"
+                    ? `${formatNumber(m.value)} L`
+                    : formatNumber(m.value)
+                }}
               </p>
               <p class="text-xs text-muted mt-1">{{ m.description }}</p>
             </UCard>
@@ -219,23 +309,33 @@ const filterTabs = [
           <div class="grid gap-3 sm:grid-cols-5">
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">Belum Rilis Dana</p>
-              <p class="text-2xl font-bold text-warning">{{ doAlurStats.belumRilisDana }}</p>
+              <p class="text-2xl font-bold text-warning">
+                {{ doAlurStats.belumRilisDana }}
+              </p>
             </UCard>
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">Dana Dirilis</p>
-              <p class="text-2xl font-bold text-info">{{ doAlurStats.sudahRilisDana }}</p>
+              <p class="text-2xl font-bold text-info">
+                {{ doAlurStats.sudahRilisDana }}
+              </p>
             </UCard>
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">Siap Dikirim</p>
-              <p class="text-2xl font-bold text-primary">{{ doAlurStats.sudahReadyOrder }}</p>
+              <p class="text-2xl font-bold text-primary">
+                {{ doAlurStats.sudahReadyOrder }}
+              </p>
             </UCard>
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">Selesai Kirim</p>
-              <p class="text-2xl font-bold text-success">{{ doAlurStats.sudahSelesaiDikirim }}</p>
+              <p class="text-2xl font-bold text-success">
+                {{ doAlurStats.sudahSelesaiDikirim }}
+              </p>
             </UCard>
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">Lunas Ongkir</p>
-              <p class="text-2xl font-bold text-success">{{ doAlurStats.sudahLunasOngkir }}</p>
+              <p class="text-2xl font-bold text-success">
+                {{ doAlurStats.sudahLunasOngkir }}
+              </p>
             </UCard>
           </div>
 
@@ -251,10 +351,20 @@ const filterTabs = [
               <AdminBarChart
                 v-if="trendLabels.length"
                 :labels="trendLabels"
-                :datasets="[{ label: 'Delivery Order', data: doTrendData, backgroundColor: 'rgba(245,158,11,0.7)' }]"
+                :datasets="[
+                  {
+                    label: 'Delivery Order',
+                    data: doTrendData,
+                    backgroundColor: 'rgba(245,158,11,0.7)',
+                  },
+                ]"
                 @bar-click="onBarClick"
               />
-              <UEmpty v-else icon="i-lucide-chart-bar" title="Belum ada data tren" />
+              <UEmpty
+                v-else
+                icon="i-lucide-chart-bar"
+                title="Belum ada data tren"
+              />
             </UCard>
             <UCard>
               <template #header>
@@ -316,17 +426,28 @@ const filterTabs = [
                   icon="i-lucide-eye"
                   size="xs"
                   color="neutral"
-                  variant="ghost"
+                  variant="soft"
                   @click="openDetail(row.original.id)"
                 >
                   Selengkapnya
                 </UButton>
               </template>
             </UTable>
-            <UEmpty v-if="!paged.length" icon="i-lucide-file-search" title="Tidak ada data" />
-            <div v-if="filtered.length > PAGE_SIZE" class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2">
+            <UEmpty
+              v-if="!paged.length"
+              icon="i-lucide-file-search"
+              title="Tidak ada data"
+            />
+            <div
+              v-if="filtered.length > PAGE_SIZE"
+              class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2"
+            >
               <p class="text-xs text-muted">{{ filtered.length }} total</p>
-              <UPagination v-model:page="page" :total="filtered.length" :items-per-page="PAGE_SIZE" />
+              <UPagination
+                v-model:page="page"
+                :total="filtered.length"
+                :items-per-page="PAGE_SIZE"
+              />
             </div>
           </UCard>
         </template>
