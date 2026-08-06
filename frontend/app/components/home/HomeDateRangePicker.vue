@@ -3,98 +3,98 @@ import {
   DateFormatter,
   getLocalTimeZone,
   CalendarDate,
-  today
-} from '@internationalized/date'
-import type { Range } from '~/types'
+  today,
+} from "@internationalized/date";
+import type { Range } from "~/types";
 
-const df = new DateFormatter('id-ID', {
-  dateStyle: 'medium'
-})
+const df = new DateFormatter("id-ID", {
+  dateStyle: "medium",
+});
 
-const selected = defineModel<Range>({ required: true })
+const selected = defineModel<Range>({ required: true });
 
 const ranges = [
-  { label: '7 hari terakhir', days: 7 },
-  { label: '14 hari terakhir', days: 14 },
-  { label: '30 hari terakhir', days: 30 },
-  { label: '3 bulan terakhir', months: 3 },
-  { label: '6 bulan terakhir', months: 6 },
-  { label: '1 tahun terakhir', years: 1 }
-]
+  { label: "7 hari terakhir", days: 7 },
+  { label: "14 hari terakhir", days: 14 },
+  { label: "30 hari terakhir", days: 30 },
+  { label: "3 bulan terakhir", months: 3 },
+  { label: "6 bulan terakhir", months: 6 },
+  { label: "1 tahun terakhir", years: 1 },
+];
 
 const toCalendarDate = (date: Date) => {
   return new CalendarDate(
     date.getFullYear(),
     date.getMonth() + 1,
-    date.getDate()
-  )
-}
+    date.getDate(),
+  );
+};
 
 const calendarRange = computed({
   get: () => ({
     start: selected.value.start
       ? toCalendarDate(selected.value.start)
       : undefined,
-    end: selected.value.end ? toCalendarDate(selected.value.end) : undefined
+    end: selected.value.end ? toCalendarDate(selected.value.end) : undefined,
   }),
-  set: (newValue: { start: CalendarDate | null, end: CalendarDate | null }) => {
+  set: (newValue: { start: CalendarDate | null; end: CalendarDate | null }) => {
     selected.value = {
       start: newValue.start
         ? newValue.start.toDate(getLocalTimeZone())
         : new Date(),
-      end: newValue.end ? newValue.end.toDate(getLocalTimeZone()) : new Date()
-    }
-  }
-})
+      end: newValue.end ? newValue.end.toDate(getLocalTimeZone()) : new Date(),
+    };
+  },
+});
 
 const isRangeSelected = (range: {
-  days?: number
-  months?: number
-  years?: number
+  days?: number;
+  months?: number;
+  years?: number;
 }) => {
-  if (!selected.value.start || !selected.value.end) return false
+  if (!selected.value.start || !selected.value.end) return false;
 
-  const currentDate = today(getLocalTimeZone())
-  let startDate = currentDate.copy()
+  const currentDate = today(getLocalTimeZone());
+  let startDate = currentDate.copy();
 
   if (range.days) {
-    startDate = startDate.subtract({ days: range.days })
+    startDate = startDate.subtract({ days: range.days });
   } else if (range.months) {
-    startDate = startDate.subtract({ months: range.months })
+    startDate = startDate.subtract({ months: range.months });
   } else if (range.years) {
-    startDate = startDate.subtract({ years: range.years })
+    startDate = startDate.subtract({ years: range.years });
   }
 
-  const selectedStart = toCalendarDate(selected.value.start)
-  const selectedEnd = toCalendarDate(selected.value.end)
+  const selectedStart = toCalendarDate(selected.value.start);
+  const selectedEnd = toCalendarDate(selected.value.end);
 
   return (
-    selectedStart.compare(startDate) === 0
-    && selectedEnd.compare(currentDate) === 0
-  )
-}
+    selectedStart.compare(startDate) === 0 &&
+    selectedEnd.compare(currentDate) === 0
+  );
+};
 
 const selectRange = (range: {
-  days?: number
-  months?: number
-  years?: number
+  days?: number;
+  months?: number;
+  years?: number;
 }) => {
-  const endDate = today(getLocalTimeZone())
-  let startDate = endDate.copy()
+  const endDate = today(getLocalTimeZone());
+  let startDate = endDate.copy();
 
   if (range.days) {
-    startDate = startDate.subtract({ days: range.days })
+    startDate = startDate.subtract({ days: range.days });
   } else if (range.months) {
-    startDate = startDate.subtract({ months: range.months })
+    startDate = startDate.subtract({ months: range.months });
   } else if (range.years) {
-    startDate = startDate.subtract({ years: range.years })
+    startDate = startDate.subtract({ years: range.years });
   }
 
   selected.value = {
     start: startDate.toDate(getLocalTimeZone()),
-    end: endDate.toDate(getLocalTimeZone())
-  }
-}
+    end: endDate.toDate(getLocalTimeZone()),
+  };
+};
 </script>
 
 <template>
@@ -136,7 +136,7 @@ const selectRange = (range: {
             variant="ghost"
             class="rounded-none px-4"
             :class="[
-              isRangeSelected(range) ? 'bg-elevated' : 'hover:bg-elevated/50'
+              isRangeSelected(range) ? 'bg-elevated' : 'hover:bg-elevated/50',
             ]"
             truncate
             @click="selectRange(range)"
