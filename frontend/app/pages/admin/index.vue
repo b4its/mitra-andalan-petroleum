@@ -1,162 +1,221 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
-import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
-import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
-import type { ChartClickPayload } from '~/components/admin/AdminChartDetailModal.vue'
+import type { TableColumn } from "@nuxt/ui";
+import AdminBarChart from "~/components/admin/charts/AdminBarChart.vue";
+import AdminPieChart from "~/components/admin/charts/AdminPieChart.vue";
+import type { ChartClickPayload } from "~/components/admin/AdminChartDetailModal.vue";
+import type { Range } from "~/types";
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: "admin" });
 
-const presets = [
-  { label: '1 Minggu', days: 7 },
-  { label: '2 Minggu', days: 14 },
-  { label: '3 Minggu', days: 21 },
-  { label: '1 Bulan', days: 30 }
-]
-const dateTo = ref(new Date().toISOString())
-const dateFrom = ref(new Date(Date.now() - 30 * 86400000).toISOString())
-const selectedMetric = ref<any>()
-const modalOpen = ref(false)
-const { get } = useApi()
+const dateTo = ref(new Date().toISOString());
+const dateFrom = ref(new Date(Date.now() - 30 * 86400000).toISOString());
+const range = ref<Range>({
+  start: new Date(Date.now() - 30 * 86400000),
+  end: new Date(),
+});
+const selectedMetric = ref<any>();
+const modalOpen = ref(false);
+const { get } = useApi();
 
 // ── Chart modal state ──────────────────────────────────────────
-const chartDetailOpen = ref(false)
-const chartPayload = ref<ChartClickPayload | null>(null)
+const chartDetailOpen = ref(false);
+const chartPayload = ref<ChartClickPayload | null>(null);
 
-function onBarClick(payload: { label: string, datasetLabel: string, value: number, datasetIndex: number, labelIndex: number }) {
+function onBarClick(payload: {
+  label: string;
+  datasetLabel: string;
+  value: number;
+  datasetIndex: number;
+  labelIndex: number;
+}) {
   chartPayload.value = {
-    chartType: 'bar',
+    chartType: "bar",
     label: payload.label,
     datasetLabel: payload.datasetLabel,
-    value: payload.value
-  }
-  chartDetailOpen.value = true
+    value: payload.value,
+  };
+  chartDetailOpen.value = true;
 }
 
-function onPieSegmentClick(payload: { label: string, value: number, index: number }) {
+function onPieSegmentClick(payload: {
+  label: string;
+  value: number;
+  index: number;
+}) {
   chartPayload.value = {
-    chartType: 'pie',
+    chartType: "pie",
     segmentLabel: payload.label,
-    segmentValue: payload.value
-  }
-  chartDetailOpen.value = true
+    segmentValue: payload.value,
+  };
+  chartDetailOpen.value = true;
 }
 
-function onChartViewRecords(metric: { key: string, title: string, value: number, unit: string, description: string }) {
-  selectedMetric.value = metric
-  modalOpen.value = true
+function onChartViewRecords(metric: {
+  key: string;
+  title: string;
+  value: number;
+  unit: string;
+  description: string;
+}) {
+  selectedMetric.value = metric;
+  modalOpen.value = true;
 }
+
+onMounted(() => {
+  console.log(dateTo.value);
+  console.log(dateFrom.value);
+  console.log(range.value.start.toISOString());
+});
 
 const { data, pending, error, refresh } = await useAsyncData(
-  'admin-system-analytics',
-  () => get<any>('/stats/admin', { date_from: dateFrom.value, date_to: dateTo.value }),
-  { default: () => null, watch: [dateFrom, dateTo] }
-)
-
-function applyPreset(days: number) {
-  dateTo.value = new Date().toISOString()
-  dateFrom.value = new Date(Date.now() - days * 86400000).toISOString()
-}
+  "admin-system-analytics",
+  () =>
+    get<any>("/stats/admin", {
+      date_from: range.value.start.toISOString(),
+      date_to: range.value.end.toISOString(),
+    }),
+  { default: () => null, watch: [range] },
+);
 
 function showMetric(metric: any) {
-  selectedMetric.value = metric
-  modalOpen.value = true
+  selectedMetric.value = metric;
+  modalOpen.value = true;
 }
 
 function reloadDashboard() {
-  refresh()
+  refresh();
 }
 
 // ── Metric formatting ──────────────────────────────────────────
 function metricValue(metric: any): string {
-  if (metric.unit === 'currency') return formatCurrency(metric.value)
-  if (metric.unit === 'volume') return `${formatNumber(metric.value)} L`
-  return formatNumber(metric.value)
+  if (metric.unit === "currency") return formatCurrency(metric.value);
+  if (metric.unit === "volume") return `${formatNumber(metric.value)} L`;
+  return formatNumber(metric.value);
 }
 
 // Colour hint per metric group
 const metricColor: Record<string, string> = {
-  customers: 'text-blue-500',
-  suppliers: 'text-cyan-500',
-  users: 'text-violet-500',
-  offering_letters: 'text-indigo-500',
-  customer_purchase_orders: 'text-emerald-500',
-  supplier_purchase_orders: 'text-teal-500',
-  delivery_orders: 'text-amber-500',
-  fuel_volume: 'text-orange-500',
-  invoice_value: 'text-red-500',
-  paid_value: 'text-green-500',
-  outstanding_value: 'text-yellow-500',
-  overdue_value: 'text-rose-500',
-  sales_value: 'text-purple-500',
-  unread_notifications: 'text-sky-500',
-  uploads: 'text-slate-500'
-}
+  customers: "text-blue-500",
+  suppliers: "text-cyan-500",
+  users: "text-violet-500",
+  offering_letters: "text-indigo-500",
+  customer_purchase_orders: "text-emerald-500",
+  supplier_purchase_orders: "text-teal-500",
+  delivery_orders: "text-amber-500",
+  fuel_volume: "text-orange-500",
+  invoice_value: "text-red-500",
+  paid_value: "text-green-500",
+  outstanding_value: "text-yellow-500",
+  overdue_value: "text-rose-500",
+  sales_value: "text-purple-500",
+  unread_notifications: "text-sky-500",
+  uploads: "text-slate-500",
+};
 
 // ── Charts ────────────────────────────────────────────────────
-const trendLabels = computed(() => data.value?.trends?.map((t: any) => t.label) || [])
+const trendLabels = computed(
+  () => data.value?.trends?.map((t: any) => t.label) || [],
+);
 const trendDatasets = computed(() => [
-  { label: 'OL', data: data.value?.trends?.map((t: any) => t.offering_letters) || [], backgroundColor: 'rgba(59,130,246,.7)' },
-  { label: 'PO', data: data.value?.trends?.map((t: any) => t.purchase_orders) || [], backgroundColor: 'rgba(16,185,129,.7)' },
-  { label: 'DO', data: data.value?.trends?.map((t: any) => t.delivery_orders) || [], backgroundColor: 'rgba(245,158,11,.7)' },
-  { label: 'Invoice', data: data.value?.trends?.map((t: any) => t.invoices) || [], backgroundColor: 'rgba(139,92,246,.7)' }
-])
-const invoiceLabels = computed(() => data.value?.distributions?.invoices?.map((d: any) => d.label) || [])
-const invoiceValues = computed(() => data.value?.distributions?.invoices?.map((d: any) => d.value) || [])
+  {
+    label: "Surat Penawaran",
+    data: data.value?.trends?.map((t: any) => t.offering_letters) || [],
+    backgroundColor: "rgba(59,130,246,.7)",
+  },
+  {
+    label: "Purchase Order Customer",
+    data: data.value?.trends?.map((t: any) => t.purchase_orders) || [],
+    backgroundColor: "rgba(16,185,129,.7)",
+  },
+  {
+    label: "Delivery Order",
+    data: data.value?.trends?.map((t: any) => t.delivery_orders) || [],
+    backgroundColor: "rgba(245,158,11,.7)",
+  },
+  {
+    label: "Invoice",
+    data: data.value?.trends?.map((t: any) => t.invoices) || [],
+    backgroundColor: "rgba(139,92,246,.7)",
+  },
+]);
+const invoiceLabels = computed(
+  () => data.value?.distributions?.invoices?.map((d: any) => d.label) || [],
+);
+const invoiceValues = computed(
+  () => data.value?.distributions?.invoices?.map((d: any) => d.value) || [],
+);
 
 // ── Notifikasi tabel + search + pagination ─────────────────────
-const notifSearch = ref('')
-const notifPage = ref(1)
-const NOTIF_PAGE_SIZE = 5
+const notifSearch = ref("");
+const notifPage = ref(1);
+const NOTIF_PAGE_SIZE = 5;
 
 const filteredNotifications = computed(() => {
-  const q = notifSearch.value.trim().toLowerCase()
-  const list: any[] = data.value?.notifications || []
+  const q = notifSearch.value.trim().toLowerCase();
+  const list: any[] = data.value?.notifications || [];
   return q
-    ? list.filter(n =>
-        n.title?.toLowerCase().includes(q) || n.subtitle?.toLowerCase().includes(q)
+    ? list.filter(
+        (n) =>
+          n.title?.toLowerCase().includes(q) ||
+          n.subtitle?.toLowerCase().includes(q),
       )
-    : list
-})
+    : list;
+});
 const pagedNotifications = computed(() => {
-  const start = (notifPage.value - 1) * NOTIF_PAGE_SIZE
-  return filteredNotifications.value.slice(start, start + NOTIF_PAGE_SIZE)
-})
-watch(notifSearch, () => { notifPage.value = 1 })
+  const start = (notifPage.value - 1) * NOTIF_PAGE_SIZE;
+  return filteredNotifications.value.slice(start, start + NOTIF_PAGE_SIZE);
+});
+watch(notifSearch, () => {
+  notifPage.value = 1;
+});
 
 const notificationColumns: TableColumn<any>[] = [
-  { accessorKey: 'title', header: 'Judul' },
-  { accessorKey: 'subtitle', header: 'Pesan' },
-  { accessorKey: 'created_at', header: 'Waktu', cell: ({ row }) => row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-' }
-]
+  { accessorKey: "title", header: "Judul" },
+  { accessorKey: "subtitle", header: "Pesan" },
+  {
+    accessorKey: "created_at",
+    header: "Waktu",
+    cell: ({ row }) =>
+      row.getValue("created_at") ? formatDate(row.getValue("created_at")) : "-",
+  },
+];
 
 // ── Aktivitas tabel + search + pagination ──────────────────────
-const actSearch = ref('')
-const actPage = ref(1)
-const ACT_PAGE_SIZE = 5
+const actSearch = ref("");
+const actPage = ref(1);
+const ACT_PAGE_SIZE = 5;
 
 const filteredActivities = computed(() => {
-  const q = actSearch.value.trim().toLowerCase()
-  const list: any[] = data.value?.activities || []
+  const q = actSearch.value.trim().toLowerCase();
+  const list: any[] = data.value?.activities || [];
   return q
-    ? list.filter(a =>
-        a.domain?.toLowerCase().includes(q) ||
-        a.title?.toLowerCase().includes(q) ||
-        a.subtitle?.toLowerCase().includes(q)
+    ? list.filter(
+        (a) =>
+          a.domain?.toLowerCase().includes(q) ||
+          a.title?.toLowerCase().includes(q) ||
+          a.subtitle?.toLowerCase().includes(q),
       )
-    : list
-})
+    : list;
+});
 const pagedActivities = computed(() => {
-  const start = (actPage.value - 1) * ACT_PAGE_SIZE
-  return filteredActivities.value.slice(start, start + ACT_PAGE_SIZE)
-})
-watch(actSearch, () => { actPage.value = 1 })
+  const start = (actPage.value - 1) * ACT_PAGE_SIZE;
+  return filteredActivities.value.slice(start, start + ACT_PAGE_SIZE);
+});
+watch(actSearch, () => {
+  actPage.value = 1;
+});
 
 const activityColumns: TableColumn<any>[] = [
-  { accessorKey: 'domain', header: 'Domain' },
-  { accessorKey: 'title', header: 'Dokumen' },
-  { accessorKey: 'subtitle', header: 'Status' },
-  { accessorKey: 'created_at', header: 'Waktu', cell: ({ row }) => row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-' }
-]
+  { accessorKey: "domain", header: "Domain" },
+  { accessorKey: "title", header: "Dokumen" },
+  { accessorKey: "subtitle", header: "Status" },
+  {
+    accessorKey: "created_at",
+    header: "Waktu",
+    cell: ({ row }) =>
+      row.getValue("created_at") ? formatDate(row.getValue("created_at")) : "-",
+  },
+];
 </script>
 
 <template>
@@ -167,43 +226,39 @@ const activityColumns: TableColumn<any>[] = [
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <UButton icon="i-lucide-refresh-cw" color="neutral" variant="ghost" @click="reloadDashboard" />
+          <UButton
+            icon="i-lucide-refresh-cw"
+            color="neutral"
+            variant="ghost"
+            @click="reloadDashboard"
+          />
         </template>
       </UDashboardNavbar>
       <UDashboardToolbar>
         <template #left>
-          <div class="flex flex-wrap items-center gap-2 p-3">
-            <UButton
-              v-for="preset in presets"
-              :key="preset.days"
-              size="sm"
-              color="neutral"
-              variant="soft"
-              @click="applyPreset(preset.days)"
-            >
-              {{ preset.label }}
-            </UButton>
-            <UInput v-model="dateFrom" type="datetime-local" aria-label="Tanggal awal" />
-            <span class="text-muted text-sm">sampai</span>
-            <UInput v-model="dateTo" type="datetime-local" aria-label="Tanggal akhir" />
-          </div>
+          <HomeDateRangePicker v-model="range" />
         </template>
       </UDashboardToolbar>
     </template>
 
     <template #body>
       <div class="space-y-6 p-4 lg:p-6">
-
         <!-- Header -->
         <div>
           <h1 class="text-2xl font-semibold">Monitoring Keseluruhan Sistem</h1>
           <p class="mt-1 text-sm text-muted">
-            Setiap kartu menampilkan metrik berbeda sesuai domain. Klik kartu untuk melihat data penyusunnya.
+            Setiap kartu menampilkan metrik berbeda sesuai domain. Klik kartu
+            untuk melihat data penyusunnya.
           </p>
         </div>
 
         <!-- Error -->
-        <UAlert v-if="error" color="error" title="Gagal memuat dashboard" :description="error.message" />
+        <UAlert
+          v-if="error"
+          color="error"
+          title="Gagal memuat dashboard"
+          :description="error.message"
+        />
 
         <!-- Skeleton loading -->
         <template v-else-if="pending">
@@ -222,7 +277,6 @@ const activityColumns: TableColumn<any>[] = [
 
         <!-- Content -->
         <template v-else>
-
           <!-- KPI Cards — setiap kartu menampilkan unit, deskripsi, dan warna ikon berbeda -->
           <UPageGrid class="sm:grid-cols-2 xl:grid-cols-4">
             <UPageCard
@@ -241,16 +295,29 @@ const activityColumns: TableColumn<any>[] = [
               </template>
               <template #title>{{ metric.title }}</template>
               <!-- Nilai diformat sesuai unit: currency / volume (Liter) / angka biasa -->
-              <p class="text-2xl font-semibold tabular-nums">{{ metricValue(metric) }}</p>
-              <p class="mt-1 text-xs text-muted leading-snug">{{ metric.description }}</p>
+              <p class="text-2xl font-semibold tabular-nums">
+                {{ metricValue(metric) }}
+              </p>
+              <p class="mt-1 text-xs text-muted leading-snug">
+                {{ metric.description }}
+              </p>
               <!-- Label unit kecil di bawah -->
-              <p v-if="metric.unit === 'volume'" class="mt-1 text-[10px] text-muted uppercase tracking-wide">
+              <p
+                v-if="metric.unit === 'volume'"
+                class="mt-1 text-[10px] text-muted uppercase tracking-wide"
+              >
                 Liter
               </p>
-              <p v-else-if="metric.unit === 'currency'" class="mt-1 text-[10px] text-muted uppercase tracking-wide">
+              <p
+                v-else-if="metric.unit === 'currency'"
+                class="mt-1 text-[10px] text-muted uppercase tracking-wide"
+              >
                 Rupiah
               </p>
-              <p v-else class="mt-1 text-[10px] text-muted uppercase tracking-wide">
+              <p
+                v-else
+                class="mt-1 text-[10px] text-muted uppercase tracking-wide"
+              >
                 Records
               </p>
             </UPageCard>
@@ -271,7 +338,11 @@ const activityColumns: TableColumn<any>[] = [
                 :datasets="trendDatasets"
                 @bar-click="onBarClick"
               />
-              <UEmpty v-else icon="i-lucide-chart-no-axes-combined" title="Belum ada tren" />
+              <UEmpty
+                v-else
+                icon="i-lucide-chart-no-axes-combined"
+                title="Belum ada tren"
+              />
             </UCard>
             <UCard>
               <template #header>
@@ -305,13 +376,19 @@ const activityColumns: TableColumn<any>[] = [
                   />
                 </div>
               </template>
-              <UTable :data="pagedNotifications" :columns="notificationColumns" />
+              <UTable
+                :data="pagedNotifications"
+                :columns="notificationColumns"
+              />
               <UEmpty
                 v-if="!pagedNotifications.length"
                 icon="i-lucide-bell-off"
                 title="Tidak ada notifikasi"
               />
-              <div v-if="filteredNotifications.length > NOTIF_PAGE_SIZE" class="flex justify-end border-t border-default pt-3 mt-2">
+              <div
+                v-if="filteredNotifications.length > NOTIF_PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-3 mt-2"
+              >
                 <UPagination
                   v-model:page="notifPage"
                   :total="filteredNotifications.length"
@@ -340,7 +417,10 @@ const activityColumns: TableColumn<any>[] = [
                 icon="i-lucide-history"
                 title="Tidak ada aktivitas"
               />
-              <div v-if="filteredActivities.length > ACT_PAGE_SIZE" class="flex justify-end border-t border-default pt-3 mt-2">
+              <div
+                v-if="filteredActivities.length > ACT_PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-3 mt-2"
+              >
                 <UPagination
                   v-model:page="actPage"
                   :total="filteredActivities.length"
@@ -357,8 +437,8 @@ const activityColumns: TableColumn<any>[] = [
   <AdminChartDetailModal
     v-model:open="chartDetailOpen"
     :payload="chartPayload"
-    :date-from="dateFrom"
-    :date-to="dateTo"
+    :date-from="range.start.toISOString()"
+    :date-to="range.end.toISOString()"
     @view-records="onChartViewRecords"
   />
 
@@ -366,7 +446,7 @@ const activityColumns: TableColumn<any>[] = [
     v-if="selectedMetric"
     v-model:open="modalOpen"
     :metric="selectedMetric"
-    :date-from="dateFrom"
-    :date-to="dateTo"
+    :date-from="range.start.toISOString()"
+    :date-to="range.end.toISOString()"
   />
 </template>
