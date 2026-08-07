@@ -595,16 +595,17 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
     </template>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <UButton color="neutral" variant="ghost" @click="rilisDanaOpen = false">
-          Batal
-        </UButton>
         <UButton
           color="success"
           :loading="rilisDanaLoading"
           icon="i-lucide-check"
           @click="confirmRilisDana"
         >
-          Ya, Rilis Dana
+          Konfirmasi Rilis Dana
+        </UButton>
+
+        <UButton color="neutral" variant="ghost" @click="rilisDanaOpen = false">
+          Batal
         </UButton>
       </div>
     </template>
@@ -636,19 +637,20 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
     <template #footer>
       <div class="flex justify-end gap-2">
         <UButton
-          color="neutral"
-          variant="ghost"
-          @click="lunasOngkirOpen = false"
-        >
-          Batal
-        </UButton>
-        <UButton
           color="warning"
           :loading="lunasOngkirLoading"
           icon="i-lucide-check"
           @click="confirmLunasOngkir"
         >
-          Ya, Lunasi Ongkir
+          Konfirmasi Lunasi Ongkir
+        </UButton>
+
+        <UButton
+          color="neutral"
+          variant="ghost"
+          @click="lunasOngkirOpen = false"
+        >
+          Batal
         </UButton>
       </div>
     </template>
