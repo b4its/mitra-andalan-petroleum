@@ -11,7 +11,7 @@ import type {
 const toast = useToast();
 const { get, put, postFile } = useApi();
 
-const { data: customerList } = await useAsyncData("customers", async () => {
+const { data: customerList, pending: pendingCustomers } = await useAsyncData("customers", async () => {
   const res = await get<Customer[]>("/customers");
   return res.map((receiver: Customer) => ({
     id: receiver.id,
@@ -44,7 +44,7 @@ const items: StepperItem[] = [
 const route = useRoute();
 const idOfferingLetter = route.params.id;
 
-const { data: offeringLetter } = await useAsyncData(
+const { data: offeringLetter, pending: pendingOL } = await useAsyncData(
   "offering-letter",
   async () => {
     const res = await get<OfferingLetterPost>(
@@ -119,7 +119,7 @@ const letterFooter = reactive<MarketingOLFooterState>({
   },
 });
 
-const { data: signature } = await useAsyncData('signature', async () => {
+const { data: signature, pending: pendingSignature } = await useAsyncData('signature', async () => {
   let res = await get<ResUploads[]>('/uploads', {
     document_type: 'ol',
     document_id: idOfferingLetter
@@ -219,7 +219,13 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UStepper ref="stepper" disabled :items>
+  <div v-if="pendingOL || pendingCustomers || pendingSignature" class="space-y-4 py-4">
+    <div v-for="i in 3" :key="i" class="space-y-2">
+      <USkeleton class="h-4 w-32 rounded" />
+      <USkeleton class="h-10 w-full rounded-lg" />
+    </div>
+  </div>
+  <UStepper v-else ref="stepper" disabled :items>
     <template #letterHeader>
       <MarketingOLHeaderForm
         v-model="letterHeader"

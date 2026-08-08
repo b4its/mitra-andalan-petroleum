@@ -90,7 +90,13 @@ definePageMeta({ layout: 'accounting' })
             </div>
           </UCard>
 
-          <template v-if="cashflow">
+          <div v-if="pending" class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <USkeleton v-for="i in 4" :key="i" class="h-24 rounded-lg" />
+            </div>
+            <USkeleton class="h-64 rounded-lg" />
+          </div>
+          <template v-else-if="cashflow">
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <UCard color="neutral" variant="subtle">

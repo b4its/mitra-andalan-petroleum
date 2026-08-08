@@ -17,7 +17,7 @@ const { get, put, post, postFile } = useApi();
 const toast = useToast();
 const { user } = useAuth();
 
-const { data: supplierList } = await useAsyncData("suppliers", async () => {
+const { data: supplierList, pending: pendingSuppliers } = await useAsyncData("suppliers", async () => {
   const res = await get<Customer[]>("/suppliers");
   return res.map((receiver: Customer) => ({
     id: receiver.id,
@@ -29,7 +29,7 @@ const { data: supplierList } = await useAsyncData("suppliers", async () => {
   }));
 }, { default: () => [] });
 
-const { data: OlData } = await useAsyncData(
+const { data: OlData, pending: pendingOlData } = await useAsyncData(
   "offering-letters-supplier-po",
   async () => {
     const res = await get<{ items: OfferingLetters[] }>("/offering-letters", {
@@ -238,7 +238,17 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UStepper ref="stepper" disabled :items>
+  <div v-if="pendingSuppliers || pendingOlData" class="space-y-4 py-4">
+    <div class="space-y-2">
+      <USkeleton class="h-4 w-32 rounded" />
+      <USkeleton class="h-10 w-full rounded-lg" />
+    </div>
+    <div class="space-y-2">
+      <USkeleton class="h-4 w-40 rounded" />
+      <USkeleton class="h-10 w-full rounded-lg" />
+    </div>
+  </div>
+  <UStepper v-else ref="stepper" disabled :items>
     <template #companyInformation>
       <MarketingPOCompanyForm
         v-model="letterCompanyMain"

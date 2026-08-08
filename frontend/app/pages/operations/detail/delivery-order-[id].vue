@@ -865,8 +865,12 @@ watch(
 
 <template>
   <main class="min-h-180 w-full">
-    <div v-if="pending" class="flex h-180 items-center justify-center">
-      <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-primary" />
+    <div v-if="pending" class="h-180 w-full space-y-4 p-8">
+      <USkeleton class="h-8 w-64 rounded" />
+      <USkeleton class="h-4 w-80 rounded" />
+      <USkeleton class="h-40 w-full rounded-lg" />
+      <USkeleton class="h-32 w-full rounded-lg" />
+      <USkeleton class="h-40 w-full rounded-lg" />
     </div>
 
     <iframe v-else-if="pdfLink" :src="pdfLink" class="h-180 w-full" />

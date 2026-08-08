@@ -15,7 +15,7 @@ const { get } = useApi();
 const search = ref("");
 const debouncedSearch = refDebounced(search, 300);
 
-const { data: PoData } = await useAsyncData(
+const { data: PoData, pending } = await useAsyncData(
   "purchase-orders-supplier",
   async () => {
     const params: Record<string, string | number> = {
@@ -97,7 +97,11 @@ function openDetail(id: string) {
       />
     </div>
 
+    <div v-if="pending" class="space-y-3">
+      <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+    </div>
     <UTable
+      v-else
       ref="table"
       v-model:pagination="pagination"
       :data="PoData"

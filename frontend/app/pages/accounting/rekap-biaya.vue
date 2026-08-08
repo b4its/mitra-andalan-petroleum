@@ -106,7 +106,11 @@ definePageMeta({ layout: 'accounting' })
             </div>
           </UCard>
 
-          <template v-if="data">
+          <div v-if="pending" class="flex flex-col gap-4">
+            <USkeleton class="h-20 rounded-lg" />
+            <USkeleton v-for="i in 4" :key="i" class="h-28 rounded-lg" />
+          </div>
+          <template v-else-if="data">
             <UCard color="error" variant="subtle">
               <div class="flex items-center justify-between">
                 <span class="text-sm text-neutral-500 dark:text-neutral-400">Total Biaya</span>

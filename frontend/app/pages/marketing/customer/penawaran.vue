@@ -11,7 +11,7 @@ import type {
 const { user } = useAuth();
 const { get } = useApi();
 
-const { data: customerList } = await useAsyncData("customers", async () => {
+const { data: customerList, pending } = await useAsyncData("customers", async () => {
   const res = await get<Customer[]>("/customers");
   return res.map((receiver: Customer) => ({
     id: receiver.id,
@@ -168,7 +168,13 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UStepper ref="stepper" disabled :items>
+  <div v-if="pending" class="space-y-4 py-4">
+    <div v-for="i in 3" :key="i" class="space-y-2">
+      <USkeleton class="h-4 w-32 rounded" />
+      <USkeleton class="h-10 w-full rounded-lg" />
+    </div>
+  </div>
+  <UStepper v-else ref="stepper" disabled :items>
     <template #letterHeader>
       <MarketingOLHeaderForm
         v-model="letterHeader"

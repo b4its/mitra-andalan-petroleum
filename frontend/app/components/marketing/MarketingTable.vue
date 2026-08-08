@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const UBadge = resolveComponent('UBadge')
 
-const { data } = await useAsyncData('marketing-sales', async () => {
+const { data, pending } = await useAsyncData('marketing-sales', async () => {
   const { get } = useApi()
   const res = await get<{ items?: any[] }>('/sales')
   return (res || []).map((s: any) => ({
@@ -78,7 +78,11 @@ const columns: TableColumn<Sale>[] = [
 </script>
 
 <template>
+  <div v-if="pending" class="space-y-3">
+    <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+  </div>
   <UTable
+    v-else
     :data="data"
     :columns="columns"
     class="shrink-0"

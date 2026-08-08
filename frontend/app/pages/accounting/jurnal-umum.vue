@@ -43,7 +43,7 @@ function onExport(format: "excel" | "pdf" | "csv") {
   else toCSV(filename, exportColumns, journals.value);
 }
 
-const { data: journals, refresh } = await useAsyncData(
+const { data: journals, refresh, pending: pendingJournals } = await useAsyncData(
   "accounting-journals",
   async () => {
     const params: Record<string, string | number> = { page: 1, page_size: 50 };
@@ -57,7 +57,7 @@ const { data: journals, refresh } = await useAsyncData(
   { default: () => [], watch: [debouncedSearch], server: false },
 );
 
-const { data: accounts } = await useAsyncData(
+const { data: accounts, pending: pendingAccounts } = await useAsyncData(
   "accounting-accounts-options",
   () => get<AccountingAccount[]>("/accounting/accounts"),
   { default: () => [], server: false },
@@ -309,7 +309,11 @@ definePageMeta({ layout: "accounting" });
           </div>
 
           <UCard>
+            <div v-if="pendingJournals" class="divide-y divide-default">
+              <USkeleton v-for="i in 5" :key="i" class="my-3 h-12 rounded-lg" />
+            </div>
             <UTable
+              v-else
               :data="journals"
               :columns="columns"
               :ui="{
@@ -380,12 +384,14 @@ definePageMeta({ layout: "accounting" });
                       class="flex flex-wrap items-center gap-2"
                     >
                       <USelect
+                        v-if="!pendingAccounts"
                         v-model="line.account_id"
                         :items="accountItems"
                         value-key="value"
                         placeholder="Pilih akun"
                         class="w-56"
                       />
+                      <USkeleton v-else class="h-10 w-56 rounded-lg" />
                       <UInput
                         v-model="line.description"
                         placeholder="Keterangan"

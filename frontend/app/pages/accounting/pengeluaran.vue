@@ -149,6 +149,13 @@ definePageMeta({ layout: 'accounting' })
       </div>
     </UCard>
 
+    <div v-if="pending" class="flex flex-col gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <USkeleton v-for="i in 2" :key="i" class="h-24 rounded-lg" />
+      </div>
+      <USkeleton class="h-64 rounded-lg" />
+    </div>
+    <template v-else>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <UCard>
         <p class="text-sm text-neutral-500 dark:text-neutral-400">
@@ -187,6 +194,7 @@ definePageMeta({ layout: 'accounting' })
         Belum ada data pengeluaran
       </p>
     </UCard>
+    </template>
         </section>
       </div>
     </template>

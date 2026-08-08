@@ -12,7 +12,7 @@ const invoiceId = route.params.id;
 const { user } = useAuth();
 const { get } = useApi();
 
-const { data: invoiceDetails } = await useAsyncData(
+const { data: invoiceDetails, pending } = await useAsyncData(
   "invoice-details",
   async () => {
     const res = await get<InvoiceDetails>(`/invoices/${invoiceId}`);
@@ -777,7 +777,14 @@ onMounted(() => {
 
 <template>
   <main class="h-180 w-full">
-    <iframe v-if="pdfLink" :src="pdfLink" class="h-full w-full" />
+    <div v-if="pending" class="h-full w-full space-y-4 p-8">
+      <USkeleton class="h-8 w-64 rounded" />
+      <USkeleton class="h-4 w-80 rounded" />
+      <USkeleton class="h-40 w-full rounded-lg" />
+      <USkeleton class="h-32 w-full rounded-lg" />
+      <USkeleton class="h-40 w-full rounded-lg" />
+    </div>
+    <iframe v-else-if="pdfLink" :src="pdfLink" class="h-full w-full" />
     <div
       v-else-if="!details?.companyInformation"
       class="flex flex-col items-center justify-center h-full gap-3 text-muted"

@@ -14,7 +14,7 @@ const columnPinning = ref({
 
 const { get } = useApi()
 
-const { data: OlData } = await useAsyncData(
+const { data: OlData, pending } = await useAsyncData(
   'offering-letters-revision',
   async () => {
     const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
@@ -104,7 +104,11 @@ const pagination = ref({
 
 <template>
   <section class="flex flex-col lg:gap-4">
+    <div v-if="pending" class="space-y-3">
+      <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+    </div>
     <UTable
+      v-else
       ref="table"
       v-model:pagination="pagination"
       :data="OlData"

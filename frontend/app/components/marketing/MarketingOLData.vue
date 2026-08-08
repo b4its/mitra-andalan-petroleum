@@ -17,7 +17,7 @@ const { get } = useApi()
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
 
-const { data: OlData } = await useAsyncData(
+const { data: OlData, pending } = await useAsyncData(
   'offering-letters-data',
   async () => {
     const params: Record<string, string | number> = { page: 1, page_size: 50 }
@@ -157,7 +157,11 @@ function openDetail(id: string) {
       />
     </div>
 
+    <div v-if="pending" class="space-y-3">
+      <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+    </div>
     <UTable
+      v-else
       ref="table"
       v-model:pagination="pagination"
       :data="OlData"
