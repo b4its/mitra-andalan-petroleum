@@ -82,8 +82,9 @@ def test_export_returns_sql(client: TestClient, seeded_db):
     response = client.get("/api/v1/admin/database/export")
     assert response.status_code == 200
     content = response.content.decode("utf-8")
+    assert "CREATE TABLE" in content
+    assert "DROP TABLE IF EXISTS" in content
     assert "INSERT INTO" in content
-    assert "DELETE FROM" in content
 
 
 def test_import_requires_sql_extension(client: TestClient):

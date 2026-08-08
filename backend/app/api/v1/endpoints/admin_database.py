@@ -34,6 +34,40 @@ def _quote_identifier(value: str) -> str:
     return f"`{value.replace('`', '``')}`"
 
 
+async def _schema_statements(conn) -> list[str]:
+    """Ambil statement CREATE TABLE dari database aktual.
+
+    - MySQL  : pakai SHOW CREATE TABLE (mencakup semua kolom, termasuk
+               kolom hasil ALTER TABLE yang mungkin tidak ada di model)
+    - SQLite : pakai sqlite_master
+    """
+    statements: list[str] = []
+    if _is_mysql():
+        result = await conn.execute(text("SHOW TABLES"))
+        tables = [row[0] for row in result.all()]
+        for table in sorted(tables):
+            create = (
+                await conn.execute(
+                    text(f"SHOW CREATE TABLE {_quote_identifier(table)}")
+                )
+            ).first()
+            if create:
+                # MySQL mengembalikan (table_name, create_statement)
+                stmt = create[1]
+                statements.append(f"{stmt};")
+    elif _is_sqlite():
+        result = await conn.execute(
+            text(
+                "SELECT name, sql FROM sqlite_master "
+                "WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+            )
+        )
+        for name, sql in result.all():
+            if sql:
+                statements.append(f"{sql};")
+    return statements
+
+
 def _literal(value) -> str:
     if value is None:
         return "NULL"
@@ -136,12 +170,12 @@ def _split_sql(sql: str) -> list[str]:
 @router.get(
     "/export",
     summary="Export data SQL",
-    description="Export seluruh data database sebagai SQL data-only berisi DELETE dan INSERT.",
+    description="Export lengkap database: struktur tabel (CREATE TABLE) + data (DELETE dan INSERT).",
 )
 async def export_database():
     tables = Base.metadata.sorted_tables
     lines = [
-        "-- Mandalan data export",
+        "-- Mandalan full database export",
         f"-- Generated at {datetime.utcnow().isoformat(timespec='seconds')}Z",
     ]
     fk_off = _fk_checks_sql(False)
@@ -151,10 +185,29 @@ async def export_database():
     lines.append("")
 
     async with engine.connect() as conn:
+        # 1. Struktur tabel: DROP (urutan terbalik utk FK) lalu CREATE
+        lines.append("-- ============================================")
+        lines.append("-- STRUKTUR TABEL")
+        lines.append("-- ============================================")
         for table in reversed(tables):
-            lines.append(f"DELETE FROM {_quote_identifier(table.name)};")
+            lines.append(f"DROP TABLE IF EXISTS {_quote_identifier(table.name)};")
+        lines.append("")
+        schema = await _schema_statements(conn)
+        if not schema:
+            # Fallback: bangun CREATE TABLE dari metadata model
+            from sqlalchemy.schema import CreateTable
+            for table in tables:
+                ddl = str(CreateTable(table).compile(dialect=engine.dialect))
+                lines.append(f"{ddl};")
+        else:
+            for stmt in schema:
+                lines.append(stmt)
         lines.append("")
 
+        # 2. Data (INSERT)
+        lines.append("-- ============================================")
+        lines.append("-- DATA")
+        lines.append("-- ============================================")
         for table in tables:
             result = await conn.execute(select(table))
             rows = result.mappings().all()
