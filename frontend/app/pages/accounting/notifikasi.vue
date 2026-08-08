@@ -5,6 +5,7 @@ import type { Notifications } from '~/types/notification'
 
 const { get, put } = useApi()
 const toast = useToast()
+const router = useRouter()
 
 const { data: notifications, refresh, pending } = await useAsyncData(
   'accounting-notifications',
@@ -36,15 +37,46 @@ const typeIcon = (type: string) => {
   return icons[type] || 'i-lucide-bell'
 }
 
+// ── Detail modal ──────────────────────────────────────────────
+const detailModalOpen = ref(false)
+const selectedNotification = ref<Notifications | null>(null)
+
+function openDetail(notification: Notifications) {
+  selectedNotification.value = notification
+  detailModalOpen.value = true
+  // Tandai dibaca otomatis saat dibuka
+  if (!notification.is_read) {
+    markAsRead(notification)
+  }
+}
+
+function closeDetail() {
+  detailModalOpen.value = false
+  selectedNotification.value = null
+}
+
+function navigateTo(path: string) {
+  closeDetail()
+  router.push(path)
+}
+
+function formatDateTime(raw: any): string {
+  if (!raw) return '-'
+  const d = new Date(raw)
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${dd}-${mm}-${yyyy}, ${hh}:${min}`
+}
+
+// ── Mark as read ──────────────────────────────────────────────
 async function markAsRead(notification: Notifications) {
   if (notification.is_read) return
   try {
     await put(`/notifications/${notification.id}`, { is_read: true })
-    toast.add({
-      title: 'Notifikasi ditandai dibaca',
-      icon: 'i-lucide-check',
-      color: 'success'
-    })
+    notification.is_read = true
     refresh()
   } catch (err: any) {
     toast.add({
@@ -211,7 +243,16 @@ definePageMeta({ layout: 'accounting' })
               </div>
 
               <!-- Action -->
-              <div class="shrink-0">
+              <div class="flex shrink-0 items-center gap-1">
+                <UButton
+                  icon="i-lucide-eye"
+                  size="sm"
+                  color="primary"
+                  variant="ghost"
+                  @click="openDetail(notification)"
+                >
+                  View
+                </UButton>
                 <UButton
                   v-if="!notification.is_read"
                   icon="i-lucide-check"
@@ -229,4 +270,84 @@ definePageMeta({ layout: 'accounting' })
       </div>
     </template>
   </UDashboardPanel>
+
+  <!-- ── Modal Detail Notifikasi ── -->
+  <UModal
+    v-model:open="detailModalOpen"
+    :ui="{ content: 'max-w-lg' }"
+  >
+    <template #title>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-bell" class="size-4 text-primary" />
+        Detail Notifikasi
+      </div>
+    </template>
+
+    <template #body>
+      <div v-if="selectedNotification" class="space-y-4">
+        <!-- Badge tipe + status -->
+        <div class="flex items-center gap-2">
+          <UBadge
+            :color="typeBadge(selectedNotification.type)"
+            variant="subtle"
+            class="capitalize"
+          >
+            {{ selectedNotification.type }}
+          </UBadge>
+          <UBadge
+            :color="selectedNotification.is_read ? 'success' : 'warning'"
+            variant="subtle"
+          >
+            {{ selectedNotification.is_read ? 'Sudah Dibaca' : 'Belum Dibaca' }}
+          </UBadge>
+        </div>
+
+        <!-- Detail fields -->
+        <div class="space-y-3 text-sm">
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">Judul</p>
+            <p class="font-semibold text-highlighted">{{ selectedNotification.title }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">Pesan</p>
+            <p class="text-muted leading-relaxed">{{ selectedNotification.message }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">Pengguna</p>
+              <p class="font-medium">{{ selectedNotification.user_name || '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">Waktu</p>
+              <p class="font-medium">{{ formatDateTime(selectedNotification.created_at) }}</p>
+            </div>
+            <div v-if="selectedNotification.to">
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">Tautan</p>
+              <p class="font-mono text-xs text-primary truncate">{{ selectedNotification.to }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">ID</p>
+              <p class="font-mono text-xs text-muted truncate">{{ selectedNotification.id }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <UButton color="neutral" variant="ghost" @click="closeDetail">
+          Tutup
+        </UButton>
+        <UButton
+          v-if="selectedNotification?.to"
+          color="primary"
+          icon="i-lucide-external-link"
+          @click="navigateTo(selectedNotification!.to!)"
+        >
+          Buka Halaman
+        </UButton>
+      </div>
+    </template>
+  </UModal>
 </template>
