@@ -3,29 +3,29 @@ import type { StepperItem } from '@nuxt/ui'
 import type { ResUploads } from '~/types'
 import type {
   OfferingLetters,
-  PurchaseOrdersCustomerPost
-} from '~/types/marketing'
-import type { MarketingPOCustomerState } from '~/types/schemas'
+  PurchaseOrdersCustomerPost,
+} from "~/types/marketing";
+import type { MarketingPOCustomerState } from "~/types/schemas";
 
-const { user } = useAuth()
+const { user } = useAuth();
 
 const items: StepperItem[] = [
   {
-    title: 'Upload PO Customer',
-    slot: 'poCustomer',
-    icon: 'i-lucide-receipt-text'
-  }
-]
+    title: "Upload PO Customer",
+    slot: "poCustomer",
+    icon: "i-lucide-receipt-text",
+  },
+];
 
-const { get, put, post, postFile } = useApi()
+const { get, put, post, postFile } = useApi();
 
 const { data: OlData } = await useAsyncData(
-  'offering-letters-po',
+  "offering-letters-po",
   async () => {
-    const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
+    const res = await get<{ items: OfferingLetters[] }>("/offering-letters", {
       page: 1,
-      page_size: 50
-    })
+      page_size: 50,
+    });
     return res.items.map((ol: OfferingLetters) => ({
       id: ol.id,
       offeringLetterNumber: ol.offering_letter_number,
@@ -35,17 +35,17 @@ const { data: OlData } = await useAsyncData(
       transportPrice: ol.transport_price,
       dateCreated: ol.created_at.toString(),
       dateChanged: ol.updated_at.toString(),
-      status: ol.status
-    }))
+      status: ol.status,
+    }));
   },
   {
-    default: () => []
-  }
-)
+    default: () => [],
+  },
+);
 
 const offeringLetters = computed(() =>
   OlData.value
-    .filter(ol => ol.status !== 'po_received')
+    .filter((ol) => ol.status !== "po_received")
     .map((ol) => {
       return {
         label: ol.customerName,
@@ -58,59 +58,61 @@ const offeringLetters = computed(() =>
           transportPrice: ol.transportPrice,
           dateCreated: ol.dateCreated,
           dateChanged: ol.dateChanged,
-          status: ol.status
+          status: ol.status,
         },
-        olNumber: ol.offeringLetterNumber
-      }
-    })
-)
+        olNumber: ol.offeringLetterNumber,
+      };
+    }),
+);
 
 const poCustomer = reactive<MarketingPOCustomerState>({
   selectedOfferingLetter: {},
   poDocument: undefined,
-  purchaseOrderNumber: '',
-  poReceivedDate: new Date().toISOString().split('T')[0]?.toString() || '',
-  total: 0
-})
+  purchaseOrderNumber: "",
+  poReceivedDate: new Date().toISOString().split("T")[0]?.toString() || "",
+  total: 0,
+});
 
-const toast = useToast()
+const toast = useToast();
 async function onPoCustomerSubmit() {
   try {
     const poData = {
-      ...poCustomer
-    }
+      ...poCustomer,
+    };
     const poPost: PurchaseOrdersCustomerPost = {
       po_number: poData.purchaseOrderNumber,
-      type: 'customer',
-      customer_id: poData.selectedOfferingLetter.customerId || '',
+      type: "customer",
+      customer_id: poData.selectedOfferingLetter.customerId || "",
       supplier_id: null,
       date: poData.poReceivedDate,
       total: poData.total,
-      status: 'created',
+      status: "created",
       created_by: user.value?.id ?? null,
       // Simpan ID OL yang terpilih sebagai JSON array
-      id_offering_letters: JSON.stringify([poData.selectedOfferingLetter.id].filter(Boolean))
-    }
+      id_offering_letters: JSON.stringify(
+        [poData.selectedOfferingLetter.id].filter(Boolean),
+      ),
+    };
 
     const res = await post<any, PurchaseOrdersCustomerPost>(
-      '/purchase-orders',
-      poPost
-    )
+      "/purchase-orders",
+      poPost,
+    );
 
-    const olRes = await put<any, { status: 'po_received' }>(
+    const olRes = await put<any, { status: "po_received" }>(
       `/offering-letters/${poData.selectedOfferingLetter.id}`,
       {
-        status: 'po_received'
-      }
-    )
+        status: "po_received",
+      },
+    );
 
-    console.log('Data submitted')
-    console.log(res)
-    console.log(olRes)
+    console.log("Data submitted");
+    console.log(res);
+    console.log(olRes);
 
-    const poDocument = poCustomer.poDocument
+    const poDocument = poCustomer.poDocument;
     if (!poDocument) {
-      throw new Error('Tanda tangan belum diunggah')
+      throw new Error("Tanda tangan belum diunggah");
     }
 
     const resUpload = await postFile<ResUploads[]>('/upload', {
@@ -124,17 +126,17 @@ async function onPoCustomerSubmit() {
     // console.log(poDocument);
     // console.log(poPost);
     toast.add({
-      title: 'Sukses',
-      icon: 'i-lucide-check-circle',
-      description: 'Data Purchase Order Customer berhasil ditambahkan',
-      color: 'success'
-    })
+      title: "Sukses",
+      icon: "i-lucide-check-circle",
+      description: "Data Purchase Order Customer berhasil ditambahkan",
+      color: "success",
+    });
   } catch (e: any) {
-    toast.add({ title: 'Error', description: e.message, color: 'error' })
+    toast.add({ title: "Error", description: e.message, color: "error" });
   }
 }
 
-definePageMeta({ layout: 'marketing' })
+definePageMeta({ layout: "marketing" });
 </script>
 
 <template>

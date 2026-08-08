@@ -1,111 +1,145 @@
 <script setup lang="ts">
-type DocType = 'ol' | 'po' | 'do' | 'invoice'
+type DocType = "ol" | "po" | "do" | "invoice";
 
 const props = defineProps<{
-  open: boolean
-  type: DocType
-  id: string | null
-}>()
+  open: boolean;
+  type: DocType;
+  id: string | null;
+}>();
 
-const emit = defineEmits<{ 'update:open': [value: boolean] }>()
+const emit = defineEmits<{ "update:open": [value: boolean] }>();
 
-const { get } = useApi()
+const { get } = useApi();
 
 const endpointMap: Record<DocType, string> = {
-  ol: '/offering-letters',
-  po: '/purchase-orders',
-  do: '/delivery-orders',
-  invoice: '/invoices'
-}
+  ol: "/offering-letters",
+  po: "/purchase-orders",
+  do: "/delivery-orders",
+  invoice: "/invoices",
+};
 
 const titleMap: Record<DocType, string> = {
-  ol: 'Detail Surat Penawaran',
-  po: 'Detail Purchase Order',
-  do: 'Detail Delivery Order',
-  invoice: 'Detail Invoice'
-}
+  ol: "Detail Surat Penawaran",
+  po: "Detail Purchase Order",
+  do: "Detail Delivery Order",
+  invoice: "Detail Invoice",
+};
 
 // ── Fetch record ──────────────────────────────────────────────
 const { data, pending, error } = await useAsyncData(
   () => `record-detail-${props.type}-${props.id}`,
   () => {
-    if (!props.id) return Promise.resolve(null)
-    return get<any>(`${endpointMap[props.type]}/${props.id}`)
+    if (!props.id) return Promise.resolve(null);
+    return get<any>(`${endpointMap[props.type]}/${props.id}`);
   },
-  { watch: [() => props.id, () => props.type] }
-)
+  { watch: [() => props.id, () => props.type] },
+);
 
 // ── Fetch files terkait ───────────────────────────────────────
 const { data: uploads, pending: uploadsPending } = await useAsyncData(
   () => `record-uploads-${props.type}-${props.id}`,
   () => {
-    if (!props.id) return Promise.resolve([])
-    return get<any[]>('/uploads', { document_type: props.type, document_id: props.id })
+    if (!props.id) return Promise.resolve([]);
+    return get<any[]>("/uploads", {
+      document_type: props.type,
+      document_id: props.id,
+    });
   },
-  { watch: [() => props.id, () => props.type], default: () => [] }
-)
+  { watch: [() => props.id, () => props.type], default: () => [] },
+);
 
 // ── Format helpers ────────────────────────────────────────────
 function fmt(v: any): string {
-  if (v === null || v === undefined || v === '') return '-'
-  return String(v)
+  if (v === null || v === undefined || v === "") return "-";
+  return String(v);
 }
 function fmtCurrency(v: any): string {
-  if (v === null || v === undefined) return '-'
-  return formatCurrency(Number(v))
+  if (v === null || v === undefined) return "-";
+  return formatCurrency(Number(v));
 }
 function fmtDateTime(v: any): string {
-  if (!v) return '-'
-  const d = new Date(v)
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  const hh = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${dd}-${mm}-${yyyy}, ${hh}:${min}`
+  if (!v) return "-";
+  const d = new Date(v);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}-${mm}-${yyyy}, ${hh}:${min}`;
 }
 function fmtSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 // ── Status maps ───────────────────────────────────────────────
-const olStatusLabel: Record<string, string> = { created: 'Dibuat', under_revision: 'Revisi', po_received: 'PO Diterima' }
-const olStatusColor: Record<string, 'info' | 'warning' | 'success'> = { created: 'info', under_revision: 'warning', po_received: 'success' }
-const doStatusLabel: Record<string, string> = { created: 'Dibuat', document_returned: 'Dokumen Kembali' }
-const doStatusColor: Record<string, 'info' | 'success'> = { created: 'info', document_returned: 'success' }
-const invStatusLabel: Record<string, string> = { unpaid: 'Belum Lunas', paid: 'Lunas', overdue: 'Jatuh Tempo' }
-const invStatusColor: Record<string, 'warning' | 'success' | 'error'> = { unpaid: 'warning', paid: 'success', overdue: 'error' }
-const deadlineLabel: Record<string, string> = { on_time: 'Tepat Waktu', due_soon: 'Segera', overdue: 'Terlewat' }
-const deadlineColor: Record<string, 'info' | 'warning' | 'error'> = { on_time: 'info', due_soon: 'warning', overdue: 'error' }
+const olStatusLabel: Record<string, string> = {
+  created: "Dibuat",
+  under_revision: "Revisi",
+  po_received: "PO Diterima",
+};
+const olStatusColor: Record<string, "info" | "warning" | "success"> = {
+  created: "info",
+  under_revision: "warning",
+  po_received: "success",
+};
+const doStatusLabel: Record<string, string> = {
+  created: "Dibuat",
+  document_returned: "Dokumen Kembali",
+};
+const doStatusColor: Record<string, "info" | "success"> = {
+  created: "info",
+  document_returned: "success",
+};
+const invStatusLabel: Record<string, string> = {
+  unpaid: "Belum Lunas",
+  paid: "Lunas",
+  overdue: "Jatuh Tempo",
+};
+const invStatusColor: Record<string, "warning" | "success" | "error"> = {
+  unpaid: "warning",
+  paid: "success",
+  overdue: "error",
+};
+const deadlineLabel: Record<string, string> = {
+  on_time: "Tepat Waktu",
+  due_soon: "Segera",
+  overdue: "Terlewat",
+};
+const deadlineColor: Record<string, "info" | "warning" | "error"> = {
+  on_time: "info",
+  due_soon: "warning",
+  overdue: "error",
+};
 
 // ── File helpers ──────────────────────────────────────────────
 function fileIcon(mimeType: string): string {
-  if (mimeType.startsWith('image/')) return 'i-lucide-image'
-  if (mimeType === 'application/pdf') return 'i-lucide-file-text'
-  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'i-lucide-table'
-  if (mimeType.includes('word')) return 'i-lucide-file-type'
-  return 'i-lucide-paperclip'
+  if (mimeType.startsWith("image/")) return "i-lucide-image";
+  if (mimeType === "application/pdf") return "i-lucide-file-text";
+  if (mimeType.includes("spreadsheet") || mimeType.includes("excel"))
+    return "i-lucide-table";
+  if (mimeType.includes("word")) return "i-lucide-file-type";
+  return "i-lucide-paperclip";
 }
 
 function fileUrl(url: string): string {
   // backend mengembalikan url seperti /media/folder/filename
   // di dev mode Nuxt proxy /media → backend:8000/media
-  if (url.startsWith('http')) return url
-  return url // /media/... sudah cukup, proxied oleh nitro devProxy
+  if (url.startsWith("http")) return url;
+  return url; // /media/... sudah cukup, proxied oleh nitro devProxy
 }
 
 async function downloadFile(upload: any) {
-  const url = fileUrl(upload.url)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = upload.original_filename
-  a.target = '_blank'
-  a.rel = 'noopener noreferrer'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
+  const url = fileUrl(upload.url);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = upload.original_filename;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 </script>
 
@@ -129,108 +163,342 @@ async function downloadFile(upload: any) {
       </div>
 
       <!-- Error -->
-      <UAlert v-else-if="error" color="error" title="Gagal memuat data" :description="error.message" />
+      <UAlert
+        v-else-if="error"
+        color="error"
+        title="Gagal memuat data"
+        :description="error.message"
+      />
 
       <template v-else>
         <!-- ── Offering Letter ── -->
         <div v-if="type === 'ol' && data" class="space-y-4 text-sm">
           <div class="grid grid-cols-2 gap-x-6 gap-y-3">
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Nomor SP</p><p class="font-semibold">{{ fmt(data.offering_letter_number) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Status</p>
-              <UBadge :color="olStatusColor[data.status] ?? 'neutral'" variant="subtle">{{ olStatusLabel[data.status] ?? data.status }}</UBadge>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Nomor SP
+              </p>
+              <p class="font-semibold">
+                {{ fmt(data.offering_letter_number) }}
+              </p>
             </div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Customer</p><p class="font-medium">{{ fmt(data.customer_name) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Tanggal</p><p class="font-medium">{{ fmt(data.date) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Lokasi</p><p class="font-medium">{{ fmt(data.location) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Perihal</p><p class="font-medium">{{ fmt(data.regarding) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Penerima</p><p class="font-medium">{{ fmt(data.receiver) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Harga BBM</p><p class="font-semibold text-primary">{{ fmtCurrency(data.fuel_total_price) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Ongkos Transportir</p><p class="font-semibold text-primary">{{ fmtCurrency(data.transport_price) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Dibuat</p><p class="font-medium">{{ fmtDateTime(data.created_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Diperbarui</p><p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">ID</p><p class="font-mono text-xs text-muted truncate">{{ data.id }}</p></div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Status
+              </p>
+              <UBadge
+                :color="olStatusColor[data.status] ?? 'neutral'"
+                variant="subtle"
+                >{{ olStatusLabel[data.status] ?? data.status }}</UBadge
+              >
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Customer
+              </p>
+              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Tanggal
+              </p>
+              <p class="font-medium">{{ fmt(data.date) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Lokasi
+              </p>
+              <p class="font-medium">{{ fmt(data.location) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Perihal
+              </p>
+              <p class="font-medium">{{ fmt(data.regarding) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Penerima
+              </p>
+              <p class="font-medium">{{ fmt(data.receiver) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Harga BBM
+              </p>
+              <p class="font-bold text-success">
+                {{ fmtCurrency(data.fuel_total_price) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Ongkos Transportir
+              </p>
+              <p class="font-bold text-success">
+                {{ fmtCurrency(data.transport_price) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Dibuat
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Diperbarui
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                ID
+              </p>
+              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+            </div>
           </div>
         </div>
 
         <!-- ── Purchase Order ── -->
         <div v-else-if="type === 'po' && data" class="space-y-4 text-sm">
           <div class="grid grid-cols-2 gap-x-6 gap-y-3">
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Nomor PO</p><p class="font-semibold">{{ fmt(data.po_number) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Tipe</p>
-              <UBadge :color="data.type === 'customer' ? 'info' : 'warning'" variant="subtle" class="capitalize">{{ data.type }}</UBadge>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Nomor PO
+              </p>
+              <p class="font-semibold">{{ fmt(data.po_number) }}</p>
             </div>
-            <div v-if="data.customer_name"><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Customer</p><p class="font-medium">{{ fmt(data.customer_name) }}</p></div>
-            <div v-if="data.supplier_name"><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Supplier</p><p class="font-medium">{{ fmt(data.supplier_name) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Tanggal</p><p class="font-medium">{{ fmt(data.date) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Total</p><p class="font-semibold text-primary">{{ fmtCurrency(data.total) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Status</p>
-              <UBadge color="neutral" variant="subtle" class="capitalize">{{ fmt(data.status) }}</UBadge>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Tipe
+              </p>
+              <UBadge
+                :color="data.type === 'customer' ? 'info' : 'warning'"
+                variant="subtle"
+                class="capitalize"
+                >{{ data.type }}</UBadge
+              >
             </div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Dibuat</p><p class="font-medium">{{ fmtDateTime(data.created_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Diperbarui</p><p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">ID</p><p class="font-mono text-xs text-muted truncate">{{ data.id }}</p></div>
+            <div v-if="data.customer_name">
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Customer
+              </p>
+              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+            </div>
+            <div v-if="data.supplier_name">
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Supplier
+              </p>
+              <p class="font-medium">{{ fmt(data.supplier_name) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Tanggal
+              </p>
+              <p class="font-medium">{{ fmt(data.date) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Total
+              </p>
+              <p class="font-semibold text-primary">
+                {{ fmtCurrency(data.total) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Status
+              </p>
+              <UBadge color="neutral" variant="subtle" class="capitalize">{{
+                fmt(data.status)
+              }}</UBadge>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Dibuat
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Diperbarui
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                ID
+              </p>
+              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+            </div>
           </div>
         </div>
 
         <!-- ── Delivery Order ── -->
         <div v-else-if="type === 'do' && data" class="space-y-4 text-sm">
           <div class="grid grid-cols-2 gap-x-6 gap-y-3">
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Nomor DO</p><p class="font-semibold">{{ fmt(data.do_number) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Status</p>
-              <UBadge :color="doStatusColor[data.status] ?? 'neutral'" variant="subtle">{{ doStatusLabel[data.status] ?? data.status }}</UBadge>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Nomor DO
+              </p>
+              <p class="font-semibold">{{ fmt(data.do_number) }}</p>
             </div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Customer</p><p class="font-medium">{{ fmt(data.customer_name) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Nomor PO</p><p class="font-medium">{{ fmt(data.po_number) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Transportir</p><p class="font-medium">{{ fmt(data.transport_name) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Volume BBM</p><p class="font-semibold text-primary">{{ formatNumber(data.fuel_total ?? 0) }} L</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Dibuat</p><p class="font-medium">{{ fmtDateTime(data.created_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Diperbarui</p><p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">ID</p><p class="font-mono text-xs text-muted truncate">{{ data.id }}</p></div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Status
+              </p>
+              <UBadge
+                :color="doStatusColor[data.status] ?? 'neutral'"
+                variant="subtle"
+                >{{ doStatusLabel[data.status] ?? data.status }}</UBadge
+              >
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Customer
+              </p>
+              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Nomor PO
+              </p>
+              <p class="font-medium">{{ fmt(data.po_number) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Transportir
+              </p>
+              <p class="font-medium">{{ fmt(data.transport_name) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Volume BBM
+              </p>
+              <p class="font-semibold text-primary">
+                {{ formatNumber(data.fuel_total ?? 0) }} L
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Dibuat
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Diperbarui
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                ID
+              </p>
+              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+            </div>
           </div>
 
           <!-- Status alur pengiriman -->
           <div class="border-t border-default pt-3">
-            <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-3">Status Alur Pengiriman</p>
+            <p
+              class="text-xs font-semibold text-muted uppercase tracking-wide mb-3"
+            >
+              Status Alur Pengiriman
+            </p>
             <div class="grid grid-cols-2 gap-3">
               <div class="rounded-lg border border-default p-3 space-y-1">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-circle-dollar-sign" class="size-4 shrink-0" :class="data.status_rilis_dana ? 'text-success' : 'text-muted'" />
+                  <UIcon
+                    name="i-lucide-circle-dollar-sign"
+                    class="size-4 shrink-0"
+                    :class="
+                      data.status_rilis_dana ? 'text-success' : 'text-muted'
+                    "
+                  />
                   <p class="text-xs font-medium">Rilis Dana</p>
-                  <UBadge :color="data.status_rilis_dana ? 'success' : 'warning'" variant="subtle" class="ml-auto text-xs">
-                    {{ data.status_rilis_dana ? 'Sudah' : 'Belum' }}
+                  <UBadge
+                    :color="data.status_rilis_dana ? 'success' : 'warning'"
+                    variant="subtle"
+                    class="ml-auto text-xs"
+                  >
+                    {{ data.status_rilis_dana ? "Sudah" : "Belum" }}
                   </UBadge>
                 </div>
-                <p v-if="data.rilis_dana_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.rilis_dana_at) }}</p>
+                <p v-if="data.rilis_dana_at" class="text-xs text-muted pl-6">
+                  {{ fmtDateTime(data.rilis_dana_at) }}
+                </p>
               </div>
               <div class="rounded-lg border border-default p-3 space-y-1">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-package" class="size-4 shrink-0" :class="data.status_ready_order ? 'text-info' : 'text-muted'" />
+                  <UIcon
+                    name="i-lucide-package"
+                    class="size-4 shrink-0"
+                    :class="
+                      data.status_ready_order ? 'text-info' : 'text-muted'
+                    "
+                  />
                   <p class="text-xs font-medium">Siap Kirim</p>
-                  <UBadge :color="data.status_ready_order ? 'info' : 'neutral'" variant="subtle" class="ml-auto text-xs">
-                    {{ data.status_ready_order ? 'Siap' : '-' }}
+                  <UBadge
+                    :color="data.status_ready_order ? 'info' : 'neutral'"
+                    variant="subtle"
+                    class="ml-auto text-xs"
+                  >
+                    {{ data.status_ready_order ? "Siap" : "-" }}
                   </UBadge>
                 </div>
-                <p v-if="data.ready_order_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.ready_order_at) }}</p>
+                <p v-if="data.ready_order_at" class="text-xs text-muted pl-6">
+                  {{ fmtDateTime(data.ready_order_at) }}
+                </p>
               </div>
               <div class="rounded-lg border border-default p-3 space-y-1">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-check-circle" class="size-4 shrink-0" :class="data.status_selesai_dikirim ? 'text-success' : 'text-muted'" />
+                  <UIcon
+                    name="i-lucide-check-circle"
+                    class="size-4 shrink-0"
+                    :class="
+                      data.status_selesai_dikirim
+                        ? 'text-success'
+                        : 'text-muted'
+                    "
+                  />
                   <p class="text-xs font-medium">Selesai Dikirim</p>
-                  <UBadge :color="data.status_selesai_dikirim ? 'success' : 'neutral'" variant="subtle" class="ml-auto text-xs">
-                    {{ data.status_selesai_dikirim ? 'Selesai' : '-' }}
+                  <UBadge
+                    :color="data.status_selesai_dikirim ? 'success' : 'neutral'"
+                    variant="subtle"
+                    class="ml-auto text-xs"
+                  >
+                    {{ data.status_selesai_dikirim ? "Selesai" : "-" }}
                   </UBadge>
                 </div>
-                <p v-if="data.selesai_dikirim_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.selesai_dikirim_at) }}</p>
+                <p
+                  v-if="data.selesai_dikirim_at"
+                  class="text-xs text-muted pl-6"
+                >
+                  {{ fmtDateTime(data.selesai_dikirim_at) }}
+                </p>
               </div>
               <div class="rounded-lg border border-default p-3 space-y-1">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-truck" class="size-4 shrink-0" :class="data.status_lunas_ongkir ? 'text-success' : 'text-muted'" />
+                  <UIcon
+                    name="i-lucide-truck"
+                    class="size-4 shrink-0"
+                    :class="
+                      data.status_lunas_ongkir ? 'text-success' : 'text-muted'
+                    "
+                  />
                   <p class="text-xs font-medium">Lunas Ongkir</p>
-                  <UBadge :color="data.status_lunas_ongkir ? 'success' : 'neutral'" variant="subtle" class="ml-auto text-xs">
-                    {{ data.status_lunas_ongkir ? 'Lunas' : '-' }}
+                  <UBadge
+                    :color="data.status_lunas_ongkir ? 'success' : 'neutral'"
+                    variant="subtle"
+                    class="ml-auto text-xs"
+                  >
+                    {{ data.status_lunas_ongkir ? "Lunas" : "-" }}
                   </UBadge>
                 </div>
-                <p v-if="data.lunas_ongkir_at" class="text-xs text-muted pl-6">{{ fmtDateTime(data.lunas_ongkir_at) }}</p>
+                <p v-if="data.lunas_ongkir_at" class="text-xs text-muted pl-6">
+                  {{ fmtDateTime(data.lunas_ongkir_at) }}
+                </p>
               </div>
             </div>
           </div>
@@ -239,19 +507,74 @@ async function downloadFile(upload: any) {
         <!-- ── Invoice ── -->
         <div v-else-if="type === 'invoice' && data" class="space-y-4 text-sm">
           <div class="grid grid-cols-2 gap-x-6 gap-y-3">
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Nomor Invoice</p><p class="font-semibold">{{ fmt(data.invoice_number) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Status Bayar</p>
-              <UBadge :color="invStatusColor[data.invoice_status] ?? 'neutral'" variant="subtle">{{ invStatusLabel[data.invoice_status] ?? data.invoice_status }}</UBadge>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Nomor Invoice
+              </p>
+              <p class="font-semibold">{{ fmt(data.invoice_number) }}</p>
             </div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Customer</p><p class="font-medium">{{ fmt(data.customer_name) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Status Tenggat</p>
-              <UBadge :color="deadlineColor[data.deadline_status] ?? 'neutral'" variant="subtle">{{ deadlineLabel[data.deadline_status] ?? data.deadline_status }}</UBadge>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Status Bayar
+              </p>
+              <UBadge
+                :color="invStatusColor[data.invoice_status] ?? 'neutral'"
+                variant="subtle"
+                >{{
+                  invStatusLabel[data.invoice_status] ?? data.invoice_status
+                }}</UBadge
+              >
             </div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Grand Total</p><p class="font-semibold text-primary text-base">{{ fmtCurrency(data.grand_total) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Terms</p><p class="font-medium">{{ fmt(data.terms_day) }} hari</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Dibuat</p><p class="font-medium">{{ fmtDateTime(data.created_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">Diperbarui</p><p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p></div>
-            <div><p class="text-xs text-muted uppercase tracking-wide mb-0.5">ID</p><p class="font-mono text-xs text-muted truncate">{{ data.id }}</p></div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Customer
+              </p>
+              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Status Tenggat
+              </p>
+              <UBadge
+                :color="deadlineColor[data.deadline_status] ?? 'neutral'"
+                variant="subtle"
+                >{{
+                  deadlineLabel[data.deadline_status] ?? data.deadline_status
+                }}</UBadge
+              >
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Grand Total
+              </p>
+              <p class="font-semibold text-primary text-base">
+                {{ fmtCurrency(data.grand_total) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Terms
+              </p>
+              <p class="font-medium">{{ fmt(data.terms_day) }} hari</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Dibuat
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                Diperbarui
+              </p>
+              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
+                ID
+              </p>
+              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+            </div>
           </div>
         </div>
 
@@ -259,7 +582,9 @@ async function downloadFile(upload: any) {
 
         <!-- ── Lampiran / File Terkait ── -->
         <div class="mt-5 border-t border-default pt-4">
-          <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-3">
+          <p
+            class="text-xs font-semibold text-muted uppercase tracking-wide mb-3"
+          >
             Lampiran
           </p>
 
@@ -281,10 +606,17 @@ async function downloadFile(upload: any) {
               class="flex items-center justify-between gap-3 rounded-lg border border-default bg-muted/30 px-3 py-2.5"
             >
               <div class="flex items-center gap-2.5 min-w-0">
-                <UIcon :name="fileIcon(file.mime_type)" class="size-5 shrink-0 text-primary" />
+                <UIcon
+                  :name="fileIcon(file.mime_type)"
+                  class="size-5 shrink-0 text-primary"
+                />
                 <div class="min-w-0">
-                  <p class="text-sm font-medium truncate">{{ file.original_filename }}</p>
-                  <p class="text-xs text-muted">{{ fmtSize(file.size) }} · {{ file.mime_type }}</p>
+                  <p class="text-sm font-medium truncate">
+                    {{ file.original_filename }}
+                  </p>
+                  <p class="text-xs text-muted">
+                    {{ fmtSize(file.size) }} · {{ file.mime_type }}
+                  </p>
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
@@ -313,14 +645,6 @@ async function downloadFile(upload: any) {
           </div>
         </div>
       </template>
-    </template>
-
-    <template #footer>
-      <div class="flex justify-end">
-        <UButton color="neutral" variant="ghost" @click="emit('update:open', false)">
-          Tutup
-        </UButton>
-      </div>
     </template>
   </UModal>
 </template>

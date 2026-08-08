@@ -1,73 +1,89 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from '@tanstack/vue-table'
-import { h, resolveComponent } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import type { MarketingOfferingLetterOverview } from '~/types'
-import type { PurchaseOrdersSupplier } from '~/types/marketing'
+import { getPaginationRowModel } from "@tanstack/vue-table";
+import { h, resolveComponent } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+import type { MarketingOfferingLetterOverview } from "~/types";
+import type { PurchaseOrdersSupplier } from "~/types/marketing";
 
-const UBadge = resolveComponent('UBadge')
-const UButton = resolveComponent('UButton')
-const table = useTemplateRef('table')
-const columnPinning = ref({ right: ['actions'] })
+const UBadge = resolveComponent("UBadge");
+const UButton = resolveComponent("UButton");
+const table = useTemplateRef("table");
+const columnPinning = ref({ right: ["actions"] });
 
-const { get } = useApi()
+const { get } = useApi();
 
-const search = ref('')
-const debouncedSearch = refDebounced(search, 300)
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
 
 const { data: PoData } = await useAsyncData(
-  'purchase-orders-supplier',
+  "purchase-orders-supplier",
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 50, type: 'supplier' }
-    if (debouncedSearch.value) params.search = debouncedSearch.value
-    const res = await get<{ items: PurchaseOrdersSupplier[] }>('/purchase-orders', params)
+    const params: Record<string, string | number> = {
+      page: 1,
+      page_size: 50,
+      type: "supplier",
+    };
+    if (debouncedSearch.value) params.search = debouncedSearch.value;
+    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
+      "/purchase-orders",
+      params,
+    );
     return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
       id: purchaseOrder.id,
       offeringLetterNumber: purchaseOrder.po_number,
       customerName: purchaseOrder.supplier_name,
-      fuelTotalQty: purchaseOrder.total,
+      fuelTotalPrice: purchaseOrder.total,
       transportPrice: 0,
+      distanceKm: purchaseOrder?.details.delivery.distance || 0,
       dateCreated: purchaseOrder.created_at.toString(),
       dateChanged: purchaseOrder.updated_at.toString(),
-      status: purchaseOrder.status
-    }))
+      status: purchaseOrder.status,
+    }));
   },
-  { default: () => [], watch: [debouncedSearch] }
-)
+  { default: () => [], watch: [debouncedSearch] },
+);
 
 const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
   {
-    accessorKey: 'offeringLetterNumber',
-    header: 'Nomor PO',
-    cell: ({ row }) => `${row.getValue('offeringLetterNumber')}`
+    accessorKey: "offeringLetterNumber",
+    header: "Nomor PO",
+    cell: ({ row }) => `${row.getValue("offeringLetterNumber")}`,
   },
   {
-    accessorKey: 'customerName',
-    header: 'Supplier',
-    cell: ({ row }) => `${row.getValue('customerName')}`
+    accessorKey: "customerName",
+    header: "Supplier",
+    cell: ({ row }) => `${row.getValue("customerName")}`,
   },
   {
-    accessorKey: 'fuelTotalQty',
-    header: 'Total',
-    cell: ({ row }) => `${formatCurrency(row.getValue('fuelTotalQty'))}`
+    accessorKey: "fuelTotalQty",
+    header: "Total",
+    cell: ({ row }) => `${formatCurrency(row.getValue("fuelTotalQty"))}`,
   },
   {
-    accessorKey: 'dateCreated',
-    header: 'Dibuat',
-    cell: ({ row }) => `${formatDate(row.getValue('dateCreated'))}`
+    accessorKey: "distanceKm",
+    header: "Jarak KM",
+    cell: ({ row }) => `${formatToKm(row.getValue("distanceKm"))}`,
   },
   {
-    id: 'actions',
-    header: 'Aksi',
-    size: 220
-  }
-]
+    accessorKey: "dateCreated",
+    header: "Dibuat",
+    cell: ({ row }) => `${formatDate(row.getValue("dateCreated"))}`,
+  },
+  {
+    id: "actions",
+    header: "Aksi",
+    size: 220,
+  },
+];
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 })
+const pagination = ref({ pageIndex: 0, pageSize: 7 });
 
-const detailOpen = ref(false)
-const detailId = ref<string | null>(null)
-function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
+const detailOpen = ref(false);
+const detailId = ref<string | null>(null);
+function openDetail(id: string) {
+  detailId.value = id;
+  detailOpen.value = true;
+}
 </script>
 
 <template>
@@ -92,7 +108,7 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default'
+        td: 'border-b border-default',
       }"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
 import type { Customer, PurchaseOrdersSupplier } from "~/types/marketing";
-import type { DeliveryOrderPost, DeliveryOrdersDetails } from "~/types/operations";
+import type {
+  DeliveryOrderPost,
+  DeliveryOrdersDetails,
+} from "~/types/operations";
 import {
   type OperationsDOAdditionalState,
   type OperationsDODetailsTransportState,
@@ -17,22 +20,25 @@ const toast = useToast();
 const route = useRoute();
 const loading = ref(false);
 const selectedDoId = ref("");
-const editingDoId = computed(() =>
-  (typeof route.query.do_id === "string" ? route.query.do_id : "") || selectedDoId.value
+const editingDoId = computed(
+  () =>
+    (typeof route.query.do_id === "string" ? route.query.do_id : "") ||
+    selectedDoId.value,
 );
 
 const { data: linkedDeliveryOrders } = await useAsyncData(
   "delivery-orders-from-po-customer",
   async () => {
     const [posRes, dosRes] = await Promise.all([
-      get<{ items: PurchaseOrdersSupplier[] }>(
-        "/purchase-orders",
-        { page: 1, page_size: 100, type: "customer" },
-      ),
-      get<{ items: DeliveryOrdersDetails[] }>(
-        "/delivery-orders",
-        { page: 1, page_size: 100 },
-      ),
+      get<{ items: PurchaseOrdersSupplier[] }>("/purchase-orders", {
+        page: 1,
+        page_size: 100,
+        type: "customer",
+      }),
+      get<{ items: DeliveryOrdersDetails[] }>("/delivery-orders", {
+        page: 1,
+        page_size: 100,
+      }),
     ]);
     const poByNumber = new Map(
       (posRes.items || []).map((po) => [po.po_number, po] as const),
@@ -154,12 +160,16 @@ const { data: existingDeliveryOrder } = await useAsyncData(
   () => `delivery-order-edit-${editingDoId.value}`,
   async () => {
     if (!editingDoId.value) return null;
-    return await get<DeliveryOrdersDetails>(`/delivery-orders/${editingDoId.value}`);
+    return await get<DeliveryOrdersDetails>(
+      `/delivery-orders/${editingDoId.value}`,
+    );
   },
   { default: () => null, server: false, watch: [editingDoId] },
 );
 
-function hydrateFormFromExistingDeliveryOrder(value: DeliveryOrdersDetails | null) {
+function hydrateFormFromExistingDeliveryOrder(
+  value: DeliveryOrdersDetails | null,
+) {
   if (!value) return;
 
   const details = value.details || {};
@@ -182,24 +192,34 @@ function hydrateFormFromExistingDeliveryOrder(value: DeliveryOrdersDetails | nul
     customerName: details.customerName || value.customer_name || "",
     customerId: details.customerId || value.customer_id || "",
     customerAddress: details.customerAddress || "",
-    receiverInformation: details.receiverInformation || { name: undefined, phoneNumber: undefined },
-    receiverDateReceived: details.receiverDateReceived || doReceiver.receiverDateReceived,
+    receiverInformation: details.receiverInformation || {
+      name: undefined,
+      phoneNumber: undefined,
+    },
+    receiverDateReceived:
+      details.receiverDateReceived || doReceiver.receiverDateReceived,
   });
 
   Object.assign(doTransport, {
     transportName: details.transportName || value.transport_name || "",
     transportId: details.transportId || "",
     transportAddress: details.transportAddress || "",
-    driverInformation: details.driverInformation || { name: undefined, phoneNumber: undefined },
-    transportDateReceived: details.transportDateReceived || doTransport.transportDateReceived,
+    driverInformation: details.driverInformation || {
+      name: undefined,
+      phoneNumber: undefined,
+    },
+    transportDateReceived:
+      details.transportDateReceived || doTransport.transportDateReceived,
     helperName: details.helperName || undefined,
   });
 
   Object.assign(doDetailsTransport, {
     dueDate: details.dueDate || undefined,
     total: details.total || value.fuel_total || 0,
-    productInformation: details.productInformation || doDetailsTransport.productInformation,
-    transportInformation: details.transportInformation || doDetailsTransport.transportInformation,
+    productInformation:
+      details.productInformation || doDetailsTransport.productInformation,
+    transportInformation:
+      details.transportInformation || doDetailsTransport.transportInformation,
   });
 
   Object.assign(doAdditional, {
@@ -207,18 +227,22 @@ function hydrateFormFromExistingDeliveryOrder(value: DeliveryOrdersDetails | nul
     t2Depot: details.t2Depot,
     t2Unloading: details.t2Unloading,
     indexSensitivity: details.indexSensitivity,
-    fuelReceived: details.fuelReceived || details.total || value.fuel_total || 0,
+    fuelReceived:
+      details.fuelReceived || details.total || value.fuel_total || 0,
   });
 
   Object.assign(doFooter, {
-    companyCoordinator: details.companyCoordinator || doFooter.companyCoordinator,
+    companyCoordinator:
+      details.companyCoordinator || doFooter.companyCoordinator,
     distributionAdmin: details.distributionAdmin || doFooter.distributionAdmin,
     receiver: details.receiver || undefined,
     driver: details.driver || details.driverInformation?.name || undefined,
   });
 }
 
-watch(existingDeliveryOrder, hydrateFormFromExistingDeliveryOrder, { immediate: true });
+watch(existingDeliveryOrder, hydrateFormFromExistingDeliveryOrder, {
+  immediate: true,
+});
 
 const stepper = useTemplateRef("stepper");
 
@@ -277,7 +301,10 @@ async function onFormSubmit() {
     };
 
     const res = editingDoId.value
-      ? await put<any, DeliveryOrderPost>(`/delivery-orders/${editingDoId.value}`, doPost)
+      ? await put<any, DeliveryOrderPost>(
+          `/delivery-orders/${editingDoId.value}`,
+          doPost,
+        )
       : await post<any, DeliveryOrderPost>("/delivery-orders", doPost);
 
     console.log("Data submitted");

@@ -1,26 +1,31 @@
 <script setup lang="ts">
-const router = useRouter()
-const { selectedNotification, isDetailModalOpen, closeDetail } = useNotifications()
+const router = useRouter();
+const { selectedNotification, isDetailModalOpen, closeDetail } =
+  useNotifications();
 
 function handleView() {
-  const to = selectedNotification.value?.to
-  closeDetail()
-  if (to) router.push(to)
+  const to = selectedNotification.value?.to;
+  closeDetail();
+  if (to) router.push(to);
 }
 
-const typeColor: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
-  info: 'info',
-  success: 'success',
-  warning: 'warning',
-  error: 'error'
-}
+const typeColor: Record<string, "info" | "success" | "warning" | "error"> = {
+  info: "info",
+  success: "success",
+  warning: "warning",
+  error: "error",
+};
 </script>
 
 <template>
   <UModal
     v-model:open="isDetailModalOpen"
     :ui="{ footer: 'justify-end' }"
-    @update:open="(val) => { if (!val) closeDetail() }"
+    @update:open="
+      (val) => {
+        if (!val) closeDetail();
+      }
+    "
   >
     <template #title>
       <div class="flex items-center gap-2">
@@ -32,7 +37,7 @@ const typeColor: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
         >
           {{ selectedNotification.type }}
         </UBadge>
-        <span>{{ selectedNotification?.title ?? 'Notifikasi' }}</span>
+        <span>{{ selectedNotification?.title ?? "Notifikasi" }}</span>
       </div>
     </template>
 
@@ -42,15 +47,16 @@ const typeColor: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
           {{ selectedNotification.message }}
         </p>
         <p class="text-xs text-dimmed">
-          {{ selectedNotification.created_at ? formatDate(selectedNotification.created_at) : '' }}
+          {{
+            selectedNotification.created_at
+              ? formatDate(selectedNotification.created_at)
+              : ""
+          }}
         </p>
       </div>
     </template>
 
     <template #footer>
-      <UButton color="neutral" variant="ghost" @click="closeDetail">
-        Tutup
-      </UButton>
       <UButton
         v-if="selectedNotification?.to"
         color="primary"
@@ -58,6 +64,10 @@ const typeColor: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
         @click="handleView"
       >
         View
+      </UButton>
+
+      <UButton color="neutral" variant="ghost" @click="closeDetail">
+        Tutup
       </UButton>
     </template>
   </UModal>

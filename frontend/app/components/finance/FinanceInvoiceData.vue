@@ -1,35 +1,35 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from '@tanstack/vue-table'
-import { h, resolveComponent } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import type { FinanceInvoiceOverview } from '~/types'
-import type { Invoices } from '~/types/finance'
+import { getPaginationRowModel } from "@tanstack/vue-table";
+import { h, resolveComponent } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+import type { FinanceInvoiceOverview } from "~/types";
+import type { Invoices } from "~/types/finance";
 
-const UBadge = resolveComponent('UBadge')
-const UButton = resolveComponent('UButton')
-const table = useTemplateRef('table')
-const columnPinning = ref({ right: ['actions'] })
+const UBadge = resolveComponent("UBadge");
+const UButton = resolveComponent("UButton");
+const table = useTemplateRef("table");
+const columnPinning = ref({ right: ["actions"] });
 
-const toast = useToast()
-const { get, put } = useApi()
-const loading = ref(false)
+const toast = useToast();
+const { get, put } = useApi();
+const loading = ref(false);
 
-const search = ref('')
-const debouncedSearch = refDebounced(search, 300)
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
 
 const { data: InvoiceData, refresh } = await useAsyncData(
-  'invoices',
+  "invoices",
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 50 }
-    if (debouncedSearch.value) params.search = debouncedSearch.value
-    const res = await get<{ items: Invoices[] }>('/invoices', params)
+    const params: Record<string, string | number> = { page: 1, page_size: 50 };
+    if (debouncedSearch.value) params.search = debouncedSearch.value;
+    const res = await get<{ items: Invoices[] }>("/invoices", params);
     return res.items.map((inv: Invoices) => {
       // Check the real-time status every time data is fetched
       const { invoiceStatus, deadlineStatus } = calculateDynamicStatus(
         inv.created_at,
         inv.terms_day,
-        inv.invoice_status
-      )
+        inv.invoice_status,
+      );
 
       return {
         id: inv.id,
@@ -39,154 +39,158 @@ const { data: InvoiceData, refresh } = await useAsyncData(
         dateCreated: inv.created_at.toString(),
         grandTotal: inv.grand_total,
         invoiceStatus: invoiceStatus,
-        deadlineStatus: deadlineStatus
-      }
-    })
+        deadlineStatus: deadlineStatus,
+      };
+    });
   },
-  { default: () => [], watch: [debouncedSearch] }
-)
+  { default: () => [], watch: [debouncedSearch] },
+);
 
 const columns: TableColumn<FinanceInvoiceOverview>[] = [
   {
-    accessorKey: 'invoiceNumber',
-    header: 'Nomor Invoice',
-    cell: ({ row }) => `${row.getValue('invoiceNumber')}`
+    accessorKey: "invoiceNumber",
+    header: "Nomor Invoice",
+    cell: ({ row }) => `${row.getValue("invoiceNumber")}`,
   },
   {
-    accessorKey: 'customerName',
-    header: 'Customer',
-    cell: ({ row }) => `${row.getValue('customerName')}`
+    accessorKey: "customerName",
+    header: "Customer",
+    cell: ({ row }) => `${row.getValue("customerName")}`,
   },
   {
-    accessorKey: 'grandTotal',
-    header: 'Grand Total',
-    cell: ({ row }) => `${formatCurrency(row.getValue('grandTotal'))}`
+    accessorKey: "grandTotal",
+    header: "Grand Total",
+    cell: ({ row }) => `${formatCurrency(row.getValue("grandTotal"))}`,
   },
   {
-    accessorKey: 'dateCreated',
-    header: 'Dibuat',
-    cell: ({ row }) => `${formatDate(row.getValue('dateCreated'))}`
+    accessorKey: "dateCreated",
+    header: "Dibuat",
+    cell: ({ row }) => `${formatDate(row.getValue("dateCreated"))}`,
   },
   {
-    accessorKey: 'termsDay',
-    header: 'Tenggat Hari',
+    accessorKey: "termsDay",
+    header: "Tenggat Hari",
     meta: {
       class: {
-        th: 'text-center',
-        td: 'text-center'
-      }
+        th: "text-center",
+        td: "text-center",
+      },
     },
-    cell: ({ row }) => `${row.getValue('termsDay')} Hari`
+    cell: ({ row }) => `${row.getValue("termsDay")} Hari`,
   },
   {
-    accessorKey: 'invoiceStatus',
-    header: 'Status Invoice',
+    accessorKey: "invoiceStatus",
+    header: "Status Invoice",
     meta: {
       class: {
-        th: 'text-center',
-        td: 'text-center'
-      }
-    },
-    cell: ({ row }) => {
-      const color = {
-        unpaid: 'warning' as const,
-        paid: 'success' as const,
-        overdue: 'error' as const
-      }[row.getValue('invoiceStatus') as string]
-      const label = {
-        unpaid: 'Belum Lunas',
-        paid: 'Lunas',
-        overdue: 'Jatuh Tempo'
-      }[row.getValue('invoiceStatus') as string]
-      return h(
-        UBadge,
-        { class: 'capitalize', variant: 'soft', color },
-        () => label
-      )
-    }
-  },
-  {
-    accessorKey: 'deadlineStatus',
-    header: 'Status Tenggat Waktu',
-    meta: {
-      class: {
-        th: 'text-center',
-        td: 'text-center'
-      }
+        th: "text-center",
+        td: "text-center",
+      },
     },
     cell: ({ row }) => {
       const color = {
-        on_time: 'info' as const,
-        due_soon: 'warning' as const,
-        overdue: 'error' as const
-      }[row.getValue('deadlineStatus') as string]
+        unpaid: "warning" as const,
+        paid: "success" as const,
+        overdue: "error" as const,
+      }[row.getValue("invoiceStatus") as string];
       const label = {
-        on_time: 'Tepat Waktu',
-        due_soon: 'Segera',
-        overdue: 'Terlewat'
-      }[row.getValue('deadlineStatus') as string]
+        unpaid: "Belum Lunas",
+        paid: "Lunas",
+        overdue: "Jatuh Tempo",
+      }[row.getValue("invoiceStatus") as string];
       return h(
         UBadge,
-        { class: 'capitalize', variant: 'soft', color },
-        () => label
-      )
-    }
+        { class: "capitalize", variant: "soft", color },
+        () => label,
+      );
+    },
   },
   {
-    id: 'actions',
-    header: 'Aksi'
-  }
-]
+    accessorKey: "deadlineStatus",
+    header: "Status Tenggat Waktu",
+    meta: {
+      class: {
+        th: "text-center",
+        td: "text-center",
+      },
+    },
+    cell: ({ row }) => {
+      const color = {
+        on_time: "info" as const,
+        due_soon: "warning" as const,
+        overdue: "error" as const,
+      }[row.getValue("deadlineStatus") as string];
+      const label = {
+        on_time: "Tepat Waktu",
+        due_soon: "Segera",
+        overdue: "Terlewat",
+      }[row.getValue("deadlineStatus") as string];
+      return h(
+        UBadge,
+        { class: "capitalize", variant: "soft", color },
+        () => label,
+      );
+    },
+  },
+
+  {
+    id: "actions",
+    header: "Aksi",
+  },
+];
 
 async function updateInvoiceStatus(
   invoiceId: string,
   invoiceData: {
-    dateCreated: string
-    terms: number
-    currentStatus: string
-  }
+    dateCreated: string;
+    terms: number;
+    currentStatus: string;
+  },
 ) {
   try {
-    if (loading.value) return
-    loading.value = true
+    if (loading.value) return;
+    loading.value = true;
 
     const { deadlineStatus } = calculateDynamicStatus(
       invoiceData.dateCreated,
       invoiceData.terms,
-      invoiceData.currentStatus
-    )
+      invoiceData.currentStatus,
+    );
 
     const res = await put(`/invoices/${invoiceId}`, {
-      invoice_status: 'paid',
-      deadline_status: deadlineStatus
-    })
+      invoice_status: "paid",
+      deadline_status: deadlineStatus,
+    });
 
-    console.log(res)
+    console.log(res);
 
     toast.add({
-      title: 'Berhasil',
-      description: 'Status Invoice berhasil diperbarui',
-      icon: 'i-lucide-check-circle',
-      color: 'success'
-    })
+      title: "Berhasil",
+      description: "Status Invoice berhasil diperbarui",
+      icon: "i-lucide-check-circle",
+      color: "success",
+    });
   } catch (err) {
     toast.add({
-      title: 'Gagal',
-      description: 'Status Invoice gagal diperbarui',
-      icon: 'i-lucide-x',
-      color: 'error'
-    })
+      title: "Gagal",
+      description: "Status Invoice gagal diperbarui",
+      icon: "i-lucide-x",
+      color: "error",
+    });
   } finally {
-    loading.value = false
-    refresh()
+    loading.value = false;
+    refresh();
   }
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 })
+const pagination = ref({ pageIndex: 0, pageSize: 7 });
 
-const detailOpen = ref(false)
-const detailId = ref<string | null>(null)
-function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
+const detailOpen = ref(false);
+const detailId = ref<string | null>(null);
+function openDetail(id: string) {
+  detailId.value = id;
+  detailOpen.value = true;
+}
 </script>
 
 <template>
@@ -211,7 +215,7 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default'
+        td: 'border-b border-default',
       }"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
@@ -244,7 +248,7 @@ function openDetail(id: string) { detailId.value = id; detailOpen.value = true }
               updateInvoiceStatus(row.original.id, {
                 dateCreated: row.original.dateCreated,
                 terms: row.original.termsDay,
-                currentStatus: row.original.invoiceStatus
+                currentStatus: row.original.invoiceStatus,
               })
             "
             variant="soft"

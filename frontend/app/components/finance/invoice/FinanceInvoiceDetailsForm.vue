@@ -1,29 +1,29 @@
 <script setup lang="ts">
-import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
+import type { FormSubmitEvent, SelectMenuItem } from "@nuxt/ui";
 import {
   financeInvoiceDetailsSchema,
-  type FinanceInvoiceDetailsState
-} from '~/types/schemas'
+  type FinanceInvoiceDetailsState,
+} from "~/types/schemas";
 
 defineProps<{
-  purchaseOrders: any
-  deliveryOrderGroups: SelectMenuItem[][]
-  hasPrevious: boolean | undefined
-}>()
+  purchaseOrders: any;
+  deliveryOrderGroups: SelectMenuItem[][];
+  hasPrevious: boolean | undefined;
+}>();
 
 const emit = defineEmits<{
-  submit: []
-  previous: []
-}>()
+  submit: [];
+  previous: [];
+}>();
 
-const state = defineModel<FinanceInvoiceDetailsState>({ required: true })
+const state = defineModel<FinanceInvoiceDetailsState>({ required: true });
 
 function previous() {
-  emit('previous')
+  emit("previous");
 }
 
 function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
-  emit('submit')
+  emit("submit");
 }
 </script>
 
@@ -60,7 +60,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
             :format-options="{
               style: 'unit',
               unit: 'day',
-              unitDisplay: 'long'
+              unitDisplay: 'long',
             }"
           />
         </UFormField>
