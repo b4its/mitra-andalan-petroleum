@@ -6,8 +6,24 @@ const toast = useToast()
 
 const open = ref(false)
 
-const links = [
-  [
+const { user } = useAuth()
+const isAdmin = computed(() => user.value?.role === 'admin')
+
+const links = computed<NavigationMenuItem[][]>(() => {
+  const items: NavigationMenuItem[] = []
+
+  // Jika admin yang sedang mengakses halaman marketing, tambah link kembali ke admin
+  if (isAdmin.value) {
+    items.push({
+      label: 'Kembali ke Admin',
+      icon: 'i-lucide-arrow-left',
+      to: '/admin',
+      exact: true,
+      onSelect: () => { open.value = false }
+    })
+  }
+
+  items.push(
     {
       label: 'Beranda',
       icon: 'i-lucide-house',
@@ -68,8 +84,10 @@ const links = [
         }
       ]
     }
-  ]
-] satisfies NavigationMenuItem[][]
+  )
+
+  return [items] satisfies NavigationMenuItem[][]
+})
 </script>
 
 <template>
