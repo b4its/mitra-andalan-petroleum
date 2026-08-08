@@ -3,6 +3,13 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const open = ref(false)
 
+const { unreadCount, isSlideoverOpen, fetchNotifications } = useNotifications()
+
+// Fetch notifications on mount (for header badge)
+onMounted(() => {
+  fetchNotifications()
+})
+
 const links = [
   [
     {
@@ -161,7 +168,23 @@ const links = [
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+        <div class="flex items-center gap-1">
+          <UserMenu :collapsed="collapsed" class="flex-1" />
+          <UButton
+            :icon="'i-lucide-bell'"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            :square="collapsed"
+            @click="isSlideoverOpen = true"
+          >
+            <template v-if="unreadCount" #trailing>
+              <UBadge size="xs" color="error" variant="solid">
+                {{ unreadCount }}
+              </UBadge>
+            </template>
+          </UButton>
+        </div>
       </template>
 
       <template #default="{ collapsed }">
@@ -173,8 +196,21 @@ const links = [
           popover
         />
       </template>
+
+      <template #footer="{ collapsed }">
+        <UButton
+          :icon="'i-lucide-bell'"
+          :label="collapsed ? undefined : 'Notifikasi'"
+          color="neutral"
+          variant="ghost"
+          :square="collapsed"
+          @click="isSlideoverOpen = true"
+        />
+      </template>
     </UDashboardSidebar>
 
     <slot />
+
+    <NotificationsSlideover />
   </UDashboardGroup>
 </template>
