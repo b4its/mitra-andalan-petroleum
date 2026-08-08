@@ -6,3 +6,5 @@ cryptography==44.0.0
 pydantic>=2.13,<3
 pydantic-settings>=2.8,<3
 python-multipart>=0.0.18
+passlib[bcrypt]>=1.7.4
+bcrypt==3.2.2

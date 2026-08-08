@@ -5,11 +5,11 @@ import type {
   OfferingLetters,
   PurchaseOrdersCustomerPost,
 } from "~/types/marketing";
-import {
-  type MarketingPOAdditionalState,
-  type MarketingPOAssociateState,
-  type MarketingPOCompanyState,
-  type MarketingPODetailsState,
+import type {
+  MarketingPOAdditionalState,
+  MarketingPOAssociateState,
+  MarketingPOCompanyState,
+  MarketingPODetailsState,
 } from "~/types/schemas";
 
 const { get, put, post, postFile } = useApi();
@@ -29,7 +29,7 @@ const { data: supplierList } = await useAsyncData("suppliers", async () => {
 });
 
 const { data: OlData } = await useAsyncData(
-  "offering-letters",
+  "offering-letters-supplier-po",
   async () => {
     const res = await get<{ items: OfferingLetters[] }>("/offering-letters", {
       page: 1,
@@ -143,7 +143,9 @@ const letterOfferDetails = reactive<MarketingPODetailsState>({
 
 const letterAdditional = reactive<MarketingPOAdditionalState>({
   termAndCondition: "ABC",
-  delivery: {},
+  delivery: {
+    distance: 0,
+  },
   forwarder: {
     trucking: "ABC",
   },
@@ -188,6 +190,7 @@ async function onFormSubmit() {
         date: poData.po.date,
         total: poData.totalProductsPrice,
         status: "created",
+        created_by: user.value?.id ?? null,
         details: {
           ...letterCompanyMain,
           ...letterCompanyAssociate,
@@ -233,11 +236,11 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UStepper disabled ref="stepper" :items>
+  <UStepper ref="stepper" disabled :items>
     <template #companyInformation>
       <MarketingPOCompanyForm
         v-model="letterCompanyMain"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFormSubmitToNext"
       />
@@ -245,9 +248,9 @@ definePageMeta({ layout: "marketing" });
 
     <template #associateInformation>
       <MarketingPOAssociateForm
-        :receivers="suppliers"
         v-model="letterCompanyAssociate"
-        :hasPrevious="stepper?.hasPrev"
+        :receivers="suppliers"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFormSubmitToNext"
       />
@@ -255,9 +258,9 @@ definePageMeta({ layout: "marketing" });
 
     <template #poDetails>
       <MarketingPODetailsForm
-        :offering-letters="offeringLetters"
         v-model="letterOfferDetails"
-        :hasPrevious="stepper?.hasPrev"
+        :offering-letters="offeringLetters"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFormSubmitToNext"
       />
@@ -266,7 +269,7 @@ definePageMeta({ layout: "marketing" });
     <template #additionalDetails>
       <MarketingPOAdditionalForm
         v-model="letterAdditional"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         :is-loading="loading"
         @previous="previousNavigation"
         @submit="onFormSubmit"

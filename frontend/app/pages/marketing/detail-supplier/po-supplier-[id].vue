@@ -15,7 +15,7 @@ const { user } = useAuth();
 const { get } = useApi();
 
 const { data: purchaseOrderDetails } = await useAsyncData(
-  "purchase-order-details",
+  "purchase-order-detail-po-supplier",
   async () => {
     const res = await get<PurchaseOrderDetails>(
       `/purchase-orders/${idPoLetter}`,
@@ -392,7 +392,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: `Loading Terminal : ${details.delivery.loadingTerminal || ""}\nLoading Date : ${details.delivery.loadingDate || ""}\nPIC OPERATION MAP : ${details.delivery.picOperationMap || ""}`,
+                  text: `Jarak KM : ${formatToKm(details.delivery.distance) || ""}\nLoading Terminal : ${details.delivery.loadingTerminal || ""}\nLoading Date : ${details.delivery.loadingDate || ""}\nPIC OPERATION MAP : ${details.delivery.picOperationMap || ""}`,
                   border: [true, false, true, true],
                 },
                 {

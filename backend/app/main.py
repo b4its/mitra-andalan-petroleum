@@ -18,9 +18,45 @@ MEDIA_DIR = Path(__file__).resolve().parent.parent / "media"
 async def lifespan(app: FastAPI):
     MEDIA_DIR.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
+        # Kolom lama yang ditambahkan sebelumnya
         for col in ["`to` VARCHAR(500) NULL", "`is_read` TINYINT(1) NOT NULL DEFAULT 0"]:
             try:
                 await conn.execute(text(f"ALTER TABLE notifications ADD COLUMN {col}"))
+            except Exception:
+                pass
+        # Kolom created_by untuk tracking user input dokumen
+        for table in ["offering_letters", "purchase_orders", "delivery_orders"]:
+            try:
+                await conn.execute(text(
+                    f"ALTER TABLE `{table}` ADD COLUMN `created_by` VARCHAR(36) NULL "
+                    f"COMMENT 'ID user yang membuat dokumen'"
+                ))
+            except Exception:
+                pass
+        # Kolom baru delivery_orders: rilis dana + lunas ongkir
+        do_new_cols = [
+            "`rilis_dana_at` DATETIME NULL COMMENT 'Waktu rilis dana (WITA)'",
+            "`status_rilis_dana` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika dana sudah dirilis'",
+            "`ready_order_at` DATETIME NULL COMMENT 'Waktu pengantaran disiapkan (WITA)'",
+            "`status_ready_order` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika pengantaran sudah disiapkan'",
+            "`selesai_dikirim_at` DATETIME NULL COMMENT 'Waktu selesai dikirim (WITA)'",
+            "`status_selesai_dikirim` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika pengiriman sudah selesai'",
+            "`lunas_ongkir_at` DATETIME NULL COMMENT 'Waktu pelunasan ongkir (WITA)'",
+            "`status_lunas_ongkir` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika ongkir sudah dilunasi'",
+        ]
+        for col in do_new_cols:
+            try:
+                await conn.execute(text(f"ALTER TABLE `delivery_orders` ADD COLUMN {col}"))
+            except Exception:
+                pass
+        # Kolom baru purchase_orders: relasi ke OL dan DO
+        po_new_cols = [
+            "`id_offering_letters` TEXT NULL COMMENT 'JSON array: ID offering letter terkait'",
+            "`id_delivery_order` VARCHAR(36) NULL COMMENT 'ID delivery order yang dibuat otomatis'",
+        ]
+        for col in po_new_cols:
+            try:
+                await conn.execute(text(f"ALTER TABLE `purchase_orders` ADD COLUMN {col}"))
             except Exception:
                 pass
         await conn.run_sync(Base.metadata.create_all)
@@ -45,6 +81,8 @@ openapi_tags = [
     {"name": "notifications", "description": "Notifikasi sistem. Field: `to` (redirect path), `is_read` (status baca)."},
     {"name": "stats", "description": "Statistik untuk dashboard"},
     {"name": "uploads", "description": "Upload file (signature, dokumen, foto, dll). Multi-file, max 50MB/file. Kaitkan ke parent via `document_type` + `document_id`. Cascade delete otomatis saat parent dihapus."},
+    {"name": "accounting", "description": "Modul akuntansi (finance): chart of accounts, jurnal umum, buku besar, pemasukan, pengeluaran, neraca saldo, dan ringkasan keuangan."},
+    {"name": "admin-database", "description": "Admin database: export dan import data SQL."},
 ]
 
 app = FastAPI(
@@ -57,7 +95,7 @@ Sistem manajemen internal untuk perusahaan bahan bakar minyak.
 ## Modul
 - **Marketing** — Offering Letters, Purchase Orders, Stats
 - **Operations** — Delivery Orders, Sales, Stats
-- **Finance** — Invoices, Delivery Orders, Sales, Stats
+- **Finance** — Invoices, Delivery Orders, Accounting (akun, jurnal, buku besar, pemasukan, pengeluaran), Stats
 - **Admin** — User/Profile Management
 
 ## Auth

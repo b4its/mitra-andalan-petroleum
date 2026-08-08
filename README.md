@@ -64,6 +64,16 @@ mandalan/
 
 ```bash
 docker compose --profile full up -d
+docker compose -f docker-compose.yml -f docker-compose.local.yml --profile full up
+
+#build
+docker compose -f docker-compose.yml -f docker-compose.local.yml --profile full up -d --build
+
+#build frontend
+docker compose -f docker-compose.yml -f docker-compose.local.yml --profile full up -d --build frontend
+
+#build backend
+docker compose -f docker-compose.yml -f docker-compose.local.yml --profile full up -d --build backend
 ```
 
 | Service | URL |

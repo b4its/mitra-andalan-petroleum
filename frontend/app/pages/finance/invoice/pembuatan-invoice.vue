@@ -141,8 +141,6 @@ const purchaseOrders = ref(
   }),
 );
 
-// Replace `const deliveryOrderGroups = ref();` with this:
-
 const deliveryOrderGroups = computed(() => {
   const selectedPO =
     financeDetails.customerPurchaseInformation.customerPurchaseOrderNumber;
@@ -257,17 +255,6 @@ async function onFormSubmit() {
       details: invoiceData,
     });
 
-    // console.log({
-    //   customer_id:
-    //     invoiceData.customerPurchaseInformation.customerPurchaseOrderNumber.customerId,
-    //   deadline_status: "due_soon",
-    //   invoice_status: "unpaid",
-    //   grand_total: invoiceData.priceSummary.grandTotal,
-    //   invoice_number: invoiceData.invoiceInformation.invoiceNumber,
-    //   terms_day: invoiceData.invoiceInformation.terms,
-    //   details: invoiceData,
-    // });
-
     toast.add({
       title: "Success",
       icon: "i-lucide-check-circle",
@@ -290,11 +277,11 @@ definePageMeta({ layout: "finance" });
 </script>
 
 <template>
-  <UStepper disabled ref="stepper" :items>
+  <UStepper ref="stepper" disabled :items>
     <template #invoiceHeader>
       <FinanceInvoiceHeaderForm
         v-model="financeHeader"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFormSubmitToNext"
       />
@@ -305,7 +292,7 @@ definePageMeta({ layout: "finance" });
         :delivery-order-groups="deliveryOrderGroups"
         :purchase-orders="purchaseOrders"
         v-model="financeDetails"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFormSubmitToNext"
       />
@@ -314,7 +301,7 @@ definePageMeta({ layout: "finance" });
     <template #invoiceProducts>
       <FinanceInvoiceProductsForm
         v-model="financeProducts"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFormSubmitToNext"
       />
@@ -323,7 +310,7 @@ definePageMeta({ layout: "finance" });
     <template #invoiceFooter>
       <FinanceInvoiceFooterForm
         v-model="financeFooter"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFormSubmit"
       />

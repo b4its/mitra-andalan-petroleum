@@ -17,10 +17,12 @@
 // }
 
 export interface Notifications {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  sender_id: string;
-  created_at: Date;
+  id: string
+  title: string
+  message: string
+  type: string
+  sender_id: string | null
+  to: string | null
+  is_read: boolean
+  created_at: Date
 }

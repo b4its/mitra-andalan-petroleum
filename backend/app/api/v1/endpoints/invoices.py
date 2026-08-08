@@ -1,8 +1,8 @@
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -53,12 +53,21 @@ def _to_response(inv, customer_name):
     description="Daftar invoice dengan pagination. Menyertakan nama customer.",
 )
 async def list_invoices(
-    page: int = 1, page_size: int = 20, db: AsyncSession = Depends(get_db)
+    page: int = 1, page_size: int = 20,
+    search: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db)
 ):
-    total_result = await db.execute(select(func.count()).select_from(select(Invoice).subquery()))
+    base = select(Invoice)
+    if search:
+        base = base.where(or_(
+            Invoice.invoice_number.ilike(f"%{search}%"),
+            Invoice.invoice_status.ilike(f"%{search}%"),
+            Invoice.deadline_status.ilike(f"%{search}%"),
+        ))
+    total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0
 
-    stmt = select(Invoice).order_by(Invoice.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    stmt = base.order_by(Invoice.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     invoices = result.scalars().all()
 

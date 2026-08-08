@@ -1,21 +1,20 @@
 <script setup lang="ts">
-const { user, loadUser } = useAuth();
+const { user, loadUser } = useAuth()
 
 onMounted(() => {
-  loadUser();
+  loadUser()
   if (user.value) {
-    navigateTo(`/${user.value.role}`);
+    navigateTo(`/${user.value.role}`)
   } else {
-    navigateTo("/login");
+    navigateTo('/login')
   }
-});
+})
 </script>
 
 <template>
   <UDashboardPanel id="root">
     <template #header>
-      <UDashboardNavbar title="Beranda" :ui="{ right: 'gap-3' }">
-      </UDashboardNavbar>
+      <UDashboardNavbar title="Beranda" :ui="{ right: 'gap-3' }" />
     </template>
 
     <template #body>

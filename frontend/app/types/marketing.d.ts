@@ -166,6 +166,7 @@ export interface OfferingLetterPost {
   transport_price: number;
   status: string;
   details: OfferingLetterDetails;
+  created_by?: string | null;
 }
 
 export interface OfferingLetters {
@@ -198,6 +199,7 @@ export interface PurchaseOrdersSupplier {
   status: "created" | "under_revision" | "po_received";
   created_at: Date;
   updated_at: Date;
+  details: any;
 }
 
 export interface PurchaseOrdersCustomerPost {
@@ -209,6 +211,8 @@ export interface PurchaseOrdersCustomerPost {
   total: number;
   status: string;
   details?: Record<string, any>;
+  created_by?: string | null;
+  id_offering_letters?: string | null;
 }
 
 export interface PurchaseOrdersDetails {

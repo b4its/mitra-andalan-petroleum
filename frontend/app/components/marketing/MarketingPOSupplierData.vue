@@ -12,12 +12,21 @@ const columnPinning = ref({ right: ["actions"] });
 
 const { get } = useApi();
 
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
+
 const { data: PoData } = await useAsyncData(
   "purchase-orders-supplier",
   async () => {
+    const params: Record<string, string | number> = {
+      page: 1,
+      page_size: 50,
+      type: "supplier",
+    };
+    if (debouncedSearch.value) params.search = debouncedSearch.value;
     const res = await get<{ items: PurchaseOrdersSupplier[] }>(
       "/purchase-orders",
-      { page: 1, page_size: 50, type: "supplier" },
+      params,
     );
     return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
       id: purchaseOrder.id,
@@ -25,12 +34,13 @@ const { data: PoData } = await useAsyncData(
       customerName: purchaseOrder.supplier_name,
       fuelTotalPrice: purchaseOrder.total,
       transportPrice: 0,
+      distanceKm: purchaseOrder?.details.delivery.distance || 0,
       dateCreated: purchaseOrder.created_at.toString(),
       dateChanged: purchaseOrder.updated_at.toString(),
       status: purchaseOrder.status,
     }));
   },
-  { default: () => [] },
+  { default: () => [], watch: [debouncedSearch] },
 );
 
 const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
@@ -45,9 +55,14 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
     cell: ({ row }) => `${row.getValue("customerName")}`,
   },
   {
-    accessorKey: "fuelTotalPrice",
+    accessorKey: "fuelTotalQty",
     header: "Total",
-    cell: ({ row }) => `${formatCurrency(row.getValue("fuelTotalPrice"))}`,
+    cell: ({ row }) => `${formatCurrency(row.getValue("fuelTotalQty"))}`,
+  },
+  {
+    accessorKey: "distanceKm",
+    header: "Jarak KM",
+    cell: ({ row }) => `${formatToKm(row.getValue("distanceKm"))}`,
   },
   {
     accessorKey: "dateCreated",
@@ -62,12 +77,29 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
 ];
 
 const pagination = ref({ pageIndex: 0, pageSize: 7 });
+
+const detailOpen = ref(false);
+const detailId = ref<string | null>(null);
+function openDetail(id: string) {
+  detailId.value = id;
+  detailOpen.value = true;
+}
 </script>
 
 <template>
   <section class="flex flex-col lg:gap-4">
+    <div class="flex items-center gap-2">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="Cari nomor PO atau supplier..."
+        class="w-64"
+      />
+    </div>
+
     <UTable
       ref="table"
+      v-model:pagination="pagination"
       :data="PoData"
       :columns="columns"
       :column-pinning="columnPinning"
@@ -78,18 +110,27 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
         td: 'border-b border-default',
       }"
-      v-model:pagination="pagination"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
         <div class="flex items-center gap-2">
           <UButton
+            icon="i-lucide-eye"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            @click="openDetail(row.original.id)"
+          >
+            Selengkapnya
+          </UButton>
+          <UButton
             :to="`/marketing/detail-supplier/po-supplier-${row.original.id}`"
             variant="solid"
-            size="md"
+            size="sm"
             color="primary"
-            >Lihat Surat</UButton
           >
+            Lihat Surat
+          </UButton>
         </div>
       </template>
     </UTable>
@@ -103,4 +144,6 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
       />
     </div>
   </section>
+
+  <RecordDetailModal v-model:open="detailOpen" type="po" :id="detailId" />
 </template>

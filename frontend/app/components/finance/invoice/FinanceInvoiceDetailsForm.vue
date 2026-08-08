@@ -53,8 +53,8 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
           required
         >
           <UInputNumber
-            class="w-full"
             v-model="state.invoiceInformation.terms"
+            class="w-full"
             :min="1"
             locale="id-ID"
             :format-options="{

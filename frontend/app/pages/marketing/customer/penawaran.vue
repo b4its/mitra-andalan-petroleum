@@ -2,10 +2,10 @@
 import type { StepperItem } from "@nuxt/ui";
 import type { Uploads } from "~/types";
 import type { OfferingLetterPost, Customer } from "~/types/marketing";
-import {
-  type MarketingOLDetailsState,
-  type MarketingOLFooterState,
-  type MarketingOLHeaderState,
+import type {
+  MarketingOLDetailsState,
+  MarketingOLFooterState,
+  MarketingOLHeaderState,
 } from "~/types/schemas";
 
 const { user } = useAuth();
@@ -68,6 +68,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
   fuelPrices: {
     logisticInformation: "TRUCK",
     productName: "Bio Diesel",
+    hppPrice: 0,
     basePrice: 17950,
     totalPrice: 0,
     sellingPrice: {
@@ -125,6 +126,7 @@ async function onFooterSubmit() {
       status: "created",
       transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
       fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
+      created_by: user.value?.id ?? null,
       details: {
         ...letterHeader,
         ...letterOfferDetails,
@@ -164,12 +166,12 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UStepper disabled ref="stepper" :items>
+  <UStepper ref="stepper" disabled :items>
     <template #letterHeader>
       <MarketingOLHeaderForm
-        :receivers="receivers"
         v-model="letterHeader"
-        :hasPrevious="stepper?.hasPrev"
+        :receivers="receivers"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onHeaderSubmit"
       />
@@ -178,7 +180,7 @@ definePageMeta({ layout: "marketing" });
     <template #letterOfferDetails>
       <MarketingOLDetailsForm
         v-model="letterOfferDetails"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onDetailsSubmit"
       />
@@ -187,7 +189,7 @@ definePageMeta({ layout: "marketing" });
     <template #letterFooter>
       <MarketingOLFooterForm
         v-model="letterFooter"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFooterSubmit"
       />

@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.output/
+.nuxt/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+frontend/test-results/
+frontend/playwright-report/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.egg
+
+# Docker
+mysql_data/
+media_data/
+
+# Logs
+*.log
+
+# Misc
+guideline/
+*.tmp
+*.temp
+
+# Nuxt
+frontend/.nuxt/
+frontend/.output/
+frontend/node_modules/
+frontend/.pnpm-store/
+frontend/.pnpm-store
+frontend/.data/
+
+test-results/
+playwright-report/

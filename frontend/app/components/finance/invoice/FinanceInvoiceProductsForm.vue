@@ -133,13 +133,13 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             required
           >
             <UInputNumber
+              v-model="product.price"
               locale="id-ID"
               :format-options="{
                 style: 'currency',
                 currency: 'IDR',
                 currencyDisplay: 'narrowSymbol',
               }"
-              v-model="product.price"
               :min="0"
             />
           </UFormField>
@@ -151,6 +151,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             required
           >
             <UInputNumber
+              v-model="product.totalPrice"
               locale="id-ID"
               :format-options="{
                 style: 'currency',
@@ -159,7 +160,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
               }"
               :decrement="false"
               :increment="false"
-              v-model="product.totalPrice"
               disabled
             />
           </UFormField>
@@ -195,6 +195,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
           required
         >
           <UInputNumber
+            v-model="state.priceSummary.subTotal"
             class="w-full"
             locale="id-ID"
             :format-options="{
@@ -204,13 +205,13 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             }"
             :decrement="false"
             :increment="false"
-            v-model="state.priceSummary.subTotal"
             disabled
           />
         </UFormField>
 
         <UFormField name="pricePpn" label="PPn" class="w-full" required>
           <UInputNumber
+            v-model="state.priceSummary.ppn"
             class="w-full"
             locale="id-ID"
             :format-options="{
@@ -220,7 +221,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             }"
             :decrement="false"
             :increment="false"
-            v-model="state.priceSummary.ppn"
             disabled
           />
         </UFormField>
@@ -234,6 +234,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
           required
         >
           <UInputNumber
+            v-model="state.priceSummary.prePaid"
             class="w-full"
             locale="id-ID"
             :format-options="{
@@ -243,7 +244,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             }"
             :decrement="false"
             :increment="false"
-            v-model="state.priceSummary.prePaid"
           />
         </UFormField>
 
@@ -254,6 +254,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
           required
         >
           <UInputNumber
+            v-model="state.priceSummary.discount"
             class="w-full"
             locale="id-ID"
             :format-options="{
@@ -263,7 +264,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             }"
             :decrement="false"
             :increment="false"
-            v-model="state.priceSummary.discount"
           />
         </UFormField>
       </div>
@@ -276,6 +276,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
           required
         >
           <UInputNumber
+            v-model="state.priceSummary.grandTotal"
             class="w-full"
             locale="id-ID"
             :format-options="{
@@ -285,7 +286,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             }"
             :decrement="false"
             :increment="false"
-            v-model="state.priceSummary.grandTotal"
             disabled
           />
         </UFormField>
@@ -297,9 +297,9 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
           required
         >
           <UInput
+            v-model="state.priceSummary.spellNumber"
             class="w-full"
             type="text"
-            v-model="state.priceSummary.spellNumber"
             disabled
           />
         </UFormField>

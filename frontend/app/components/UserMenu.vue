@@ -29,7 +29,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
       },
     },
     {
-      label: "Appearance",
+      label: "Theme",
       icon: "i-lucide-sun",
       children: [
         {

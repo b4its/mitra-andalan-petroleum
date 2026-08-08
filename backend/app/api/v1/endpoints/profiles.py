@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from passlib.hash import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -46,7 +47,9 @@ async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)
     existing = await db.execute(select(User).where(User.email == body.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already exists")
-    user = User(**body.model_dump())
+    data = body.model_dump()
+    data["password"] = bcrypt.hash(data["password"])
+    user = User(**data)
     db.add(user)
     await db.flush()
     await db.refresh(user)
@@ -64,7 +67,10 @@ async def update_profile(id: str, body: ProfileUpdate, db: AsyncSession = Depend
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Not found")
-    for key, val in body.model_dump(exclude_unset=True).items():
+    data = body.model_dump(exclude_unset=True)
+    if "password" in data:
+        data["password"] = bcrypt.hash(data["password"])
+    for key, val in data.items():
         setattr(user, key, val)
     await db.flush()
     await db.refresh(user)

@@ -5,7 +5,9 @@ import type {
   OfferingLetters,
   PurchaseOrdersCustomerPost,
 } from "~/types/marketing";
-import { type MarketingPOCustomerState } from "~/types/schemas";
+import type { MarketingPOCustomerState } from "~/types/schemas";
+
+const { user } = useAuth();
 
 const items: StepperItem[] = [
   {
@@ -18,7 +20,7 @@ const items: StepperItem[] = [
 const { get, put, post, postFile } = useApi();
 
 const { data: OlData } = await useAsyncData(
-  "offering-letters",
+  "offering-letters-po",
   async () => {
     const res = await get<{ items: OfferingLetters[] }>("/offering-letters", {
       page: 1,
@@ -85,6 +87,11 @@ async function onPoCustomerSubmit() {
       date: poData.poReceivedDate,
       total: poData.total,
       status: "created",
+      created_by: user.value?.id ?? null,
+      // Simpan ID OL yang terpilih sebagai JSON array
+      id_offering_letters: JSON.stringify(
+        [poData.selectedOfferingLetter.id].filter(Boolean),
+      ),
     };
 
     const res = await post<any, PurchaseOrdersCustomerPost>(
@@ -133,11 +140,11 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UStepper disabled ref="stepper" :items>
+  <UStepper ref="stepper" disabled :items>
     <template #poCustomer>
       <MarketingPOCustomerForm
-        :offering-letters="offeringLetters"
         v-model="poCustomer"
+        :offering-letters="offeringLetters"
         @submit="onPoCustomerSubmit"
       />
     </template>

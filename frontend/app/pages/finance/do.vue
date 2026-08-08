@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: "finance" });
+definePageMeta({ layout: 'finance' })
 </script>
 
 <template>
@@ -13,7 +13,9 @@ definePageMeta({ layout: "finance" });
     </template>
 
     <template #body>
-      <FinanceDOData />
+      <div class="p-4 lg:p-6">
+        <FinanceDOData />
+      </div>
     </template>
   </UDashboardPanel>
 </template>
