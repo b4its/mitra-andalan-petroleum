@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent } from "@nuxt/ui";
 import {
   marketingPOAdditionalSchema,
-  type MarketingPOAdditionalState
-} from '~/types/schemas'
+  type MarketingPOAdditionalState,
+} from "~/types/schemas";
 
 defineProps<{
-  isLoading: boolean | undefined
-}>()
+  isLoading: boolean | undefined;
+}>();
 
 const emit = defineEmits<{
-  submit: []
-  previous: []
-}>()
+  submit: [];
+  previous: [];
+}>();
 
-const state = defineModel<MarketingPOAdditionalState>({ required: true })
+const state = defineModel<MarketingPOAdditionalState>({ required: true });
 
 function previous() {
-  emit('previous')
+  emit("previous");
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
-  emit('submit')
+  emit("submit");
 }
 </script>
 
@@ -51,6 +51,21 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
       <USeparator />
 
       <p>Delivery</p>
+
+      <UFormField name="distanceKm" label="Jarak KM" required>
+        <UInputNumber
+          v-model="state.delivery.distance"
+          class="w-full"
+          :min="1"
+          :format-options="{
+            style: 'unit',
+            unit: 'kilometer',
+            unitDisplay: 'short',
+          }"
+          :increment="false"
+          :decrement="false"
+        />
+      </UFormField>
 
       <UFormField name="loadingTerminal" label="Loading Terminal">
         <UInput
