@@ -26,6 +26,15 @@ const links = [
           onSelect: () => {
             open.value = false
           }
+        },
+        {
+          label: 'Halaman Marketing',
+          icon: 'i-lucide-arrow-up-right',
+          to: '/marketing',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
         }
       ]
     },
@@ -49,6 +58,15 @@ const links = [
           onSelect: () => {
             open.value = false
           }
+        },
+        {
+          label: 'Halaman Operations',
+          icon: 'i-lucide-arrow-up-right',
+          to: '/operations',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
         }
       ]
     },
@@ -65,7 +83,15 @@ const links = [
             open.value = false
           }
         },
-
+        {
+          label: 'Halaman Finance',
+          icon: 'i-lucide-arrow-up-right',
+          to: '/finance',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        }
       ]
     },
     {
@@ -76,6 +102,15 @@ const links = [
         {
           label: 'Rekap Keseluruhan',
           to: '/admin/accounting',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Halaman Accounting',
+          icon: 'i-lucide-arrow-up-right',
+          to: '/accounting',
           exact: true,
           onSelect: () => {
             open.value = false
