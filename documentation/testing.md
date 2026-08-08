@@ -78,6 +78,11 @@ Konfigurasi dual:
 - Tests berjalan serial (`fullyParallel: false`); `--workers=1` direkomendasikan
   untuk menghindari resource contention.
 - Login state dikelola per-test via localStorage — tidak ada shared cookies.
+- **Robust login helper**: setelah `networkidle`, helper menunggu tombol submit
+  enabled lalu melakukan **retry maksimal 3x** (isi ulang field + submit) bila
+  URL belum berubah. Ini mengatasi race hydration Vue: field bisa tereset
+  (state kosong → error "expected string, received undefined") jika submit
+  pertama terjadi sebelum hydration selesai.
 - Pengecekan body-visibility menunggu `waitUntil: "networkidle"` dan menargetkan
   elemen heading spesifik, bukan `<body>` (Nuxt menyembunyikan body saat hydration).
 - Error login divalidasi dengan `getByText("Login Gagal", { exact: true })`
@@ -86,7 +91,7 @@ Konfigurasi dual:
   but contains mismatches` (warning hydration Nuxt/Vue), Vue Devtools, dan
   experimental feature — jangan hapus filter ini tanpa alasan.
 
-### Cakupan test (63 tests)
+### Cakupan test (71 tests)
 | File | Jumlah | Coverage |
 |---|---|---|
 | `login.spec.ts` | 9 | form login, redirect per role, error password/email, route guard, logout |
@@ -95,8 +100,10 @@ Konfigurasi dual:
 | `accounting.spec.ts` | 7 | summary cards, chart of accounts, jurnal, buku besar, pemasukan/pengeluaran, console audit |
 | `admin-accounting.spec.ts` | 5 | rekap page, jurnal & trial balance, search filter, export dropdown, download .xlsx |
 | `export.spec.ts` | 9 | dropdown export 3 format di tiap halaman, download Excel/PDF/CSV |
+| `admin-customers.spec.ts` | 3 | kolom NPWP, validasi format NPWP (warning), tambah customer dengan NPWP valid |
+| `admin-database.spec.ts` | 5 | render kartu database, export SQL + download .sql, validasi tombol import/clear, import SQL |
 
-**Total: 63 tests.** Jalankan full suite:
+**Total: 71 tests.** Jalankan full suite:
 ```bash
 cd frontend
 timeout 900 pnpm exec playwright test --reporter=line --workers=1
@@ -110,4 +117,4 @@ timeout 900 pnpm exec playwright test --reporter=line --workers=1
 |---|---|---|
 | Backend | `pytest tests/ -v` | 95 |
 | Frontend (headless) | `npx vitest run` | 53 |
-| Frontend (browser) | `pnpm exec playwright test` | 63 |
+| Frontend (browser) | `pnpm exec playwright test` | 71 |
