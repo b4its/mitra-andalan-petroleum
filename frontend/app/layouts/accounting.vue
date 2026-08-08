@@ -168,23 +168,7 @@ const links = [
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <div class="flex items-center gap-1">
-          <UserMenu :collapsed="collapsed" class="flex-1" />
-          <UButton
-            :icon="'i-lucide-bell'"
-            size="sm"
-            color="neutral"
-            variant="ghost"
-            :square="collapsed"
-            @click="isSlideoverOpen = true"
-          >
-            <template v-if="unreadCount" #trailing>
-              <UBadge size="xs" color="error" variant="solid">
-                {{ unreadCount }}
-              </UBadge>
-            </template>
-          </UButton>
-        </div>
+        <UserMenu :collapsed="collapsed" />
       </template>
 
       <template #default="{ collapsed }">
@@ -196,20 +180,32 @@ const links = [
           popover
         />
       </template>
-
-      <template #footer="{ collapsed }">
-        <UButton
-          :icon="'i-lucide-bell'"
-          :label="collapsed ? undefined : 'Notifikasi'"
-          color="neutral"
-          variant="ghost"
-          :square="collapsed"
-          @click="isSlideoverOpen = true"
-        />
-      </template>
     </UDashboardSidebar>
 
-    <slot />
+    <UDashboardPanel id="accounting-main">
+      <template #header>
+        <UDashboardNavbar :ui="{ right: 'gap-2' }">
+          <template #right>
+            <UButton
+              :icon="'i-lucide-bell'"
+              color="neutral"
+              variant="ghost"
+              @click="isSlideoverOpen = true"
+            >
+              <template v-if="unreadCount" #trailing>
+                <UBadge size="xs" color="error" variant="solid">
+                  {{ unreadCount }}
+                </UBadge>
+              </template>
+            </UButton>
+          </template>
+        </UDashboardNavbar>
+      </template>
+
+      <template #body>
+        <slot />
+      </template>
+    </UDashboardPanel>
 
     <NotificationsSlideover />
   </UDashboardGroup>
