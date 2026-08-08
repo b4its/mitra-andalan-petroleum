@@ -58,4 +58,4 @@ frontend/.data/
 test-results/
 playwright-report/
 *.db
-db/
+/db/
