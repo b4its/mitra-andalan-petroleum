@@ -105,7 +105,7 @@ const links = [
           }
         },
         {
-          label: 'Export / Import SQL',
+          label: 'Database Konfigurasi',
           to: '/admin/database',
           exact: true,
           onSelect: () => {

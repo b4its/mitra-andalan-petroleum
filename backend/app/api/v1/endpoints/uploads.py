@@ -1,5 +1,6 @@
 import uuid
 from pathlib import Path
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy import select
@@ -22,6 +23,13 @@ def _ensure_dir(path: Path):
     path.mkdir(parents=True, exist_ok=True)
 
 
+def _safe_folder(folder: str) -> str:
+    folder = (folder or "general").strip().strip("/")
+    if not folder or not re.fullmatch(r"[A-Za-z0-9_-]+", folder):
+        raise HTTPException(status_code=400, detail="folder may only contain letters, numbers, underscore, and dash")
+    return folder
+
+
 def _delete_file(upload: Upload):
     file_path = MEDIA_DIR / upload.folder / upload.stored_filename
     if file_path.exists():
@@ -29,6 +37,7 @@ def _delete_file(upload: Upload):
 
 
 async def _process_single_file(file: UploadFile, folder: str, document_type: str | None, document_id: str | None, db: AsyncSession) -> Upload:
+    folder = _safe_folder(folder)
     ext = Path(file.filename or "").suffix.lower()
     if not ext:
         raise HTTPException(status_code=400, detail="File must have an extension")
@@ -36,6 +45,8 @@ async def _process_single_file(file: UploadFile, folder: str, document_type: str
         raise HTTPException(status_code=400, detail=f"File type {ext} not allowed")
 
     content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="File cannot be empty")
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File too large (max 50MB)")
 
@@ -80,15 +91,21 @@ async def upload_files(
     document_id: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
 ):
+    folder = _safe_folder(folder)
     if document_type and document_type not in DOCUMENT_TYPES:
         raise HTTPException(status_code=400, detail=f"document_type must be one of {DOCUMENT_TYPES}")
     if (document_type and not document_id) or (document_id and not document_type):
         raise HTTPException(status_code=400, detail="Both document_type and document_id must be provided together")
 
     results = []
-    for file in files:
-        upload = await _process_single_file(file, folder, document_type, document_id, db)
-        results.append(upload)
+    try:
+        for file in files:
+            upload = await _process_single_file(file, folder, document_type, document_id, db)
+            results.append(upload)
+    except Exception:
+        for upload in results:
+            _delete_file(upload)
+        raise
     return results
 
 
@@ -135,6 +152,8 @@ async def get_upload(id: str, db: AsyncSession = Depends(get_db)):
 async def update_upload(id: str, body: UploadUpdate, db: AsyncSession = Depends(get_db)):
     if body.document_type and body.document_type not in DOCUMENT_TYPES:
         raise HTTPException(status_code=400, detail=f"document_type must be one of {DOCUMENT_TYPES}")
+    if body.folder is not None:
+        body.folder = _safe_folder(body.folder)
 
     result = await db.execute(select(Upload).where(Upload.id == id))
     upload = result.scalar_one_or_none()

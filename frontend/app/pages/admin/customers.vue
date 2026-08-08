@@ -6,7 +6,7 @@ import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
 definePageMeta({ layout: 'admin' })
 
 const toast = useToast()
-const { get, post, put } = useApi()
+const { get, post, put, del } = useApi()
 
 // ── Tipe lokal ────────────────────────────────────────────────
 interface Customer {
@@ -170,11 +170,7 @@ async function confirmDelete() {
   if (deleting.value || !deleteTarget.value) return
   deleting.value = true
   try {
-    const res = await fetch(`/api/v1/customers/${deleteTarget.value.id}`, { method: 'DELETE' })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }))
-      throw new Error(err.detail || `Error ${res.status}`)
-    }
+    await del(`/customers/${deleteTarget.value.id}`)
     toast.add({ title: 'Berhasil', description: `Customer ${deleteTarget.value.name} berhasil dihapus.`, color: 'success' })
     deleteOpen.value = false
     deleteTarget.value = null

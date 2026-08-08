@@ -1,0 +1,183 @@
+<script setup lang="ts">
+import type { BalanceSheetResponse } from '~/types/accounting'
+
+const { get } = useApi()
+const toast = useToast()
+
+const dateFrom = ref('')
+const dateTo = ref('')
+
+const { data: neraca, refresh, pending } = await useAsyncData(
+  'accounting-neraca',
+  async () => {
+    const params: Record<string, string> = {}
+    if (dateFrom.value) params.date_from = dateFrom.value
+    if (dateTo.value) params.date_to = dateTo.value
+    return get<BalanceSheetResponse>('/accounting/balance-sheet', params)
+  },
+  { default: () => null, server: false }
+)
+
+const isBalanced = computed(() => {
+  if (!neraca.value) return true
+  return Math.abs(neraca.value.total_assets - (neraca.value.total_liabilities + neraca.value.total_equity)) < 1
+})
+
+definePageMeta({ layout: 'accounting' })
+</script>
+
+<template>
+  <UDashboardPanel id="accounting-neraca">
+    <template #header>
+      <UDashboardNavbar>
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+        <template #title>
+          <div>
+            <p class="text-base font-semibold">Neraca (Balance Sheet)</p>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+              Laporan posisi keuangan: Aset, Kewajiban, dan Ekuitas
+            </p>
+          </div>
+        </template>
+      </UDashboardNavbar>
+    </template>
+
+    <template #body>
+      <div class="p-4 lg:p-6">
+        <section class="flex flex-col lg:gap-4">
+          <UCard>
+            <div class="flex flex-wrap items-end gap-3">
+              <UFormField label="Dari Tanggal">
+                <UInput v-model="dateFrom" type="date" />
+              </UFormField>
+              <UFormField label="Sampai Tanggal">
+                <UInput v-model="dateTo" type="date" />
+              </UFormField>
+              <UButton
+                icon="i-lucide-search"
+                :loading="pending"
+                @click="() => refresh()"
+              >
+                Tampilkan
+              </UButton>
+            </div>
+          </UCard>
+
+          <template v-if="neraca">
+            <!-- Balance Check -->
+            <UCard v-if="!isBalanced" color="warning" variant="soft">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-alert-triangle" class="size-5" />
+                <span class="text-sm">Neraca tidak balance: Aset ({{ formatCurrency(neraca.total_assets) }}) &ne; Kewajiban + Ekuitas ({{ formatCurrency(neraca.total_liabilities + neraca.total_equity) }})</span>
+              </div>
+            </UCard>
+            <UCard v-else color="success" variant="soft">
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-check-circle" class="size-5" />
+                <span class="text-sm">Neraca balance: Aset = Kewajiban + Ekuitas</span>
+              </div>
+            </UCard>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <!-- Aset -->
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <span class="font-semibold text-info">Aset</span>
+                    <span class="font-bold text-lg">{{ formatCurrency(neraca.assets.total) }}</span>
+                  </div>
+                </template>
+                <div class="flex flex-col divide-y divide-default">
+                  <div
+                    v-for="acc in neraca.assets.accounts"
+                    :key="acc.account_id"
+                    class="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span class="text-neutral-500 dark:text-neutral-400">{{ acc.account_code }} - {{ acc.account_name }}</span>
+                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                  </div>
+                  <div v-if="!neraca.assets.accounts.length" class="py-4 text-center text-sm text-neutral-500">
+                    Belum ada data aset
+                  </div>
+                </div>
+              </UCard>
+
+              <!-- Kewajiban -->
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <span class="font-semibold text-warning">Kewajiban</span>
+                    <span class="font-bold text-lg">{{ formatCurrency(neraca.liabilities.total) }}</span>
+                  </div>
+                </template>
+                <div class="flex flex-col divide-y divide-default">
+                  <div
+                    v-for="acc in neraca.liabilities.accounts"
+                    :key="acc.account_id"
+                    class="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span class="text-neutral-500 dark:text-neutral-400">{{ acc.account_code }} - {{ acc.account_name }}</span>
+                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                  </div>
+                  <div v-if="!neraca.liabilities.accounts.length" class="py-4 text-center text-sm text-neutral-500">
+                    Belum ada data kewajiban
+                  </div>
+                </div>
+              </UCard>
+
+              <!-- Ekuitas -->
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <span class="font-semibold text-primary">Ekuitas</span>
+                    <span class="font-bold text-lg">{{ formatCurrency(neraca.equity.total) }}</span>
+                  </div>
+                </template>
+                <div class="flex flex-col divide-y divide-default">
+                  <div
+                    v-for="acc in neraca.equity.accounts"
+                    :key="acc.account_id"
+                    class="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span class="text-neutral-500 dark:text-neutral-400">{{ acc.account_code }} - {{ acc.account_name }}</span>
+                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                  </div>
+                  <div v-if="!neraca.equity.accounts.length" class="py-4 text-center text-sm text-neutral-500">
+                    Belum ada data ekuitas
+                  </div>
+                </div>
+              </UCard>
+            </div>
+
+            <!-- Summary -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <UCard color="info" variant="subtle">
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Aset</p>
+                <p class="text-2xl font-bold">{{ formatCurrency(neraca.total_assets) }}</p>
+              </UCard>
+              <UCard color="warning" variant="subtle">
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Kewajiban</p>
+                <p class="text-2xl font-bold">{{ formatCurrency(neraca.total_liabilities) }}</p>
+              </UCard>
+              <UCard color="primary" variant="subtle">
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Ekuitas</p>
+                <p class="text-2xl font-bold">{{ formatCurrency(neraca.total_equity) }}</p>
+              </UCard>
+            </div>
+          </template>
+
+          <UAlert
+            v-else-if="!pending"
+            title="Pilih Periode"
+            description="Gunakan filter tanggal di atas untuk menampilkan neraca."
+            icon="i-lucide-info"
+            color="info"
+            variant="soft"
+          />
+        </section>
+      </div>
+    </template>
+  </UDashboardPanel>
+</template>

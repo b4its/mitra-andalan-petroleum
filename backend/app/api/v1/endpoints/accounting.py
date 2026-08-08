@@ -23,6 +23,21 @@ from app.schemas.accounting import (
     IncomeExpenseRow,
     AccountingSummary,
     MessageResponse,
+    BalanceSheetResponse,
+    BalanceSheetSection,
+    BalanceSheetAccount,
+    CashflowResponse,
+    CashflowSection,
+    CashflowItem,
+    CostRecapResponse,
+    CostRecapGroup,
+    CostRecapRow,
+    MonitoringResponse,
+    MonitoringRow,
+    DailyCashResponse,
+    DailyCashRow,
+    BankInterestResponse,
+    BankInterestRow,
 )
 
 router = APIRouter()
@@ -627,4 +642,494 @@ async def get_summary(
         journal_count=journal_count,
         account_count=account_count,
         recent_journals=recent,
+    )
+
+
+# ── Neraca (Balance Sheet) ─────────────────────────────────────
+
+@router.get(
+    "/accounting/balance-sheet",
+    response_model=BalanceSheetResponse,
+    summary="Neraca (Balance Sheet)",
+    description="Laporan posisi keuangan: Aset, Kewajiban, dan Ekuitas.",
+)
+async def get_balance_sheet(
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    conditions = []
+    if date_from:
+        conditions.append(JournalEntry.entry_date >= date_from)
+    if date_to:
+        conditions.append(JournalEntry.entry_date <= date_to)
+
+    async def _section_balance(acc_type: str) -> tuple[list[BalanceSheetAccount], float]:
+        stmt = select(Account).where(Account.type == acc_type, Account.is_active == True).order_by(Account.code)
+        accounts = (await db.execute(stmt)).scalars().all()
+        items = []
+        total = 0.0
+        for acc in accounts:
+            q = (
+                select(
+                    func.coalesce(func.sum(JournalLine.debit), 0.0),
+                    func.coalesce(func.sum(JournalLine.credit), 0.0),
+                )
+                .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+                .where(JournalLine.account_id == acc.id)
+            )
+            for cond in conditions:
+                q = q.where(cond)
+            debit, credit = (await db.execute(q)).one()
+            if acc.type in DEBIT_TYPES:
+                saldo = round((debit or 0) - (credit or 0), 2)
+            else:
+                saldo = round((credit or 0) - (debit or 0), 2)
+            if saldo != 0:
+                items.append(BalanceSheetAccount(
+                    account_id=acc.id, account_code=acc.code,
+                    account_name=acc.name, balance=saldo,
+                ))
+                total += saldo
+        return items, round(total, 2)
+
+    asset_items, total_assets = await _section_balance("asset")
+    liability_items, total_liabilities = await _section_balance("liability")
+    equity_items, total_equity = await _section_balance("equity")
+
+    return BalanceSheetResponse(
+        assets=BalanceSheetSection(section="Aset", accounts=asset_items, total=total_assets),
+        liabilities=BalanceSheetSection(section="Kewajiban", accounts=liability_items, total=total_liabilities),
+        equity=BalanceSheetSection(section="Ekuitas", accounts=equity_items, total=total_equity),
+        total_assets=total_assets,
+        total_liabilities=total_liabilities,
+        total_equity=total_equity,
+    )
+
+
+# ── Rekap Cashflow ─────────────────────────────────────────────
+
+@router.get(
+    "/accounting/cashflow",
+    response_model=CashflowResponse,
+    summary="Rekap Arus Kas (Cashflow)",
+    description="Laporan arus kas: operasi, investasi, dan pendanaan.",
+)
+async def get_cashflow(
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    conditions = []
+    if date_from:
+        conditions.append(JournalEntry.entry_date >= date_from)
+    if date_to:
+        conditions.append(JournalEntry.entry_date <= date_to)
+
+    # Saldo awal kas/bank
+    opening_balance = 0.0
+    if date_from:
+        pre_cond = [JournalEntry.entry_date < date_from]
+        kas_stmt = (
+            select(
+                func.coalesce(func.sum(JournalLine.debit), 0.0),
+                func.coalesce(func.sum(JournalLine.credit), 0.0),
+            )
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .join(Account, JournalLine.account_id == Account.id)
+            .where(Account.type == "asset", or_(Account.name.ilike("Kas%"), Account.name.ilike("Bank%")))
+        )
+        for pc in pre_cond:
+            kas_stmt = kas_stmt.where(pc)
+        kas_debit, kas_credit = (await db.execute(kas_stmt)).one()
+        opening_balance = round((kas_debit or 0) - (kas_credit or 0), 2)
+
+    async def _cashflow_section(
+        section_name: str,
+        account_type: str,
+        is_inflow: bool,
+    ) -> CashflowSection:
+        side = "credit" if is_inflow else "debit"
+        stmt = (
+            select(JournalLine, JournalEntry.description, JournalEntry.entry_date, Account.name)
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .join(Account, JournalLine.account_id == Account.id)
+            .where(Account.type == account_type)
+        )
+        for cond in conditions:
+            stmt = stmt.where(cond)
+        stmt = stmt.order_by(JournalEntry.entry_date)
+        result = await db.execute(stmt)
+        items = []
+        total = 0.0
+        for line, desc, _, acc_name in result.all():
+            amount = (line.credit if side == "credit" else line.debit) or 0
+            if amount > 0:
+                items.append(CashflowItem(description=desc, amount=amount, category=acc_name))
+                total += amount
+        return CashflowSection(section=section_name, items=items, total=round(total, 2))
+
+    operating = await _cashflow_section("Arus Kas Operasi", "revenue", True)
+    operating_expense = await _cashflow_section("Arus Kas Operasi", "expense", False)
+    operating.total = round(operating.total - operating_expense.total, 2)
+    operating.items.extend(operating_expense.items)
+
+    investing = CashflowSection(section="Arus Kas Investasi", items=[], total=0)
+    financing = CashflowSection(section="Arus Kas Pendanaan", items=[], total=0)
+
+    net_cashflow = round(operating.total + investing.total + financing.total, 2)
+
+    # Saldo akhir
+    all_conditions = conditions.copy()
+    kas_stmt_end = (
+        select(
+            func.coalesce(func.sum(JournalLine.debit), 0.0),
+            func.coalesce(func.sum(JournalLine.credit), 0.0),
+        )
+        .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+        .join(Account, JournalLine.account_id == Account.id)
+        .where(Account.type == "asset", or_(Account.name.ilike("Kas%"), Account.name.ilike("Bank%")))
+    )
+    for cond in all_conditions:
+        kas_stmt_end = kas_stmt_end.where(cond)
+    kas_debit_end, kas_credit_end = (await db.execute(kas_stmt_end)).one()
+    closing_balance = round((kas_debit_end or 0) - (kas_credit_end or 0), 2)
+
+    return CashflowResponse(
+        operating=operating,
+        investing=investing,
+        financing=financing,
+        net_cashflow=net_cashflow,
+        opening_balance=opening_balance,
+        closing_balance=closing_balance,
+    )
+
+
+# ── Rekap Biaya (Cost Recap) ───────────────────────────────────
+
+@router.get(
+    "/accounting/cost-recap",
+    response_model=CostRecapResponse,
+    summary="Rekap Biaya",
+    description="Rekap seluruh biaya (expense) yang dikelompokkan per akun.",
+)
+async def get_cost_recap(
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    conditions = [Account.type == "expense"]
+    if date_from:
+        conditions.append(JournalEntry.entry_date >= date_from)
+    if date_to:
+        conditions.append(JournalEntry.entry_date <= date_to)
+
+    stmt = (
+        select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date,
+               JournalEntry.description, JournalEntry.reference, Account.code, Account.name)
+        .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+        .join(Account, JournalLine.account_id == Account.id)
+        .where(and_(*conditions))
+        .order_by(Account.code, JournalEntry.entry_date)
+    )
+    result = await db.execute(stmt)
+    rows_data = result.all()
+
+    groups_map: dict[str, dict] = {}
+    total_cost = 0.0
+    for line, entry_number, entry_date, desc, ref, code, name in rows_data:
+        amount = (line.debit or 0) - (line.credit or 0)
+        if amount <= 0:
+            continue
+        if code not in groups_map:
+            groups_map[code] = {"code": code, "name": name, "total": 0.0, "items": []}
+        groups_map[code]["items"].append(CostRecapRow(
+            id=line.id, entry_date=entry_date, description=desc,
+            account_code=code, account_name=name, amount=round(amount, 2), reference=ref,
+        ))
+        groups_map[code]["total"] = round(groups_map[code]["total"] + amount, 2)
+        total_cost += amount
+
+    groups = [
+        CostRecapGroup(account_code=g["code"], account_name=g["name"], total=g["total"], items=g["items"])
+        for g in groups_map.values()
+    ]
+
+    return CostRecapResponse(total_cost=round(total_cost, 2), groups=groups)
+
+
+# ── Rekap Monitoring ───────────────────────────────────────────
+
+@router.get(
+    "/accounting/monitoring",
+    response_model=MonitoringResponse,
+    summary="Rekap Monitoring Bulanan",
+    description="Rekap monitoring pendapatan, biaya, dan margin per bulan.",
+)
+async def get_monitoring(
+    year: int | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    the_year = year or date.today().year
+    bulan_names = [
+        "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+    ]
+
+    rows = []
+    totals = {"invoice": 0, "modal": 0, "oat": 0, "gm": 0, "penghasilan": 0, "operasional": 0, "fee": 0}
+
+    for bulan in range(1, 13):
+        start = date(the_year, bulan, 1)
+        if bulan == 12:
+            end = date(the_year + 1, 1, 1)
+        else:
+            end = date(the_year, bulan + 1, 1)
+
+        # Pendapatan (revenue credit)
+        rev_stmt = (
+            select(func.coalesce(func.sum(JournalLine.credit), 0.0))
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .join(Account, JournalLine.account_id == Account.id)
+            .where(Account.type == "revenue", JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+        )
+        penghasilan = round((await db.execute(rev_stmt)).scalar() or 0, 2)
+
+        # Expense (expense debit)
+        exp_stmt = (
+            select(func.coalesce(func.sum(JournalLine.debit), 0.0))
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .join(Account, JournalLine.account_id == Account.id)
+            .where(Account.type == "expense", JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+        )
+        operasional = round((await db.execute(exp_stmt)).scalar() or 0, 2)
+
+        # Invoice (total revenue transactions)
+        inv_count_stmt = (
+            select(func.count(JournalLine.id))
+            .select_from(JournalLine)
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .join(Account, JournalLine.account_id == Account.id)
+            .where(Account.type == "revenue", JournalLine.credit > 0,
+                   JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+        )
+        invoice_count = (await db.execute(inv_count_stmt)).scalar() or 0
+
+        # Fee manajemen (4% of revenue)
+        fee_manajemen = round(penghasilan * 0.04, 2)
+
+        # OAT = revenue from "Pendapatan Jasa Angkut" (4-1100)
+        oat_stmt = (
+            select(func.coalesce(func.sum(JournalLine.credit), 0.0))
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .join(Account, JournalLine.account_id == Account.id)
+            .where(Account.code == "4-1100",
+                   JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+        )
+        oat = round((await db.execute(oat_stmt)).scalar() or 0, 2)
+
+        # Modal Elnusa (estimated as 60% of revenue)
+        modal_elnusa = round(penghasilan * 0.6, 2)
+
+        gross_margin = round(penghasilan - operasional, 2)
+
+        if penghasilan > 0 or operasional > 0:
+            rows.append(MonitoringRow(
+                bulan=bulan_names[bulan],
+                invoice=invoice_count,
+                modal_elnusa=modal_elnusa,
+                oat=oat,
+                gross_margin=gross_margin,
+                penghasilan=penghasilan,
+                operasional=operasional,
+                fee_manajemen=fee_manajemen,
+            ))
+            totals["invoice"] += invoice_count
+            totals["modal"] += modal_elnusa
+            totals["oat"] += oat
+            totals["gm"] += gross_margin
+            totals["penghasilan"] += penghasilan
+            totals["operasional"] += operasional
+            totals["fee"] += fee_manajemen
+
+    return MonitoringResponse(
+        rows=rows,
+        total_invoice=totals["invoice"],
+        total_modal=round(totals["modal"], 2),
+        total_oat=round(totals["oat"], 2),
+        total_gross_margin=round(totals["gm"], 2),
+        total_penghasilan=round(totals["penghasilan"], 2),
+        total_operasional=round(totals["operasional"], 2),
+        total_fee_manajemen=round(totals["fee"], 2),
+    )
+
+
+# ── Kas Harian (Daily Cash) ────────────────────────────────────
+
+@router.get(
+    "/accounting/daily-cash",
+    response_model=DailyCashResponse,
+    summary="Kas Harian",
+    description="Mutasi kas/bank harian dengan saldo berjalan.",
+)
+async def get_daily_cash(
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    # Cari akun Kas/Bank
+    kas_stmt = select(Account).where(
+        Account.type == "asset",
+        or_(Account.name.ilike("Kas%"), Account.name.ilike("Bank%")),
+        Account.is_active == True,
+    ).order_by(Account.code)
+    kas_accounts = (await db.execute(kas_stmt)).scalars().all()
+    kas_ids = [a.id for a in kas_accounts]
+
+    if not kas_ids:
+        return DailyCashResponse(opening_balance=0, closing_balance=0, total_debit=0, total_credit=0, rows=[])
+
+    conditions = [JournalLine.account_id.in_(kas_ids)]
+    if date_from:
+        conditions.append(JournalEntry.entry_date >= date_from)
+    if date_to:
+        conditions.append(JournalEntry.entry_date <= date_to)
+
+    # Saldo awal
+    opening_balance = 0.0
+    if date_from:
+        pre_cond = [JournalLine.account_id.in_(kas_ids), JournalEntry.entry_date < date_from]
+        pre_stmt = (
+            select(
+                func.coalesce(func.sum(JournalLine.debit), 0.0),
+                func.coalesce(func.sum(JournalLine.credit), 0.0),
+            )
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .where(and_(*pre_cond))
+        )
+        pre_debit, pre_credit = (await db.execute(pre_stmt)).one()
+        opening_balance = round((pre_debit or 0) - (pre_credit or 0), 2)
+
+    stmt = (
+        select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date,
+               JournalEntry.description, JournalEntry.reference, Account.code, Account.name)
+        .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+        .join(Account, JournalLine.account_id == Account.id)
+        .where(and_(*conditions))
+        .order_by(JournalEntry.entry_date, JournalLine.created_at)
+    )
+    result = await db.execute(stmt)
+    rows_data = result.all()
+
+    balance = opening_balance
+    total_debit = 0.0
+    total_credit = 0.0
+    daily_rows = []
+    for line, entry_number, entry_date, desc, ref, code, name in rows_data:
+        debit = line.debit or 0
+        credit = line.credit or 0
+        balance = round(balance + debit - credit, 2)
+        total_debit += debit
+        total_credit += credit
+        daily_rows.append(DailyCashRow(
+            id=line.id, entry_date=entry_date, description=desc,
+            account_code=code, account_name=name,
+            debit=debit, credit=credit, balance=balance,
+            reference=ref,
+        ))
+
+    return DailyCashResponse(
+        opening_balance=opening_balance,
+        closing_balance=balance,
+        total_debit=round(total_debit, 2),
+        total_credit=round(total_credit, 2),
+        rows=daily_rows,
+    )
+
+
+# ── Rekap Bunga Bank ───────────────────────────────────────────
+
+@router.get(
+    "/accounting/bank-interest",
+    response_model=BankInterestResponse,
+    summary="Rekap Bunga Bank",
+    description="Rekap bunga bank: pinjaman, pembayaran, dan kalkulasi bunga.",
+)
+async def get_bank_interest(
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    # Cari akun pinjaman (liability) dan beban bunga (expense)
+    loan_stmt = select(Account).where(
+        Account.type == "liability",
+        Account.name.ilike("%pinjaman%"),
+        Account.is_active == True,
+    )
+    loan_accounts = (await db.execute(loan_stmt)).scalars().all()
+
+    interest_stmt = select(Account).where(
+        Account.type == "expense",
+        Account.name.ilike("%bunga%"),
+        Account.is_active == True,
+    )
+    interest_accounts = (await db.execute(interest_stmt)).scalars().all()
+
+    loan_ids = [a.id for a in loan_accounts]
+    interest_ids = [a.id for a in interest_accounts]
+
+    conditions = []
+    if date_from:
+        conditions.append(JournalEntry.entry_date >= date_from)
+    if date_to:
+        conditions.append(JournalEntry.entry_date <= date_to)
+
+    rows = []
+    total_principal = 0.0
+    total_interest = 0.0
+    total_paid = 0.0
+
+    # Data pinjaman (credit liability)
+    if loan_ids:
+        stmt = (
+            select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date,
+                   JournalEntry.description, JournalEntry.reference)
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .where(JournalLine.account_id.in_(loan_ids), JournalLine.credit > 0)
+        )
+        for cond in conditions:
+            stmt = stmt.where(cond)
+        stmt = stmt.order_by(JournalEntry.entry_date)
+        result = await db.execute(stmt)
+        for line, entry_number, entry_date, desc, ref in result.all():
+            amount = line.credit or 0
+            total_principal += amount
+            interest_val = round(amount * 0.06 / 12, 2)  # estimasi 6% p.a / 12 bulan
+            rows.append(BankInterestRow(
+                id=line.id, entry_date=entry_date, description=desc,
+                amount=amount, interest_rate=6.0, days=30,
+                interest_amount=interest_val, reference=ref,
+            ))
+            total_interest += interest_val
+
+    # Pembayaran bunga (debit expense)
+    if interest_ids:
+        stmt = (
+            select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date,
+                   JournalEntry.description, JournalEntry.reference)
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .where(JournalLine.account_id.in_(interest_ids), JournalLine.debit > 0)
+        )
+        for cond in conditions:
+            stmt = stmt.where(cond)
+        stmt = stmt.order_by(JournalEntry.entry_date)
+        result = await db.execute(stmt)
+        for line, entry_number, entry_date, desc, ref in result.all():
+            total_paid += line.debit or 0
+
+    return BankInterestResponse(
+        total_principal=round(total_principal, 2),
+        total_interest=round(total_interest, 2),
+        total_paid=round(total_paid, 2),
+        rows=rows,
     )

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from '@nuxt/ui'
-import type { Uploads } from '~/types'
+import type { ResUploads } from '~/types'
 import type { OfferingLetterPost, Customer } from '~/types/marketing'
 import type {
   MarketingOLDetailsState,
@@ -20,10 +20,10 @@ const { data: customerList } = await useAsyncData('customers', async () => {
     phone: receiver.phone,
     email: receiver.email
   }))
-})
+}, { default: () => [] })
 
-const receivers = ref(
-  customerList.value?.map((receiver: Customer) => {
+const receivers = computed(() =>
+  customerList.value.map((receiver: Customer) => {
     return {
       label: receiver.name,
       value: receiver.id,
@@ -139,11 +139,11 @@ async function onFooterSubmit() {
       throw new Error('Tanda tangan belum diunggah')
     }
 
-    const resUpload = await postFile<Uploads>('/upload', {
+    const resUpload = await postFile<ResUploads[]>('/upload', {
       files: [signature],
       folder: 'marketing',
       document_type: 'ol',
-      document_id: letterHeader.offeringLetterNumber
+      document_id: res.id
     })
 
     console.log(resUpload)

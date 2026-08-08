@@ -30,6 +30,27 @@ async function parseError(res: Response) {
   throw new Error(err.detail || `API error: ${res.status}`)
 }
 
+function newestFirst<T>(data: T, path: string): T {
+  if (path.startsWith('/accounting/accounts') || path.startsWith('/accounting/ledger') || path.startsWith('/accounting/trial-balance')) {
+    return data
+  }
+
+  const sort = (items: any[]) => [...items].sort((a, b) => {
+    const aTime = Date.parse(a?.created_at ?? a?.dateCreated ?? a?.createdAt ?? '')
+    const bTime = Date.parse(b?.created_at ?? b?.dateCreated ?? b?.createdAt ?? '')
+    if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0
+    return bTime - aTime
+  })
+
+  if (Array.isArray(data)) {
+    return sort(data) as T
+  }
+  if (data && typeof data === 'object' && Array.isArray((data as any).items)) {
+    return { ...(data as any), items: sort((data as any).items) }
+  }
+  return data
+}
+
 async function request(input: string, init?: RequestInit) {
   try {
     return await fetch(input, init)
@@ -50,7 +71,7 @@ export function useApi() {
     if (!res.ok) {
       await parseError(res)
     }
-    return res.json()
+    return newestFirst(await res.json(), path)
   }
 
   async function put<T, U>(path: string, body: U): Promise<T> {
@@ -78,6 +99,13 @@ export function useApi() {
   }
 
   async function postFile<T>(path: string, payload: Uploads): Promise<T> {
+    if (!payload.files.length) {
+      throw new Error('Tidak ada file yang dipilih')
+    }
+    if (Boolean(payload.document_type) !== Boolean(payload.document_id)) {
+      throw new Error('document_type dan document_id harus diisi bersamaan')
+    }
+
     const formData = new FormData()
 
     payload.files.forEach((file) => {
@@ -107,6 +135,13 @@ export function useApi() {
   }
 
   async function putFile<T>(path: string, payload: Uploads): Promise<T> {
+    if (!payload.files.length) {
+      throw new Error('Tidak ada file yang dipilih')
+    }
+    if (Boolean(payload.document_type) !== Boolean(payload.document_id)) {
+      throw new Error('document_type dan document_id harus diisi bersamaan')
+    }
+
     const formData = new FormData()
 
     payload.files.forEach((file) => {

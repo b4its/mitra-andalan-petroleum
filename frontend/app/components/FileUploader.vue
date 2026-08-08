@@ -62,7 +62,7 @@ function isImage(mime: string): boolean {
       ref="dropZoneRef"
       class="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 p-6 transition hover:border-primary-400 dark:border-neutral-600"
       @dragover.prevent
-      @drop.prevent="onDrop($dataTransfer?.files)"
+      @drop.prevent="event => event.dataTransfer?.files && onDrop(event.dataTransfer.files)"
     >
       <UIcon name="i-lucide-upload" class="mb-2 size-8 text-neutral-400" />
       <p class="text-sm font-medium">

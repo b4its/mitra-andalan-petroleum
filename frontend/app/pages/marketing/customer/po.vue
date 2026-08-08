@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem } from '@nuxt/ui'
-import type { Uploads } from '~/types'
+import type { ResUploads } from '~/types'
 import type {
   OfferingLetters,
   PurchaseOrdersCustomerPost
@@ -43,7 +43,7 @@ const { data: OlData } = await useAsyncData(
   }
 )
 
-const offeringLetters = ref(
+const offeringLetters = computed(() =>
   OlData.value
     .filter(ol => ol.status !== 'po_received')
     .map((ol) => {
@@ -113,11 +113,11 @@ async function onPoCustomerSubmit() {
       throw new Error('Tanda tangan belum diunggah')
     }
 
-    const resUpload = await postFile<Uploads>('/upload', {
+    const resUpload = await postFile<ResUploads[]>('/upload', {
       files: [poDocument],
       folder: 'marketing',
       document_type: 'po',
-      document_id: poCustomer.purchaseOrderNumber
+      document_id: res.id
     })
     console.log(resUpload)
 

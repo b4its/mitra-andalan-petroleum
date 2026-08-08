@@ -105,8 +105,8 @@ export interface Range {
 export interface Uploads {
   files: File[]
   folder: string
-  document_type: string
-  document_id: string
+  document_type?: string
+  document_id?: string
 }
 
 export interface UpdateFileUploads {

@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
+import type { ResUploads } from "~/types";
 import { type OperationsDOState } from "~/types/schemas";
+
+const { postFile } = useApi();
+const toast = useToast();
+const uploading = ref(false);
 
 const items: StepperItem[] = [
   {
@@ -11,13 +16,37 @@ const items: StepperItem[] = [
 ];
 
 const doReturned = reactive<OperationsDOState>({
-  deliveryOrderNumber: "1086/DO/MAP/V/2026",
+  deliveryOrderNumber: "",
   doDocument: undefined,
 });
 
-function onDoSubmit() {
-  console.log("Data submitted");
-  console.log({ ...doReturned });
+async function onDoSubmit() {
+  if (uploading.value) return;
+  const file = Array.isArray(doReturned.doDocument)
+    ? doReturned.doDocument[0]
+    : doReturned.doDocument;
+
+  if (!doReturned.deliveryOrderNumber || !file) {
+    toast.add({ title: "Validasi", description: "Pilih nomor DO dan file yang akan diupload.", color: "warning" });
+    return;
+  }
+
+  uploading.value = true;
+  try {
+    await postFile<ResUploads[]>("/upload", {
+      files: [file],
+      folder: "do",
+      document_type: "do",
+      document_id: doReturned.deliveryOrderNumber,
+    });
+    toast.add({ title: "Sukses", description: "File Delivery Order berhasil diupload.", color: "success" });
+    doReturned.deliveryOrderNumber = "";
+    doReturned.doDocument = undefined;
+  } catch (error: any) {
+    toast.add({ title: "Error", description: error.message || "Gagal upload file Delivery Order.", color: "error" });
+  } finally {
+    uploading.value = false;
+  }
 }
 
 const links = [

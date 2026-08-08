@@ -15,10 +15,10 @@ router = APIRouter()
     "/profiles",
     response_model=list[ProfileResponse],
     summary="List users",
-    description="Daftar semua user/profile (diurutkan berdasarkan nama).",
+    description="Daftar semua user/profile (terbaru di atas).",
 )
 async def list_profiles(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).order_by(User.name))
+    result = await db.execute(select(User).order_by(User.created_at.desc()))
     return result.scalars().all()
 
 
