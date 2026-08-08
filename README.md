@@ -60,7 +60,7 @@ mandalan/
 |---|---|---|---|
 | Backend | pytest | `docker compose exec mandalan-backend python -m pytest tests/ -v` | 95 |
 | Frontend (headless) | Vitest | `cd frontend && npx vitest run` | 53 |
-| Frontend (browser/E2E) | Playwright | `cd frontend && pnpm exec playwright test` | 63 |
+| Frontend (browser/E2E) | Playwright | `cd frontend && pnpm exec playwright test` | 71 |
 
 E2E Playwright menguji aplikasi via Chromium pada `localhost:8080` (Docker)
 atau `localhost:3000` (dev): login per role, dashboard admin (KPI, modal drill-down,

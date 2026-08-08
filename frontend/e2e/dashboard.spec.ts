@@ -9,10 +9,22 @@ async function loginAs(page: Page, role: string) {
   }
   const cred = credentials[role]
   await page.goto('/login', { waitUntil: 'networkidle' })
-  await page.fill('input[type="email"]', cred.email)
-  await page.fill('input[type="password"]', cred.password)
-  await page.click('button[type="submit"]')
-  await page.waitForURL(new RegExp(`/${role}`))
+  await expect(page.locator('button[type="submit"]')).toBeEnabled()
+  const expected = new RegExp(`/${role}`)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (page.url().match(expected)) return
+    await page.fill('input[type="email"]', cred.email)
+    await page.fill('input[type="password"]', cred.password)
+    await page.click('button[type="submit"]')
+    try {
+      await page.waitForURL(expected, { timeout: 15000 })
+      return
+    } catch {
+      // Hydration Vue mungkin belum selesai pada submit pertama: field tereset
+      // (state kosong) sehingga submit tidak menghasilkan navigasi. Isi ulang.
+    }
+  }
+  throw new Error(`Login gagal untuk role ${role}`)
 }
 
 test.describe('Admin Dashboard', () => {
