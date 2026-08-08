@@ -1,57 +1,71 @@
 <script setup lang="ts">
+import type { ResUploads } from "~/types";
+
 const props = defineProps<{
-  folder: string
-  documentType?: string
-  documentId?: string
-  label?: string
-  description?: string
-  accept?: string
-  multiple?: boolean
-}>()
+  folder: string;
+  documentType?: string;
+  documentId?: string;
+  label?: string;
+  description?: string;
+  accept?: string;
+  multiple?: boolean;
+}>();
 
 const emit = defineEmits<{
-  uploaded: [files: ResUploads[]]
-}>()
+  uploaded: [files: ResUploads[]];
+}>();
 
-const { pendingFiles, uploadedFiles, isUploading, addFiles, removeFile, cancelAll, uploadAll } = useFileUpload()
+const {
+  pendingFiles,
+  uploadedFiles,
+  isUploading,
+  addFiles,
+  removeFile,
+  cancelAll,
+  uploadAll,
+} = useFileUpload();
 
-const dropZoneRef = ref<HTMLDivElement>()
+const dropZoneRef = ref<HTMLDivElement>();
 
 function onDrop(files: FileList | File[]) {
-  addFiles(files)
+  addFiles(files);
 }
 
 function onFileChange(event: Event) {
-  const target = event.target as HTMLInputElement
+  const target = event.target as HTMLInputElement;
   if (target.files?.length) {
-    addFiles(target.files)
-    target.value = ''
+    addFiles(target.files);
+    target.value = "";
   }
 }
 
 function onRemove(index: number) {
-  removeFile(index)
+  removeFile(index);
 }
 
 function onCancelAll() {
-  cancelAll()
+  cancelAll();
 }
 
 async function onUploadAll() {
-  const results = await uploadAll(props.folder, props.documentType, props.documentId)
+  const results = await uploadAll(
+    props.folder,
+    props.documentType,
+    props.documentId,
+  );
   if (results.length) {
-    emit('uploaded', results)
+    emit("uploaded", results);
   }
 }
 
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
 function isImage(mime: string): boolean {
-  return mime.startsWith('image/')
+  return mime.startsWith("image/");
 }
 </script>
 
@@ -71,12 +85,7 @@ function isImage(mime: string): boolean {
       <p v-if="description" class="mt-1 text-xs text-neutral-400">
         {{ description }}
       </p>
-      <UButton
-        tag="label"
-        size="sm"
-        variant="soft"
-        class="mt-3 cursor-pointer"
-      >
+      <UButton tag="label" size="sm" variant="soft" class="mt-3 cursor-pointer">
         Pilih File
         <input
           type="file"
@@ -84,7 +93,7 @@ function isImage(mime: string): boolean {
           :multiple="multiple ?? true"
           class="hidden"
           @change="onFileChange"
-        >
+        />
       </UButton>
     </div>
 
@@ -97,20 +106,16 @@ function isImage(mime: string): boolean {
         <div class="flex gap-2">
           <UButton
             size="xs"
-            color="error"
-            variant="ghost"
-            @click="onCancelAll"
-          >
-            Batal Semua
-          </UButton>
-          <UButton
-            size="xs"
             color="primary"
             :loading="isUploading"
             :disabled="isUploading"
             @click="onUploadAll"
           >
             Upload Semua
+          </UButton>
+
+          <UButton size="xs" color="error" variant="ghost" @click="onCancelAll">
+            Batal Semua
           </UButton>
         </div>
       </div>
@@ -122,16 +127,22 @@ function isImage(mime: string): boolean {
           class="group relative overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800"
         >
           <!-- Image preview -->
-          <div v-if="isImage(item.file.type)" class="flex aspect-square items-center justify-center bg-neutral-100 dark:bg-neutral-700">
+          <div
+            v-if="isImage(item.file.type)"
+            class="flex aspect-square items-center justify-center bg-neutral-100 dark:bg-neutral-700"
+          >
             <img
               :src="item.previewUrl"
               :alt="item.file.name"
               class="size-full object-cover"
-            >
+            />
           </div>
 
           <!-- Non-image icon -->
-          <div v-else class="flex aspect-square items-center justify-center bg-neutral-100 dark:bg-neutral-700">
+          <div
+            v-else
+            class="flex aspect-square items-center justify-center bg-neutral-100 dark:bg-neutral-700"
+          >
             <UIcon name="i-lucide-file" class="size-10 text-neutral-400" />
           </div>
 
@@ -158,15 +169,16 @@ function isImage(mime: string): boolean {
 
     <!-- Uploaded files -->
     <div v-if="uploadedFiles.length" class="space-y-2">
-      <p class="text-sm font-medium text-green-600">
-        Telah diupload:
-      </p>
+      <p class="text-sm font-medium text-green-600">Telah diupload:</p>
       <div
         v-for="upload in uploadedFiles"
         :key="upload.id"
         class="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20"
       >
-        <UIcon name="i-lucide-check-circle" class="size-5 shrink-0 text-green-500" />
+        <UIcon
+          name="i-lucide-check-circle"
+          class="size-5 shrink-0 text-green-500"
+        />
         <div class="min-w-0 flex-1">
           <p class="truncate text-sm font-medium">
             {{ upload.original_filename }}
