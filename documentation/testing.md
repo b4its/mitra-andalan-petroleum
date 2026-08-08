@@ -91,19 +91,20 @@ Konfigurasi dual:
   but contains mismatches` (warning hydration Nuxt/Vue), Vue Devtools, dan
   experimental feature — jangan hapus filter ini tanpa alasan.
 
-### Cakupan test (71 tests)
+### Cakupan test (76 tests)
 | File | Jumlah | Coverage |
 |---|---|---|
 | `login.spec.ts` | 9 | form login, redirect per role, error password/email, route guard, logout |
 | `dashboard.spec.ts` | 18 | stat cards, sidebar, navigasi subpage, modal detail metrik, date range preset, page loads per role |
 | `pages.spec.ts` | 15 | page rendering per modul, responsive mobile, console error audit per role |
-| `accounting.spec.ts` | 7 | summary cards, chart of accounts, jurnal, buku besar, pemasukan/pengeluaran, console audit |
+| `accounting.spec.ts` | 10 | dashboard, chart of accounts, jurnal, buku besar, pemasukan/pengeluaran, kas harian, neraca, rekap (cashflow/biaya/bunga/monitoring), notifikasi, console audit |
 | `admin-accounting.spec.ts` | 5 | rekap page, jurnal & trial balance, search filter, export dropdown, download .xlsx |
 | `export.spec.ts` | 9 | dropdown export 3 format di tiap halaman, download Excel/PDF/CSV |
 | `admin-customers.spec.ts` | 3 | kolom NPWP, validasi format NPWP (warning), tambah customer dengan NPWP valid |
 | `admin-database.spec.ts` | 5 | render kartu database, export SQL + download .sql, validasi tombol import/clear, import SQL |
+| `admin-master-data.spec.ts` | 3 | tabel users (akun seed), suppliers, data delivery order |
 
-**Total: 71 tests.** Jalankan full suite:
+**Total: 76 tests.** Jalankan full suite:
 ```bash
 cd frontend
 timeout 900 pnpm exec playwright test --reporter=line --workers=1
@@ -117,4 +118,4 @@ timeout 900 pnpm exec playwright test --reporter=line --workers=1
 |---|---|---|
 | Backend | `pytest tests/ -v` | 95 |
 | Frontend (headless) | `npx vitest run` | 53 |
-| Frontend (browser) | `pnpm exec playwright test` | 71 |
+| Frontend (browser) | `pnpm exec playwright test` | 76 |

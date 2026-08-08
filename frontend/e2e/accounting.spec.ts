@@ -100,6 +100,33 @@ test.describe('Accounting pages', () => {
     await expect(page.locator('h1').filter({ hasText: 'Pengeluaran' })).toBeVisible()
   })
 
+  test('daily cash, balance sheet, and cost recap pages render', async ({ page }) => {
+    for (const [path, title] of [
+      ['/accounting/kas-harian', 'Kas Harian'],
+      ['/accounting/neraca', 'Neraca'],
+      ['/accounting/rekap-cashflow', 'Rekap Arus Kas'],
+      ['/accounting/rekap-biaya', 'Rekap Biaya'],
+      ['/accounting/rekap-bunga-bank', 'Rekap Bunga Bank'],
+      ['/accounting/rekap-monitoring', 'Rekap Monitoring']
+    ]) {
+      await page.goto(path, { waitUntil: 'networkidle' })
+      await expect(
+        page.locator('p').filter({ hasText: title }).first(),
+      ).toBeVisible()
+    }
+  })
+
+  test('notification page renders and marks all as read', async ({ page }) => {
+    await page.goto('/accounting/notifikasi', { waitUntil: 'networkidle' })
+    await expect(page.locator('p').filter({ hasText: 'Notifikasi' }).first()).toBeVisible()
+    const markAll = page.getByRole('button', { name: /Tandai semua|tandai semua/i }).first()
+    // Tombol hanya aktif bila ada notifikasi belum dibaca — skip bila tidak
+    if (await markAll.count() && await markAll.isEnabled()) {
+      await markAll.click()
+      await expect(page.getByText('Semua notifikasi ditandai dibaca').first()).toBeVisible()
+    }
+  })
+
   test('no console errors on accounting pages', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', err => errors.push(err.message))
@@ -112,9 +139,19 @@ test.describe('Accounting pages', () => {
       '/accounting/buku-besar',
       '/accounting/pemasukan',
       '/accounting/pengeluaran',
-      '/accounting/akun'
+      '/accounting/akun',
+      '/accounting/kas-harian',
+      '/accounting/neraca',
+      '/accounting/rekap-cashflow',
+      '/accounting/rekap-biaya',
+      '/accounting/rekap-bunga-bank',
+      '/accounting/rekap-monitoring',
+      '/accounting/notifikasi'
     ]) {
-      await page.goto(path, { waitUntil: 'networkidle' })
+      // Beberapa halaman rekap bisa menahan networkidle (request berulang),
+      // jadi tunggu 'load' saja lalu beri waktu hydration berjalan.
+      await page.goto(path, { waitUntil: 'load' })
+      await page.waitForTimeout(500)
     }
     const filtered = errors.filter(
       e =>
