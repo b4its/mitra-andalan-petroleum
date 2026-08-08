@@ -6,22 +6,36 @@ const open = ref(false)
 const notificationsOpen = ref(false)
 
 const { unreadCount, fetchNotifications } = useNotifications()
+const { user } = useAuth()
 
 // Fetch notifications on mount (for header badge)
 onMounted(() => {
   fetchNotifications()
 })
 
-const links = [
-  [
+const isAdmin = computed(() => user.value?.role === 'admin')
+
+const links = computed<NavigationMenuItem[][]>(() => {
+  const items: NavigationMenuItem[] = []
+
+  // Jika admin yang sedang mengakses halaman accounting, tambah link kembali ke admin
+  if (isAdmin.value) {
+    items.push({
+      label: 'Kembali ke Admin',
+      icon: 'i-lucide-arrow-left',
+      to: '/admin',
+      exact: true,
+      onSelect: () => { open.value = false }
+    })
+  }
+
+  items.push(
     {
       label: 'Dashboard',
       icon: 'i-lucide-house',
       to: '/accounting',
       exact: true,
-      onSelect: () => {
-        open.value = false
-      }
+      onSelect: () => { open.value = false }
     },
     {
       label: 'Notifikasi',
@@ -155,8 +169,10 @@ const links = [
         }
       ]
     }
-  ]
-] satisfies NavigationMenuItem[][]
+  )
+
+  return [items] satisfies NavigationMenuItem[][]
+})
 </script>
 
 <template>
