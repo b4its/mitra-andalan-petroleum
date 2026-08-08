@@ -18,10 +18,10 @@ router = APIRouter()
     "/customers",
     response_model=list[CustomerResponse],
     summary="List customers",
-    description="Daftar semua customer (diurutkan berdasarkan nama).",
+    description="Daftar semua customer (terbaru di atas).",
 )
 async def list_customers(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Customer).order_by(Customer.name))
+    result = await db.execute(select(Customer).order_by(Customer.created_at.desc()))
     return result.scalars().all()
 
 

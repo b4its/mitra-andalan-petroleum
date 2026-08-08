@@ -249,6 +249,60 @@ definePageMeta({ layout: 'accounting' })
           >
             Chart of Accounts
           </UButton>
+          <UButton
+            to="/accounting/neraca"
+            icon="i-lucide-scale"
+            block
+            color="primary"
+            variant="soft"
+          >
+            Neraca
+          </UButton>
+          <UButton
+            to="/accounting/rekap-cashflow"
+            icon="i-lucide-arrow-left-right"
+            block
+            color="neutral"
+            variant="soft"
+          >
+            Rekap Cashflow
+          </UButton>
+          <UButton
+            to="/accounting/rekap-biaya"
+            icon="i-lucide-receipt"
+            block
+            color="error"
+            variant="soft"
+          >
+            Rekap Biaya
+          </UButton>
+          <UButton
+            to="/accounting/rekap-monitoring"
+            icon="i-lucide-monitor"
+            block
+            color="neutral"
+            variant="soft"
+          >
+            Rekap Monitoring
+          </UButton>
+          <UButton
+            to="/accounting/kas-harian"
+            icon="i-lucide-wallet"
+            block
+            color="neutral"
+            variant="soft"
+          >
+            Kas Harian
+          </UButton>
+          <UButton
+            to="/accounting/rekap-bunga-bank"
+            icon="i-lucide-percent"
+            block
+            color="neutral"
+            variant="soft"
+          >
+            Rekap Bunga Bank
+          </UButton>
         </div>
       </UCard>
     </div>

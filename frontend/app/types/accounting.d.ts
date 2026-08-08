@@ -109,3 +109,134 @@ export interface AccountingSummary {
   account_count: number
   recent_journals: AccountingJournal[]
 }
+
+// ── Neraca (Balance Sheet) ──────────────────────────────────
+export interface BalanceSheetAccount {
+  account_id: string
+  account_code: string
+  account_name: string
+  balance: number
+}
+
+export interface BalanceSheetSection {
+  section: string
+  total: number
+  accounts: BalanceSheetAccount[]
+}
+
+export interface BalanceSheetResponse {
+  assets: BalanceSheetSection
+  liabilities: BalanceSheetSection
+  equity: BalanceSheetSection
+  total_assets: number
+  total_liabilities: number
+  total_equity: number
+}
+
+// ── Rekap Cashflow ──────────────────────────────────────────
+export interface CashflowItem {
+  description: string
+  amount: number
+  category: string
+}
+
+export interface CashflowSection {
+  section: string
+  total: number
+  items: CashflowItem[]
+}
+
+export interface CashflowResponse {
+  operating: CashflowSection
+  investing: CashflowSection
+  financing: CashflowSection
+  net_cashflow: number
+  opening_balance: number
+  closing_balance: number
+}
+
+// ── Rekap Biaya (Cost Recap) ────────────────────────────────
+export interface CostRecapRow {
+  id: string
+  entry_date: string
+  description: string
+  account_code: string
+  account_name: string
+  amount: number
+  reference: string | null
+}
+
+export interface CostRecapGroup {
+  account_code: string
+  account_name: string
+  total: number
+  items: CostRecapRow[]
+}
+
+export interface CostRecapResponse {
+  total_cost: number
+  groups: CostRecapGroup[]
+}
+
+// ── Rekap Monitoring ────────────────────────────────────────
+export interface MonitoringRow {
+  bulan: string
+  invoice: number
+  modal_elnusa: number
+  oat: number
+  gross_margin: number
+  penghasilan: number
+  operasional: number
+  fee_manajemen: number
+}
+
+export interface MonitoringResponse {
+  rows: MonitoringRow[]
+  total_invoice: number
+  total_modal: number
+  total_oat: number
+  total_gross_margin: number
+  total_penghasilan: number
+  total_operasional: number
+  total_fee_manajemen: number
+}
+
+// ── Kas Harian (Daily Cash) ────────────────────────────────
+export interface DailyCashRow {
+  id: string
+  entry_date: string
+  description: string
+  account_code: string
+  account_name: string
+  debit: number
+  credit: number
+  balance: number
+  reference: string | null
+}
+
+export interface DailyCashResponse {
+  opening_balance: number
+  closing_balance: number
+  total_debit: number
+  total_credit: number
+  rows: DailyCashRow[]
+}
+
+// ── Rekap Bunga Bank ────────────────────────────────────────
+export interface BankInterestRow {
+  id: string
+  entry_date: string
+  description: string
+  amount: number
+  interest_rate: number
+  days: number
+  interest_amount: number
+  reference: string | null
+}
+
+export interface BankInterestResponse {
+  total_principal: number
+  total_interest: number
+  total_paid: number
+  rows: BankInterestRow[]
+}

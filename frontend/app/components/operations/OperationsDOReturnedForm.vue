@@ -7,27 +7,32 @@ const emit = defineEmits<{
 }>()
 
 const state = defineModel<OperationsDOState>({ required: true })
+const { get } = useApi()
+
+const { data: deliveryOrderList } = await useAsyncData(
+  'operations-returned-delivery-orders',
+  async () => {
+    const res = await get<{ items: any[] }>('/delivery-orders', {
+      page: 1,
+      page_size: 100
+    })
+    return res.items || []
+  },
+  { default: () => [], server: false }
+)
+
+const deliveryOrders = computed(() =>
+  deliveryOrderList.value.map((deliveryOrder: any) => ({
+    label: deliveryOrder.customer_name || deliveryOrder.do_number,
+    value: deliveryOrder.id,
+    doNumber: deliveryOrder.do_number,
+  }))
+)
 
 function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
   emit('submit')
 }
 
-const value = ref<string>()
-
-const deliveryOrders = ref([
-  {
-    label: 'PT. MIGAS KUKAR MANDIRI',
-    value: '1086/DO/MAP/V/2026'
-  },
-  {
-    label: 'PT. BERAU MINERAL ENERGI',
-    value: '1092/DO/BME/V/2026'
-  },
-  {
-    label: 'PT. KALTIM OIL SERVICES',
-    value: '1098/DO/KOS/V/2026'
-  }
-])
 </script>
 
 <template>
@@ -51,7 +56,7 @@ const deliveryOrders = ref([
           <template #item-label="{ item }">
             {{ item.label }}
 
-            <span class="text-muted text-xs"> ({{ item.value }}) </span>
+            <span class="text-muted text-xs"> ({{ item.doNumber }}) </span>
           </template>
         </USelect>
       </UFormField>

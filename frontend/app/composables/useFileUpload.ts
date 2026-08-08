@@ -6,6 +6,7 @@ export interface TempFile {
 }
 
 export function useFileUpload() {
+  const { postFile } = useApi()
   const pendingFiles = ref<TempFile[]>([])
   const uploadedFiles = ref<ResUploads[]>([])
   const isUploading = ref(false)
@@ -44,9 +45,11 @@ export function useFileUpload() {
     try {
       const payload: Uploads = {
         files: pendingFiles.value.map(f => f.file),
-        folder,
-        document_type: documentType || 'general',
-        document_id: documentId || ''
+        folder
+      }
+      if (documentType && documentId) {
+        payload.document_type = documentType
+        payload.document_id = documentId
       }
 
       const results = await postFile<ResUploads[]>('/upload', payload)

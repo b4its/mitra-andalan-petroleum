@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
+import type { ResUploads } from '~/types'
 import { profileSchema, type ProfileState } from '~/types/schemas'
 
 const fileRef = ref<HTMLInputElement>()
+const selectedFile = ref<File>()
+const { postFile } = useApi()
 
 const profile = reactive<ProfileState>({
   name: 'Benjamin Canac',
@@ -11,13 +14,22 @@ const profile = reactive<ProfileState>({
 })
 const toast = useToast()
 async function onSubmit(event: FormSubmitEvent<ProfileState>) {
-  toast.add({
-    title: 'Success',
-    description: 'Your settings have been updated.',
-    icon: 'i-lucide-check',
-    color: 'success'
-  })
-  console.log(event.data)
+  try {
+    if (selectedFile.value) {
+      await postFile<ResUploads[]>('/upload', {
+        files: [selectedFile.value],
+        folder: 'marketing-harga'
+      })
+    }
+    toast.add({
+      title: 'Sukses',
+      description: 'Data harga solar berhasil disimpan.',
+      icon: 'i-lucide-check',
+      color: 'success'
+    })
+  } catch (error: any) {
+    toast.add({ title: 'Error', description: error.message || 'Gagal menyimpan file.', color: 'error' })
+  }
 }
 
 function onFileChange(e: Event) {
@@ -27,7 +39,8 @@ function onFileChange(e: Event) {
     return
   }
 
-  profile.avatar = URL.createObjectURL(input.files[0]!)
+  selectedFile.value = input.files[0]!
+  profile.avatar = URL.createObjectURL(selectedFile.value)
 }
 
 function onFileClick() {

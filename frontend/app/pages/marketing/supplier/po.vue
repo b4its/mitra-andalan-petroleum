@@ -26,7 +26,7 @@ const { data: supplierList } = await useAsyncData('suppliers', async () => {
     phone: receiver.phone,
     email: receiver.email
   }))
-})
+}, { default: () => [] })
 
 const { data: OlData } = await useAsyncData(
   'offering-letters-supplier-po',
@@ -52,7 +52,7 @@ const { data: OlData } = await useAsyncData(
   }
 )
 
-const offeringLetters = ref(
+const offeringLetters = computed(() =>
   OlData.value
     .filter(ol => ol.status === 'po_received')
     .map((ol) => {
@@ -74,8 +74,8 @@ const offeringLetters = ref(
     })
 )
 
-const suppliers = ref(
-  supplierList.value?.map((supplier: Customer) => {
+const suppliers = computed(() =>
+  supplierList.value.map((supplier: Customer) => {
     return {
       label: supplier.name,
       value: {

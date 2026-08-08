@@ -189,3 +189,140 @@ class AccountingSummary(BaseModel):
 class MessageResponse(BaseModel):
     message: str
     code: int = 200
+
+
+# ── Neraca (Balance Sheet) ─────────────────────────────────────
+
+class BalanceSheetAccount(BaseModel):
+    account_id: str
+    account_code: str
+    account_name: str
+    balance: float = 0
+
+
+class BalanceSheetSection(BaseModel):
+    section: str
+    total: float = 0
+    accounts: list[BalanceSheetAccount] = []
+
+
+class BalanceSheetResponse(BaseModel):
+    assets: BalanceSheetSection
+    liabilities: BalanceSheetSection
+    equity: BalanceSheetSection
+    total_assets: float = 0
+    total_liabilities: float = 0
+    total_equity: float = 0
+
+
+# ── Rekap Cashflow ─────────────────────────────────────────────
+
+class CashflowItem(BaseModel):
+    description: str
+    amount: float = 0
+    category: str = ""
+
+
+class CashflowSection(BaseModel):
+    section: str
+    total: float = 0
+    items: list[CashflowItem] = []
+
+
+class CashflowResponse(BaseModel):
+    operating: CashflowSection
+    investing: CashflowSection
+    financing: CashflowSection
+    net_cashflow: float = 0
+    opening_balance: float = 0
+    closing_balance: float = 0
+
+
+# ── Rekap Biaya (Cost Recap) ───────────────────────────────────
+
+class CostRecapRow(BaseModel):
+    id: str
+    entry_date: date
+    description: str
+    account_code: str
+    account_name: str
+    amount: float = 0
+    reference: str | None = None
+
+
+class CostRecapGroup(BaseModel):
+    account_code: str
+    account_name: str
+    total: float = 0
+    items: list[CostRecapRow] = []
+
+
+class CostRecapResponse(BaseModel):
+    total_cost: float = 0
+    groups: list[CostRecapGroup] = []
+
+
+# ── Rekap Monitoring ───────────────────────────────────────────
+
+class MonitoringRow(BaseModel):
+    bulan: str = ""
+    invoice: float = 0
+    modal_elnusa: float = 0
+    oat: float = 0
+    gross_margin: float = 0
+    penghasilan: float = 0
+    operasional: float = 0
+    fee_manajemen: float = 0
+
+
+class MonitoringResponse(BaseModel):
+    rows: list[MonitoringRow] = []
+    total_invoice: float = 0
+    total_modal: float = 0
+    total_oat: float = 0
+    total_gross_margin: float = 0
+    total_penghasilan: float = 0
+    total_operasional: float = 0
+    total_fee_manajemen: float = 0
+
+
+# ── Kas Harian (Daily Cash) ────────────────────────────────────
+
+class DailyCashRow(BaseModel):
+    id: str
+    entry_date: date
+    description: str
+    account_code: str
+    account_name: str
+    debit: float = 0
+    credit: float = 0
+    balance: float = 0
+    reference: str | None = None
+
+
+class DailyCashResponse(BaseModel):
+    opening_balance: float = 0
+    closing_balance: float = 0
+    total_debit: float = 0
+    total_credit: float = 0
+    rows: list[DailyCashRow] = []
+
+
+# ── Rekap Bunga Bank ───────────────────────────────────────────
+
+class BankInterestRow(BaseModel):
+    id: str
+    entry_date: date
+    description: str
+    amount: float = 0
+    interest_rate: float = 0
+    days: int = 0
+    interest_amount: float = 0
+    reference: str | None = None
+
+
+class BankInterestResponse(BaseModel):
+    total_principal: float = 0
+    total_interest: float = 0
+    total_paid: float = 0
+    rows: list[BankInterestRow] = []

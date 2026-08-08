@@ -20,10 +20,10 @@ const { data: customerList } = await useAsyncData('customers', async () => {
     phone: receiver.phone,
     email: receiver.email
   }))
-})
+}, { default: () => [] })
 
-const receivers = ref(
-  customerList.value?.map((receiver: Customer) => {
+const receivers = computed(() =>
+  customerList.value.map((receiver: Customer) => {
     return {
       label: receiver.name,
       value: receiver.id,
@@ -118,9 +118,17 @@ const letterFooter = reactive<MarketingOLFooterState>({
 })
 
 const { data: signature } = await useAsyncData('signature', async () => {
-  const res = await get<ResUploads[]>(
-    `/uploads?document_type=ol&document_id=${letterHeader.offeringLetterNumber}`
-  )
+  let res = await get<ResUploads[]>('/uploads', {
+    document_type: 'ol',
+    document_id: idOfferingLetter
+  })
+
+  if (!res.length && letterHeader.offeringLetterNumber) {
+    res = await get<ResUploads[]>('/uploads', {
+      document_type: 'ol',
+      document_id: letterHeader.offeringLetterNumber
+    })
+  }
 
   return {
     url: res[0]?.url
@@ -128,8 +136,10 @@ const { data: signature } = await useAsyncData('signature', async () => {
 })
 
 async function loadExistingFile() {
-  const url = `http://localhost:8000${signature.value?.url}`
+  if (!signature.value?.url) return
+  const url = signature.value.url
   const response = await fetch(url)
+  if (!response.ok) return
   const blob = await response.blob()
   const filename = url.split('/').pop()!
   letterFooter.offeror.signature = new File([blob], filename, {
@@ -181,11 +191,11 @@ async function onFooterSubmit() {
       throw new Error('Tanda tangan belum diunggah')
     }
 
-    const resUpload = await postFile<Uploads>('/upload', {
+    const resUpload = await postFile<ResUploads[]>('/upload', {
       files: [signature],
       folder: 'marketing',
       document_type: 'ol',
-      document_id: letterHeader.offeringLetterNumber
+      document_id: String(idOfferingLetter)
     })
 
     console.log(resUpload)

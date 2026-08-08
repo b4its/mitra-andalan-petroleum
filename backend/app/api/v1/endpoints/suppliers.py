@@ -18,10 +18,10 @@ router = APIRouter()
     "/suppliers",
     response_model=list[SupplierResponse],
     summary="List suppliers",
-    description="Daftar semua supplier (diurutkan berdasarkan nama).",
+    description="Daftar semua supplier (terbaru di atas).",
 )
 async def list_suppliers(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Supplier).order_by(Supplier.name))
+    result = await db.execute(select(Supplier).order_by(Supplier.created_at.desc()))
     return result.scalars().all()
 
 

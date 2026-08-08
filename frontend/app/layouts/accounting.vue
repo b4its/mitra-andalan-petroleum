@@ -31,6 +31,54 @@ const links = [
       }
     },
     {
+      label: 'Neraca',
+      icon: 'i-lucide-scale',
+      to: '/accounting/neraca',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Rekap Cashflow',
+      icon: 'i-lucide-arrow-left-right',
+      to: '/accounting/rekap-cashflow',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Rekap Biaya',
+      icon: 'i-lucide-receipt',
+      to: '/accounting/rekap-biaya',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Rekap Monitoring',
+      icon: 'i-lucide-monitor',
+      to: '/accounting/rekap-monitoring',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Kas Harian',
+      icon: 'i-lucide-wallet',
+      to: '/accounting/kas-harian',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'Rekap Bunga Bank',
+      icon: 'i-lucide-percent',
+      to: '/accounting/rekap-bunga-bank',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
       label: 'Pemasukan',
       icon: 'i-lucide-trending-up',
       to: '/accounting/pemasukan',
