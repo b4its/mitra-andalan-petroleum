@@ -6,7 +6,7 @@ const route = useRoute()
 const idPoLetter = route.params.id
 const { get } = useApi()
 
-const { data: purchaseOrderDetails } = await useAsyncData('purchase-order-detail-supplier', async () => {
+const { data: purchaseOrderDetails, pending } = await useAsyncData('purchase-order-detail-supplier', async () => {
   const res = await get<PurchaseOrdersDetails>(`/purchase-orders/${idPoLetter}`)
   return res
 })
@@ -27,7 +27,7 @@ definePageMeta({ layout: 'marketing' })
 <template>
   <UDashboardPanel id="po-supplier" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Purchase Order Supplier (${purchaseOrderDetails?.po_number}) | ${purchaseOrderDetails?.supplier_name}`"">
+      <UDashboardNavbar :title="pending ? `Purchase Order Supplier (…)` : `Purchase Order Supplier (${purchaseOrderDetails?.po_number}) | ${purchaseOrderDetails?.supplier_name}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -40,7 +40,12 @@ definePageMeta({ layout: 'marketing' })
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
+      <div v-if="pending" class="flex flex-col gap-4 w-full px-4 lg:px-6">
+        <div class="space-y-3">
+          <USkeleton v-for="i in 6" :key="i" class="h-12 rounded-lg" />
+        </div>
+      </div>
+      <div v-else class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
         <NuxtPage />
       </div>
     </template>

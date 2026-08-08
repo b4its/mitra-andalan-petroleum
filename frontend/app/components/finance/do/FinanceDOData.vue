@@ -13,7 +13,7 @@ const { get, post } = useApi();
 const search = ref("");
 const debouncedSearch = refDebounced(search, 300);
 
-const { data: DoData, refresh } = await useAsyncData(
+const { data: DoData, pending, refresh } = await useAsyncData(
   "finance-delivery-orders",
   async () => {
     const params: Record<string, string | number> = { page: 1, page_size: 100 };
@@ -213,7 +213,11 @@ const columns: TableColumn<any>[] = [
       />
     </div>
 
+    <div v-if="pending" class="space-y-3">
+      <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+    </div>
     <UTable
+      v-else
       ref="table"
       v-model:pagination="pagination"
       :data="DoData"

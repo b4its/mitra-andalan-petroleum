@@ -34,7 +34,7 @@ function onExport(format: 'excel' | 'pdf' | 'csv') {
   else toCSV(filename, exportColumns, account.rows)
 }
 
-const { data: accounts } = await useAsyncData(
+const { data: accounts, pending: pendingAccounts } = await useAsyncData(
   'accounting-accounts-ledger',
   () => get<AccountingAccount[]>('/accounting/accounts'),
   { default: () => [], server: false }
@@ -176,7 +176,22 @@ definePageMeta({ layout: 'accounting' })
         <section class="flex flex-col lg:gap-4">
 
     <UCard>
-      <div class="flex flex-wrap items-end gap-3">
+      <div v-if="pendingAccounts" class="flex flex-wrap items-end gap-3">
+        <div class="space-y-2">
+          <USkeleton class="h-4 w-16 rounded" />
+          <USkeleton class="h-10 w-72 rounded-lg" />
+        </div>
+        <div class="space-y-2">
+          <USkeleton class="h-4 w-24 rounded" />
+          <USkeleton class="h-10 w-40 rounded-lg" />
+        </div>
+        <div class="space-y-2">
+          <USkeleton class="h-4 w-24 rounded" />
+          <USkeleton class="h-10 w-40 rounded-lg" />
+        </div>
+        <USkeleton class="h-10 w-32 rounded-lg" />
+      </div>
+      <div v-else class="flex flex-wrap items-end gap-3">
         <UFormField label="Akun" class="w-72">
           <USelect
             v-model="accountId"

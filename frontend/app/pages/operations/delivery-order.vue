@@ -26,7 +26,7 @@ const editingDoId = computed(
     selectedDoId.value,
 );
 
-const { data: linkedDeliveryOrders } = await useAsyncData(
+const { data: linkedDeliveryOrders, pending: pendingLinked } = await useAsyncData(
   "delivery-orders-from-po-customer",
   async () => {
     const [posRes, dosRes] = await Promise.all([
@@ -156,7 +156,7 @@ const doFooter = reactive<OperationsDOFooterState>({
   driver: undefined,
 });
 
-const { data: existingDeliveryOrder } = await useAsyncData(
+const { data: existingDeliveryOrder, pending: pendingExisting } = await useAsyncData(
   () => `delivery-order-edit-${editingDoId.value}`,
   async () => {
     if (!editingDoId.value) return null;
@@ -383,7 +383,20 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #body>
-      <UStepper disabled ref="stepper" :items>
+      <div
+        v-if="pendingLinked || pendingExisting"
+        class="space-y-4 w-full p-4"
+      >
+        <div class="space-y-2">
+          <USkeleton class="h-4 w-32 rounded" />
+          <USkeleton class="h-10 w-full rounded-lg" />
+        </div>
+        <div class="space-y-2">
+          <USkeleton class="h-4 w-40 rounded" />
+          <USkeleton class="h-10 w-full rounded-lg" />
+        </div>
+      </div>
+      <UStepper v-else disabled ref="stepper" :items>
         <template #doHeader>
           <OperationsDOHeaderForm
             :purchase-orders="purchaseOrders"

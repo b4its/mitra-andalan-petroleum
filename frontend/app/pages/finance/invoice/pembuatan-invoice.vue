@@ -14,7 +14,7 @@ const toast = useToast();
 const { user } = useAuth();
 const loading = ref(false);
 
-const { data: poCustomer } = await useAsyncData(
+const { data: poCustomer, pending: pendingPo } = await useAsyncData(
   "purchase-orders-customer",
   async () => {
     const res = await get<{ items: PurchaseOrdersSupplier[] }>(
@@ -35,7 +35,7 @@ const { data: poCustomer } = await useAsyncData(
   { default: () => [] },
 );
 
-const { data: doCustomer, refresh } = await useAsyncData(
+const { data: doCustomer, refresh, pending: pendingDo } = await useAsyncData(
   "delivery-orders-customer",
   async () => {
     const res = await get<{ items: FinanceDeliveryOrders[] }>(
@@ -277,7 +277,17 @@ definePageMeta({ layout: "finance" });
 </script>
 
 <template>
-  <UStepper ref="stepper" disabled :items>
+  <div v-if="pendingPo || pendingDo" class="space-y-4 py-4">
+    <div class="space-y-2">
+      <USkeleton class="h-4 w-32 rounded" />
+      <USkeleton class="h-10 w-full rounded-lg" />
+    </div>
+    <div class="space-y-2">
+      <USkeleton class="h-4 w-40 rounded" />
+      <USkeleton class="h-10 w-full rounded-lg" />
+    </div>
+  </div>
+  <UStepper v-else ref="stepper" disabled :items>
     <template #invoiceHeader>
       <FinanceInvoiceHeaderForm
         v-model="financeHeader"

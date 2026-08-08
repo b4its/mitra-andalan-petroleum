@@ -8,7 +8,7 @@ function totalDebit(journal: AccountingJournal): number {
   return journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0)
 }
 
-const { data: summary, refresh } = await useAsyncData(
+const { data: summary, refresh, pending } = await useAsyncData(
   'accounting-summary',
   () => get<AccountingSummary>('/accounting/summary'),
   { default: () => null, server: false }
@@ -109,7 +109,19 @@ definePageMeta({ layout: 'accounting' })
     </template>
 
     <template #body>
-      <div class="p-4 lg:p-6">
+      <div v-if="pending" class="p-4 lg:p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <USkeleton v-for="i in 4" :key="i" class="h-24 rounded-lg" />
+        </div>
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <USkeleton v-for="i in 4" :key="i" class="h-24 rounded-lg" />
+        </div>
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <USkeleton class="h-64 rounded-lg" />
+          <USkeleton class="h-64 rounded-lg" />
+        </div>
+      </div>
+      <div v-else class="p-4 lg:p-6">
         <section class="flex flex-col gap-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <UCard v-for="card in cards" :key="card.title">

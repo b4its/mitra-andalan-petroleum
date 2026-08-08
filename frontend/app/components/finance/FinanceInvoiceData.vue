@@ -17,7 +17,7 @@ const loading = ref(false);
 const search = ref("");
 const debouncedSearch = refDebounced(search, 300);
 
-const { data: InvoiceData, refresh } = await useAsyncData(
+const { data: InvoiceData, pending, refresh } = await useAsyncData(
   "invoices",
   async () => {
     const params: Record<string, string | number> = { page: 1, page_size: 50 };
@@ -204,7 +204,11 @@ function openDetail(id: string) {
       />
     </div>
 
+    <div v-if="pending" class="space-y-3">
+      <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+    </div>
     <UTable
+      v-else
       ref="table"
       v-model:pagination="pagination"
       :data="InvoiceData"

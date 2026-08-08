@@ -9,7 +9,7 @@ const emit = defineEmits<{
 const state = defineModel<OperationsDOState>({ required: true })
 const { get } = useApi()
 
-const { data: deliveryOrderList } = await useAsyncData(
+const { data: deliveryOrderList, pending } = await useAsyncData(
   'operations-returned-delivery-orders',
   async () => {
     const res = await get<{ items: any[] }>('/delivery-orders', {
@@ -44,7 +44,18 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
     @submit="onSubmit"
   >
     <UPageCard variant="soft">
-      <UFormField name="deliveryOrder" label="Nomor Delivery Order" required>
+      <div v-if="pending" class="space-y-4 py-2">
+        <div class="space-y-2">
+          <USkeleton class="h-4 w-40 rounded" />
+          <USkeleton class="h-10 w-full rounded-lg" />
+        </div>
+        <div class="space-y-2">
+          <USkeleton class="h-4 w-40 rounded" />
+          <USkeleton class="h-10 w-full rounded-lg" />
+        </div>
+      </div>
+      <template v-else>
+        <UFormField name="deliveryOrder" label="Nomor Delivery Order" required>
         <USelect
           v-model="state.deliveryOrderNumber"
           :items="deliveryOrders"
@@ -78,6 +89,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
           Upload DO
         </UButton>
       </div>
+      </template>
     </UPageCard>
   </UForm>
 </template>

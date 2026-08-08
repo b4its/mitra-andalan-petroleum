@@ -7,7 +7,7 @@ const props = defineProps<{
   range: Range
 }>()
 
-const { data: stats } = await useAsyncData<Stats[]>(
+const { data: stats, pending } = await useAsyncData<Stats[]>(
   'marketing-stats',
   async () => {
     const { get } = useApi()
@@ -25,7 +25,11 @@ const { data: stats } = await useAsyncData<Stats[]>(
 </script>
 
 <template>
-  <UPageGrid class="lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-px">
+  <div v-if="pending" class="grid gap-4 lg:grid-cols-4">
+    <USkeleton v-for="i in 4" :key="i" class="h-28 rounded-xl" />
+  </div>
+
+  <UPageGrid v-else class="lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-px">
     <UPageCard
       v-for="(stat, index) in stats"
       :key="index"

@@ -6,12 +6,12 @@ const route = useRoute()
 const idOfferingLetter = route.params.id
 const { get } = useApi()
 
-const { data: offeringLetterDetails } = await useAsyncData('offering-letter-detail', async () => {
+const { data: offeringLetterDetails, pending: pendingOL } = await useAsyncData('offering-letter-detail', async () => {
   const res = await get<OfferingLetterPost>(`/offering-letters/${idOfferingLetter}`)
   return res
 })
 
-const { data: customerDetail } = await useAsyncData(
+const { data: customerDetail, pending: pendingCustomer } = await useAsyncData(
   'customer-detail-offering',
   async () => {
     const res = await get<Customer>(
@@ -42,7 +42,7 @@ definePageMeta({ layout: 'marketing' })
 <template>
   <UDashboardPanel id="offering-letter" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Surat Penawaran Customer (${offeringLetterDetails?.details.offeringLetterNumber}) | ${customerDetail?.name}`"">
+      <UDashboardNavbar :title="pendingOL || pendingCustomer ? `Surat Penawaran Customer (…)` : `Surat Penawaran Customer (${offeringLetterDetails?.details.offeringLetterNumber}) | ${customerDetail?.name}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -55,7 +55,12 @@ definePageMeta({ layout: 'marketing' })
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
+      <div v-if="pendingOL || pendingCustomer" class="flex flex-col gap-4 w-full px-4 lg:px-6">
+        <div class="space-y-3">
+          <USkeleton v-for="i in 6" :key="i" class="h-12 rounded-lg" />
+        </div>
+      </div>
+      <div v-else class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
         <NuxtPage />
       </div>
     </template>

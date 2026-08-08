@@ -40,7 +40,7 @@ function onExport(format: "excel" | "pdf" | "csv") {
   else toCSV(filename, exportColumns, accounts.value);
 }
 
-const { data: accounts, refresh } = await useAsyncData(
+const { data: accounts, refresh, pending } = await useAsyncData(
   "accounting-accounts",
   async () => {
     const params: Record<string, string | number | boolean> = {
@@ -258,7 +258,11 @@ definePageMeta({ layout: "accounting" });
           </div>
 
           <UCard>
+            <div v-if="pending" class="divide-y divide-default">
+              <USkeleton v-for="i in 5" :key="i" class="my-3 h-12 rounded-lg" />
+            </div>
             <UTable
+              v-else
               :data="accounts"
               :columns="columns"
               :ui="{

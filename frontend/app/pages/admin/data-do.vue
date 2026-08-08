@@ -39,7 +39,7 @@ interface CustomerOption {
   name: string;
 }
 
-const { data: dos, refresh } = await useAsyncData(
+const { data: dos, refresh, pending } = await useAsyncData(
   "admin-delivery-orders",
   async () => {
     const params: Record<string, string | number> = { page: 1, page_size: 100 };
@@ -53,7 +53,7 @@ const { data: dos, refresh } = await useAsyncData(
   { default: () => [], watch: [debouncedSearch], server: false },
 );
 
-const { data: customers } = await useAsyncData(
+const { data: customers, pending: pendingCustomers } = await useAsyncData(
   "admin-customers-options",
   () => get<CustomerOption[]>("/customers"),
   { default: () => [], server: false },
@@ -366,7 +366,11 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
         </div>
 
         <UCard>
+          <div v-if="pending" class="divide-y divide-default">
+            <USkeleton v-for="i in 5" :key="i" class="my-3 h-12 rounded-lg" />
+          </div>
           <UTable
+            v-else
             ref="table"
             v-model:pagination="pagination"
             :data="dos"
@@ -489,10 +493,12 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
         </UFormField>
         <UFormField label="Customer" required>
           <USelect
+            v-if="!pendingCustomers"
             v-model="form.customer_id"
             :items="customerItems"
             value-key="value"
           />
+          <USkeleton v-else class="h-10 w-full rounded-lg" />
         </UFormField>
         <div class="grid grid-cols-2 gap-3">
           <UFormField label="Nomor PO">

@@ -137,7 +137,13 @@ definePageMeta({ layout: 'accounting' })
             </div>
           </UCard>
 
-          <template v-if="data">
+          <div v-if="pending" class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <USkeleton v-for="i in 3" :key="i" class="h-24 rounded-lg" />
+            </div>
+            <USkeleton class="h-64 rounded-lg" />
+          </div>
+          <template v-else-if="data">
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <UCard color="info" variant="subtle">

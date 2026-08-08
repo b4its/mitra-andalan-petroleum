@@ -65,7 +65,15 @@ definePageMeta({ layout: 'accounting' })
             </div>
           </UCard>
 
-          <template v-if="neraca">
+          <div v-if="pending" class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <USkeleton v-for="i in 3" :key="i" class="h-64 rounded-lg" />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <USkeleton v-for="i in 3" :key="i" class="h-24 rounded-lg" />
+            </div>
+          </div>
+          <template v-else-if="neraca">
             <!-- Balance Check -->
             <UCard v-if="!isBalanced" color="warning" variant="soft">
               <div class="flex items-center gap-2">
