@@ -12,6 +12,7 @@ const { get, post, put, del } = useApi()
 interface Customer {
   id: string;
   name: string;
+  npwp: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -40,6 +41,7 @@ const filtered = computed(() => {
   return list.filter(
     (c) =>
       c.name.toLowerCase().includes(q) ||
+      (c.npwp ?? "").toLowerCase().includes(q) ||
       (c.email ?? "").toLowerCase().includes(q) ||
       (c.phone ?? "").toLowerCase().includes(q) ||
       (c.address ?? "").toLowerCase().includes(q),
@@ -58,6 +60,11 @@ watch(search, () => {
 // ── Kolom tabel ───────────────────────────────────────────────
 const columns: TableColumn<Customer>[] = [
   { accessorKey: "name", header: "Nama" },
+  {
+    accessorKey: "npwp",
+    header: "NPWP",
+    cell: ({ row }) => row.getValue("npwp") || "-",
+  },
   {
     accessorKey: "email",
     header: "Email",
@@ -88,6 +95,14 @@ const selectedCustomer = ref<Customer | null>(null);
 // ── Form schema ───────────────────────────────────────────────
 const schema = z.object({
   name: z.string().min(2, "Minimal 2 karakter"),
+  npwp: z
+    .string()
+    .regex(
+      /^\d{2}\.\d{3}\.\d{3}\.\d{1}-\d{3}\.\d{3}$/,
+      "Format NPWP tidak valid (contoh: 01.234.567.8-901.000)",
+    )
+    .optional()
+    .or(z.literal("")),
   address: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email("Email tidak valid").optional(),
@@ -97,6 +112,7 @@ type Schema = z.output<typeof schema>;
 
 const formState = reactive({
   name: "",
+  npwp: "",
   address: "",
   phone: "",
   email: "",
@@ -109,6 +125,7 @@ function openAdd() {
   modalMode.value = "add";
   selectedCustomer.value = null;
   formState.name = "";
+  formState.npwp = "";
   formState.address = "";
   formState.phone = "";
   formState.email = "";
@@ -125,6 +142,7 @@ function openEdit(customer: Customer) {
   modalMode.value = "edit";
   selectedCustomer.value = customer;
   formState.name = customer.name;
+  formState.npwp = customer.npwp ?? "";
   formState.address = customer.address ?? "";
   formState.phone = customer.phone ?? "";
   formState.email = customer.email ?? "";
@@ -136,7 +154,11 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
   if (saving.value) return;
   saving.value = true;
   try {
-    await post<Customer, Schema>("/customers", event.data);
+    const payload = {
+      ...event.data,
+      npwp: event.data.npwp?.trim() ? event.data.npwp.trim() : null,
+    };
+    await post<Customer, typeof payload>("/customers", payload);
     toast.add({
       title: "Berhasil",
       description: "Customer baru berhasil ditambahkan.",
@@ -160,9 +182,13 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
   if (saving.value || !selectedCustomer.value) return;
   saving.value = true;
   try {
-    await put<Customer, Schema>(
+    const payload = {
+      ...event.data,
+      npwp: event.data.npwp?.trim() ? event.data.npwp.trim() : null,
+    };
+    await put<Customer, typeof payload>(
       `/customers/${selectedCustomer.value.id}`,
-      event.data,
+      payload,
     );
     toast.add({
       title: "Berhasil",
@@ -326,6 +352,10 @@ const modalTitle = computed(() => {
             <p class="font-medium">{{ selectedCustomer.name }}</p>
           </div>
           <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">NPWP</p>
+            <p class="font-medium">{{ selectedCustomer.npwp || "-" }}</p>
+          </div>
+          <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">Email</p>
             <p class="font-medium">{{ selectedCustomer.email || "-" }}</p>
           </div>
@@ -365,6 +395,14 @@ const modalTitle = computed(() => {
           <UInput
             v-model="formState.name"
             placeholder="Nama customer"
+            autocomplete="off"
+          />
+        </UFormField>
+        <UFormField name="npwp" label="NPWP">
+          <UInput
+            v-model="formState.npwp"
+            v-maska="'00.000.000.0-000.000'"
+            placeholder="00.000.000.0-000.000"
             autocomplete="off"
           />
         </UFormField>

@@ -67,26 +67,12 @@ const { data, pending, error, refresh } = await useAsyncData(
       date_from: range.value.start.toISOString(),
       date_to: range.value.end.toISOString(),
     }),
-  { default: () => null, watch: [range] },
+  { default: () => ({ metrics: [], trends: [], distributions: {}, notifications: [], activities: [] }), watch: [range] },
 );
 
-const mappedAnalytics = ref([
-  data.value.metrics.find((d: any) => d.key === "outstanding_value"),
-  data.value.metrics.find((d: any) => d.key === "overdue_value"),
-  data.value.metrics.find((d: any) => d.key === "invoice_value"),
-  data.value.metrics.find((d: any) => d.key === "paid_value"),
-  data.value.metrics.find((d: any) => d.key === "sales_value"),
-  data.value.metrics.find((d: any) => d.key === "fuel_volume"),
-  data.value.metrics.find((d: any) => d.key === "delivery_orders"),
-  data.value.metrics.find((d: any) => d.key === "offering_letters"),
-  data.value.metrics.find((d: any) => d.key === "customer_purchase_orders"),
-  data.value.metrics.find((d: any) => d.key === "supplier_purchase_orders"),
-  data.value.metrics.find((d: any) => d.key === "customers"),
-  data.value.metrics.find((d: any) => d.key === "suppliers"),
-  data.value.metrics.find((d: any) => d.key === "unread_notifications"),
-  data.value.metrics.find((d: any) => d.key === "users"),
-  data.value.metrics.find((d: any) => d.key === "uploads"),
-]);
+const mappedAnalytics = computed(() =>
+  (data.value?.metrics ?? []).filter(Boolean)
+);
 
 function showMetric(metric: any) {
   selectedMetric.value = metric;

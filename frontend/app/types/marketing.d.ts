@@ -1,6 +1,7 @@
 export interface Customer {
   id: string;
   name: string;
+  npwp: string | null;
   address: string;
   phone: string;
   email: string;

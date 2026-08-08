@@ -22,6 +22,8 @@ export interface Notifications {
   message: string
   type: string
   sender_id: string | null
+  user_name: string | null
+  role: string | null
   to: string | null
   is_read: boolean
   created_at: Date

@@ -58,9 +58,9 @@ async def _seed_customers(db: AsyncSession):
         return
 
     customers = [
-        Customer(name="PT. Bina Karya Sentosa"),
-        Customer(name="CV. Maju Jaya Abadi"),
-        Customer(name="PT. Sumber Rejeki Mandiri"),
+        Customer(name="PT. Bina Karya Sentosa", npwp="01.234.567.8-901.000"),
+        Customer(name="CV. Maju Jaya Abadi", npwp="02.345.678.9-012.000"),
+        Customer(name="PT. Sumber Rejeki Mandiri", npwp="03.456.789.0-123.000"),
     ]
     for c in customers:
         db.add(c)
@@ -204,6 +204,7 @@ async def _seed_notifications(db: AsyncSession):
     marketing_user = users.get("marketing")
     ops_user = users.get("operations")
     finance_user = users.get("finance")
+    accounting_user = users.get("accounting")
 
     notifications = [
         Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Bina Karya Sentosa telah masuk.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
@@ -212,6 +213,10 @@ async def _seed_notifications(db: AsyncSession):
         Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2025 memerlukan revisi.", type="error", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
         Notification(title="Penawaran Baru", message="Surat penawaran 003/OL/VI/2025 berhasil dibuat oleh tim marketing.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=False),
         Notification(title="PO Supplier Dibuat", message="Purchase Order ke PT. Supplier Logistik Mandiri berhasil dibuat.", type="success", sender_id=marketing_user.id if marketing_user else None, to="/marketing/supplier", is_read=False),
+        # Notifikasi khusus role accounting
+        Notification(title="Jurnal Baru", message="Jurnal umum baru telah diposting oleh tim finance.", type="info", sender_id=finance_user.id if finance_user else None, role="accounting", to="/accounting/jurnal-umum", is_read=True),
+        Notification(title="Laba Rugi Bulanan", message="Laporan laba rugi bulan Juli 2025 tersedia. Cek neraca dan rekap biaya.", type="info", sender_id=accounting_user.id if accounting_user else None, role="accounting", to="/accounting/neraca", is_read=False),
+        Notification(title="Rekonsiliasi Bank", message="Data rekening bank BCA perlu direkonsiliasi untuk periode Agustus 2025.", type="warning", sender_id=finance_user.id if finance_user else None, role="accounting", to="/accounting/kas-harian", is_read=False),
     ]
     for n in notifications:
         db.add(n)

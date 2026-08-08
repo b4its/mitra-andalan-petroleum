@@ -99,6 +99,9 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLHeaderState>) {
           <template #item-label="{ item }">
             {{ item.label }}
 
+            <span v-if="item.npwp" class="text-muted text-xs">
+              · NPWP {{ item.npwp }}
+            </span>
             <span v-if="item.address" class="text-muted text-xs">
               ({{ item.address }})
             </span>

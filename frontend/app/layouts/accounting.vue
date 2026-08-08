@@ -15,100 +15,136 @@ const links = [
       }
     },
     {
-      label: 'Jurnal Umum',
-      icon: 'i-lucide-book-open',
-      to: '/accounting/jurnal-umum',
+      label: 'Notifikasi',
+      icon: 'i-lucide-bell',
+      to: '/accounting/notifikasi',
       onSelect: () => {
         open.value = false
       }
     },
     {
-      label: 'Buku Besar',
-      icon: 'i-lucide-book-copy',
-      to: '/accounting/buku-besar',
-      onSelect: () => {
-        open.value = false
-      }
+      label: 'Laporan Keuangan',
+      icon: 'i-lucide-file-bar-chart',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'Neraca',
+          icon: 'i-lucide-scale',
+          to: '/accounting/neraca',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Rekap Cashflow',
+          icon: 'i-lucide-arrow-left-right',
+          to: '/accounting/rekap-cashflow',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Rekap Biaya',
+          icon: 'i-lucide-receipt',
+          to: '/accounting/rekap-biaya',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Rekap Monitoring',
+          icon: 'i-lucide-monitor',
+          to: '/accounting/rekap-monitoring',
+          onSelect: () => {
+            open.value = false
+          }
+        }
+      ]
     },
     {
-      label: 'Neraca',
-      icon: 'i-lucide-scale',
-      to: '/accounting/neraca',
-      onSelect: () => {
-        open.value = false
-      }
+      label: 'Jurnal & Buku Besar',
+      icon: 'i-lucide-book-open-text',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'Jurnal Umum',
+          icon: 'i-lucide-book-open',
+          to: '/accounting/jurnal-umum',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Buku Besar',
+          icon: 'i-lucide-book-copy',
+          to: '/accounting/buku-besar',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Kas Harian',
+          icon: 'i-lucide-wallet',
+          to: '/accounting/kas-harian',
+          onSelect: () => {
+            open.value = false
+          }
+        }
+      ]
     },
     {
-      label: 'Rekap Cashflow',
-      icon: 'i-lucide-arrow-left-right',
-      to: '/accounting/rekap-cashflow',
-      onSelect: () => {
-        open.value = false
-      }
+      label: 'Analisis Keuangan',
+      icon: 'i-lucide-chart-column',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'Pemasukan',
+          icon: 'i-lucide-trending-up',
+          to: '/accounting/pemasukan',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Pengeluaran',
+          icon: 'i-lucide-trending-down',
+          to: '/accounting/pengeluaran',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Rekap Bunga Bank',
+          icon: 'i-lucide-percent',
+          to: '/accounting/rekap-bunga-bank',
+          onSelect: () => {
+            open.value = false
+          }
+        }
+      ]
     },
     {
-      label: 'Rekap Biaya',
-      icon: 'i-lucide-receipt',
-      to: '/accounting/rekap-biaya',
-      onSelect: () => {
-        open.value = false
-      }
-    },
-    {
-      label: 'Rekap Monitoring',
-      icon: 'i-lucide-monitor',
-      to: '/accounting/rekap-monitoring',
-      onSelect: () => {
-        open.value = false
-      }
-    },
-    {
-      label: 'Kas Harian',
-      icon: 'i-lucide-wallet',
-      to: '/accounting/kas-harian',
-      onSelect: () => {
-        open.value = false
-      }
-    },
-    {
-      label: 'Rekap Bunga Bank',
-      icon: 'i-lucide-percent',
-      to: '/accounting/rekap-bunga-bank',
-      onSelect: () => {
-        open.value = false
-      }
-    },
-    {
-      label: 'Pemasukan',
-      icon: 'i-lucide-trending-up',
-      to: '/accounting/pemasukan',
-      onSelect: () => {
-        open.value = false
-      }
-    },
-    {
-      label: 'Pengeluaran',
-      icon: 'i-lucide-trending-down',
-      to: '/accounting/pengeluaran',
-      onSelect: () => {
-        open.value = false
-      }
-    },
-    {
-      label: 'Chart of Accounts',
-      icon: 'i-lucide-list-tree',
-      to: '/accounting/akun',
-      onSelect: () => {
-        open.value = false
-      }
-    },
-    {
-      label: 'Profil',
-      icon: 'i-lucide-user',
-      to: '/accounting/profile',
-      onSelect: () => {
-        open.value = false
-      }
+      label: 'Pengaturan',
+      icon: 'i-lucide-cog',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'Chart of Accounts',
+          icon: 'i-lucide-list-tree',
+          to: '/accounting/akun',
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
+          label: 'Profil',
+          icon: 'i-lucide-user',
+          to: '/accounting/profile',
+          onSelect: () => {
+            open.value = false
+          }
+        }
+      ]
     }
   ]
 ] satisfies NavigationMenuItem[][]

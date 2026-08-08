@@ -17,7 +17,7 @@ const emit = defineEmits<{
   previous: []
 }>()
 
-const state = defineModel<MarketingPOAssociateState>()
+const state = defineModel<MarketingPOAssociateState>({ required: true })
 
 function previous() {
   emit('previous')
@@ -28,9 +28,11 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAssociateState>) {
 }
 
 watch(
-  () => state.value.receiver,
+  () => state.value?.receiver,
   (value) => {
+    if (!state.value || !value) return
     state.value.receiver.name = value.name
+    state.value.receiver.npwp = value.npwp || undefined
     state.value.receiver.address = value.address || undefined
     state.value.receiver.contactPerson = value.contactPerson || undefined
     state.value.receiver.email = value.email || undefined
@@ -69,6 +71,9 @@ watch(
           <template #item-label="{ item }">
             {{ item.label }}
 
+            <span v-if="item.npwp" class="text-muted text-xs">
+              · NPWP {{ item.npwp }}
+            </span>
             <span v-if="item.address" class="text-muted text-xs">
               ({{ item.address }})
             </span>
