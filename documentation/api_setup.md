@@ -36,6 +36,7 @@ Interactive docs: [Swagger UI](http://localhost:8000/docs) | [ReDoc](http://loca
 | Marketing | marketing@email.com | marketing123 |
 | Finance | finance@email.com | finance123 |
 | Operations | ops@email.com | ops123 |
+| Accounting | accounting@email.com | accounting123 |
 
 ---
 

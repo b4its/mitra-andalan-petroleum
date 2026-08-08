@@ -50,8 +50,23 @@ mandalan/
 ├── docker-compose.yml
 └── documentation/
     ├── setup.md                # Panduan instalasi
-    └── api_setup.md            # Dokumentasi API lengkap + skenario upload
+    ├── api_setup.md            # Dokumentasi API lengkap + skenario upload
+    └── testing.md              # Panduan testing (pytest, vitest, Playwright)
 ```
+
+## Testing
+
+| Layer | Tool | Command | Count |
+|---|---|---|---|
+| Backend | pytest | `docker compose exec mandalan-backend python -m pytest tests/ -v` | 95 |
+| Frontend (headless) | Vitest | `cd frontend && npx vitest run` | 53 |
+| Frontend (browser/E2E) | Playwright | `cd frontend && pnpm exec playwright test` | 63 |
+
+E2E Playwright menguji aplikasi via Chromium pada `localhost:8080` (Docker)
+atau `localhost:3000` (dev): login per role, dashboard admin (KPI, modal drill-down,
+date picker), halaman marketing/operations/finance/accounting, ekspor Excel/PDF/CSV,
+dan audit console error. Lihat `documentation/testing.md` untuk detail dan tips
+anti-flaky (login wajib `waitUntil: "networkidle"`).
 
 ## Key Features
 
@@ -92,3 +107,4 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml --profile full 
 | Marketing | marketing@email.com | marketing123 |
 | Finance | finance@email.com | finance123 |
 | Operations | ops@email.com | ops123 |
+| Accounting | accounting@email.com | accounting123 |

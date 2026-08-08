@@ -6,6 +6,7 @@
 - Python 3.12 (manual backend)
 - Node.js 22 + pnpm (manual frontend)
 - MySQL 8.0 (manual backend)
+- Chromium (untuk E2E Playwright, contoh Arch: `sudo pacman -S chromium`)
 
 ## Instalasi & Menjalankan
 
@@ -69,7 +70,7 @@ NUXT_PUBLIC_SITE_URL=
 
 Database otomatis terisi data awal saat pertama kali backend dijalankan:
 
-- 4 user (admin, marketing, finance, operations)
+- 5 user (admin, marketing, finance, operations, accounting)
 - 3 customer, 2 supplier
 - 15 offering letters, 10 purchase orders
 - 15 delivery orders, 15 invoices
@@ -83,3 +84,19 @@ Database otomatis terisi data awal saat pertama kali backend dijalankan:
 | Marketing | marketing@email.com | marketing123 |
 | Finance | finance@email.com | finance123 |
 | Operations | ops@email.com | ops123 |
+| Accounting | accounting@email.com | accounting123 |
+
+## Testing
+
+Panduan lengkap ada di `testing.md`. Ringkasan perintah:
+
+```bash
+# Backend (dari dalam container)
+docker compose exec mandalan-backend python -m pytest tests/ -v
+
+# Frontend unit (dari host, folder frontend)
+cd frontend && npx vitest run
+
+# E2E Playwright (frontend + backend harus berjalan, lalu)
+cd frontend && pnpm exec playwright test
+```
