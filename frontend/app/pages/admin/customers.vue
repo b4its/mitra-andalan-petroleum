@@ -95,17 +95,10 @@ const selectedCustomer = ref<Customer | null>(null);
 // ── Form schema ───────────────────────────────────────────────
 const schema = z.object({
   name: z.string().min(2, "Minimal 2 karakter"),
-  npwp: z
-    .string()
-    .regex(
-      /^\d{2}\.\d{3}\.\d{3}\.\d{1}-\d{3}\.\d{3}$/,
-      "Format NPWP tidak valid (contoh: 01.234.567.8-901.000)",
-    )
-    .optional()
-    .or(z.literal("")),
+  npwp: z.string().optional(),
   address: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email("Email tidak valid").optional(),
+  email: z.string().email("Email tidak valid").optional().or(z.literal("")),
 });
 
 type Schema = z.output<typeof schema>;
@@ -154,9 +147,18 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
   if (saving.value) return;
   saving.value = true;
   try {
+    const npwp = event.data.npwp?.trim() || "";
+    if (npwp && !/^\d{2}\.\d{3}\.\d{3}\.\d{1}-\d{3}\.\d{3}$/.test(npwp)) {
+      toast.add({ title: "Format NPWP salah", description: "Gunakan format 00.000.000.0-000.000", color: "warning" });
+      saving.value = false;
+      return;
+    }
     const payload = {
-      ...event.data,
-      npwp: event.data.npwp?.trim() ? event.data.npwp.trim() : null,
+      name: event.data.name,
+      npwp: npwp || null,
+      address: event.data.address || null,
+      phone: event.data.phone || null,
+      email: event.data.email || null,
     };
     await post<Customer, typeof payload>("/customers", payload);
     toast.add({
@@ -182,9 +184,18 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
   if (saving.value || !selectedCustomer.value) return;
   saving.value = true;
   try {
+    const npwp = event.data.npwp?.trim() || "";
+    if (npwp && !/^\d{2}\.\d{3}\.\d{3}\.\d{1}-\d{3}\.\d{3}$/.test(npwp)) {
+      toast.add({ title: "Format NPWP salah", description: "Gunakan format 00.000.000.0-000.000", color: "warning" });
+      saving.value = false;
+      return;
+    }
     const payload = {
-      ...event.data,
-      npwp: event.data.npwp?.trim() ? event.data.npwp.trim() : null,
+      name: event.data.name,
+      npwp: npwp || null,
+      address: event.data.address || null,
+      phone: event.data.phone || null,
+      email: event.data.email || null,
     };
     await put<Customer, typeof payload>(
       `/customers/${selectedCustomer.value.id}`,
@@ -401,7 +412,6 @@ const modalTitle = computed(() => {
         <UFormField name="npwp" label="NPWP">
           <UInput
             v-model="formState.npwp"
-            v-maska="'00.000.000.0-000.000'"
             placeholder="00.000.000.0-000.000"
             autocomplete="off"
           />
