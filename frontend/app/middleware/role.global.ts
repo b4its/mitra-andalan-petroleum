@@ -21,6 +21,9 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo('/login')
   }
 
+  // Admin dapat mengakses halaman role mana pun
+  if (user.role === 'admin') return
+
   if (user.role !== firstSegment) {
     return navigateTo(`/${user.role}`)
   }
