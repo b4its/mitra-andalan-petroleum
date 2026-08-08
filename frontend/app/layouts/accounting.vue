@@ -3,7 +3,9 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const open = ref(false)
 
-const { unreadCount, isSlideoverOpen, fetchNotifications } = useNotifications()
+const notificationsOpen = ref(false)
+
+const { unreadCount, fetchNotifications } = useNotifications()
 
 // Fetch notifications on mount (for header badge)
 onMounted(() => {
@@ -190,7 +192,7 @@ const links = [
               :icon="'i-lucide-bell'"
               color="neutral"
               variant="ghost"
-              @click="isSlideoverOpen = true"
+              @click="notificationsOpen = true"
             >
               <template v-if="unreadCount" #trailing>
                 <UBadge size="xs" color="error" variant="solid">
@@ -207,6 +209,6 @@ const links = [
       </template>
     </UDashboardPanel>
 
-    <NotificationsSlideover />
+    <AdminNotificationsModal v-model:open="notificationsOpen" />
   </UDashboardGroup>
 </template>
