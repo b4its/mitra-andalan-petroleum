@@ -16,6 +16,7 @@ const { data: customerList } = await useAsyncData("customers", async () => {
   return res.map((receiver: Customer) => ({
     id: receiver.id,
     name: receiver.name,
+    npwp: receiver.npwp,
     address: receiver.address,
     phone: receiver.phone,
     email: receiver.email,
@@ -27,6 +28,7 @@ const receivers = computed(() =>
     return {
       label: receiver.name,
       value: receiver.id,
+      npwp: receiver.npwp,
       address: receiver.address,
     };
   }),

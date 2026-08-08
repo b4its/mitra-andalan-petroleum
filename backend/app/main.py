@@ -33,6 +33,22 @@ async def lifespan(app: FastAPI):
                 ))
             except Exception:
                 pass
+        # Kolom npwp untuk customer
+        try:
+            await conn.execute(text(
+                "ALTER TABLE `customers` ADD COLUMN `npwp` VARCHAR(20) NULL "
+                "COMMENT 'Nomor Pokok Wajib Pajak customer'"
+            ))
+        except Exception:
+            pass
+        # Kolom role untuk notification (target role)
+        try:
+            await conn.execute(text(
+                "ALTER TABLE `notifications` ADD COLUMN `role` VARCHAR(20) NULL "
+                "COMMENT 'Target role notifikasi (accounting, admin, dll)'"
+            ))
+        except Exception:
+            pass
         # Kolom baru delivery_orders: rilis dana + lunas ongkir
         do_new_cols = [
             "`rilis_dana_at` DATETIME NULL COMMENT 'Waktu rilis dana (WITA)'",

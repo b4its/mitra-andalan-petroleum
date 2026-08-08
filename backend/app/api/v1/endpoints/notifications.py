@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
@@ -31,6 +31,7 @@ def _to_response(n: Notification, user_name: str | None = None) -> NotificationR
         type=n.type,
         sender_id=n.sender_id,
         user_name=user_name,
+        role=n.role,
         to=n.to,
         is_read=n.is_read,
         created_at=n.created_at,
@@ -41,12 +42,17 @@ def _to_response(n: Notification, user_name: str | None = None) -> NotificationR
     "/notifications",
     response_model=list[NotificationResponse],
     summary="List notifications",
-    description="Daftar notifikasi sistem (terbaru di atas). Menyertakan nama pengguna jika sender_id tersedia.",
+    description="Daftar notifikasi sistem (terbaru di atas). Filter berdasarkan role jika disediakan.",
 )
-async def list_notifications(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Notification).order_by(Notification.created_at.desc())
-    )
+async def list_notifications(
+    role: str | None = Query(default=None, description="Filter notifikasi berdasarkan role target"),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = select(Notification).order_by(Notification.created_at.desc())
+    if role:
+        # Tampilkan notifikasi yang ditujukan untuk role tertentu ATAU untuk semua role (role = null)
+        stmt = stmt.where(or_(Notification.role == role, Notification.role.is_(None)))
+    result = await db.execute(stmt)
     notifications = result.scalars().all()
     items = []
     for n in notifications:

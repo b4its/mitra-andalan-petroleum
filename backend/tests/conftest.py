@@ -68,10 +68,10 @@ def seeded_db(client):
              "password": bcrypt.hash("marketing123"), "role": "marketing", "now": now})
 
         ids["cust_id"] = str(uuid.uuid4())
-        conn.execute(text("""INSERT INTO customers (id, name, address, phone, email, created_at, updated_at)
-            VALUES (:id, :name, :addr, :phone, :email, :now, :now)"""),
-            {"id": ids["cust_id"], "name": "PT Bina Karya", "addr": "Jl. Merdeka No.1",
-             "phone": "021-1234", "email": "bina@email.com", "now": now})
+        conn.execute(text("""INSERT INTO customers (id, name, npwp, address, phone, email, created_at, updated_at)
+            VALUES (:id, :name, :npwp, :addr, :phone, :email, :now, :now)"""),
+            {"id": ids["cust_id"], "name": "PT Bina Karya", "npwp": "01.234.567.8-901.000",
+             "addr": "Jl. Merdeka No.1", "phone": "021-1234", "email": "bina@email.com", "now": now})
 
         ids["supp_id"] = str(uuid.uuid4())
         conn.execute(text("""INSERT INTO suppliers (id, name, address, phone, email, created_at, updated_at)

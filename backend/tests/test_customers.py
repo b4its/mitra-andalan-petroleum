@@ -33,6 +33,40 @@ def test_create_customer(client: TestClient, seeded_db):
     assert "id" in data
 
 
+def test_create_customer_with_npwp(client: TestClient, seeded_db):
+    response = client.post("/api/v1/customers", json={
+        "name": "PT NPWP Test",
+        "npwp": "01.234.567.8-901.000",
+    })
+    assert response.status_code == 201
+    data = response.json()
+    assert data["npwp"] == "01.234.567.8-901.000"
+
+
+def test_create_customer_npwp_optional(client: TestClient, seeded_db):
+    response = client.post("/api/v1/customers", json={"name": "PT Tanpa NPWP"})
+    assert response.status_code == 201
+    assert response.json()["npwp"] is None
+
+
+def test_create_customer_npwp_too_long(client: TestClient, seeded_db):
+    response = client.post("/api/v1/customers", json={
+        "name": "PT NPWP Panjang",
+        "npwp": "12.345.678.9-012.345-EXTRA",
+    })
+    assert response.status_code == 422
+
+
+def test_update_customer_npwp(client: TestClient, seeded_db):
+    list_resp = client.get("/api/v1/customers")
+    cust_id = list_resp.json()[0]["id"]
+    response = client.put(f"/api/v1/customers/{cust_id}", json={
+        "npwp": "99.888.777.6-555.000"
+    })
+    assert response.status_code == 200
+    assert response.json()["npwp"] == "99.888.777.6-555.000"
+
+
 def test_create_customer_missing_name(client: TestClient, seeded_db):
     response = client.post("/api/v1/customers", json={"address": "Test"})
     assert response.status_code == 422
