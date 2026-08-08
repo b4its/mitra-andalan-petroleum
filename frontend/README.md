@@ -59,6 +59,30 @@ pnpm preview
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 
+## Testing
+
+### Vitest (unit + API contract)
+```bash
+pnpm exec vitest run
+```
+
+### Playwright (E2E browser)
+Membutuhkan backend (`localhost:8000`) dan frontend berjalan, plus Chromium.
+
+```bash
+# Server Docker (http://localhost:8080) — default config
+pnpm exec playwright test
+
+# Nuxt dev server (http://localhost:3000)
+pnpm exec playwright test --config=playwright.local.ts
+
+# Chromium jika tidak terdeteksi otomatis:
+# PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm exec playwright test
+```
+
+E2E wajib pakai `waitUntil: "networkidle"` setelah login (Vue hydration),
+jalankan serial (`--workers=1`). Detail: `../documentation/testing.md`
+
 ## Renovate integration
 
 Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.

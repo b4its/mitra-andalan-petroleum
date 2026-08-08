@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Login Page', () => {
   test('shows login form', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/login', { waitUntil: 'networkidle' })
     const form = page.locator('form')
     await expect(form).toBeVisible()
     await expect(page.locator('input[type="email"]')).toBeVisible()
@@ -15,7 +15,7 @@ test.describe('Login Page', () => {
   test('login with admin credentials redirects to admin dashboard', async ({
     page
   }) => {
-    await page.goto('/login')
+    await page.goto('/login', { waitUntil: 'networkidle' })
     await page.fill('input[type="email"]', 'admin@email.com')
     await page.fill('input[type="password"]', 'admin123')
     await page.click('button[type="submit"]')
@@ -26,7 +26,7 @@ test.describe('Login Page', () => {
   test('login with marketing credentials redirects to marketing dashboard', async ({
     page
   }) => {
-    await page.goto('/login')
+    await page.goto('/login', { waitUntil: 'networkidle' })
     await page.fill('input[type="email"]', 'marketing@email.com')
     await page.fill('input[type="password"]', 'marketing123')
     await page.click('button[type="submit"]')
@@ -37,7 +37,7 @@ test.describe('Login Page', () => {
   test('login with operations credentials redirects to operations dashboard', async ({
     page
   }) => {
-    await page.goto('/login')
+    await page.goto('/login', { waitUntil: 'networkidle' })
     await page.fill('input[type="email"]', 'ops@email.com')
     await page.fill('input[type="password"]', 'ops123')
     await page.click('button[type="submit"]')
@@ -48,7 +48,7 @@ test.describe('Login Page', () => {
   test('login with finance credentials redirects to finance dashboard', async ({
     page
   }) => {
-    await page.goto('/login')
+    await page.goto('/login', { waitUntil: 'networkidle' })
     await page.fill('input[type="email"]', 'finance@email.com')
     await page.fill('input[type="password"]', 'finance123')
     await page.click('button[type="submit"]')
@@ -61,7 +61,7 @@ test.describe('Login Page', () => {
     await page.fill('input[type="email"]', 'admin@email.com')
     await page.fill('input[type="password"]', 'wrongpassword')
     await page.click('button[type="submit"]')
-    await expect(page.getByText('Login failed', { exact: true })).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Login Gagal', { exact: true })).toBeVisible({ timeout: 5000 })
   })
 
   test('shows error on nonexistent email', async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe('Login Page', () => {
     await page.fill('input[type="email"]', 'nonexistent@test.com')
     await page.fill('input[type="password"]', 'test12345')
     await page.click('button[type="submit"]')
-    await expect(page.getByText('Login failed', { exact: true })).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Login Gagal', { exact: true })).toBeVisible({ timeout: 5000 })
   })
 
   test('cannot access admin page without login', async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe('Login Page', () => {
   })
 
   test('logout returns to login page', async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/login', { waitUntil: 'networkidle' })
     await page.fill('input[type="email"]', 'admin@email.com')
     await page.fill('input[type="password"]', 'admin123')
     await page.click('button[type="submit"]')

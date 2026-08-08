@@ -52,34 +52,55 @@ CRUD, pagination, CORS).
 
 ## Frontend — Browser (Playwright)
 
-E2E tests using Playwright + system Chromium.
+E2E tests menggunakan Playwright + Chromium (system browser).
 
 ### Prerequisites
-- Frontend server running at `http://localhost:8080`
-- Chromium installed on host (Arch: `sudo pacman -S chromium`)
+- Frontend berjalan di `http://localhost:8080` (via Docker) atau `http://localhost:3000` (dev lokal)
+- Backend berjalan di `http://localhost:8000`
+- Chromium terinstall di host (Arch: `sudo pacman -S chromium`)
 
 ### Running tests (from host)
 ```bash
 cd frontend
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium COREPACK_ENABLE_STRICT=0 npx playwright test
+COREPACK_ENABLE_STRICT=0 pnpm exec playwright test
 ```
 
-### Tips
-- Tests run serially (`fullyParallel: false`). Single-worker execution avoids
-  resource contention and stale session state.
-- Login state is managed per-test via localStorage — no shared cookies.
-- Body-visibility checks wait for `waitUntil: "networkidle"` and target
-  specific heading elements rather than `<body>` (which Nuxt may keep hidden
-  during hydration/transitions).
-- Error notifications are validated with `getByText("Login failed", { exact: true })`
-  to avoid strict-mode ambiguity with the toast container element.
+Konfigurasi dual:
+- `playwright.config.ts` — baseURL `http://localhost:8080` (server Docker)
+- `playwright.local.ts` — baseURL `http://localhost:3000` (Nuxt dev server)
+- Jalankan dengan config lokal: `pnpm exec playwright test --config=playwright.local.ts`
+- Jika Chromium tidak terdeteksi otomatis:
+  `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm exec playwright test`
 
-**40 tests** — login flows (admin/marketing/operations/finance), form error
-display, route guards (redirect to login on unauthenticated access), logout,
-dashboard rendering per role (stat cards, sidebar navigation, subpages), page
-rendering (customer, supplier, offering letters, purchase orders, delivery
-orders, invoices, detail pages), responsive layout (mobile viewport, sidebar
-behavior), and browser console error auditing.
+### Tips (penting agar test tidak flaky)
+- **Semua `page.goto('/login')` harus pakai `{ waitUntil: 'networkidle' }`** —
+  tanpa itu Vue belum selesai hydration dan submit login tidak terpanggil.
+- Tests berjalan serial (`fullyParallel: false`); `--workers=1` direkomendasikan
+  untuk menghindari resource contention.
+- Login state dikelola per-test via localStorage — tidak ada shared cookies.
+- Pengecekan body-visibility menunggu `waitUntil: "networkidle"` dan menargetkan
+  elemen heading spesifik, bukan `<body>` (Nuxt menyembunyikan body saat hydration).
+- Error login divalidasi dengan `getByText("Login Gagal", { exact: true })`
+  (message API berbahasa Indonesia), bukan "Login failed".
+- Console-error audit memfilter pesan benign: `favicon`, `Hydration completed
+  but contains mismatches` (warning hydration Nuxt/Vue), Vue Devtools, dan
+  experimental feature — jangan hapus filter ini tanpa alasan.
+
+### Cakupan test (63 tests)
+| File | Jumlah | Coverage |
+|---|---|---|
+| `login.spec.ts` | 9 | form login, redirect per role, error password/email, route guard, logout |
+| `dashboard.spec.ts` | 18 | stat cards, sidebar, navigasi subpage, modal detail metrik, date range preset, page loads per role |
+| `pages.spec.ts` | 15 | page rendering per modul, responsive mobile, console error audit per role |
+| `accounting.spec.ts` | 7 | summary cards, chart of accounts, jurnal, buku besar, pemasukan/pengeluaran, console audit |
+| `admin-accounting.spec.ts` | 5 | rekap page, jurnal & trial balance, search filter, export dropdown, download .xlsx |
+| `export.spec.ts` | 9 | dropdown export 3 format di tiap halaman, download Excel/PDF/CSV |
+
+**Total: 63 tests.** Jalankan full suite:
+```bash
+cd frontend
+timeout 900 pnpm exec playwright test --reporter=line --workers=1
+```
 
 ---
 
@@ -89,4 +110,4 @@ behavior), and browser console error auditing.
 |---|---|---|
 | Backend | `pytest tests/ -v` | 95 |
 | Frontend (headless) | `npx vitest run` | 53 |
-| Frontend (browser) | `npx playwright test` | 40 |
+| Frontend (browser) | `pnpm exec playwright test` | 63 |

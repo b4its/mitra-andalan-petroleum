@@ -8,7 +8,7 @@ async function loginAs(page: Page, role: string) {
     finance: { email: 'finance@email.com', password: 'finance123' }
   }
   const cred = credentials[role]
-  await page.goto('/login')
+  await page.goto('/login', { waitUntil: 'networkidle' })
   await page.fill('input[type="email"]', cred.email)
   await page.fill('input[type="password"]', cred.password)
   await page.click('button[type="submit"]')
@@ -25,7 +25,7 @@ test.describe('Admin Dashboard', () => {
   })
 
   test('sidebar navigation is visible', async ({ page }) => {
-    const sidebar = page.locator('nav, aside, [role=navigation]')
+    const sidebar = page.locator('aside, [data-reka-navigation-menu]').first()
     await expect(sidebar).toBeVisible()
   })
 
@@ -48,12 +48,16 @@ test.describe('Admin Dashboard', () => {
     await expect(page.getByText('Monitoring Keseluruhan Sistem')).toBeVisible()
     await expect(page.getByText('Surat Penawaran').first()).toBeVisible()
     await page.getByText('Surat Penawaran').first().click()
-    await expect(page.getByText('Rincian Perhitungan')).toBeVisible()
-    await expect(page.getByText('Record penyusun nilai pada periode dan filter aktif.')).toBeVisible()
+    // Modal detail metrik terbuka
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await expect(page.getByRole('dialog').getByText('Surat Penawaran').first()).toBeVisible()
   })
 
   test('overview applies a one-week date preset', async ({ page }) => {
-    await page.getByRole('button', { name: '1 Minggu' }).click()
+    await expect(page.getByText('Monitoring Keseluruhan Sistem')).toBeVisible()
+    // Buka popover date range dan pilih preset 7 hari terakhir
+    await page.getByRole('button', { name: /\d{1,2} \w{3} \d{4} - \d{1,2} \w{3} \d{4}/ }).click()
+    await page.getByRole('button', { name: '7 hari terakhir' }).click()
     await expect(page.getByText('Monitoring Keseluruhan Sistem')).toBeVisible()
   })
 })
