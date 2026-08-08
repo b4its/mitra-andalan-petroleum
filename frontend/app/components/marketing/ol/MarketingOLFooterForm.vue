@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   marketingOLFooterSchema,
-  type MarketingOLFooterState,
-} from "~/types/schemas";
+  type MarketingOLFooterState
+} from '~/types/schemas'
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<MarketingOLFooterState>({ required: true });
+const state = defineModel<MarketingOLFooterState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -36,17 +36,17 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
         required
       >
         <UInputNumber
-          :ui="{
-            root: 'w-full',
-          }"
           v-model="state.purchaseOrderDeadline"
+          :ui="{
+            root: 'w-full'
+          }"
           orientation="vertical"
           :step="1"
           locale="id-ID"
           :format-options="{
             style: 'unit',
             unit: 'day',
-            unitDisplay: 'long',
+            unitDisplay: 'long'
           }"
         />
       </UFormField>

@@ -1,29 +1,29 @@
 <script setup lang="ts">
-const colorMode = useColorMode();
+const colorMode = useColorMode()
 
 const color = computed(() =>
-  colorMode.value === "dark" ? "#1b1718" : "white",
-);
+  colorMode.value === 'dark' ? '#1b1718' : 'white'
+)
 
 useHead({
   meta: [
-    { charset: "utf-8" },
-    { name: "viewport", content: "width=device-width, initial-scale=1" },
-    { key: "theme-color", name: "theme-color", content: color },
+    { charset: 'utf-8' },
+    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+    { key: 'theme-color', name: 'theme-color', content: color }
   ],
-  link: [{ rel: "icon", href: "/favicon.ico" }],
+  link: [{ rel: 'icon', href: '/favicon.ico' }],
   htmlAttrs: {
-    lang: "id",
-  },
-});
+    lang: 'id'
+  }
+})
 
-const title = "Mitra Andalan Petroleum";
-const description = "A Dashboard System";
+const title = 'Mitra Andalan Petroleum'
+const description = 'A Dashboard System'
 
 useSeoMeta({
   title,
-  description,
-});
+  description
+})
 </script>
 
 <template>

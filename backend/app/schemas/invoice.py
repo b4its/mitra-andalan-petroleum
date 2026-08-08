@@ -16,8 +16,8 @@ class InvoiceResponse(BaseModel):
     invoice_status: str = "unpaid"
     deadline_status: str = "on_time"
     details: dict[str, Any] | None = None
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class InvoiceCreate(BaseModel):

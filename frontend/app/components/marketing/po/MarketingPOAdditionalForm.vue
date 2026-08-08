@@ -52,6 +52,21 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
 
       <p>Delivery</p>
 
+      <UFormField name="distanceKm" label="Jarak KM" required>
+        <UInputNumber
+          v-model="state.delivery.distance"
+          class="w-full"
+          :min="1"
+          :format-options="{
+            style: 'unit',
+            unit: 'kilometer',
+            unitDisplay: 'short',
+          }"
+          :increment="false"
+          :decrement="false"
+        />
+      </UFormField>
+
       <UFormField name="loadingTerminal" label="Loading Terminal">
         <UInput
           v-model="state.delivery.loadingTerminal"

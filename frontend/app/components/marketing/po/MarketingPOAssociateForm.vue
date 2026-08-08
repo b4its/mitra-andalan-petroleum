@@ -1,41 +1,41 @@
 <script setup lang="ts">
 // @ts-ignore
-import type { FormSubmitEvent } from "@nuxt/ui";
-import { ref, watch } from "vue";
+import type { FormSubmitEvent } from '@nuxt/ui'
+import { ref, watch } from 'vue'
 import {
   marketingPOAssociateSchema,
-  type MarketingPOAssociateState,
-} from "~/types/schemas";
+  type MarketingPOAssociateState
+} from '~/types/schemas'
 
 const props = defineProps<{
-  hasPrevious: boolean | undefined;
-  receivers: any;
-}>();
+  hasPrevious: boolean | undefined
+  receivers: any
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<MarketingPOAssociateState>();
+const state = defineModel<MarketingPOAssociateState>()
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingPOAssociateState>) {
-  emit("submit");
+  emit('submit')
 }
 
 watch(
   () => state.value.receiver,
   (value) => {
-    state.value.receiver.name = value.name;
-    state.value.receiver.address = value.address || undefined;
-    state.value.receiver.contactPerson = value.contactPerson || undefined;
-    state.value.receiver.email = value.email || undefined;
-  },
-);
+    state.value.receiver.name = value.name
+    state.value.receiver.address = value.address || undefined
+    state.value.receiver.contactPerson = value.contactPerson || undefined
+    state.value.receiver.email = value.email || undefined
+  }
+)
 </script>
 
 <template>

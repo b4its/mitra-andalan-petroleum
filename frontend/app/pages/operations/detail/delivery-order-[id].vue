@@ -10,7 +10,7 @@ const { user } = useAuth();
 
 const { get } = useApi();
 
-const { data: doDetails } = await useAsyncData(
+const { data: doDetails, pending } = await useAsyncData<DeliveryOrdersDetails | null>(
   "delivery-orders-details",
   async () => {
     const res = await get<DeliveryOrdersDetails>(
@@ -18,34 +18,87 @@ const { data: doDetails } = await useAsyncData(
     );
     return res;
   },
-  { default: () => [] },
+  { default: () => null, server: false },
 );
 
-const details: Details = doDetails.value?.details;
+const details = computed<Details | null>(() => doDetails.value?.details ?? null);
+const completeFormPath = computed(() => `/operations/delivery-order?do_id=${idDoLetter}`);
 
-const tableBodyNotes = [
-  [
+function isFilled(value: unknown) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "number") return Number.isFinite(value) && value > 0;
+  if (typeof value === "string") return value.trim().length > 0;
+  return value !== undefined && value !== null;
+}
+
+const missingFields = computed(() => {
+  const data = details.value;
+  if (!data) return ["Data delivery order"];
+
+  const required: Array<[string, unknown]> = [
+    ["Nama perusahaan", data.companyInformation?.name],
+    ["Alamat perusahaan", data.companyInformation?.address],
+    ["Nomor DO", data.doInformation?.doNumber],
+    ["Tanggal DO", data.doInformation?.doDateCreated],
+    ["Nomor PO Customer", data.doInformation?.poCustomerNumber?.purchaseOrderNumber],
+    ["Nama customer", data.customerName],
+    ["Nama penerima", data.receiverInformation?.name],
+    ["Nama transportir", data.transportName],
+    ["Nama driver", data.driverInformation?.name],
+    ["Tanggal berlaku", data.dueDate],
+    ["Nama produk", data.productInformation?.name],
+    ["Volume produk", data.productInformation?.qty],
+    ["Segel atas", data.productInformation?.topSeal],
+    ["Segel bawah", data.productInformation?.bottomSeal],
+    ["Nomor kendaraan", data.transportInformation?.transportNumber],
+    ["Jenis transport", data.transportInformation?.transportType],
+    ["KM awal", data.transportInformation?.startKm],
+    ["KM akhir", data.transportInformation?.endKm],
+    ["SG meter", data.transportInformation?.sgMeter],
+    ["Jam berangkat", data.transportInformation?.timeInformation?.departureTime],
+    ["Jam tiba", data.transportInformation?.timeInformation?.arrivalTime],
+    ["Jam tiba di depo", data.transportInformation?.timeInformation?.depotArrivalTime],
+    ["Jam mulai pembongkaran", data.transportInformation?.timeInformation?.unloadingTime],
+    ["T2 depo", data.t2Depot],
+    ["T2 bongkar", data.t2Unloading],
+    ["Kepekaan index", data.indexSensitivity],
+    ["BBM diterima", data.fuelReceived],
+    ["Koordinator MAP", data.companyCoordinator],
+    ["Admin distribusi", data.distributionAdmin],
+    ["Penerima", data.receiver],
+    ["Driver/Officer", data.driver],
+    ["Catatan", data.notes],
+  ];
+
+  return required.filter(([, value]) => !isFilled(value)).map(([label]) => label);
+});
+
+const isDetailsComplete = computed(() => missingFields.value.length === 0);
+
+const loadPdf = async () => {
+  const pdfMake = usePDFMake();
+  if (!pdfMake) return;
+  if (!details.value || !isDetailsComplete.value) return;
+
+  const detailsData = details.value;
+  const surat = detailsData;
+  const tableBodyNotes = [
     [
       {
         text: "Catatan :",
         border: [true, false, true, false],
       },
     ],
-  ],
-];
+  ];
 
-for (const note of details.notes) {
-  tableBodyNotes.push([
-    {
-      text: note.note || "",
-      border: [true, false, true, false],
-    },
-  ]);
-}
-
-const loadPdf = async () => {
-  const pdfMake = usePDFMake();
-  if (!pdfMake) return;
+  for (const note of surat.notes || []) {
+    tableBodyNotes.push([
+      {
+        text: note.note || "",
+        border: [true, false, true, false],
+      },
+    ]);
+  }
 
   pdfLink.value = await pdfMake
     .createPdf({
@@ -121,7 +174,7 @@ const loadPdf = async () => {
             body: [
               [
                 {
-                  text: `${details.companyInformation.name}`,
+                  text: `${surat.companyInformation.name}`,
                   bold: true,
                   border: [true, false, false, false],
                 },
@@ -138,7 +191,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: `${details.companyInformation.nameSub}`,
+                  text: `${surat.companyInformation.nameSub}`,
                   italics: true,
                   border: [true, false, false, false],
                 },
@@ -150,13 +203,13 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.doInformation.doNumber}`,
+                  text: `${surat.doInformation.doNumber}`,
                   border: [false, false, true, false],
                 },
               ],
               [
                 {
-                  text: `${details.companyInformation.address}`,
+                  text: `${surat.companyInformation.address}`,
                   border: [true, false, false, false],
                 },
                 {
@@ -167,13 +220,13 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: formatDateDoc(details.doInformation.doDateCreated),
+                  text: formatDateDoc(surat.doInformation.doDateCreated),
                   border: [false, false, true, false],
                 },
               ],
               [
                 {
-                  text: `${details.companyInformation.phoneNumber}`,
+                  text: `${surat.companyInformation.phoneNumber}`,
                   border: [true, false, false, false],
                 },
                 {},
@@ -198,7 +251,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.doInformation.poCustomerNumber.purchaseOrderNumber}`,
+                  text: `${surat.doInformation.poCustomerNumber.purchaseOrderNumber}`,
                   border: [false, false, true, false],
                 },
               ],
@@ -215,7 +268,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.doInformation.soNumber || ""}\n\n`,
+                  text: `${surat.doInformation.soNumber || ""}\n\n`,
                   border: [false, false, true, false],
                 },
               ],
@@ -255,7 +308,7 @@ const loadPdf = async () => {
                   border: [false, true, false, false],
                 },
                 {
-                  text: `${details.customerName}`,
+                  text: `${surat.customerName}`,
                   border: [false, true, false, false],
                 },
                 {
@@ -268,7 +321,7 @@ const loadPdf = async () => {
                   border: [false, true, false, false],
                 },
                 {
-                  text: `${details.transportName}\n\n\n`,
+                  text: `${surat.transportName}\n\n\n`,
                   border: [false, true, true, false],
                 },
               ],
@@ -282,7 +335,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.customerName}`,
+                  text: `${surat.customerName}`,
                 },
                 {
                   text: "ID",
@@ -293,7 +346,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.transportId || ""}`,
+                  text: `${surat.transportId || ""}`,
                   border: [false, false, true, false],
                 },
               ],
@@ -307,7 +360,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.customerAddress || ""}`,
+                  text: `${surat.customerAddress || ""}`,
                   border: [false, false, true, false],
                 },
                 {
@@ -319,7 +372,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.transportAddress || ""}\n\n\n`,
+                  text: `${surat.transportAddress || ""}\n\n\n`,
                   border: [false, false, true, false],
                 },
               ],
@@ -333,7 +386,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.receiverInformation.name || ""}`,
+                  text: `${surat.receiverInformation.name || ""}`,
                 },
                 {
                   text: "Driver+HP",
@@ -344,7 +397,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.driverInformation.name || ""} ${details.driverInformation.phoneNumber ? "-" : ""} ${details.driverInformation.phoneNumber || ""}\n\n\n`,
+                  text: `${surat.driverInformation.name || ""} ${surat.driverInformation.phoneNumber ? "-" : ""} ${surat.driverInformation.phoneNumber || ""}\n\n\n`,
                   border: [false, false, true, false],
                 },
               ],
@@ -368,7 +421,7 @@ const loadPdf = async () => {
                   text: ":",
                 },
                 {
-                  text: `${details.helperName || ""}`,
+                  text: `${surat.helperName || ""}`,
                   border: [false, false, true, false],
                 },
               ],
@@ -383,8 +436,8 @@ const loadPdf = async () => {
                 },
                 {
                   text:
-                    details.receiverDateReceived === undefined
-                      ? formatDateDoc(details.receiverDateReceived)
+                    surat.receiverDateReceived === undefined
+                      ? formatDateDoc(surat.receiverDateReceived)
                       : "",
                   border: [false, false, true, false],
                 },
@@ -398,8 +451,8 @@ const loadPdf = async () => {
                 },
                 {
                   text:
-                    details.receiverDateReceived === undefined
-                      ? formatDateDoc(details.transportDateReceived)
+                    surat.receiverDateReceived === undefined
+                      ? formatDateDoc(surat.transportDateReceived)
                       : "",
                   border: [false, false, true, false],
                 },
@@ -454,19 +507,19 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: `${details.dueDate !== undefined ? formatDateDoc(details.dueDate) : ""}`,
+                  text: `${surat.dueDate !== undefined ? formatDateDoc(surat.dueDate) : ""}`,
                   colSpan: 2,
                   alignment: "center",
                 },
                 {},
                 {
-                  text: `${details.productInformation.name || ""}`,
+                  text: `${surat.productInformation.name || ""}`,
                   colSpan: 2,
                   alignment: "center",
                 },
                 {},
                 {
-                  text: `${formatNumber(details.productInformation.qty || 0)} Liter`,
+                  text: `${formatNumber(surat.productInformation.qty || 0)} Liter`,
                   colSpan: 2,
                   alignment: "center",
                 },
@@ -485,7 +538,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.productInformation.topSeal || ""}`,
+                  text: `${surat.productInformation.topSeal || ""}`,
                   rowSpan: 2,
                   verticalAlignment: "middle",
                   alignment: "center",
@@ -505,7 +558,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.transportNumber || ""}`,
+                  text: `${surat.transportInformation.transportNumber || ""}`,
                 },
                 {
                   text: "",
@@ -518,7 +571,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.timeInformation.departureTime || ""}`,
+                  text: `${surat.transportInformation.timeInformation.departureTime || ""}`,
                 },
               ],
               [
@@ -527,7 +580,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.startKm || ""}`,
+                  text: `${surat.transportInformation.startKm || ""}`,
                 },
                 {
                   text: "Segel Bawah",
@@ -536,7 +589,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.productInformation.bottomSeal || ""}`,
+                  text: `${surat.productInformation.bottomSeal || ""}`,
                   rowSpan: 2,
                   verticalAlignment: "middle",
                   alignment: "center",
@@ -546,7 +599,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.timeInformation.arrivalTime || ""}`,
+                  text: `${surat.transportInformation.timeInformation.arrivalTime || ""}`,
                 },
               ],
               [
@@ -555,7 +608,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.endKm || ""}`,
+                  text: `${surat.transportInformation.endKm || ""}`,
                 },
                 {
                   text: "",
@@ -568,7 +621,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.timeInformation.unloadingTime || ""}`,
+                  text: `${surat.transportInformation.timeInformation.unloadingTime || ""}`,
                 },
               ],
               [
@@ -577,21 +630,21 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.sgMeter}`,
+                  text: `${surat.transportInformation.sgMeter}`,
                 },
                 {
                   text: "Temperatur",
                   bold: true,
                 },
                 {
-                  text: `${details.productInformation.temperature || ""}`,
+                  text: `${surat.productInformation.temperature || ""}`,
                 },
                 {
                   text: "Jam Tiba di Depo",
                   bold: true,
                 },
                 {
-                  text: `${details.transportInformation.timeInformation.depotArrivalTime || ""}`,
+                  text: `${surat.transportInformation.timeInformation.depotArrivalTime || ""}`,
                 },
               ],
               [
@@ -608,7 +661,7 @@ const loadPdf = async () => {
                   bold: true,
                 },
                 {
-                  text: `${formatNumber(details.productInformation.qty || 0)} # (${useChangeCase(angkaTerbilang(details.productInformation.qty), "capitalCase").value} Liter) #`,
+                  text: `${formatNumber(surat.productInformation.qty || 0)} # (${useChangeCase(angkaTerbilang(surat.productInformation.qty), "capitalCase").value} Liter) #`,
                   italics: true,
                   colSpan: 5,
                 },
@@ -763,22 +816,22 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: `${details.companyCoordinator || ""}`,
+                  text: `${surat.companyCoordinator || ""}`,
                   alignment: "center",
                   bold: true,
                 },
                 {
-                  text: `${details.distributionAdmin || ""}`,
+                  text: `${surat.distributionAdmin || ""}`,
                   alignment: "center",
                   bold: true,
                 },
                 {
-                  text: `${details.receiver || ""}`,
+                  text: `${surat.receiver || ""}`,
                   alignment: "center",
                   bold: true,
                 },
                 {
-                  text: `${details.driver || ""}`,
+                  text: `${surat.driver || ""}`,
                   alignment: "center",
                   bold: true,
                 },
@@ -801,13 +854,73 @@ const loadPdf = async () => {
     .getDataUrl();
 };
 
-onMounted(() => {
-  loadPdf();
-});
+watch(
+  isDetailsComplete,
+  (complete) => {
+    if (complete && !pdfLink.value) loadPdf();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <main class="h-180 w-full">
-    <iframe v-if="pdfLink" :src="pdfLink" class="h-full w-full" />
+  <main class="min-h-180 w-full">
+    <div v-if="pending" class="flex h-180 items-center justify-center">
+      <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-primary" />
+    </div>
+
+    <iframe v-else-if="pdfLink" :src="pdfLink" class="h-180 w-full" />
+
+    <UCard v-else class="mx-auto max-w-3xl">
+      <template #header>
+        <div class="flex items-start gap-3">
+          <UIcon name="i-lucide-file-warning" class="mt-1 size-6 text-warning" />
+          <div>
+            <h2 class="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+              Data Delivery Order belum lengkap
+            </h2>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+              PDF tidak dapat dicetak sebelum data wajib dilengkapi.
+            </p>
+          </div>
+        </div>
+      </template>
+
+      <div class="space-y-4">
+        <p class="text-sm text-neutral-600 dark:text-neutral-300">
+          Lengkapi data berikut di halaman form pembuatan Delivery Order, lalu buka kembali surat ini untuk mencetak PDF.
+        </p>
+
+        <div class="grid gap-2 sm:grid-cols-2">
+          <UBadge
+            v-for="field in missingFields"
+            :key="field"
+            color="warning"
+            variant="soft"
+            class="justify-start"
+          >
+            {{ field }}
+          </UBadge>
+        </div>
+
+        <div class="flex flex-wrap justify-end gap-2 pt-2">
+          <UButton
+            icon="i-lucide-refresh-cw"
+            color="neutral"
+            variant="soft"
+            @click="refreshNuxtData('delivery-orders-details')"
+          >
+            Cek Ulang Data
+          </UButton>
+          <UButton
+            :to="completeFormPath"
+            icon="i-lucide-clipboard-pen"
+            color="primary"
+          >
+            Lengkapi di Form DO
+          </UButton>
+        </div>
+      </div>
+    </UCard>
   </main>
 </template>

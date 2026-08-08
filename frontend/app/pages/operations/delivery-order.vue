@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
 import type { Customer, PurchaseOrdersSupplier } from "~/types/marketing";
-import type { DeliveryOrderPost } from "~/types/operations";
+import type {
+  DeliveryOrderPost,
+  DeliveryOrdersDetails,
+} from "~/types/operations";
 import {
   type OperationsDOAdditionalState,
   type OperationsDODetailsTransportState,
@@ -14,27 +17,50 @@ import {
 const { user } = useAuth();
 const { get, put, post } = useApi();
 const toast = useToast();
+const route = useRoute();
 const loading = ref(false);
+const selectedDoId = ref("");
+const editingDoId = computed(
+  () =>
+    (typeof route.query.do_id === "string" ? route.query.do_id : "") ||
+    selectedDoId.value,
+);
 
-const { data: poCustomer } = await useAsyncData(
-  "purchase-orders-customer",
+const { data: linkedDeliveryOrders } = await useAsyncData(
+  "delivery-orders-from-po-customer",
   async () => {
-    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
-      "/purchase-orders",
-      { page: 1, page_size: 50, type: "customer" },
+    const [posRes, dosRes] = await Promise.all([
+      get<{ items: PurchaseOrdersSupplier[] }>("/purchase-orders", {
+        page: 1,
+        page_size: 100,
+        type: "customer",
+      }),
+      get<{ items: DeliveryOrdersDetails[] }>("/delivery-orders", {
+        page: 1,
+        page_size: 100,
+      }),
+    ]);
+    const poByNumber = new Map(
+      (posRes.items || []).map((po) => [po.po_number, po] as const),
     );
-    return res.items.map((purchaseOrder: PurchaseOrdersSupplier) => ({
-      id: purchaseOrder.id,
-      purchaseOrderNumber: purchaseOrder.po_number,
-      customerName: purchaseOrder.customer_name,
-      customerId: purchaseOrder.customer_id,
-      fuelTotalQty: purchaseOrder.total,
-      dateCreated: purchaseOrder.created_at.toString(),
-      dateChanged: purchaseOrder.updated_at.toString(),
-      status: purchaseOrder.status,
-    }));
+    return (dosRes.items || [])
+      .filter((do_) => poByNumber.has(do_.po_number))
+      .map((do_) => {
+        const po = poByNumber.get(do_.po_number)!;
+        return {
+          id: do_.id,
+          doNumber: do_.do_number,
+          purchaseOrderNumber: do_.po_number,
+          customerName: po.customer_name || do_.customer_name || "",
+          customerId: po.customer_id || do_.customer_id || "",
+          fuelTotalQty: po.total ?? do_.fuel_total ?? 0,
+          dateCreated: po.created_at?.toString() ?? "",
+          dateChanged: po.updated_at?.toString() ?? "",
+          status: do_.status,
+        };
+      });
   },
-  { default: () => [] },
+  { default: () => [], server: false },
 );
 
 const items: StepperItem[] = [
@@ -130,6 +156,94 @@ const doFooter = reactive<OperationsDOFooterState>({
   driver: undefined,
 });
 
+const { data: existingDeliveryOrder } = await useAsyncData(
+  () => `delivery-order-edit-${editingDoId.value}`,
+  async () => {
+    if (!editingDoId.value) return null;
+    return await get<DeliveryOrdersDetails>(
+      `/delivery-orders/${editingDoId.value}`,
+    );
+  },
+  { default: () => null, server: false, watch: [editingDoId] },
+);
+
+function hydrateFormFromExistingDeliveryOrder(
+  value: DeliveryOrdersDetails | null,
+) {
+  if (!value) return;
+
+  const details = value.details || {};
+  const existingPo = details.doInformation?.poCustomerNumber;
+  Object.assign(doHeader.companyInformation, details.companyInformation || {});
+  Object.assign(doHeader.doInformation, {
+    ...(details.doInformation || {}),
+    poCustomerNumber: {
+      ...(existingPo || {}),
+      id: value.id,
+      doNumber: value.do_number,
+      purchaseOrderNumber: existingPo?.purchaseOrderNumber ?? value.po_number,
+      customerName: existingPo?.customerName ?? value.customer_name,
+      customerId: existingPo?.customerId ?? value.customer_id,
+      fuelTotalQty: existingPo?.fuelTotalQty ?? value.fuel_total,
+    },
+  });
+
+  Object.assign(doReceiver, {
+    customerName: details.customerName || value.customer_name || "",
+    customerId: details.customerId || value.customer_id || "",
+    customerAddress: details.customerAddress || "",
+    receiverInformation: details.receiverInformation || {
+      name: undefined,
+      phoneNumber: undefined,
+    },
+    receiverDateReceived:
+      details.receiverDateReceived || doReceiver.receiverDateReceived,
+  });
+
+  Object.assign(doTransport, {
+    transportName: details.transportName || value.transport_name || "",
+    transportId: details.transportId || "",
+    transportAddress: details.transportAddress || "",
+    driverInformation: details.driverInformation || {
+      name: undefined,
+      phoneNumber: undefined,
+    },
+    transportDateReceived:
+      details.transportDateReceived || doTransport.transportDateReceived,
+    helperName: details.helperName || undefined,
+  });
+
+  Object.assign(doDetailsTransport, {
+    dueDate: details.dueDate || undefined,
+    total: details.total || value.fuel_total || 0,
+    productInformation:
+      details.productInformation || doDetailsTransport.productInformation,
+    transportInformation:
+      details.transportInformation || doDetailsTransport.transportInformation,
+  });
+
+  Object.assign(doAdditional, {
+    notes: details.notes || doAdditional.notes,
+    t2Depot: details.t2Depot,
+    t2Unloading: details.t2Unloading,
+    indexSensitivity: details.indexSensitivity,
+    fuelReceived:
+      details.fuelReceived || details.total || value.fuel_total || 0,
+  });
+
+  Object.assign(doFooter, {
+    companyCoordinator:
+      details.companyCoordinator || doFooter.companyCoordinator,
+    distributionAdmin: details.distributionAdmin || doFooter.distributionAdmin,
+    receiver: details.receiver || undefined,
+    driver: details.driver || details.driverInformation?.name || undefined,
+  });
+}
+
+watch(existingDeliveryOrder, hydrateFormFromExistingDeliveryOrder, {
+  immediate: true,
+});
+
 const stepper = useTemplateRef("stepper");
 
 function previousNavigation() {
@@ -150,6 +264,12 @@ watch(
       doDetailsTransport.total = value.fuelTotalQty || 0;
       doDetailsTransport.productInformation.qty = value.fuelTotalQty || 0;
       doAdditional.fuelReceived = value.fuelTotalQty || 0;
+      if (value.id) {
+        selectedDoId.value = value.id;
+      }
+      if (value.doNumber) {
+        doHeader.doInformation.doNumber = value.doNumber;
+      }
     }
   },
 );
@@ -180,7 +300,12 @@ async function onFormSubmit() {
       details: doData,
     };
 
-    const res = await post<any, DeliveryOrderPost>("/delivery-orders", doPost);
+    const res = editingDoId.value
+      ? await put<any, DeliveryOrderPost>(
+          `/delivery-orders/${editingDoId.value}`,
+          doPost,
+        )
+      : await post<any, DeliveryOrderPost>("/delivery-orders", doPost);
 
     console.log("Data submitted");
     console.log(res);
@@ -188,7 +313,9 @@ async function onFormSubmit() {
     toast.add({
       title: "Sukses",
       icon: "i-lucide-check-circle",
-      description: "Data Delivery Order berhasil dibuat",
+      description: editingDoId.value
+        ? "Data Delivery Order berhasil dilengkapi"
+        : "Data Delivery Order berhasil dibuat",
       color: "success",
     });
   } catch (e: any) {
@@ -198,20 +325,21 @@ async function onFormSubmit() {
   }
 }
 
-const purchaseOrders = ref(
-  poCustomer.value.map((po) => {
+const purchaseOrders = computed(() =>
+  linkedDeliveryOrders.value.map((entry) => {
     return {
-      label: po.purchaseOrderNumber,
+      label: entry.doNumber,
       value: {
-        id: po.id,
-        purchaseOrderNumber: po.purchaseOrderNumber,
-        customerName: po.customerName,
-        customerId: po.customerId,
-        dateCreated: po.dateCreated,
-        dateChanged: po.dateChanged,
-        fuelTotalQty: po.fuelTotalQty,
+        id: entry.id,
+        doNumber: entry.doNumber,
+        purchaseOrderNumber: entry.purchaseOrderNumber,
+        customerName: entry.customerName,
+        customerId: entry.customerId,
+        dateCreated: entry.dateCreated,
+        dateChanged: entry.dateChanged,
+        fuelTotalQty: entry.fuelTotalQty,
       },
-      customerName: po.customerName,
+      customerName: entry.customerName,
     };
   }),
 );

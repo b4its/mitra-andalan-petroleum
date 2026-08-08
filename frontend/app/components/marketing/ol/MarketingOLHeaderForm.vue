@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
-import type { Customer } from "~/types/marketing";
+import type { FormSubmitEvent } from '@nuxt/ui'
+import type { Customer } from '~/types/marketing'
 import {
   marketingOLHeaderSchema,
-  type MarketingOLHeaderState,
-} from "~/types/schemas";
+  type MarketingOLHeaderState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-  receivers: any;
-}>();
+  hasPrevious: boolean | undefined
+  receivers: any
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
 const options = {
-  mask: "###/AAA/AA-##/##",
+  mask: '###/AAA/AA-##/##',
   tokens: {
-    A: { pattern: /[a-zA-Z]/, transform: (chr: string) => chr.toUpperCase() },
-  },
-};
+    A: { pattern: /[a-zA-Z]/, transform: (chr: string) => chr.toUpperCase() }
+  }
+}
 
-const state = defineModel<MarketingOLHeaderState>({ required: true });
+const state = defineModel<MarketingOLHeaderState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingOLHeaderState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 

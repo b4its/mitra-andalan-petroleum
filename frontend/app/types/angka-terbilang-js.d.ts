@@ -1,5 +1,5 @@
-declare module "@develoka/angka-terbilang-js" {
-  const angkaTerbilang: (value: number) => string;
+declare module '@develoka/angka-terbilang-js' {
+  const angkaTerbilang: (value: number) => string
 
-  export default angkaTerbilang;
+  export default angkaTerbilang
 }

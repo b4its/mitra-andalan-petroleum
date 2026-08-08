@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute();
-const idInvoice = route.params.id;
+const route = useRoute()
+const idInvoice = route.params.id
 
 const links = [
   [
     {
-      label: "Detail Invoice Customer",
-      icon: "i-lucide-receipt",
-      to: `/finance/detail/invoice-${idInvoice}`,
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+      label: 'Detail Invoice Customer',
+      icon: 'i-lucide-receipt',
+      to: `/finance/detail/invoice-${idInvoice}`
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
-definePageMeta({ layout: "finance" });
+definePageMeta({ layout: 'finance' })
 </script>
 
 <template>
@@ -33,7 +33,7 @@ definePageMeta({ layout: "finance" });
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full">
+      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
         <NuxtPage />
       </div>
     </template>

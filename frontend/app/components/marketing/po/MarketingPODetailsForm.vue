@@ -55,17 +55,6 @@ function previous() {
 function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
   emit("submit");
 }
-
-watch(
-  () => state.value.selectedOfferingLetter,
-  (value) => {
-    if (state.value.products[0]) {
-      state.value.products[0].price = value.fuelTotalPrice;
-    }
-
-    console.log(value);
-  },
-);
 </script>
 
 <template>
@@ -138,10 +127,10 @@ watch(
 
         <UFormField label="VAT" name="vat" class="w-full" required>
           <UInputNumber
+            v-model="state.vat"
             :ui="{
               root: 'w-full',
             }"
-            v-model="state.vat"
             orientation="vertical"
             :step="0.01"
             :format-options="{
@@ -151,11 +140,15 @@ watch(
         </UFormField>
       </div>
 
-      <UFormField name="offeringLetter" label="Nomor Surat Penawaran" required>
+      <UFormField
+        name="offeringLetter"
+        label="Nomor Surat PO Customer"
+        required
+      >
         <USelectMenu
           v-model="state.selectedOfferingLetter"
           :items="offeringLetters"
-          placeholder="Pilih Surat Penawaran"
+          placeholder="Pilih Surat PO Customer"
           value-key="value"
           :ui="{ content: 'min-w-fit' }"
           class="w-full"
@@ -212,6 +205,7 @@ watch(
             required
           >
             <UInputNumber
+              v-model="product.price"
               locale="id-ID"
               :format-options="{
                 style: 'currency',
@@ -219,11 +213,9 @@ watch(
                 currencyDisplay: 'narrowSymbol',
               }"
               :step="1"
-              v-model="product.price"
               :min="0"
               :increment="false"
               :decrement="false"
-              :disabled="index > 0 ? false : true"
             />
           </UFormField>
 
@@ -234,6 +226,7 @@ watch(
             required
           >
             <UInputNumber
+              v-model="product.totalPrice"
               locale="id-ID"
               :format-options="{
                 style: 'currency',
@@ -242,7 +235,6 @@ watch(
               }"
               :decrement="false"
               :increment="false"
-              v-model="product.totalPrice"
               disabled
             />
           </UFormField>

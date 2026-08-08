@@ -144,8 +144,8 @@ const selectRange = (range: {
         </div>
 
         <UCalendar
-          locale="id-ID"
           v-model="calendarRange"
+          locale="id-ID"
           class="p-2"
           :number-of-months="2"
           range

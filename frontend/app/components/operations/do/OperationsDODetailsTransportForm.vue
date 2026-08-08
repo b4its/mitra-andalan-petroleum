@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { Time } from "@internationalized/date";
-import type { FormSubmitEvent } from "@nuxt/ui";
+import { Time } from '@internationalized/date'
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   operationsDODetailsTransportSchema,
-  type OperationsDODetailsTransportState,
-} from "~/types/schemas";
+  type OperationsDODetailsTransportState
+} from '~/types/schemas'
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
 // Vehicle Number Regex masking
 // const options = {
@@ -24,15 +24,31 @@ const emit = defineEmits<{
 // };
 
 const state = defineModel<OperationsDODetailsTransportState>({
-  required: true,
-});
+  required: true
+})
 
 function previous() {
-  emit("previous");
+  emit('previous')
+}
+
+function toTime(value: string | undefined): Time | null {
+  if (!value) return null
+  const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(value)
+  if (!match) return null
+  return new Time(Number(match[1]), Number(match[2]), match[3] ? Number(match[3]) : 0)
+}
+
+function fromTime(value: unknown): string | undefined {
+  if (!value) return undefined
+  if (typeof value === 'string') return value
+  if (typeof (value as { toString?: unknown }).toString === 'function') {
+    return (value as { toString: () => string }).toString()
+  }
+  return undefined
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -52,7 +68,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       </UFormField>
 
       <UFormField name="total" label="Jumlah (Liter)" required>
-        <UInputNumber class="w-full" v-model="state.total" :min="1" />
+        <UInputNumber v-model="state.total" class="w-full" :min="1" />
       </UFormField>
 
       <USeparator />
@@ -60,7 +76,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       <p>Informasi Produk</p>
 
       <div class="flex w-full gap-4">
-        <UFormField name="productName" label="Nama Produk" required>
+        <UFormField name="productInformation.name" label="Nama Produk" required>
           <UInput
             v-model="state.productInformation.name"
             type="text"
@@ -68,17 +84,17 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           />
         </UFormField>
 
-        <UFormField name="productQty" label="Volume/Kuantitas (Liter)" required>
+        <UFormField name="productInformation.qty" label="Volume/Kuantitas (Liter)" required>
           <UInputNumber
-            class="w-full"
             v-model="state.productInformation.qty"
+            class="w-full"
             :min="1"
           />
         </UFormField>
       </div>
 
       <div class="flex w-full gap-4">
-        <UFormField name="topSeal" label="Segel Atas" required>
+        <UFormField name="productInformation.topSeal" label="Segel Atas" required>
           <UInput
             v-model="state.productInformation.topSeal"
             type="text"
@@ -86,7 +102,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           />
         </UFormField>
 
-        <UFormField name="bottomSeal" label="Segel Bawah" required>
+        <UFormField name="productInformation.bottomSeal" label="Segel Bawah" required>
           <UInput
             v-model="state.productInformation.bottomSeal"
             type="text"
@@ -95,14 +111,14 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
         </UFormField>
       </div>
 
-      <UFormField name="temperature" label="Temperature" required>
+      <UFormField name="productInformation.temperature" label="Temperature" required>
         <UInputNumber
-          class="w-full"
           v-model="state.productInformation.temperature"
+          class="w-full"
           :format-options="{
             style: 'unit',
             unit: 'celsius',
-            unitDisplay: 'short',
+            unitDisplay: 'short'
           }"
         />
       </UFormField>
@@ -112,7 +128,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       <p>Informasi Agen/Transportir</p>
 
       <div class="flex w-full gap-4">
-        <UFormField name="transportType" label="Dikirim Dengan" required>
+        <UFormField name="transportInformation.transportType" label="Dikirim Dengan" required>
           <UInput
             v-model="state.transportInformation.transportType"
             type="text"
@@ -120,7 +136,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           />
         </UFormField>
 
-        <UFormField name="transportNumber" label="No. Kendaraan" required>
+        <UFormField name="transportInformation.transportNumber" label="No. Kendaraan" required>
           <UInput
             v-model="state.transportInformation.transportNumber"
             type="text"
@@ -131,40 +147,40 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       </div>
 
       <div class="flex w-full gap-4">
-        <UFormField name="topSeal" label="Km. Awal" required>
+        <UFormField name="transportInformation.startKm" label="Km. Awal" required>
           <UInputNumber
-            class="w-full"
             v-model="state.transportInformation.startKm"
+            class="w-full"
             :min="1"
             :format-options="{
               style: 'unit',
               unit: 'kilometer',
-              unitDisplay: 'short',
+              unitDisplay: 'short'
             }"
             :increment="false"
             :decrement="false"
           />
         </UFormField>
 
-        <UFormField name="bottomSeal" label="Km. Akhir" required>
+        <UFormField name="transportInformation.endKm" label="Km. Akhir" required>
           <UInputNumber
-            class="w-full"
             v-model="state.transportInformation.endKm"
+            class="w-full"
             :min="1"
             :format-options="{
               style: 'unit',
               unit: 'kilometer',
-              unitDisplay: 'short',
+              unitDisplay: 'short'
             }"
             :increment="false"
             :decrement="false"
           />
         </UFormField>
 
-        <UFormField name="sgMeter" label="SG Meter" required>
+        <UFormField name="transportInformation.sgMeter" label="SG Meter" required>
           <UInputNumber
-            class="w-full"
             v-model="state.transportInformation.sgMeter"
+            class="w-full"
             label="contoh: 0.841"
             :increment="false"
             :decrement="false"
@@ -175,22 +191,29 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       <div class="flex w-full gap-4">
         <UFormField
           class="w-full"
-          name="departureTime"
+          name="transportInformation.timeInformation.departureTime"
           label="Jam Berangkat"
           required
         >
           <UInputTime
+            :model-value="toTime(state.transportInformation.timeInformation.departureTime)"
+            @update:model-value="state.transportInformation.timeInformation.departureTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
-            v-model="state.transportInformation.timeInformation.departureTime"
           />
         </UFormField>
 
-        <UFormField class="w-full" name="arrivalTime" label="Jam Tiba" required>
+        <UFormField
+          class="w-full"
+          name="transportInformation.timeInformation.arrivalTime"
+          label="Jam Tiba"
+          required
+        >
           <UInputTime
+            :model-value="toTime(state.transportInformation.timeInformation.arrivalTime)"
+            @update:model-value="state.transportInformation.timeInformation.arrivalTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
-            v-model="state.transportInformation.timeInformation.arrivalTime"
           />
         </UFormField>
       </div>
@@ -198,29 +221,29 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
       <div class="flex w-full gap-4">
         <UFormField
           class="w-full"
-          name="unloadingTime"
+          name="transportInformation.timeInformation.unloadingTime"
           label="Jam Mulai Pembongkaran"
           required
         >
           <UInputTime
+            :model-value="toTime(state.transportInformation.timeInformation.unloadingTime)"
+            @update:model-value="state.transportInformation.timeInformation.unloadingTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
-            v-model="state.transportInformation.timeInformation.unloadingTime"
           />
         </UFormField>
 
         <UFormField
           class="w-full"
-          name="deportArrivalTime"
+          name="transportInformation.timeInformation.depotArrivalTime"
           label="Jam Tiba di Depo"
           required
         >
           <UInputTime
+            :model-value="toTime(state.transportInformation.timeInformation.depotArrivalTime)"
+            @update:model-value="state.transportInformation.timeInformation.depotArrivalTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
-            v-model="
-              state.transportInformation.timeInformation.depotArrivalTime
-            "
           />
         </UFormField>
       </div>

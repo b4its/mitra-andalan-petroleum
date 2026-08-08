@@ -3,6 +3,7 @@ import angkaTerbilang from "@develoka/angka-terbilang-js";
 import { useChangeCase } from "@vueuse/integrations/useChangeCase.js";
 import logoImage from "~/assets/images/map-logo-only.jpg";
 import type { DeliveryOrdersDetails, Details } from "~/types/operations";
+
 const pdfLink = ref<string | null>(null);
 const route = useRoute();
 const idDoLetter = route.params.id;

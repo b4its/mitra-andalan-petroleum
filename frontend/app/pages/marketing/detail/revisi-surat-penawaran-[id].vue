@@ -2,10 +2,10 @@
 import type { StepperItem } from "@nuxt/ui";
 import type { ResUploads, Uploads } from "~/types";
 import type { Customer, OfferingLetterPost } from "~/types/marketing";
-import {
-  type MarketingOLDetailsState,
-  type MarketingOLFooterState,
-  type MarketingOLHeaderState,
+import type {
+  MarketingOLDetailsState,
+  MarketingOLFooterState,
+  MarketingOLHeaderState,
 } from "~/types/schemas";
 
 const toast = useToast();
@@ -207,12 +207,12 @@ definePageMeta({ layout: "marketing" });
 </script>
 
 <template>
-  <UStepper disabled ref="stepper" :items>
+  <UStepper ref="stepper" disabled :items>
     <template #letterHeader>
       <MarketingOLHeaderForm
-        :receivers="receivers"
         v-model="letterHeader"
-        :hasPrevious="stepper?.hasPrev"
+        :receivers="receivers"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onHeaderSubmit"
       />
@@ -221,7 +221,7 @@ definePageMeta({ layout: "marketing" });
     <template #letterOfferDetails>
       <MarketingOLDetailsForm
         v-model="letterOfferDetails"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onDetailsSubmit"
       />
@@ -230,7 +230,7 @@ definePageMeta({ layout: "marketing" });
     <template #letterFooter>
       <MarketingOLFooterForm
         v-model="letterFooter"
-        :hasPrevious="stepper?.hasPrev"
+        :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFooterSubmit"
       />

@@ -14,13 +14,15 @@ const toast = useToast();
 const { get, put } = useApi();
 const loading = ref(false);
 
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
+
 const { data: InvoiceData, refresh } = await useAsyncData(
   "invoices",
   async () => {
-    const res = await get<{ items: Invoices[] }>("/invoices", {
-      page: 1,
-      page_size: 50,
-    });
+    const params: Record<string, string | number> = { page: 1, page_size: 50 };
+    if (debouncedSearch.value) params.search = debouncedSearch.value;
+    const res = await get<{ items: Invoices[] }>("/invoices", params);
     return res.items.map((inv: Invoices) => {
       // Check the real-time status every time data is fetched
       const { invoiceStatus, deadlineStatus } = calculateDynamicStatus(
@@ -36,12 +38,12 @@ const { data: InvoiceData, refresh } = await useAsyncData(
         termsDay: inv.terms_day,
         dateCreated: inv.created_at.toString(),
         grandTotal: inv.grand_total,
-        invoiceStatus: invoiceStatus, // Replaced with dynamic status
-        deadlineStatus: deadlineStatus, // Replaced with dynamic status
+        invoiceStatus: invoiceStatus,
+        deadlineStatus: deadlineStatus,
       };
     });
   },
-  { default: () => [] },
+  { default: () => [], watch: [debouncedSearch] },
 );
 
 const columns: TableColumn<FinanceInvoiceOverview>[] = [
@@ -134,7 +136,6 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
   {
     id: "actions",
     header: "Aksi",
-    // size: 100,
   },
 ];
 
@@ -150,8 +151,7 @@ async function updateInvoiceStatus(
     if (loading.value) return;
     loading.value = true;
 
-    // Use the helper to get the exact payload to send to your backend
-    const { invoiceStatus, deadlineStatus } = calculateDynamicStatus(
+    const { deadlineStatus } = calculateDynamicStatus(
       invoiceData.dateCreated,
       invoiceData.terms,
       invoiceData.currentStatus,
@@ -184,12 +184,29 @@ async function updateInvoiceStatus(
 }
 
 const pagination = ref({ pageIndex: 0, pageSize: 7 });
+
+const detailOpen = ref(false);
+const detailId = ref<string | null>(null);
+function openDetail(id: string) {
+  detailId.value = id;
+  detailOpen.value = true;
+}
 </script>
 
 <template>
   <section class="flex flex-col lg:gap-4">
+    <div class="flex items-center gap-2">
+      <UInput
+        v-model="search"
+        icon="i-lucide-search"
+        placeholder="Cari nomor invoice atau customer..."
+        class="w-72"
+      />
+    </div>
+
     <UTable
       ref="table"
+      v-model:pagination="pagination"
       :data="InvoiceData"
       :columns="columns"
       :column-pinning="columnPinning"
@@ -200,19 +217,27 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
         td: 'border-b border-default',
       }"
-      v-model:pagination="pagination"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
+          <UButton
+            icon="i-lucide-eye"
+            size="sm"
+            color="neutral"
+            variant="ghost"
+            @click="openDetail(row.original.id)"
+          >
+            Selengkapnya
+          </UButton>
           <UButton
             :to="`/finance/detail/invoice-${row.original.id}`"
             variant="solid"
-            size="md"
+            size="sm"
             color="primary"
-            >Detail</UButton
           >
-
+            Detail
+          </UButton>
           <UButton
             v-if="
               row.original.invoiceStatus === 'unpaid' ||
@@ -223,13 +248,14 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
               updateInvoiceStatus(row.original.id, {
                 dateCreated: row.original.dateCreated,
                 terms: row.original.termsDay,
-                currentStatus: row.original.invoiceStatus, // Add this line
+                currentStatus: row.original.invoiceStatus,
               })
             "
             variant="soft"
-            size="md"
+            size="sm"
             color="success"
-            >Tandai Invoice Lunas
+          >
+            Tandai Lunas
           </UButton>
         </div>
       </template>
@@ -244,4 +270,6 @@ const pagination = ref({ pageIndex: 0, pageSize: 7 });
       />
     </div>
   </section>
+
+  <RecordDetailModal v-model:open="detailOpen" type="invoice" :id="detailId" />
 </template>

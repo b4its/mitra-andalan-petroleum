@@ -60,6 +60,14 @@ export function formatNumber(value: number) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
+export function formatToKm(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "unit",
+    unitDisplay: "short",
+    unit: "kilometer",
+  }).format(value);
+}
+
 export function calculateDynamicStatus(
   dateCreated: string | Date,
   termsDay: number,

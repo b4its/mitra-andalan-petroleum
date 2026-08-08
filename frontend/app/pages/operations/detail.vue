@@ -20,7 +20,7 @@ definePageMeta({ layout: "operations" });
 <template>
   <UDashboardPanel id="delivery-order" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Surat Delivery Order ${idOfferingLetter}`"">
+      <UDashboardNavbar :title="`Surat Delivery Order ${idOfferingLetter}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -33,7 +33,7 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #body>
-      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full">
+      <div class="flex flex-col gap-4 sm:gap-6 lg:gap-12 w-full px-4 lg:px-6">
         <NuxtPage />
       </div>
     </template>

@@ -2,212 +2,234 @@ import type {
   FinanceInvoiceOverview,
   MarketingOfferingLetterOverview,
   OperationsDeliveryOrderOverview,
-  Uploads,
-} from "~/types";
+  Uploads
+} from '~/types'
 
-const API_BASE = "http://localhost:8000/api/v1";
-const API_BASE_POST = "/api/v1";
+const API_BASE = '/api/v1'
+
+function apiUrl(path: string, params?: Record<string, any>) {
+  const search = params
+    ? '?' + new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
+        )
+      ).toString()
+    : ''
+  const url = `${API_BASE}${path}${search}`
+
+  if (import.meta.server) {
+    const serverApiBase = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000/api/v1'
+    return `${serverApiBase}${path}${search}`
+  }
+
+  return url
+}
+
+async function parseError(res: Response) {
+  const err = await res.json().catch(() => ({ detail: res.statusText }))
+  throw new Error(err.detail || `API error: ${res.status}`)
+}
+
+async function request(input: string, init?: RequestInit) {
+  try {
+    return await fetch(input, init)
+  } catch {
+    const target = import.meta.server
+      ? process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000/api/v1'
+      : API_BASE
+    throw new Error(`Backend tidak terhubung. Pastikan API lokal berjalan di ${target}.`)
+  }
+}
 
 export function useApi() {
   async function get<T>(
     path: string,
-    params?: Record<string, any>,
+    params?: Record<string, any>
   ): Promise<T> {
-    const url = new URL(`${API_BASE}${path}`);
-    if (params) {
-      Object.entries(params).forEach(([k, v]) =>
-        url.searchParams.set(k, String(v)),
-      );
-    }
-    const res = await fetch(url.toString());
+    const res = await request(apiUrl(path, params))
     if (!res.ok) {
-      throw new Error(`API error: ${res.status} ${res.statusText}`);
+      await parseError(res)
     }
-    return res.json();
+    return res.json()
   }
 
   async function put<T, U>(path: string, body: U): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify(body),
-    });
+    const res = await request(apiUrl(path), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || `API error: ${res.status}`);
+      await parseError(res)
     }
-    return res.json();
+    return res.json()
   }
 
   async function post<T, U>(path: string, body: U): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify(body),
-    });
+    const res = await request(apiUrl(path), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || `API error: ${res.status}`);
+      await parseError(res)
     }
-    return res.json();
+    return res.json()
   }
 
   async function postFile<T>(path: string, payload: Uploads): Promise<T> {
-    const formData = new FormData();
+    const formData = new FormData()
 
     payload.files.forEach((file) => {
-      formData.append("files", file);
-    });
+      formData.append('files', file)
+    })
 
     if (payload.folder !== undefined) {
-      formData.append("folder", payload.folder);
+      formData.append('folder', payload.folder)
     }
 
     if (payload.document_type) {
-      formData.append("document_type", payload.document_type);
+      formData.append('document_type', payload.document_type)
     }
 
     if (payload.document_id) {
-      formData.append("document_id", payload.document_id);
+      formData.append('document_id', payload.document_id)
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: "POST",
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: formData,
-    });
+    const res = await request(apiUrl(path), {
+      method: 'POST',
+      body: formData
+    })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || `API error: ${res.status}`);
+      await parseError(res)
     }
-    return res.json();
+    return res.json()
   }
 
   async function putFile<T>(path: string, payload: Uploads): Promise<T> {
-    const formData = new FormData();
+    const formData = new FormData()
 
     payload.files.forEach((file) => {
-      formData.append("files", file);
-    });
+      formData.append('files', file)
+    })
 
     if (payload.folder !== undefined) {
-      formData.append("folder", payload.folder);
+      formData.append('folder', payload.folder)
     }
 
     if (payload.document_type) {
-      formData.append("document_type", payload.document_type);
+      formData.append('document_type', payload.document_type)
     }
 
     if (payload.document_id) {
-      formData.append("document_id", payload.document_id);
+      formData.append('document_id', payload.document_id)
     }
 
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: "PUT",
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: formData,
-    });
+    const res = await request(apiUrl(path), {
+      method: 'PUT',
+      body: formData
+    })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || `API error: ${res.status}`);
+      await parseError(res)
     }
-    return res.json();
+    return res.json()
   }
 
-  return { get, post, put, putFile, postFile };
+  async function del<T>(path: string): Promise<T> {
+    const res = await request(apiUrl(path), {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (!res.ok) {
+      await parseError(res)
+    }
+    return res.json()
+  }
+
+  return { get, post, put, del, putFile, postFile }
 }
 
 export interface ApiOfferingLetter {
-  id: string;
-  offering_letter_number: string;
-  customer_id: string;
-  customer_name: string;
-  fuel_total_price: number;
-  transport_price: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  id: string
+  offering_letter_number: string
+  customer_id: string
+  customer_name: string
+  fuel_total_price: number
+  transport_price: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface ApiDeliveryOrder {
-  id: string;
-  do_number: string;
-  customer_id: string;
-  customer_name: string;
-  po_number: string;
-  transport_name: string;
-  fuel_total: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  id: string
+  do_number: string
+  customer_id: string
+  customer_name: string
+  po_number: string
+  transport_name: string
+  fuel_total: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface ApiInvoice {
-  id: string;
-  invoice_number: string;
-  customer_id: string;
-  customer_name: string;
-  terms_day: number;
-  grand_total: number;
-  invoice_status: string;
-  deadline_status: string;
-  created_at: string;
-  updated_at: string;
+  id: string
+  invoice_number: string
+  customer_id: string
+  customer_name: string
+  terms_day: number
+  grand_total: number
+  invoice_status: string
+  deadline_status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface ApiSale {
-  id: string;
-  date: string;
-  status: string;
-  email: string;
-  amount: number;
-  created_at: string;
+  id: string
+  date: string
+  status: string
+  email: string
+  amount: number
+  created_at: string
 }
 
 export interface ApiPurchaseOrder {
-  id: string;
-  po_number: string;
-  type: string;
-  customer_id: string | null;
-  supplier_id: string | null;
-  customer_name: string;
-  supplier_name: string;
-  date: string | null;
-  total: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  id: string
+  po_number: string
+  type: string
+  customer_id: string | null
+  supplier_id: string | null
+  customer_name: string
+  supplier_name: string
+  date: string | null
+  total: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface ApiPaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
+  items: T[]
+  total: number
+  page: number
+  page_size: number
 }
 
 export interface ApiStats {
   stats: {
-    title: string;
-    icon: string;
-    value: number | string;
-    variation: number;
-    to: string;
-  }[];
+    title: string
+    icon: string
+    value: number | string
+    variation: number
+    to: string
+  }[]
 }
 
 export function mapOfferingLetter(
-  ol: ApiOfferingLetter,
+  ol: ApiOfferingLetter
 ): MarketingOfferingLetterOverview {
   return {
     id: ol.id,
@@ -217,12 +239,12 @@ export function mapOfferingLetter(
     transportPrice: ol.transport_price,
     dateCreated: ol.created_at,
     dateChanged: ol.updated_at,
-    status: ol.status as MarketingOfferingLetterOverview["status"],
-  };
+    status: ol.status as MarketingOfferingLetterOverview['status']
+  }
 }
 
 export function mapDeliveryOrder(
-  do_: ApiDeliveryOrder,
+  do_: ApiDeliveryOrder
 ): OperationsDeliveryOrderOverview {
   return {
     id: do_.id,
@@ -232,8 +254,8 @@ export function mapDeliveryOrder(
     transportName: do_.transport_name,
     dateCreated: do_.created_at,
     dateChanged: do_.updated_at,
-    status: do_.status as OperationsDeliveryOrderOverview["status"],
-  };
+    status: do_.status as OperationsDeliveryOrderOverview['status']
+  }
 }
 
 export function mapInvoice(inv: ApiInvoice): FinanceInvoiceOverview {
@@ -245,8 +267,8 @@ export function mapInvoice(inv: ApiInvoice): FinanceInvoiceOverview {
     dateCreated: inv.created_at,
     grandTotal: inv.grand_total,
     invoiceStatus:
-      inv.invoice_status as FinanceInvoiceOverview["invoiceStatus"],
+      inv.invoice_status as FinanceInvoiceOverview['invoiceStatus'],
     deadlineStatus:
-      inv.deadline_status as FinanceInvoiceOverview["deadlineStatus"],
-  };
+      inv.deadline_status as FinanceInvoiceOverview['deadlineStatus']
+  }
 }

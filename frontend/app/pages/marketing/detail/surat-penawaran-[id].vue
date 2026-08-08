@@ -1,452 +1,452 @@
 <script setup lang="ts">
-import angkaTerbilang from "@develoka/angka-terbilang-js";
-import logoImage from "~/assets/images/map-logo.jpeg";
-import type { Customer, OfferingLetterPost } from "~/types/marketing";
+import angkaTerbilang from '@develoka/angka-terbilang-js'
+import logoImage from '~/assets/images/map-logo.jpeg'
+import type { Customer, OfferingLetterPost } from '~/types/marketing'
 
-const pdfLink = ref<string | null>(null);
-const route = useRoute();
-const { get } = useApi();
+const pdfLink = ref<string | null>(null)
+const route = useRoute()
+const { get } = useApi()
 
-const idOfferingLetter = route.params.id;
+const idOfferingLetter = route.params.id
 const { data: offeringLetter } = await useAsyncData(
-  "offering-letter-details",
+  'offering-letter-details',
   async () => {
     const res = await get<OfferingLetterPost>(
-      `/offering-letters/${idOfferingLetter}`,
-    );
-    return res;
-  },
-);
+      `/offering-letters/${idOfferingLetter}`
+    )
+    return res
+  }
+)
 
 const { data: customerDetail } = await useAsyncData(
-  "customer-detail",
+  'customer-detail-surat',
   async () => {
     const res = await get<Customer>(
-      `/customers/${offeringLetter.value?.details.receiver}`,
-    );
-    return res;
-  },
-);
+      `/customers/${offeringLetter.value?.details.receiver}`
+    )
+    return res
+  }
+)
 
-const details = offeringLetter.value?.details;
+const details = offeringLetter.value?.details
 
-const { user } = useAuth();
+const { user } = useAuth()
 
 const baseWithPpkb = computed(() => {
-  if (!details) return 0;
-  return details.fuelPrices.basePrice + details.fuelPrices.sellingPrice.ppkb;
-});
+  if (!details) return 0
+  return details.fuelPrices.basePrice + details.fuelPrices.sellingPrice.ppkb
+})
 
 const loadPdf = async () => {
-  const pdfMake = usePDFMake();
-  if (!pdfMake) return;
+  const pdfMake = usePDFMake()
+  if (!pdfMake) return
 
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
         title: `Surat Penawaran (${details?.offeringLetterNumber}) | ${customerDetail.value?.name}`,
-        author: "PT. Mitra Andalan Petroleum",
+        author: 'PT. Mitra Andalan Petroleum',
         creator: user.value?.name,
-        producer: "PT. Mitra Andalan Petroleum",
+        producer: 'PT. Mitra Andalan Petroleum'
       },
-      pageSize: "A4",
+      pageSize: 'A4',
       pageMargins: [72, 10, 72, 10],
       content: [
         {
           image: await toBase64(logoImage),
-          width: 160,
+          width: 160
         },
         {
           text: `Samarinda, ${formatDateDoc(details?.date || new Date())}`,
-          alignment: "right",
+          alignment: 'right',
           marginTop: 10,
-          marginBottom: 15,
+          marginBottom: 15
         },
         {
-          layout: "noBorders",
+          layout: 'noBorders',
           table: {
-            widths: ["auto", "auto", "*"],
+            widths: ['auto', 'auto', '*'],
             body: [
               [
                 {
-                  text: "Perihal",
+                  text: 'Perihal'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
                   text: [
-                    `${details?.regarding}`,
+                    `${details?.regarding}`
                     // {
                     //   text: "Periode 01 – 14 Juli 2026",
                     //   bold: true,
                     // },
                   ],
-                  decoration: "underline",
-                },
+                  decoration: 'underline'
+                }
               ],
               [
                 {
-                  text: "Nomor",
+                  text: 'Nomor'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.offeringLetterNumber}`,
-                },
-              ],
-            ],
-          },
+                  text: `${details?.offeringLetterNumber}`
+                }
+              ]
+            ]
+          }
         },
         {
           text: [
-            "Kepada Yth.\n",
-            { text: `${customerDetail.value?.name}`.toUpperCase(), bold: true },
+            'Kepada Yth.\n',
+            { text: `${customerDetail.value?.name}`.toUpperCase(), bold: true }
           ],
-          marginTop: 15,
+          marginTop: 15
         },
         {
-          text: "Dengan Hormat,",
-          marginTop: 15,
+          text: 'Dengan Hormat,',
+          marginTop: 15
         },
         {
-          text: "Berikut ini kami sampaikan penawaran Bahan Bakar Minyak Bio diesel dengan perincian sebagai berikut:",
+          text: 'Berikut ini kami sampaikan penawaran Bahan Bakar Minyak Bio diesel dengan perincian sebagai berikut:',
           marginTop: 15,
-          marginBottom: 5,
+          marginBottom: 5
         },
         {
           layout: {
             defaultBorder: false,
             paddingLeft: function (i) {
-              return i === 3 ? -2 : 0;
+              return i === 3 ? -2 : 0
             },
             paddingBottom: function () {
-              return 1;
+              return 1
             },
             paddingTop: function () {
-              return 1;
-            },
+              return 1
+            }
           },
           table: {
-            widths: ["auto", "auto", "auto", "*"],
+            widths: ['auto', 'auto', 'auto', '*'],
             body: [
               [
                 {
-                  text: "1.",
+                  text: '1.'
                 },
                 {
-                  text: "Supply Point",
+                  text: 'Supply Point'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.supplyPoint}`,
-                },
+                  text: `${details?.supplyPoint}`
+                }
               ],
               [
                 {
-                  text: "2.",
+                  text: '2.'
                 },
                 {
-                  text: "Jaminan Kualitas",
+                  text: 'Jaminan Kualitas'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.qualityAssurance}`,
-                },
+                  text: `${details?.qualityAssurance}`
+                }
               ],
               [
                 {
-                  text: "3.",
+                  text: '3.'
                 },
                 {
-                  text: "Custody Transfer",
+                  text: 'Custody Transfer'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.custodyTransfer}`,
-                },
+                  text: `${details?.custodyTransfer}`
+                }
               ],
               [
                 {
-                  text: "4.",
+                  text: '4.'
                 },
                 {
-                  text: "Prosedur Bongkar",
+                  text: 'Prosedur Bongkar'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.unloadingProcedure}`,
-                },
+                  text: `${details?.unloadingProcedure}`
+                }
               ],
               [
                 {
-                  text: "5.",
+                  text: '5.'
                 },
                 {
-                  text: "Satuan Volume",
+                  text: 'Satuan Volume'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.volumeUnit}`,
-                },
+                  text: `${details?.volumeUnit}`
+                }
               ],
               [
                 {
-                  text: "6.",
+                  text: '6.'
                 },
                 {
-                  text: "Toleransi Volume",
+                  text: 'Toleransi Volume'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: formatPercent(details?.volumeTolerance || 0),
-                },
+                  text: formatPercent(details?.volumeTolerance || 0)
+                }
               ],
               [
                 {
-                  text: "7.",
+                  text: '7.'
                 },
                 {
-                  text: "Term Pembayaran",
+                  text: 'Term Pembayaran'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.paymentTerm} ${details?.paymentTerm || 0 > 1 ? "Days" : "Day"} after delivery`,
-                },
+                  text: `${details?.paymentTerm} ${details?.paymentTerm || 0 > 1 ? 'Days' : 'Day'} after delivery`
+                }
               ],
               [
                 {
-                  text: "8.",
+                  text: '8.'
                 },
                 {
-                  text: "Penalty Keterlambatan",
+                  text: 'Penalty Keterlambatan'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${formatPercent(details?.latePenalty || 0)}`,
-                },
+                  text: `${formatPercent(details?.latePenalty || 0)}`
+                }
               ],
               [
                 {
-                  text: "9.",
+                  text: '9.'
                 },
                 {
-                  text: "Pola Pelayanan",
+                  text: 'Pola Pelayanan'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.servicePattern}`,
-                },
+                  text: `${details?.servicePattern}`
+                }
               ],
               [
                 {
-                  text: "10.",
+                  text: '10.'
                 },
                 {
-                  text: "Person In Charge",
+                  text: 'Person In Charge'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.personInCharge.name} - ${details?.personInCharge.phoneNumber}`,
-                },
+                  text: `${details?.personInCharge.name} - ${details?.personInCharge.phoneNumber}`
+                }
               ],
               [
                 {
-                  text: "11.",
+                  text: '11.'
                 },
                 {
-                  text: "Rekening Pembayaran",
+                  text: 'Rekening Pembayaran'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: "",
-                },
+                  text: ''
+                }
               ],
               [
                 {
                   text: `${details?.paymentAddress.bankName}\nNo Rek: ${details?.paymentAddress.accountNumber}\nA/N. ${details?.paymentAddress.accountName}`,
                   bold: true,
                   colSpan: 4,
-                  alignment: "center",
-                  marginBottom: 5,
-                },
+                  alignment: 'center',
+                  marginBottom: 5
+                }
               ],
               [
                 {
-                  text: "12.",
+                  text: '12.'
                 },
                 {
-                  text: "Harga Bahan Bakar Minyak:",
+                  text: 'Harga Bahan Bakar Minyak:',
                   colSpan: 3,
-                  marginBottom: 5,
-                },
-              ],
-            ],
-          },
+                  marginBottom: 5
+                }
+              ]
+            ]
+          }
         },
         {
           layout: {
             paddingTop: function (i) {
-              return i === 0 ? 5 : 2;
+              return i === 0 ? 5 : 2
             },
             paddingBottom: function (i) {
-              return i === 0 ? 10 : 2;
+              return i === 0 ? 10 : 2
             },
             paddingLeft: function (i) {
-              return i === 0 ? 15 : 5;
-            },
+              return i === 0 ? 15 : 5
+            }
           },
           marginLeft: 15,
           table: {
-            widths: ["*", "*", "*"],
+            widths: ['*', '*', '*'],
             headerRows: 1,
             body: [
               [
                 {
-                  text: "KETERANGAN",
+                  text: 'KETERANGAN',
                   style: {
-                    bold: true,
-                  },
+                    bold: true
+                  }
                 },
                 {
-                  text: "KET",
+                  text: 'KET',
                   style: {
-                    alignment: "center",
-                    bold: true,
-                  },
+                    alignment: 'center',
+                    bold: true
+                  }
                 },
                 {
                   text: `${details?.fuelPrices.logisticInformation}`,
                   style: {
-                    alignment: "center",
-                    bold: true,
-                  },
-                },
+                    alignment: 'center',
+                    bold: true
+                  }
+                }
               ],
               [
                 {
-                  text: "PRODUK",
+                  text: 'PRODUK',
                   style: {
-                    bold: true,
-                  },
+                    bold: true
+                  }
                 },
                 {
-                  text: "",
+                  text: ''
                 },
                 {
                   text: `${details?.fuelPrices.productName}`,
                   style: {
-                    alignment: "center",
-                  },
-                },
+                    alignment: 'center'
+                  }
+                }
               ],
               [
                 {
-                  text: "HARGA PRODUK",
+                  text: 'HARGA PRODUK',
                   style: {
-                    bold: true,
-                  },
+                    bold: true
+                  }
                 },
                 {
-                  text: "PPKB Include",
+                  text: 'PPKB Include',
                   style: {
-                    alignment: "center",
-                  },
+                    alignment: 'center'
+                  }
                 },
                 {
                   text: formatCurrency(baseWithPpkb.value),
                   style: {
-                    alignment: "center",
-                  },
-                },
+                    alignment: 'center'
+                  }
+                }
               ],
               [
                 {
-                  text: "",
+                  text: '',
                   style: {
-                    bold: true,
-                  },
+                    bold: true
+                  }
                 },
                 {
-                  text: "OAT",
+                  text: 'OAT',
                   style: {
-                    alignment: "center",
-                  },
+                    alignment: 'center'
+                  }
                 },
                 {
                   text: formatCurrency(
-                    details?.fuelPrices.sellingPrice.oat || 0,
+                    details?.fuelPrices.sellingPrice.oat || 0
                   ),
                   style: {
-                    alignment: "center",
-                  },
-                },
+                    alignment: 'center'
+                  }
+                }
               ],
               [
                 {
-                  text: "PPN (11%)",
+                  text: 'PPN (11%)',
                   style: {
-                    bold: true,
-                  },
+                    bold: true
+                  }
                 },
                 {
-                  text: "HARGA JUAL & ONGKOS ANGKUT",
+                  text: 'HARGA JUAL & ONGKOS ANGKUT',
                   style: {
-                    alignment: "center",
-                  },
+                    alignment: 'center'
+                  }
                 },
                 {
                   text: formatCurrency(
-                    details?.fuelPrices.sellingPrice.ppn || 0,
+                    details?.fuelPrices.sellingPrice.ppn || 0
                   ),
                   style: {
-                    alignment: "center",
-                  },
-                },
+                    alignment: 'center'
+                  }
+                }
               ],
               [
                 {
-                  text: "TOTAL",
+                  text: 'TOTAL',
                   style: {
                     bold: true,
-                    alignment: "center",
+                    alignment: 'center'
                   },
-                  colSpan: 2,
+                  colSpan: 2
                 },
                 {},
                 {
                   text: formatCurrency(details?.fuelPrices.totalPrice || 0),
                   style: {
-                    alignment: "center",
-                    bold: true,
-                  },
-                },
-              ],
-            ],
-          },
+                    alignment: 'center',
+                    bold: true
+                  }
+                }
+              ]
+            ]
+          }
         },
 
         // custom list using *** bullet
@@ -454,50 +454,50 @@ const loadPdf = async () => {
           marginTop: 10,
           marginLeft: 15,
           columns: [
-            { text: "***", width: "auto", marginRight: 3, bold: true },
+            { text: '***', width: 'auto', marginRight: 3, bold: true },
             {
-              text: "Harga sewaktu-waktu dapat berubah mengikuti harga keekonomian Pertamina",
-            },
-          ],
+              text: 'Harga sewaktu-waktu dapat berubah mengikuti harga keekonomian Pertamina'
+            }
+          ]
         },
         {
           marginTop: 1,
           marginLeft: 15,
           columns: [
-            { text: "***", width: "auto", marginRight: 3, bold: true },
+            { text: '***', width: 'auto', marginRight: 3, bold: true },
             {
-              text: "Stock BBM sewaktu-waktu dapat berubah mengikuti posisi stock BBM di depo terdekat",
-            },
-          ],
+              text: 'Stock BBM sewaktu-waktu dapat berubah mengikuti posisi stock BBM di depo terdekat'
+            }
+          ]
         },
         {
           marginTop: 1,
           marginLeft: 15,
           columns: [
-            { text: "***", width: "auto", marginRight: 3, bold: true },
+            { text: '***', width: 'auto', marginRight: 3, bold: true },
             {
-              text: "B50 / B40 if stock still available",
-            },
-          ],
+              text: 'B50 / B40 if stock still available'
+            }
+          ]
         },
         {
           text: [
-            "Mohon Purchase Order (PO) dapat dikirimkan minimal ",
+            'Mohon Purchase Order (PO) dapat dikirimkan minimal ',
             {
               text: `${details?.purchaseOrderDeadline || 0} (${angkaTerbilang(details?.purchaseOrderDeadline || 0)}) hari `,
-              bold: true,
+              bold: true
             },
-            "sebelum pengaliran/muat dari terminal.",
+            'sebelum pengaliran/muat dari terminal.'
           ],
-          marginTop: 15,
+          marginTop: 15
         },
         {
-          text: "Demikian surat penawaran ini kami sampaikan, kami ucapkan terimakasih.",
+          text: 'Demikian surat penawaran ini kami sampaikan, kami ucapkan terimakasih.'
         },
         {
-          text: "Hormat Kami,",
+          text: 'Hormat Kami,',
           marginTop: 15,
-          marginBottom: 25,
+          marginBottom: 25
         },
         // {
         //   text: "Placeholder Signature MAP",
@@ -508,73 +508,73 @@ const loadPdf = async () => {
         {
           text: `(${details?.offeror.name})`,
           bold: true,
-          marginTop: 25,
+          marginTop: 25
         },
         {
           layout: {
             defaultBorder: false,
             paddingLeft: function (i) {
-              return i === 2 ? -2 : 0;
+              return i === 2 ? -2 : 0
             },
             paddingTop: function () {
-              return 0;
+              return 0
             },
             paddingBottom: function () {
-              return 0;
-            },
+              return 0
+            }
           },
           marginLeft: 320,
           table: {
-            widths: ["auto", "auto", "auto"],
+            widths: ['auto', 'auto', 'auto'],
             body: [
               [
                 {
-                  text: "Address",
+                  text: 'Address'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.companyInformation.address}`,
-                },
+                  text: `${details?.companyInformation.address}`
+                }
               ],
               [
                 {
-                  text: "Phone",
+                  text: 'Phone'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.companyInformation.phoneNumber}`,
-                },
+                  text: `${details?.companyInformation.phoneNumber}`
+                }
               ],
               [
                 {
-                  text: "Email",
+                  text: 'Email'
                 },
                 {
-                  text: ":",
+                  text: ':'
                 },
                 {
-                  text: `${details?.companyInformation.email}`,
-                },
-              ],
-            ],
-          },
-        },
+                  text: `${details?.companyInformation.email}`
+                }
+              ]
+            ]
+          }
+        }
       ],
       defaultStyle: {
-        color: "#000000",
-        fontSize: 9,
-      },
+        color: '#000000',
+        fontSize: 9
+      }
     })
-    .getDataUrl();
-};
+    .getDataUrl()
+}
 
 onMounted(() => {
-  loadPdf();
-});
+  loadPdf()
+})
 </script>
 
 <template>

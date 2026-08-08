@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from "@tanstack/vue-table";
-import { h, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
-import type { MarketingOfferingLetterOverview } from "~/types";
-import type { OfferingLetters } from "~/types/marketing";
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import type { MarketingOfferingLetterOverview } from '~/types'
+import type { OfferingLetters } from '~/types/marketing'
 
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-const table = useTemplateRef("table");
+const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const table = useTemplateRef('table')
 const columnPinning = ref({
-  right: ["actions"],
-});
+  right: ['actions']
+})
 
-const { get } = useApi();
+const { get } = useApi()
 
 const { data: OlData } = await useAsyncData(
-  "offering-letters",
+  'offering-letters-revision',
   async () => {
-    const res = await get<{ items: OfferingLetters[] }>("/offering-letters", {
+    const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
       page: 1,
-      page_size: 50,
-    });
+      page_size: 50
+    })
     return res.items.map((ol: OfferingLetters) => ({
       id: ol.id,
       offeringLetterNumber: ol.offering_letter_number,
@@ -29,83 +29,84 @@ const { data: OlData } = await useAsyncData(
       transportPrice: ol.transport_price,
       dateCreated: ol.created_at.toString(),
       dateChanged: ol.updated_at.toString(),
-      status: ol.status,
-    }));
+      status: ol.status
+    }))
   },
   {
-    default: () => [],
-  },
-);
+    default: () => []
+  }
+)
 
 const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
   {
-    accessorKey: "offeringLetterNumber",
-    header: "Nomor Penawaran",
-    cell: ({ row }) => `${row.getValue("offeringLetterNumber")}`,
+    accessorKey: 'offeringLetterNumber',
+    header: 'Nomor Penawaran',
+    cell: ({ row }) => `${row.getValue('offeringLetterNumber')}`
   },
   {
-    accessorKey: "customerName",
-    header: "Customer ID",
-    cell: ({ row }) => `${row.getValue("customerName")}`,
+    accessorKey: 'customerName',
+    header: 'Customer ID',
+    cell: ({ row }) => `${row.getValue('customerName')}`
   },
   {
-    accessorKey: "fuelTotalPrice",
-    header: "Harga Dasar",
-    cell: ({ row }) => `${formatCurrency(row.getValue("fuelTotalPrice"))}`,
+    accessorKey: 'fuelTotalPrice',
+    header: 'Harga Dasar',
+    cell: ({ row }) => `${formatCurrency(row.getValue('fuelTotalPrice'))}`
   },
   {
-    accessorKey: "transportPrice",
-    header: "Ongkos Transportir",
-    cell: ({ row }) => `${formatCurrency(row.getValue("transportPrice"))}`,
+    accessorKey: 'transportPrice',
+    header: 'Ongkos Transportir',
+    cell: ({ row }) => `${formatCurrency(row.getValue('transportPrice'))}`
   },
   {
-    accessorKey: "dateCreated",
-    header: "Penawaran Dibuat",
-    cell: ({ row }) => `${formatDate(row.getValue("dateCreated"))}`,
+    accessorKey: 'dateCreated',
+    header: 'Penawaran Dibuat',
+    cell: ({ row }) => `${formatDate(row.getValue('dateCreated'))}`
   },
   {
-    accessorKey: "dateChanged",
-    header: "Penawaran Direvisi",
-    cell: ({ row }) => `${formatDate(row.getValue("dateChanged"))}`,
+    accessorKey: 'dateChanged',
+    header: 'Penawaran Direvisi',
+    cell: ({ row }) => `${formatDate(row.getValue('dateChanged'))}`
   },
   {
-    accessorKey: "status",
-    header: "Status Penawaran",
+    accessorKey: 'status',
+    header: 'Status Penawaran',
     cell: ({ row }) => {
       const color = {
-        created: "info" as const,
-        under_revision: "warning" as const,
-        po_received: "success" as const,
-      }[row.getValue("status") as string];
+        created: 'info' as const,
+        under_revision: 'warning' as const,
+        po_received: 'success' as const
+      }[row.getValue('status') as string]
       const status = {
-        created: "Penawaran Telah Dibuat",
-        under_revision: "Penawaran Dalam Revisi",
-        po_received: "PO Diterima",
-      }[row.getValue("status") as string];
+        created: 'Penawaran Telah Dibuat',
+        under_revision: 'Penawaran Dalam Revisi',
+        po_received: 'PO Diterima'
+      }[row.getValue('status') as string]
       return h(
         UBadge,
-        { class: "capitalize", variant: "soft", color },
-        () => status,
-      );
-    },
+        { class: 'capitalize', variant: 'soft', color },
+        () => status
+      )
+    }
   },
   {
-    id: "actions",
-    header: "Aksi",
-    size: 220,
-  },
-];
+    id: 'actions',
+    header: 'Aksi',
+    size: 220
+  }
+]
 
 const pagination = ref({
   pageIndex: 0,
-  pageSize: 7,
-});
+  pageSize: 7
+})
 </script>
 
 <template>
   <section class="flex flex-col lg:gap-4">
     <UTable
       ref="table"
+      v-model:pagination="pagination"
       :data="OlData"
       :columns="columns"
       :column-pinning="columnPinning"
@@ -114,9 +115,8 @@ const pagination = ref({
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default',
+        td: 'border-b border-default'
       }"
-      v-model:pagination="pagination"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
       <template #actions-cell="{ row }">
@@ -126,15 +126,17 @@ const pagination = ref({
             variant="solid"
             size="md"
             color="primary"
-            >Lihat Surat</UButton
           >
+            Lihat Surat
+          </UButton>
           <UButton
             :to="`/marketing/customer/revisi-surat-penawaran-${row.original.id}`"
             variant="soft"
             size="md"
             color="neutral"
-            >Revisi Penawaran</UButton
           >
+            Revisi Penawaran
+          </UButton>
         </div>
       </template>
     </UTable>

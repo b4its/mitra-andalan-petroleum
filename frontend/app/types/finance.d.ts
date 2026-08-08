@@ -7,25 +7,25 @@ export interface InvoiceDetails {
   grand_total: number;
   invoice_status: string;
   deadline_status: string;
-  details: Details;
+  details: InvoiceDetailsData;
   created_at: Date;
   updated_at: Date;
 }
 
-export interface Details {
+export interface InvoiceDetailsData {
   billToInformation: string;
   deliveryPointInformation: string;
-  companyInformation: CompanyInformation;
+  companyInformation: InvoiceCompanyInformation;
   invoiceInformation: InvoiceInformation;
   customerPurchaseInformation: CustomerPurchaseInformation;
-  products: Product[];
+  products: InvoiceProduct[];
   priceSummary: PriceSummary;
   termsAndCondition: TermsAndCondition[];
   paymentInformation: PaymentInformation;
   signature: Signature;
 }
 
-export interface CompanyInformation {
+export interface InvoiceCompanyInformation {
   name: string;
   address: string;
   phoneNumber: string;
@@ -71,7 +71,7 @@ export interface PriceSummary {
   prePaid: number;
 }
 
-export interface Product {
+export interface InvoiceProduct {
   name: string;
   qty: number;
   unit: string;

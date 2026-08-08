@@ -118,10 +118,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
 
         <UFormField name="volumeTolerance" label="Toleransi Volume" required>
           <UInputNumber
+            v-model="state.volumeTolerance"
             :ui="{
               root: 'w-full',
             }"
-            v-model="state.volumeTolerance"
             orientation="vertical"
             :step="0.005"
             :format-options="{
@@ -136,10 +136,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
 
       <UFormField name="paymentTerm" label="Term Pembayaran" required>
         <UInputNumber
+          v-model="state.paymentTerm"
           :ui="{
             root: 'w-full',
           }"
-          v-model="state.paymentTerm"
           orientation="vertical"
           :step="1"
           locale="id-ID"
@@ -154,10 +154,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
       <div class="flex w-full gap-4">
         <UFormField name="latePenalty" label="Penalty Keterlambatan" required>
           <UInputNumber
+            v-model="state.latePenalty"
             :ui="{
               root: 'w-full',
             }"
-            v-model="state.latePenalty"
             orientation="vertical"
             :step="0.01"
             :format-options="{
@@ -253,12 +253,29 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
         </UFormField>
       </div>
 
-      <UFormField name="basePrice" label="Harga Dasar Solar" required>
+      <UFormField name="hppPrice" label="HPP" required>
         <UInputNumber
+          v-model="state.fuelPrices.hppPrice"
           :ui="{
             root: 'w-full',
           }"
+          :increment="false"
+          :decrement="false"
+          :format-options="{
+            style: 'currency',
+            currency: 'IDR',
+            currencyDisplay: 'narrowSymbol',
+            currencySign: 'standard',
+          }"
+        />
+      </UFormField>
+
+      <UFormField name="basePrice" label="Harga Dasar Solar" required>
+        <UInputNumber
           v-model="state.fuelPrices.basePrice"
+          :ui="{
+            root: 'w-full',
+          }"
           :increment="false"
           :decrement="false"
           :format-options="{
@@ -273,10 +290,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
       <div class="flex w-full gap-4">
         <UFormField name="percentagePpkb" label="Persentase PPKB" required>
           <UInputNumber
+            v-model="state.fuelPrices.percentageNum.ppkb"
             :ui="{
               root: 'w-full',
             }"
-            v-model="state.fuelPrices.percentageNum.ppkb"
             orientation="vertical"
             :step="0.001"
             :format-options="{
@@ -288,10 +305,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
 
         <UFormField name="percentageOat" label="Persentase OAT" required>
           <UInputNumber
+            v-model="state.fuelPrices.percentageNum.oat"
             :ui="{
               root: 'w-full',
             }"
-            v-model="state.fuelPrices.percentageNum.oat"
             orientation="vertical"
             :step="0.001"
             :format-options="{
@@ -304,10 +321,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
 
       <UFormField name="percentagePpn" label="Persentase PPN" required>
         <UInputNumber
+          v-model="state.fuelPrices.percentageNum.ppn"
           :ui="{
             root: 'w-full',
           }"
-          v-model="state.fuelPrices.percentageNum.ppn"
           orientation="vertical"
           :step="0.001"
           :format-options="{
