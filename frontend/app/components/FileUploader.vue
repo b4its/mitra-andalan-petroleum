@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResUploads } from "~/types";
+import { useFileUpload } from "~/composables/useFileUpload";
 
 const props = defineProps<{
   folder: string;

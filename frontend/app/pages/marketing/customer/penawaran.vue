@@ -114,9 +114,10 @@ function onDetailsSubmit() {
 }
 
 const toast = useToast();
-const { post, postFile } = useApi();
+const { post, postFile, del } = useApi();
 
 async function onFooterSubmit() {
+  let createdId: string | null = null;
   try {
     const res = await post<any, OfferingLetterPost>("/offering-letters", {
       customer_id: letterHeader.receiver,
@@ -133,8 +134,10 @@ async function onFooterSubmit() {
         ...letterHeader,
         ...letterOfferDetails,
         ...letterFooter,
+        offeror: { ...letterFooter.offeror, signature: undefined },
       },
     });
+    createdId = res.id;
     console.log(res);
 
     const signature = letterFooter.offeror.signature;
@@ -160,6 +163,9 @@ async function onFooterSubmit() {
 
     // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
   } catch (e: any) {
+    if (createdId) {
+      await del(`/offering-letters/${createdId}`).catch(() => undefined);
+    }
     toast.add({ title: "Error", description: e.message, color: "error" });
   }
 }

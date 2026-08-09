@@ -61,7 +61,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
         <UFileUpload
           v-model="state.offeror.signature"
           label="Upload File Tanda Tangan"
-          description="Format file .png dengan max 2MB"
+          description="Format file .png dengan max 50MB"
         />
       </UFormField>
 
