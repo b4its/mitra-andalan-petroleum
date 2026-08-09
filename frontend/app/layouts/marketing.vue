@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute()
-const toast = useToast()
-
 const open = ref(false)
 
 const { user } = useAuth()
@@ -113,10 +110,12 @@ const links = computed<NavigationMenuItem[][]>(() => {
           popover
         />
       </template>
+
+      <template #footer="{ collapsed }">
+        <SidebarNotifications :collapsed="collapsed" />
+      </template>
     </UDashboardSidebar>
 
     <slot />
-
-    <!-- <NotificationsSlideover /> -->
   </UDashboardGroup>
 </template>

@@ -3,15 +3,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const open = ref(false)
 
-const notificationsOpen = ref(false)
-
-const { unreadCount, fetchNotifications } = useNotifications()
 const { user } = useAuth()
-
-// Fetch notifications on mount (for header badge)
-onMounted(() => {
-  fetchNotifications()
-})
 
 const isAdmin = computed(() => user.value?.role === 'admin')
 
@@ -36,14 +28,6 @@ const links = computed<NavigationMenuItem[][]>(() => {
       to: '/accounting',
       exact: true,
       onSelect: () => { open.value = false }
-    },
-    {
-      label: 'Notifikasi',
-      icon: 'i-lucide-bell',
-      to: '/accounting/notifikasi',
-      onSelect: () => {
-        open.value = false
-      }
     },
     {
       label: 'Laporan Keuangan',
@@ -198,33 +182,20 @@ const links = computed<NavigationMenuItem[][]>(() => {
           popover
         />
       </template>
+
+      <template #footer="{ collapsed }">
+        <SidebarNotifications :collapsed="collapsed" />
+      </template>
     </UDashboardSidebar>
 
     <UDashboardPanel id="accounting-main">
       <template #header>
-        <UDashboardNavbar :ui="{ right: 'gap-2' }">
-          <template #right>
-            <UButton
-              :icon="'i-lucide-bell'"
-              color="neutral"
-              variant="ghost"
-              @click="notificationsOpen = true"
-            >
-              <template v-if="unreadCount" #trailing>
-                <UBadge size="xs" color="error" variant="solid">
-                  {{ unreadCount }}
-                </UBadge>
-              </template>
-            </UButton>
-          </template>
-        </UDashboardNavbar>
+        <UDashboardNavbar :ui="{ right: 'gap-2' }" />
       </template>
 
       <template #body>
         <slot />
       </template>
     </UDashboardPanel>
-
-    <AdminNotificationsModal v-model:open="notificationsOpen" />
   </UDashboardGroup>
 </template>

@@ -4,6 +4,10 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const open = ref(false)
 const notificationsOpen = ref(false)
 
+const { unreadCount, fetchNotifications } = useNotifications()
+
+onMounted(() => fetchNotifications())
+
 const links = [
   [
     {
@@ -200,8 +204,15 @@ const links = [
           color="neutral"
           variant="ghost"
           :square="collapsed"
+          class="w-full justify-start"
           @click="notificationsOpen = true"
-        />
+        >
+          <template v-if="!collapsed && unreadCount" #trailing>
+            <UBadge size="xs" color="error" variant="solid">
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </UBadge>
+          </template>
+        </UButton>
       </template>
     </UDashboardSidebar>
 
