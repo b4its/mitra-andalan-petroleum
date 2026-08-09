@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { dummyAccounts } from '~/utils/dummyAccounts'
 
 describe('dummyAccounts', () => {
-  it('has 4 accounts', () => {
-    expect(dummyAccounts).toHaveLength(4)
+  it('has 5 accounts', () => {
+    expect(dummyAccounts).toHaveLength(5)
   })
 
   it('each account has required fields', () => {
@@ -21,6 +21,7 @@ describe('dummyAccounts', () => {
     expect(roles).toContain('operations')
     expect(roles).toContain('marketing')
     expect(roles).toContain('finance')
+    expect(roles).toContain('accounting')
   })
 
   it('has all required emails', () => {
@@ -29,6 +30,7 @@ describe('dummyAccounts', () => {
     expect(emails).toContain('ops@email.com')
     expect(emails).toContain('marketing@email.com')
     expect(emails).toContain('finance@email.com')
+    expect(emails).toContain('accounting@email.com')
   })
 
   it('passwords are non-empty', () => {
