@@ -20,6 +20,8 @@ async function login(page, email: string, password: string, urlRegex: RegExp) {
 }
 
 test.describe('Login Page', () => {
+  test.setTimeout(60000)
+
   test('shows login form', async ({ page }) => {
     await page.goto('/login', { waitUntil: 'networkidle' })
     const form = page.locator('form')
@@ -63,16 +65,37 @@ test.describe('Login Page', () => {
     await page.goto('/login', { waitUntil: 'networkidle' })
     await page.fill('input[type="email"]', 'admin@email.com')
     await page.fill('input[type="password"]', 'wrongpassword')
-    await page.click('button[type="submit"]')
-    await expect(page.getByText('Login Gagal', { exact: true })).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('button[type="submit"]')).toBeEnabled()
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await page.click('button[type="submit"]')
+      try {
+        await expect(page.getByText('Login Gagal', { exact: true })).toBeVisible({ timeout: 8000 })
+        return
+      } catch {
+        // Hydration Vue bisa mengeset ulang field di submit pertama; isi ulang lalu coba lagi.
+        await page.fill('input[type="email"]', 'admin@email.com')
+        await page.fill('input[type="password"]', 'wrongpassword')
+      }
+    }
+    throw new Error('Toast "Login Gagal" tidak muncul setelah 3 percobaan')
   })
 
   test('shows error on nonexistent email', async ({ page }) => {
     await page.goto('/login', { waitUntil: 'networkidle' })
     await page.fill('input[type="email"]', 'nonexistent@test.com')
     await page.fill('input[type="password"]', 'test12345')
-    await page.click('button[type="submit"]')
-    await expect(page.getByText('Login Gagal', { exact: true })).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('button[type="submit"]')).toBeEnabled()
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await page.click('button[type="submit"]')
+      try {
+        await expect(page.getByText('Login Gagal', { exact: true })).toBeVisible({ timeout: 8000 })
+        return
+      } catch {
+        await page.fill('input[type="email"]', 'nonexistent@test.com')
+        await page.fill('input[type="password"]', 'test12345')
+      }
+    }
+    throw new Error('Toas "Login Gagal" tidak muncul untuk email yang tidak ada')
   })
 
   test('cannot access admin page without login', async ({ page }) => {

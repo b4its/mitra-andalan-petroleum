@@ -1096,7 +1096,7 @@ const columns: TableColumn<any>[] = [
               <UFileUpload
                 v-model="lengkapiForm.receiver_sign_file"
                 label="Upload Tanda Tangan"
-                description="Format .png/.jpg, max 2MB"
+                description="Format .png/.jpg, max 50MB"
                 accept="image/*"
               />
               <span
@@ -1125,7 +1125,7 @@ const columns: TableColumn<any>[] = [
               <UFileUpload
                 v-model="lengkapiForm.driver_sign_file"
                 label="Upload Tanda Tangan"
-                description="Format .png/.jpg, max 2MB"
+                description="Format .png/.jpg, max 50MB"
                 accept="image/*"
               />
               <span

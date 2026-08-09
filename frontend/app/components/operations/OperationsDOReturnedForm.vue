@@ -80,7 +80,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
         <UFileUpload
           v-model="state.doDocument"
           label="Upload File Delivery Order"
-          description="Format file .pdf dengan max 5MB"
+          description="Format file .pdf dengan max 50MB"
         />
       </UFormField>
 

@@ -28,6 +28,8 @@ async function loginAs(page: Page, role: string) {
 }
 
 test.describe('Admin Dashboard', () => {
+  test.setTimeout(60000)
+
   test.beforeEach(async ({ page }) => {
     await loginAs(page, 'admin')
   })

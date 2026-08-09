@@ -137,6 +137,8 @@ const { data: signature, pending: pendingSignature } = await useAsyncData('signa
   };
 });
 
+const loadedSignatureFile = ref<File | null>(null)
+
 async function loadExistingFile() {
   if (!signature.value?.url) return
   const url = signature.value.url
@@ -144,9 +146,11 @@ async function loadExistingFile() {
   if (!response.ok) return
   const blob = await response.blob()
   const filename = url.split('/').pop()!
-  letterFooter.offeror.signature = new File([blob], filename, {
+  const file = new File([blob], filename, {
     type: blob.type,
-  });
+  })
+  letterFooter.offeror.signature = file
+  loadedSignatureFile.value = file
 }
 
 onMounted(loadExistingFile);
@@ -183,6 +187,7 @@ async function onFooterSubmit() {
           ...letterHeader,
           ...letterOfferDetails,
           ...letterFooter,
+          offeror: { ...letterFooter.offeror, signature: undefined },
         },
       },
     );
@@ -193,14 +198,17 @@ async function onFooterSubmit() {
       throw new Error("Tanda tangan belum diunggah");
     }
 
-    const resUpload = await postFile<ResUploads[]>('/upload', {
-      files: [signature],
-      folder: 'marketing',
-      document_type: 'ol',
-      document_id: String(idOfferingLetter)
-    })
+    if (signature !== loadedSignatureFile.value) {
+      const resUpload = await postFile<ResUploads[]>('/upload', {
+        files: [signature],
+        folder: 'marketing',
+        document_type: 'ol',
+        document_id: String(idOfferingLetter)
+      })
 
-    console.log(resUpload);
+      console.log(resUpload);
+      loadedSignatureFile.value = signature
+    }
 
     toast.add({
       title: "Sukses",

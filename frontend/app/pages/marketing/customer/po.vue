@@ -17,7 +17,7 @@ const items: StepperItem[] = [
   },
 ];
 
-const { get, put, post, postFile } = useApi();
+const { get, put, post, postFile, del } = useApi();
 
 const { data: OlData, pending } = await useAsyncData(
   "offering-letters-po",
@@ -75,6 +75,12 @@ const poCustomer = reactive<MarketingPOCustomerState>({
 
 const toast = useToast();
 async function onPoCustomerSubmit() {
+  let createdId: string | null = null;
+  const selectedOfferingLetter = poCustomer.selectedOfferingLetter as {
+    id?: string;
+    status?: string;
+  };
+  const previousStatus = selectedOfferingLetter?.status ?? "created";
   try {
     const poData = {
       ...poCustomer,
@@ -98,8 +104,9 @@ async function onPoCustomerSubmit() {
       "/purchase-orders",
       poPost,
     );
+    createdId = res.id;
 
-    const olRes = await put<any, { status: "po_received" }>(
+    await put<any, { status: "po_received" }>(
       `/offering-letters/${poData.selectedOfferingLetter.id}`,
       {
         status: "po_received",
@@ -108,7 +115,6 @@ async function onPoCustomerSubmit() {
 
     console.log("Data submitted");
     console.log(res);
-    console.log(olRes);
 
     const poDocument = poCustomer.poDocument;
     if (!poDocument) {
@@ -132,6 +138,15 @@ async function onPoCustomerSubmit() {
       color: "success",
     });
   } catch (e: any) {
+    if (createdId) {
+      await del(`/purchase-orders/${createdId}`).catch(() => undefined);
+      const olId = poCustomer.selectedOfferingLetter?.id;
+      if (olId) {
+        await put<any, { status: string }>(`/offering-letters/${olId}`, {
+          status: previousStatus,
+        }).catch(() => undefined);
+      }
+    }
     toast.add({ title: "Error", description: e.message, color: "error" });
   }
 }
