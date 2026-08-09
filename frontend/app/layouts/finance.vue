@@ -88,6 +88,10 @@ const links = computed<NavigationMenuItem[][]>(() => {
           popover
         />
       </template>
+
+      <template #footer="{ collapsed }">
+        <SidebarNotifications :collapsed="collapsed" />
+      </template>
     </UDashboardSidebar>
 
     <slot />
