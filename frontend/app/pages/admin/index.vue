@@ -1,74 +1,86 @@
 <script setup lang="ts">
-import type { TableColumn } from "@nuxt/ui";
-import AdminBarChart from "~/components/admin/charts/AdminBarChart.vue";
-import AdminPieChart from "~/components/admin/charts/AdminPieChart.vue";
-import type { ChartClickPayload } from "~/components/admin/AdminChartDetailModal.vue";
-import type { Range } from "~/types";
+import type { TableColumn } from '@nuxt/ui'
+import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
+import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
+import type { ChartClickPayload } from '~/components/admin/AdminChartDetailModal.vue'
+import type { AdminActivity, AdminBreakdown, AdminDrilldownMetric, AdminStats } from '~/types/admin'
+import type { Range } from '~/types'
 
-definePageMeta({ layout: "admin" });
-const UBadge = resolveComponent("UBadge");
-const carousel = useTemplateRef("carousel");
+definePageMeta({ layout: 'admin' })
+const UBadge = resolveComponent('UBadge')
+const carousel = useTemplateRef('carousel')
 const range = ref<Range>({
   start: new Date(Date.now() - 30 * 86400000),
-  end: new Date(),
-});
-const selectedMetric = ref<any>();
-const modalOpen = ref(false);
-const { get } = useApi();
+  end: new Date()
+})
+const selectedMetric = ref<AdminDrilldownMetric>()
+const modalOpen = ref(false)
+const { get } = useApi()
 
 // ── Chart modal state ──────────────────────────────────────────
-const chartDetailOpen = ref(false);
-const chartPayload = ref<ChartClickPayload | null>(null);
+const chartDetailOpen = ref(false)
+const chartPayload = ref<ChartClickPayload | null>(null)
 
 function onBarClick(payload: {
-  label: string;
-  datasetLabel: string;
-  value: number;
-  datasetIndex: number;
-  labelIndex: number;
+  label: string
+  datasetLabel: string
+  value: number
+  datasetIndex: number
+  labelIndex: number
 }) {
   chartPayload.value = {
-    chartType: "bar",
+    chartType: 'bar',
     label: payload.label,
     datasetLabel: payload.datasetLabel,
-    value: payload.value,
-  };
-  chartDetailOpen.value = true;
+    value: payload.value
+  }
+  chartDetailOpen.value = true
 }
 
 function onPieSegmentClick(payload: {
-  label: string;
-  value: number;
-  index: number;
+  label: string
+  value: number
+  index: number
 }) {
   chartPayload.value = {
-    chartType: "pie",
+    chartType: 'pie',
     segmentLabel: payload.label,
-    segmentValue: payload.value,
-  };
-  chartDetailOpen.value = true;
+    segmentValue: payload.value
+  }
+  chartDetailOpen.value = true
 }
 
 function onChartViewRecords(metric: {
-  key: string;
-  title: string;
-  value: number;
-  unit: string;
-  description: string;
+  key: string
+  title: string
+  value: number
+  unit: string
+  description: string
 }) {
-  selectedMetric.value = metric;
-  modalOpen.value = true;
+  selectedMetric.value = metric
+  modalOpen.value = true
 }
 
 const { data, pending, error, refresh } = await useAsyncData(
-  "admin-system-analytics",
+  'admin-system-analytics',
   () =>
-    get<any>("/stats/admin", {
+    get<AdminStats>('/stats/admin', {
       date_from: range.value.start.toISOString(),
-      date_to: range.value.end.toISOString(),
+      date_to: range.value.end.toISOString()
     }),
-  { default: () => ({ metrics: [], trends: [], distributions: {}, notifications: [], activities: [] }), watch: [range] },
-);
+  {
+    default: () => ({
+      date_from: '',
+      date_to: '',
+      metrics: [],
+      trends: [],
+      distributions: {} as Record<string, AdminBreakdown[]>,
+      notifications: [],
+      activities: []
+    }),
+    watch: [range]
+  }
+)
 
 interface MetricCard {
   key: string
@@ -79,195 +91,195 @@ interface MetricCard {
   value: number
 }
 
-const mappedAnalytics = computed<MetricCard[]>(() =>
-  (data.value?.metrics ?? []).filter(Boolean) as MetricCard[]
-);
+const mappedAnalytics = computed<MetricCard[]>(
+  () => data.value?.metrics ?? []
+)
 
-function showMetric(metric: any) {
-  selectedMetric.value = metric;
-  modalOpen.value = true;
+function showMetric(metric: MetricCard) {
+  selectedMetric.value = metric
+  modalOpen.value = true
 }
 
 function reloadDashboard() {
-  refresh();
+  refresh()
 }
 
 // ── Metric formatting ──────────────────────────────────────────
-function metricValue(metric: any): string {
-  if (metric.unit === "currency") return formatCurrency(metric.value);
-  if (metric.unit === "volume") return `${formatNumber(metric.value)} Liter`;
-  return formatNumber(metric.value);
+function metricValue(metric: MetricCard): string {
+  if (metric.unit === 'currency') return formatCurrency(metric.value)
+  if (metric.unit === 'volume') return `${formatNumber(metric.value)} Liter`
+  return formatNumber(metric.value)
 }
 
 function onPrev() {
-  carousel.value?.emblaApi?.scrollPrev();
+  carousel.value?.emblaApi?.scrollPrev()
 }
 
 function onNext() {
-  carousel.value?.emblaApi?.scrollNext();
+  carousel.value?.emblaApi?.scrollNext()
 }
 
 // Colour hint per metric group
 const metricColor: Record<string, string> = {
-  customers: "text-blue-500",
-  suppliers: "text-cyan-500",
-  users: "text-violet-500",
-  offering_letters: "text-indigo-500",
-  customer_purchase_orders: "text-emerald-500",
-  supplier_purchase_orders: "text-teal-500",
-  delivery_orders: "text-amber-500",
-  fuel_volume: "text-orange-500",
-  invoice_value: "text-red-500",
-  paid_value: "text-green-500",
-  outstanding_value: "text-yellow-500",
-  overdue_value: "text-rose-500",
-  sales_value: "text-purple-500",
-  unread_notifications: "text-sky-500",
-  uploads: "text-slate-500",
-};
+  customers: 'text-blue-500',
+  suppliers: 'text-cyan-500',
+  users: 'text-violet-500',
+  offering_letters: 'text-indigo-500',
+  customer_purchase_orders: 'text-emerald-500',
+  supplier_purchase_orders: 'text-teal-500',
+  delivery_orders: 'text-amber-500',
+  fuel_volume: 'text-orange-500',
+  invoice_value: 'text-red-500',
+  paid_value: 'text-green-500',
+  outstanding_value: 'text-yellow-500',
+  overdue_value: 'text-rose-500',
+  sales_value: 'text-purple-500',
+  unread_notifications: 'text-sky-500',
+  uploads: 'text-slate-500'
+}
 
 // ── Charts ────────────────────────────────────────────────────
 const trendLabels = computed(
-  () => data.value?.trends?.map((t: any) => t.label) || [],
-);
+  () => data.value?.trends?.map(t => t.label) || []
+)
 const trendDatasets = computed(() => [
   {
-    label: "Surat Penawaran",
-    data: data.value?.trends?.map((t: any) => t.offering_letters) || [],
-    backgroundColor: "rgba(59,130,246,.7)",
+    label: 'Surat Penawaran',
+    data: data.value?.trends?.map(t => t.offering_letters) || [],
+    backgroundColor: 'rgba(59,130,246,.7)'
   },
   {
-    label: "Purchase Order Customer",
-    data: data.value?.trends?.map((t: any) => t.purchase_orders) || [],
-    backgroundColor: "rgba(16,185,129,.7)",
+    label: 'Purchase Order Customer',
+    data: data.value?.trends?.map(t => t.purchase_orders) || [],
+    backgroundColor: 'rgba(16,185,129,.7)'
   },
   {
-    label: "Delivery Order",
-    data: data.value?.trends?.map((t: any) => t.delivery_orders) || [],
-    backgroundColor: "rgba(245,158,11,.7)",
+    label: 'Delivery Order',
+    data: data.value?.trends?.map(t => t.delivery_orders) || [],
+    backgroundColor: 'rgba(245,158,11,.7)'
   },
   {
-    label: "Invoice",
-    data: data.value?.trends?.map((t: any) => t.invoices) || [],
-    backgroundColor: "rgba(139,92,246,.7)",
-  },
-]);
+    label: 'Invoice',
+    data: data.value?.trends?.map(t => t.invoices) || [],
+    backgroundColor: 'rgba(139,92,246,.7)'
+  }
+])
 const invoiceLabels = computed(
-  () => data.value?.distributions?.invoices?.map((d: any) => d.label) || [],
-);
+  () => data.value?.distributions?.invoices?.map(d => d.label) || []
+)
 const invoiceValues = computed(
-  () => data.value?.distributions?.invoices?.map((d: any) => d.value) || [],
-);
+  () => data.value?.distributions?.invoices?.map(d => d.value) || []
+)
 
 // ── Notifikasi tabel + search + pagination ─────────────────────
-const notifSearch = ref("");
-const notifPage = ref(1);
-const NOTIF_PAGE_SIZE = 5;
+const notifSearch = ref('')
+const notifPage = ref(1)
+const NOTIF_PAGE_SIZE = 5
 
 const filteredNotifications = computed(() => {
-  const q = notifSearch.value.trim().toLowerCase();
-  const list: any[] = data.value?.notifications || [];
+  const q = notifSearch.value.trim().toLowerCase()
+  const list: AdminActivity[] = data.value?.notifications || []
   return q
     ? list.filter(
-        (n) =>
-          n.title?.toLowerCase().includes(q) ||
-          n.subtitle?.toLowerCase().includes(q),
+        n =>
+          n.title?.toLowerCase().includes(q)
+          || n.subtitle?.toLowerCase().includes(q)
       )
-    : list;
-});
+    : list
+})
 const pagedNotifications = computed(() => {
-  const start = (notifPage.value - 1) * NOTIF_PAGE_SIZE;
-  return filteredNotifications.value.slice(start, start + NOTIF_PAGE_SIZE);
-});
+  const start = (notifPage.value - 1) * NOTIF_PAGE_SIZE
+  return filteredNotifications.value.slice(start, start + NOTIF_PAGE_SIZE)
+})
 watch(notifSearch, () => {
-  notifPage.value = 1;
-});
+  notifPage.value = 1
+})
 
-const notificationColumns: TableColumn<any>[] = [
+const notificationColumns: TableColumn<AdminActivity>[] = [
   {
-    accessorKey: "title",
-    header: "Judul",
+    accessorKey: 'title',
+    header: 'Judul',
     cell: ({ row }) =>
-      h("div", { class: "truncate max-w-[200px]" }, row.getValue("title")),
+      h('div', { class: 'truncate max-w-[200px]' }, row.getValue('title'))
   },
   {
-    accessorKey: "subtitle",
-    header: "Pesan",
+    accessorKey: 'subtitle',
+    header: 'Pesan',
     cell: ({ row }) =>
-      h("div", { class: "truncate" }, row.getValue("subtitle")),
+      h('div', { class: 'truncate' }, row.getValue('subtitle'))
   },
   {
-    accessorKey: "created_at",
-    header: "Waktu",
+    accessorKey: 'created_at',
+    header: 'Waktu',
     cell: ({ row }) =>
       h(
-        "div",
-        { class: "truncate" },
-        row.getValue("created_at")
-          ? formatDate(row.getValue("created_at"))
-          : "-",
-      ),
-  },
-];
+        'div',
+        { class: 'truncate' },
+        row.getValue('created_at')
+          ? formatDate(row.getValue('created_at'))
+          : '-'
+      )
+  }
+]
 
 // ── Aktivitas tabel + search + pagination ──────────────────────
-const actSearch = ref("");
-const actPage = ref(1);
-const ACT_PAGE_SIZE = 5;
+const actSearch = ref('')
+const actPage = ref(1)
+const ACT_PAGE_SIZE = 5
 
 const filteredActivities = computed(() => {
-  const q = actSearch.value.trim().toLowerCase();
-  const list: any[] = data.value?.activities || [];
+  const q = actSearch.value.trim().toLowerCase()
+  const list: AdminActivity[] = data.value?.activities || []
   return q
     ? list.filter(
-        (a) =>
-          a.domain?.toLowerCase().includes(q) ||
-          a.title?.toLowerCase().includes(q) ||
-          a.subtitle?.toLowerCase().includes(q),
+        a =>
+          a.domain?.toLowerCase().includes(q)
+          || a.title?.toLowerCase().includes(q)
+          || a.subtitle?.toLowerCase().includes(q)
       )
-    : list;
-});
+    : list
+})
 const pagedActivities = computed(() => {
-  const start = (actPage.value - 1) * ACT_PAGE_SIZE;
-  return filteredActivities.value.slice(start, start + ACT_PAGE_SIZE);
-});
+  const start = (actPage.value - 1) * ACT_PAGE_SIZE
+  return filteredActivities.value.slice(start, start + ACT_PAGE_SIZE)
+})
 watch(actSearch, () => {
-  actPage.value = 1;
-});
+  actPage.value = 1
+})
 
-const activityColumns: TableColumn<any>[] = [
-  { accessorKey: "domain", header: "Domain" },
-  { accessorKey: "title", header: "Dokumen" },
+const activityColumns: TableColumn<AdminActivity>[] = [
+  { accessorKey: 'domain', header: 'Domain' },
+  { accessorKey: 'title', header: 'Dokumen' },
   {
-    accessorKey: "subtitle",
-    header: "Status",
+    accessorKey: 'subtitle',
+    header: 'Status',
     cell: ({ row }) => {
       const color = {
-        created: "info" as const,
-        under_revision: "warning" as const,
-        po_received: "success" as const,
-      }[row.getValue("subtitle") as string];
+        created: 'info' as const,
+        under_revision: 'warning' as const,
+        po_received: 'success' as const
+      }[row.getValue('subtitle') as string]
 
       const status = {
-        created: "Penawaran Telah Dibuat",
-        under_revision: "Penawaran Dalam Revisi",
-        po_received: "PO Diterima",
-      }[row.getValue("subtitle") as string];
+        created: 'Penawaran Telah Dibuat',
+        under_revision: 'Penawaran Dalam Revisi',
+        po_received: 'PO Diterima'
+      }[row.getValue('subtitle') as string]
 
       return h(
         UBadge,
-        { variant: "subtle", color: color, class: "capitalize" },
-        () => status,
-      );
-    },
+        { variant: 'subtle', color: color, class: 'capitalize' },
+        () => status
+      )
+    }
   },
   {
-    accessorKey: "created_at",
-    header: "Waktu",
+    accessorKey: 'created_at',
+    header: 'Waktu',
     cell: ({ row }) =>
-      row.getValue("created_at") ? formatDate(row.getValue("created_at")) : "-",
-  },
-];
+      row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-'
+  }
+]
 </script>
 
 <template>
@@ -313,13 +325,13 @@ const activityColumns: TableColumn<any>[] = [
               color="neutral"
               icon="i-lucide-chevron-left"
               @click="onPrev"
-            ></UButton>
+            />
             <UButton
               variant="subtle"
               color="neutral"
               icon="i-lucide-chevron-right"
               @click="onNext"
-            ></UButton>
+            />
           </div>
         </div>
 
@@ -370,7 +382,9 @@ const activityColumns: TableColumn<any>[] = [
                   :class="metricColor[item.key] ?? 'text-primary'"
                 />
               </template>
-              <template #title>{{ item.title }}</template>
+              <template #title>
+                {{ item.title }}
+              </template>
               <p class="text-2xl font-semibold tabular-nums">
                 {{ metricValue(item) }}
               </p>
@@ -386,8 +400,12 @@ const activityColumns: TableColumn<any>[] = [
             <UCard class="xl:col-span-2">
               <template #header>
                 <div class="flex items-center justify-between">
-                  <p class="font-medium">Tren Dokumen per Periode</p>
-                  <p class="text-xs text-muted">Klik bar untuk detail</p>
+                  <p class="font-medium">
+                    Tren Dokumen per Periode
+                  </p>
+                  <p class="text-xs text-muted">
+                    Klik bar untuk detail
+                  </p>
                 </div>
               </template>
               <AdminBarChart
@@ -405,8 +423,12 @@ const activityColumns: TableColumn<any>[] = [
             <UCard>
               <template #header>
                 <div class="flex items-center justify-between">
-                  <p class="font-medium">Distribusi Status Invoice</p>
-                  <p class="text-xs text-muted">Klik segment untuk detail</p>
+                  <p class="font-medium">
+                    Distribusi Status Invoice
+                  </p>
+                  <p class="text-xs text-muted">
+                    Klik segment untuk detail
+                  </p>
                 </div>
               </template>
               <AdminPieChart
@@ -424,7 +446,9 @@ const activityColumns: TableColumn<any>[] = [
             <UCard>
               <template #header>
                 <div class="flex items-center justify-between gap-3 flex-wrap">
-                  <p class="font-medium">Notifikasi Sistem</p>
+                  <p class="font-medium">
+                    Notifikasi Sistem
+                  </p>
                   <UInput
                     v-model="notifSearch"
                     icon="i-lucide-search"
@@ -459,7 +483,9 @@ const activityColumns: TableColumn<any>[] = [
             <UCard>
               <template #header>
                 <div class="flex items-center justify-between gap-3 flex-wrap">
-                  <p class="font-medium">Aktivitas Dokumen Terbaru</p>
+                  <p class="font-medium">
+                    Aktivitas Dokumen Terbaru
+                  </p>
                   <UInput
                     v-model="actSearch"
                     icon="i-lucide-search"
