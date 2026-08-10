@@ -16,6 +16,7 @@ from app.api.v1.endpoints import (
     uploads,
     accounting,
     admin_database,
+    prices,
 )
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -34,3 +35,4 @@ v1_router.include_router(profiles.router, tags=["profiles"])
 v1_router.include_router(uploads.router, tags=["uploads"])
 v1_router.include_router(accounting.router, tags=["accounting"])
 v1_router.include_router(admin_database.router, tags=["admin-database"])
+v1_router.include_router(prices.router, tags=["prices"])

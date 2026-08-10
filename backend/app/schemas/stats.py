@@ -11,6 +11,19 @@ class SingleStat(BaseModel):
     to: str = "#"
 
 
+class RevenuePoint(BaseModel):
+    date: str
+    label: str
+    amount: float
+
+
+class RevenueResponse(BaseModel):
+    period: str
+    start: datetime
+    end: datetime
+    points: list[RevenuePoint]
+
+
 class StatsResponse(BaseModel):
     stats: list[SingleStat]
 
