@@ -113,6 +113,7 @@ export interface OfferingLetterDetails {
   purchaseOrderDeadline: number;
   offeror: Offeror;
   companyInformation: CompanyInformation;
+  informasiTambahan?: string[];
 }
 
 export interface CompanyInformation {

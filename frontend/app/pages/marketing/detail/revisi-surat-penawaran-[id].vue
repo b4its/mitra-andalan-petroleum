@@ -102,6 +102,8 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
       ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0,
     },
   },
+  informasiTambahan:
+    offeringLetter.value?.details.informasiTambahan || [],
 });
 
 const letterFooter = reactive<MarketingOLFooterState>({

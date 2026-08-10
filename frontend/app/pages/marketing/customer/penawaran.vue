@@ -84,6 +84,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
       ppn: 0.11,
     },
   },
+  informasiTambahan: [],
 });
 
 const letterFooter = reactive<MarketingOLFooterState>({

@@ -90,6 +90,7 @@ export const marketingOLDetailsSchema = z.object({
       ppn: z.number(),
     }),
   }),
+  informasiTambahan: z.array(z.string()).optional(),
 });
 
 export type MarketingOLDetailsState = z.infer<typeof marketingOLDetailsSchema>;
