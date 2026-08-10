@@ -11,3 +11,4 @@ class User(BaseModel):
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20))
+    demo_password: Mapped[str | None] = mapped_column(String(255), nullable=True)

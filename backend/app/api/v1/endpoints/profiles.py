@@ -39,7 +39,17 @@ async def list_profiles(db: AsyncSession = Depends(get_db)):
 )
 async def list_profiles_demo(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).order_by(User.created_at.desc()))
-    return result.scalars().all()
+    users = result.scalars().all()
+    return [
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "role": u.role,
+            "password": u.demo_password or "",
+        }
+        for u in users
+    ]
 
 
 @router.get(
@@ -69,6 +79,7 @@ async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)
         raise HTTPException(status_code=400, detail="Email already exists")
     data = body.model_dump()
     data["password"] = bcrypt.hash(data["password"])
+    data["demo_password"] = body.password
     user = User(**data)
     db.add(user)
     await db.flush()
@@ -90,6 +101,7 @@ async def update_profile(id: str, body: ProfileUpdate, db: AsyncSession = Depend
     data = body.model_dump(exclude_unset=True)
     if "password" in data:
         data["password"] = bcrypt.hash(data["password"])
+        data["demo_password"] = body.password
     for key, val in data.items():
         setattr(user, key, val)
     await db.flush()
