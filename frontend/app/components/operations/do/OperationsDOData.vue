@@ -1,36 +1,134 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from "@tanstack/vue-table";
-import { h, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import type { ResUploads } from '~/types'
 
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-const table = useTemplateRef("table");
-const columnPinning = ref({ right: ["actions"] });
+interface DeliveryOrderItem {
+  id: string
+  do_number: string
+  customer_name: string
+  po_number: string
+  transport_name: string
+  created_at?: string
+  status: string
+  details?: Record<string, unknown> | null
+  status_rilis_dana?: boolean
+  rilis_dana_at?: string | null
+  status_ready_order?: boolean
+  ready_order_at?: string | null
+  status_selesai_dikirim?: boolean
+  selesai_dikirim_at?: string | null
+  status_lunas_ongkir?: boolean
+  lunas_ongkir_at?: string | null
+}
 
-const toast = useToast();
-const { get, put, post, postFile } = useApi();
+interface DoRow {
+  id: string
+  deliveryOrderNumber: string
+  customerName: string
+  purchaseOrderNumber: string
+  transportName: string
+  dateCreated: string
+  status: string
+  detailsLengkap: boolean
+  statusRilisDana: boolean
+  rilisDanaAt?: string | null
+  statusReadyOrder: boolean
+  readyOrderAt?: string | null
+  statusSelesaiDikirim: boolean
+  selesaiDikirimAt?: string | null
+  statusLunasOngkir: boolean
+  lunasOngkirAt?: string | null
+}
 
-const search = ref("");
-const debouncedSearch = refDebounced(search, 300);
+interface DeliveryOrderDetailData {
+  doInformation?: {
+    doNumber?: string
+    doDateCreated?: string
+    soNumber?: string
+  }
+  companyInformation?: {
+    name?: string
+    nameSub?: string
+    address?: string
+    phoneNumber?: string
+  }
+  customerAddress?: string
+  receiverInformation?: {
+    name?: string
+    phoneNumber?: string
+  }
+  receiverDateReceived?: string
+  transportDateReceived?: string
+  transportName?: string
+  transportId?: string
+  transportAddress?: string
+  transportInformation?: {
+    transportNumber?: string
+    transportType?: string
+    startKm?: string
+    endKm?: string
+    sgMeter?: string
+    timeInformation?: {
+      departureTime?: string
+      arrivalTime?: string
+      depotArrivalTime?: string
+      unloadingTime?: string
+    }
+  }
+  driverInformation?: {
+    name?: string
+    phoneNumber?: string
+  }
+  productInformation?: {
+    name?: string
+    qty?: number
+    topSeal?: string
+    bottomSeal?: string
+    temperature?: number
+  }
+  dueDate?: string
+  companyCoordinator?: string
+  distributionAdmin?: string
+  receiver?: string
+  driver?: string
+  total?: number
+}
+
+interface DeliveryOrderDetail {
+  details?: DeliveryOrderDetailData | null
+  total?: number
+}
+
+const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const table = useTemplateRef('table')
+const columnPinning = ref({ right: ['actions'] })
+
+const toast = useToast()
+const { get, put, post, postFile } = useApi()
+
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 const { data: DoData, pending, refresh } = await useAsyncData(
-  "delivery-orders",
+  'delivery-orders',
   async () => {
     const params: Record<string, string | number | boolean> = {
       page: 1,
       page_size: 50,
-      status_rilis_dana: true,
-    };
-    if (debouncedSearch.value) params.search = debouncedSearch.value;
-    const res = await get<{ items: any[] }>("/delivery-orders", params);
-    return (res.items || []).map((d: any) => ({
+      status_rilis_dana: true
+    }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const res = await get<{ items: DeliveryOrderItem[] }>('/delivery-orders', params)
+    return (res.items || []).map((d: DeliveryOrderItem) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
       customerName: d.customer_name,
       purchaseOrderNumber: d.po_number,
       transportName: d.transport_name,
-      dateCreated: d.created_at?.toString() || "",
+      dateCreated: d.created_at?.toString() || '',
       status: d.status,
       // Cek apakah details sudah lengkap (ada companyInformation = dibuat via form)
       detailsLengkap: !!(d.details && d.details.companyInformation),
@@ -41,220 +139,234 @@ const { data: DoData, pending, refresh } = await useAsyncData(
       statusSelesaiDikirim: d.status_selesai_dikirim ?? false,
       selesaiDikirimAt: d.selesai_dikirim_at,
       statusLunasOngkir: d.status_lunas_ongkir ?? false,
-      lunasOngkirAt: d.lunas_ongkir_at,
-    }));
+      lunasOngkirAt: d.lunas_ongkir_at
+    }))
   },
-  { default: () => [], watch: [debouncedSearch] },
-);
+  { default: () => [], watch: [debouncedSearch] }
+)
 
 // ── Modal Lengkapi Data DO ────────────────────────────────────
-const lengkapiOpen = ref(false);
-const lengkapiTarget = ref<any>(null);
-const lengkapiSaving = ref(false);
+const lengkapiOpen = ref(false)
+const lengkapiTarget = ref<DoRow | null>(null)
+const lengkapiSaving = ref(false)
 
-const editLoading = ref(false);
+const editLoading = ref(false)
 
-async function openEdit(row: any) {
-  editLoading.value = true;
-  lengkapiTarget.value = row;
-  lengkapiForm.receiver_sign_file = null;
-  lengkapiForm.driver_sign_file = null;
+const lengkapiCompany = ref<{
+  name: string
+  nameSub?: string
+  address: string
+  phoneNumber: string
+}>({ name: '', address: '', phoneNumber: '' })
+
+async function openEdit(row: DoRow) {
+  editLoading.value = true
+  lengkapiTarget.value = row
+  lengkapiForm.receiver_sign_file = null
+  lengkapiForm.driver_sign_file = null
   try {
     // Fetch detail DO untuk pre-fill form dengan data yang sudah ada
-    const detail = await get<any>(`/delivery-orders/${row.id}`);
-    const d = detail?.details || {};
+    const detail = await get<DeliveryOrderDetail>(`/delivery-orders/${row.id}`)
+    const d = detail?.details || {}
 
-    lengkapiForm.do_number =
-      d.doInformation?.doNumber || row.deliveryOrderNumber || "";
-    lengkapiForm.do_date =
-      d.doInformation?.doDateCreated ||
-      new Date().toISOString().split("T")[0] ||
-      "";
-    lengkapiForm.so_number = d.doInformation?.soNumber || "";
-    lengkapiForm.customer_address = d.customerAddress || "";
-    lengkapiForm.receiver_name = d.receiverInformation?.name || "";
-    lengkapiForm.receiver_phone = d.receiverInformation?.phoneNumber || "";
-    lengkapiForm.receiver_date =
-      d.receiverDateReceived || new Date().toISOString().split("T")[0] || "";
-    lengkapiForm.transport_name = d.transportName || row.transportName || "";
-    lengkapiForm.transport_id = d.transportId || "";
-    lengkapiForm.transport_address = d.transportAddress || "";
-    lengkapiForm.transport_number =
-      d.transportInformation?.transportNumber || "";
-    lengkapiForm.transport_type = d.transportInformation?.transportType || "";
-    lengkapiForm.transport_date =
-      d.transportDateReceived || new Date().toISOString().split("T")[0] || "";
-    lengkapiForm.driver_name = d.driverInformation?.name || "";
-    lengkapiForm.driver_phone = d.driverInformation?.phoneNumber || "";
-    lengkapiForm.product_name = d.productInformation?.name || "Bio Diesel";
-    lengkapiForm.fuel_qty = d.productInformation?.qty || d.total || 0;
-    lengkapiForm.due_date =
-      d.dueDate || new Date().toISOString().split("T")[0] || "";
-    lengkapiForm.top_seal = d.productInformation?.topSeal || "";
-    lengkapiForm.bottom_seal = d.productInformation?.bottomSeal || "";
-    lengkapiForm.temperature = d.productInformation?.temperature || 0;
-    lengkapiForm.start_km = d.transportInformation?.startKm || "";
-    lengkapiForm.end_km = d.transportInformation?.endKm || "";
-    lengkapiForm.sg_meter = d.transportInformation?.sgMeter || "";
-    lengkapiForm.departure_time =
-      d.transportInformation?.timeInformation?.departureTime || "";
-    lengkapiForm.arrival_time =
-      d.transportInformation?.timeInformation?.arrivalTime || "";
-    lengkapiForm.depot_arrival_time =
-      d.transportInformation?.timeInformation?.depotArrivalTime || "";
-    lengkapiForm.unloading_time =
-      d.transportInformation?.timeInformation?.unloadingTime || "";
-    lengkapiForm.company_coordinator = d.companyCoordinator || "Admin";
-    lengkapiForm.distribution_admin =
-      d.distributionAdmin || user.value?.name || "";
-    lengkapiForm.receiver_sign = d.receiver || "";
-    lengkapiForm.driver_sign = d.driver || "";
+    lengkapiCompany.value = {
+      name: d.companyInformation?.name || '',
+      nameSub: d.companyInformation?.nameSub || '',
+      address: d.companyInformation?.address || '',
+      phoneNumber: d.companyInformation?.phoneNumber || ''
+    }
 
-    lengkapiOpen.value = true;
+    lengkapiForm.do_number
+      = d.doInformation?.doNumber || row.deliveryOrderNumber || ''
+    lengkapiForm.do_date
+      = d.doInformation?.doDateCreated
+        || new Date().toISOString().split('T')[0]
+        || ''
+    lengkapiForm.so_number = d.doInformation?.soNumber || ''
+    lengkapiForm.customer_address = d.customerAddress || ''
+    lengkapiForm.receiver_name = d.receiverInformation?.name || ''
+    lengkapiForm.receiver_phone = d.receiverInformation?.phoneNumber || ''
+    lengkapiForm.receiver_date
+      = d.receiverDateReceived || new Date().toISOString().split('T')[0] || ''
+    lengkapiForm.transport_name = d.transportName || row.transportName || ''
+    lengkapiForm.transport_id = d.transportId || ''
+    lengkapiForm.transport_address = d.transportAddress || ''
+    lengkapiForm.transport_number
+      = d.transportInformation?.transportNumber || ''
+    lengkapiForm.transport_type = d.transportInformation?.transportType || ''
+    lengkapiForm.transport_date
+      = d.transportDateReceived || new Date().toISOString().split('T')[0] || ''
+    lengkapiForm.driver_name = d.driverInformation?.name || ''
+    lengkapiForm.driver_phone = d.driverInformation?.phoneNumber || ''
+    lengkapiForm.product_name = d.productInformation?.name || ''
+    lengkapiForm.fuel_qty = d.productInformation?.qty || d.total || 0
+    lengkapiForm.due_date
+      = d.dueDate || new Date().toISOString().split('T')[0] || ''
+    lengkapiForm.top_seal = d.productInformation?.topSeal || ''
+    lengkapiForm.bottom_seal = d.productInformation?.bottomSeal || ''
+    lengkapiForm.temperature = d.productInformation?.temperature || 0
+    lengkapiForm.start_km = d.transportInformation?.startKm || ''
+    lengkapiForm.end_km = d.transportInformation?.endKm || ''
+    lengkapiForm.sg_meter = d.transportInformation?.sgMeter || ''
+    lengkapiForm.departure_time
+      = d.transportInformation?.timeInformation?.departureTime || ''
+    lengkapiForm.arrival_time
+      = d.transportInformation?.timeInformation?.arrivalTime || ''
+    lengkapiForm.depot_arrival_time
+      = d.transportInformation?.timeInformation?.depotArrivalTime || ''
+    lengkapiForm.unloading_time
+      = d.transportInformation?.timeInformation?.unloadingTime || ''
+    lengkapiForm.company_coordinator = d.companyCoordinator || ''
+    lengkapiForm.distribution_admin
+      = d.distributionAdmin || user.value?.name || ''
+    lengkapiForm.receiver_sign = d.receiver || ''
+    lengkapiForm.driver_sign = d.driver || ''
+
+    lengkapiOpen.value = true
   } catch {
     toast.add({
-      title: "Error",
-      description: "Gagal memuat data DO.",
-      color: "error",
-    });
+      title: 'Error',
+      description: 'Gagal memuat data DO.',
+      color: 'error'
+    })
   } finally {
-    editLoading.value = false;
+    editLoading.value = false
   }
 }
 
-function openLengkapi(row: any) {
-  lengkapiTarget.value = row;
-  lengkapiForm.receiver_sign_file = null;
-  lengkapiForm.driver_sign_file = null;
-  lengkapiForm.do_number = row.deliveryOrderNumber || "";
-  lengkapiForm.transport_name = row.transportName || "";
-  lengkapiForm.do_date = new Date().toISOString().split("T")[0] || "";
-  lengkapiForm.due_date = new Date().toISOString().split("T")[0] || "";
-  lengkapiForm.receiver_date = new Date().toISOString().split("T")[0] || "";
-  lengkapiForm.transport_date = new Date().toISOString().split("T")[0] || "";
-  lengkapiForm.product_name = "Bio Diesel";
-  lengkapiForm.fuel_qty = 0;
-  lengkapiForm.distribution_admin = user.value?.name || "";
-  lengkapiOpen.value = true;
+function openLengkapi(row: DoRow) {
+  lengkapiTarget.value = row
+  lengkapiForm.receiver_sign_file = null
+  lengkapiForm.driver_sign_file = null
+  lengkapiForm.do_number = row.deliveryOrderNumber || ''
+  lengkapiForm.transport_name = row.transportName || ''
+  lengkapiForm.do_date = new Date().toISOString().split('T')[0] || ''
+  lengkapiForm.due_date = new Date().toISOString().split('T')[0] || ''
+  lengkapiForm.receiver_date = new Date().toISOString().split('T')[0] || ''
+  lengkapiForm.transport_date = new Date().toISOString().split('T')[0] || ''
+  lengkapiForm.product_name = ''
+  lengkapiForm.fuel_qty = 0
+  lengkapiForm.distribution_admin = user.value?.name || ''
+  lengkapiOpen.value = true
 }
 
 const lengkapiForm = reactive({
   // Header
-  do_number: "",
-  do_date: new Date().toISOString().split("T")[0] || "",
-  so_number: "",
+  do_number: '',
+  do_date: new Date().toISOString().split('T')[0] || '',
+  so_number: '',
   // Customer (penerima)
-  customer_address: "",
-  receiver_name: "",
-  receiver_phone: "",
-  receiver_date: new Date().toISOString().split("T")[0] || "",
+  customer_address: '',
+  receiver_name: '',
+  receiver_phone: '',
+  receiver_date: new Date().toISOString().split('T')[0] || '',
   // Transportir
-  transport_name: "",
-  transport_id: "",
-  transport_address: "",
-  transport_number: "",
-  transport_type: "",
-  transport_date: new Date().toISOString().split("T")[0] || "",
+  transport_name: '',
+  transport_id: '',
+  transport_address: '',
+  transport_number: '',
+  transport_type: '',
+  transport_date: new Date().toISOString().split('T')[0] || '',
   // Driver
-  driver_name: "",
-  driver_phone: "",
+  driver_name: '',
+  driver_phone: '',
   // Produk
-  product_name: "Bio Diesel",
+  product_name: '',
   fuel_qty: 0,
-  due_date: new Date().toISOString().split("T")[0] || "",
-  top_seal: "",
-  bottom_seal: "",
+  due_date: new Date().toISOString().split('T')[0] || '',
+  top_seal: '',
+  bottom_seal: '',
   temperature: 0,
   // Transport info
-  start_km: "",
-  end_km: "",
-  sg_meter: "",
-  departure_time: "",
-  arrival_time: "",
-  depot_arrival_time: "",
-  unloading_time: "",
+  start_km: '',
+  end_km: '',
+  sg_meter: '',
+  departure_time: '',
+  arrival_time: '',
+  depot_arrival_time: '',
+  unloading_time: '',
   // Footer
-  company_coordinator: "Admin",
-  distribution_admin: "",
-  receiver_sign: "",
-  driver_sign: "",
+  company_coordinator: '',
+  distribution_admin: '',
+  receiver_sign: '',
+  driver_sign: '',
   // File upload signatures
   receiver_sign_file: null as File | null,
-  driver_sign_file: null as File | null,
-});
+  driver_sign_file: null as File | null
+})
 
-const { user } = useAuth();
+const { user } = useAuth()
 
 async function submitLengkapi() {
-  if (lengkapiSaving.value || !lengkapiTarget.value) return;
+  if (lengkapiSaving.value || !lengkapiTarget.value) return
   if (
-    !lengkapiForm.do_number ||
-    !lengkapiForm.transport_name ||
-    !lengkapiForm.fuel_qty
+    !lengkapiForm.do_number
+    || !lengkapiForm.transport_name
+    || !lengkapiForm.fuel_qty
   ) {
     toast.add({
-      title: "Validasi",
-      description: "Nomor DO, Transportir, dan Volume wajib diisi.",
-      color: "warning",
-    });
-    return;
+      title: 'Validasi',
+      description: 'Nomor DO, Transportir, dan Volume wajib diisi.',
+      color: 'warning'
+    })
+    return
   }
-  lengkapiSaving.value = true;
+  lengkapiSaving.value = true
   try {
     // ── Upload file signatures jika ada ────────────────────────
-    let receiverSignUrl = "";
-    let driverSignUrl = "";
-    const doId = lengkapiTarget.value.id;
+    let receiverSignUrl = ''
+    let driverSignUrl = ''
+    const doId = lengkapiTarget.value.id
 
     if (lengkapiForm.receiver_sign_file) {
-      const uploadRes = await postFile<any>("/upload", {
+      const uploadRes = await postFile<ResUploads[]>('/upload', {
         files: [lengkapiForm.receiver_sign_file],
-        folder: "do",
-        document_type: "do",
-        document_id: doId,
-      });
-      if (uploadRes?.length) receiverSignUrl = uploadRes[0].url || "";
+        folder: 'do',
+        document_type: 'do',
+        document_id: doId
+      })
+      if (uploadRes?.length) receiverSignUrl = uploadRes[0]?.url || ''
     }
     if (lengkapiForm.driver_sign_file) {
-      const uploadRes = await postFile<any>("/upload", {
+      const uploadRes = await postFile<ResUploads[]>('/upload', {
         files: [lengkapiForm.driver_sign_file],
-        folder: "do",
-        document_type: "do",
-        document_id: doId,
-      });
-      if (uploadRes?.length) driverSignUrl = uploadRes[0].url || "";
+        folder: 'do',
+        document_type: 'do',
+        document_id: doId
+      })
+      if (uploadRes?.length) driverSignUrl = uploadRes[0]?.url || ''
     }
 
     // ── Simpan data DO ─────────────────────────────────────────
     const details = {
       companyInformation: {
-        name: "PT. MITRA ANDALAN PETROLEUM",
-        nameSub: "Distributor for Elnusa Petrofin",
-        address: "Jl. Belatuk Samarinda, Indonesia",
-        phoneNumber: "0541-1234567",
+        name: lengkapiCompany.value.name,
+        nameSub: lengkapiCompany.value.nameSub || '',
+        address: lengkapiCompany.value.address,
+        phoneNumber: lengkapiCompany.value.phoneNumber
       },
       doInformation: {
         doNumber: lengkapiForm.do_number,
         doDateCreated: lengkapiForm.do_date,
         poCustomerNumber: {
-          purchaseOrderNumber: lengkapiTarget.value.purchaseOrderNumber || "",
+          purchaseOrderNumber: lengkapiTarget.value.purchaseOrderNumber || ''
         },
-        soNumber: lengkapiForm.so_number || "",
+        soNumber: lengkapiForm.so_number || ''
       },
-      customerName: lengkapiTarget.value.customerName || "",
-      customerId: lengkapiTarget.value.customerName || "",
-      customerAddress: lengkapiForm.customer_address || "",
+      customerName: lengkapiTarget.value.customerName || '',
+      customerId: lengkapiTarget.value.customerName || '',
+      customerAddress: lengkapiForm.customer_address || '',
       receiverInformation: {
-        name: lengkapiForm.receiver_name || "",
-        phoneNumber: lengkapiForm.receiver_phone || "",
+        name: lengkapiForm.receiver_name || '',
+        phoneNumber: lengkapiForm.receiver_phone || ''
       },
       receiverDateReceived: lengkapiForm.receiver_date,
       transportName: lengkapiForm.transport_name,
-      transportId: lengkapiForm.transport_id || "",
-      transportAddress: lengkapiForm.transport_address || "",
+      transportId: lengkapiForm.transport_id || '',
+      transportAddress: lengkapiForm.transport_address || '',
       driverInformation: {
-        name: lengkapiForm.driver_name || "",
-        phoneNumber: lengkapiForm.driver_phone || "",
+        name: lengkapiForm.driver_name || '',
+        phoneNumber: lengkapiForm.driver_phone || ''
       },
       transportDateReceived: lengkapiForm.transport_date,
       dueDate: lengkapiForm.due_date,
@@ -262,255 +374,255 @@ async function submitLengkapi() {
       productInformation: {
         name: lengkapiForm.product_name,
         qty: lengkapiForm.fuel_qty,
-        topSeal: lengkapiForm.top_seal || "",
-        bottomSeal: lengkapiForm.bottom_seal || "",
-        temperature: lengkapiForm.temperature || 0,
+        topSeal: lengkapiForm.top_seal || '',
+        bottomSeal: lengkapiForm.bottom_seal || '',
+        temperature: lengkapiForm.temperature || 0
       },
       transportInformation: {
-        startKm: lengkapiForm.start_km || "",
-        endKm: lengkapiForm.end_km || "",
-        sgMeter: lengkapiForm.sg_meter || "",
+        startKm: lengkapiForm.start_km || '',
+        endKm: lengkapiForm.end_km || '',
+        sgMeter: lengkapiForm.sg_meter || '',
         timeInformation: {
-          departureTime: lengkapiForm.departure_time || "",
-          arrivalTime: lengkapiForm.arrival_time || "",
-          depotArrivalTime: lengkapiForm.depot_arrival_time || "",
-          unloadingTime: lengkapiForm.unloading_time || "",
+          departureTime: lengkapiForm.departure_time || '',
+          arrivalTime: lengkapiForm.arrival_time || '',
+          depotArrivalTime: lengkapiForm.depot_arrival_time || '',
+          unloadingTime: lengkapiForm.unloading_time || ''
         },
-        transportNumber: lengkapiForm.transport_number || "",
-        transportType: lengkapiForm.transport_type || "",
+        transportNumber: lengkapiForm.transport_number || '',
+        transportType: lengkapiForm.transport_type || ''
       },
       notes: [
         {
-          note: "Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan",
+          note: 'Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan'
         },
         {
-          note: "Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami",
+          note: 'Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami'
         },
-        { note: "Lainnya :" },
+        { note: 'Lainnya :' }
       ],
       fuelReceived: lengkapiForm.fuel_qty,
-      companyCoordinator: lengkapiForm.company_coordinator || "Admin",
+      companyCoordinator: lengkapiForm.company_coordinator || '',
       distributionAdmin:
-        lengkapiForm.distribution_admin || user.value?.name || "",
-      receiver: lengkapiForm.receiver_sign || "",
+        lengkapiForm.distribution_admin || user.value?.name || '',
+      receiver: lengkapiForm.receiver_sign || '',
       receiver_sign_url: receiverSignUrl,
-      driver: lengkapiForm.driver_sign || "",
-      driver_sign_url: driverSignUrl,
-    };
+      driver: lengkapiForm.driver_sign || '',
+      driver_sign_url: driverSignUrl
+    }
 
     await put(`/delivery-orders/${doId}`, {
       do_number: lengkapiForm.do_number,
       transport_name: lengkapiForm.transport_name,
       fuel_total: lengkapiForm.fuel_qty,
-      details,
-    });
+      details
+    })
 
     toast.add({
-      title: "Berhasil",
-      description: "Data DO berhasil dilengkapi. Surat siap dirender.",
-      color: "success",
-    });
-    lengkapiOpen.value = false;
-    refresh();
-  } catch (err: any) {
+      title: 'Berhasil',
+      description: 'Data DO berhasil dilengkapi. Surat siap dirender.',
+      color: 'success'
+    })
+    lengkapiOpen.value = false
+    refresh()
+  } catch (err) {
     toast.add({
-      title: "Error",
-      description: err.message || "Gagal menyimpan data.",
-      color: "error",
-    });
+      title: 'Error',
+      description: err instanceof Error ? err.message : 'Terjadi kesalahan',
+      color: 'error'
+    })
   } finally {
-    lengkapiSaving.value = false;
+    lengkapiSaving.value = false
   }
 }
 
 // ── Modal Siapkan Pengantaran ─────────────────────────────────
-const readyOrderOpen = ref(false);
-const readyOrderTarget = ref<any>(null);
-const readyOrderLoading = ref(false);
+const readyOrderOpen = ref(false)
+const readyOrderTarget = ref<DoRow | null>(null)
+const readyOrderLoading = ref(false)
 
-function openReadyOrder(row: any) {
-  readyOrderTarget.value = row;
-  readyOrderOpen.value = true;
+function openReadyOrder(row: DoRow) {
+  readyOrderTarget.value = row
+  readyOrderOpen.value = true
 }
 
 async function confirmReadyOrder() {
-  if (readyOrderLoading.value || !readyOrderTarget.value) return;
-  readyOrderLoading.value = true;
+  if (readyOrderLoading.value || !readyOrderTarget.value) return
+  readyOrderLoading.value = true
   try {
-    await post(`/delivery-orders/${readyOrderTarget.value.id}/ready-order`, {});
+    await post(`/delivery-orders/${readyOrderTarget.value.id}/ready-order`, {})
     toast.add({
-      title: "Berhasil",
-      description: "Pengantaran telah disiapkan.",
-      color: "success",
-    });
-    readyOrderOpen.value = false;
-    readyOrderTarget.value = null;
-    refresh();
-  } catch (err: any) {
+      title: 'Berhasil',
+      description: 'Pengantaran telah disiapkan.',
+      color: 'success'
+    })
+    readyOrderOpen.value = false
+    readyOrderTarget.value = null
+    refresh()
+  } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err.message || "Gagal menyiapkan pengantaran.",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Terjadi kesalahan',
+      color: 'error'
+    })
   } finally {
-    readyOrderLoading.value = false;
+    readyOrderLoading.value = false
   }
 }
 
 // ── Modal Selesai Dikirim ─────────────────────────────────────
-const selesaiDikirimOpen = ref(false);
-const selesaiDikirimTarget = ref<any>(null);
-const selesaiDikirimLoading = ref(false);
+const selesaiDikirimOpen = ref(false)
+const selesaiDikirimTarget = ref<DoRow | null>(null)
+const selesaiDikirimLoading = ref(false)
 
-function openSelesaiDikirim(row: any) {
-  selesaiDikirimTarget.value = row;
-  selesaiDikirimOpen.value = true;
+function openSelesaiDikirim(row: DoRow) {
+  selesaiDikirimTarget.value = row
+  selesaiDikirimOpen.value = true
 }
 
 async function confirmSelesaiDikirim() {
-  if (selesaiDikirimLoading.value || !selesaiDikirimTarget.value) return;
-  selesaiDikirimLoading.value = true;
+  if (selesaiDikirimLoading.value || !selesaiDikirimTarget.value) return
+  selesaiDikirimLoading.value = true
   try {
     await post(
       `/delivery-orders/${selesaiDikirimTarget.value.id}/selesai-dikirim`,
-      {},
-    );
+      {}
+    )
     toast.add({
-      title: "Berhasil",
-      description: "Pengiriman ditandai selesai.",
-      color: "success",
-    });
-    selesaiDikirimOpen.value = false;
-    selesaiDikirimTarget.value = null;
-    refresh();
-  } catch (err: any) {
+      title: 'Berhasil',
+      description: 'Pengiriman ditandai selesai.',
+      color: 'success'
+    })
+    selesaiDikirimOpen.value = false
+    selesaiDikirimTarget.value = null
+    refresh()
+  } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err.message || "Gagal menandai selesai dikirim.",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Terjadi kesalahan',
+      color: 'error'
+    })
   } finally {
-    selesaiDikirimLoading.value = false;
+    selesaiDikirimLoading.value = false
   }
 }
 
 // ── Tandai Dokumen Kembali ────────────────────────────────────
-const loading = ref(false);
+const loading = ref(false)
 
 async function updateDoStatus(doId: string) {
-  if (loading.value) return;
-  loading.value = true;
+  if (loading.value) return
+  loading.value = true
   try {
-    await put(`/delivery-orders/${doId}`, { status: "document_returned" });
+    await put(`/delivery-orders/${doId}`, { status: 'document_returned' })
     toast.add({
-      title: "Berhasil",
-      description: "Status Delivery Order berhasil diperbarui",
-      icon: "i-lucide-check-circle",
-      color: "success",
-    });
+      title: 'Berhasil',
+      description: 'Status Delivery Order berhasil diperbarui',
+      icon: 'i-lucide-check-circle',
+      color: 'success'
+    })
   } catch {
     toast.add({
-      title: "Gagal",
-      description: "Gagal memperbarui status DO.",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: 'Gagal memperbarui status DO.',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
-    refresh();
+    loading.value = false
+    refresh()
   }
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 });
+const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
-const detailOpen = ref(false);
-const detailId = ref<string | null>(null);
+const detailOpen = ref(false)
+const detailId = ref<string | null>(null)
 function openDetail(id: string) {
-  detailId.value = id;
-  detailOpen.value = true;
+  detailId.value = id
+  detailOpen.value = true
 }
 
 // ── Status badge helper ───────────────────────────────────────
-function statusBadge(done: boolean, label: string, at: any) {
-  return h("div", { class: "flex flex-col gap-0.5" }, [
+function statusBadge(done: boolean, label: string, at?: string | null) {
+  return h('div', { class: 'flex flex-col gap-0.5' }, [
     h(
       UBadge,
       {
-        variant: "subtle",
-        color: done ? "success" : "neutral",
-        class: "text-xs",
+        variant: 'subtle',
+        color: done ? 'success' : 'neutral',
+        class: 'text-xs'
       },
-      () => (done ? label : "-"),
+      () => (done ? label : '-')
     ),
     done && at
-      ? h("span", { class: "text-[10px] text-muted" }, formatDate(at))
-      : null,
-  ]);
+      ? h('span', { class: 'text-[10px] text-muted' }, formatDate(at))
+      : null
+  ])
 }
 
-const columns: TableColumn<any>[] = [
-  { accessorKey: "deliveryOrderNumber", header: "Nomor DO" },
-  { accessorKey: "customerName", header: "Customer" },
-  { accessorKey: "purchaseOrderNumber", header: "Nomor PO" },
+const columns: TableColumn<DoRow>[] = [
+  { accessorKey: 'deliveryOrderNumber', header: 'Nomor DO' },
+  { accessorKey: 'customerName', header: 'Customer' },
+  { accessorKey: 'purchaseOrderNumber', header: 'Nomor PO' },
   {
-    accessorKey: "detailsLengkap",
-    header: "Surat",
+    accessorKey: 'detailsLengkap',
+    header: 'Surat',
     cell: ({ row }) => {
-      const ok = row.original.detailsLengkap as boolean;
+      const ok = row.original.detailsLengkap as boolean
       return h(
         UBadge,
         {
-          variant: "subtle",
-          color: ok ? "success" : "warning",
-          class: "text-xs",
+          variant: 'subtle',
+          color: ok ? 'success' : 'warning',
+          class: 'text-xs'
         },
-        () => (ok ? "Siap Cetak" : "Belum Lengkap"),
-      );
-    },
+        () => (ok ? 'Siap Cetak' : 'Belum Lengkap')
+      )
+    }
   },
   {
-    accessorKey: "statusReadyOrder",
-    header: "Siap Kirim",
+    accessorKey: 'statusReadyOrder',
+    header: 'Siap Kirim',
     cell: ({ row }) =>
       statusBadge(
         row.original.statusReadyOrder,
-        "Siap",
-        row.original.readyOrderAt,
-      ),
+        'Siap',
+        row.original.readyOrderAt
+      )
   },
   {
-    accessorKey: "statusSelesaiDikirim",
-    header: "Selesai Kirim",
+    accessorKey: 'statusSelesaiDikirim',
+    header: 'Selesai Kirim',
     cell: ({ row }) =>
       statusBadge(
         row.original.statusSelesaiDikirim,
-        "Selesai",
-        row.original.selesaiDikirimAt,
-      ),
+        'Selesai',
+        row.original.selesaiDikirimAt
+      )
   },
   {
-    accessorKey: "status",
-    header: "Status DO",
+    accessorKey: 'status',
+    header: 'Status DO',
     cell: ({ row }) => {
-      const s = row.getValue("status") as string;
-      const colorMap: Record<string, "info" | "success" | "warning"> = {
-        created: "info",
-        draft: "warning",
-        document_returned: "success",
-      };
+      const s = row.getValue('status') as string
+      const colorMap: Record<string, 'info' | 'success' | 'warning'> = {
+        created: 'info',
+        draft: 'warning',
+        document_returned: 'success'
+      }
       const labelMap: Record<string, string> = {
-        created: "Dibuat",
-        draft: "Draft",
-        document_returned: "Dokumen Kembali",
-      };
+        created: 'Dibuat',
+        draft: 'Draft',
+        document_returned: 'Dokumen Kembali'
+      }
       return h(
         UBadge,
-        { variant: "soft", color: colorMap[s] ?? "neutral" },
-        () => labelMap[s] ?? s,
-      );
-    },
+        { variant: 'soft', color: colorMap[s] ?? 'neutral' },
+        () => labelMap[s] ?? s
+      )
+    }
   },
-  { id: "actions", header: "Aksi", size: 260 },
-];
+  { id: 'actions', header: 'Aksi', size: 260 }
+]
 </script>
 
 <template>
@@ -539,7 +651,7 @@ const columns: TableColumn<any>[] = [
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default',
+        td: 'border-b border-default'
       }"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
@@ -606,8 +718,8 @@ const columns: TableColumn<any>[] = [
           <!-- Selesai Dikirim: setelah ready, belum selesai -->
           <UButton
             v-if="
-              row.original.statusReadyOrder &&
-              !row.original.statusSelesaiDikirim
+              row.original.statusReadyOrder
+                && !row.original.statusSelesaiDikirim
             "
             size="xs"
             color="success"
@@ -620,8 +732,8 @@ const columns: TableColumn<any>[] = [
           <!-- Tandai Dokumen Kembali -->
           <UButton
             v-if="
-              row.original.status === 'created' ||
-              row.original.status === 'draft'
+              row.original.status === 'created'
+                || row.original.status === 'draft'
             "
             :loading="loading"
             size="xs"
@@ -676,9 +788,13 @@ const columns: TableColumn<any>[] = [
           Konfirmasi
         </UButton>
 
-        <UButton color="neutral" variant="ghost" @click="readyOrderOpen = false"
-          >Batal</UButton
+        <UButton
+          color="neutral"
+          variant="ghost"
+          @click="readyOrderOpen = false"
         >
+          Batal
+        </UButton>
       </div>
     </template>
   </UModal>
@@ -719,13 +835,14 @@ const columns: TableColumn<any>[] = [
           color="neutral"
           variant="ghost"
           @click="selesaiDikirimOpen = false"
-          >Batal</UButton
         >
+          Batal
+        </UButton>
       </div>
     </template>
   </UModal>
 
-  <RecordDetailModal v-model:open="detailOpen" type="do" :id="detailId" />
+  <RecordDetailModal :id="detailId" v-model:open="detailOpen" type="do" />
 
   <!-- ── Modal Edit / Lengkapi Data DO ── -->
   <UModal v-model:open="lengkapiOpen" :ui="{ content: 'max-w-2xl' }">
@@ -763,9 +880,7 @@ const columns: TableColumn<any>[] = [
           </p>
           <div class="grid grid-cols-3 gap-3">
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Nomor DO <span class="text-error">*</span></label
-              >
+              <label class="block text-xs text-muted mb-1">Nomor DO <span class="text-error">*</span></label>
               <UInput
                 v-model="lengkapiForm.do_number"
                 placeholder="0000/DO/MAP/I/0000"
@@ -773,9 +888,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Tanggal DO <span class="text-error">*</span></label
-              >
+              <label class="block text-xs text-muted mb-1">Tanggal DO <span class="text-error">*</span></label>
               <UInput v-model="lengkapiForm.do_date" type="date" size="sm" />
             </div>
             <div>
@@ -798,9 +911,7 @@ const columns: TableColumn<any>[] = [
           </p>
           <div class="grid grid-cols-2 gap-3">
             <div class="col-span-2">
-              <label class="block text-xs text-muted mb-1"
-                >Alamat Customer</label
-              >
+              <label class="block text-xs text-muted mb-1">Alamat Customer</label>
               <UInput
                 v-model="lengkapiForm.customer_address"
                 placeholder="Alamat customer"
@@ -808,9 +919,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Penerima BBM (Nama)</label
-              >
+              <label class="block text-xs text-muted mb-1">Penerima BBM (Nama)</label>
               <UInput
                 v-model="lengkapiForm.receiver_name"
                 placeholder="Nama penerima"
@@ -826,9 +935,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Tanggal Terima</label
-              >
+              <label class="block text-xs text-muted mb-1">Tanggal Terima</label>
               <UInput
                 v-model="lengkapiForm.receiver_date"
                 type="date"
@@ -847,9 +954,7 @@ const columns: TableColumn<any>[] = [
           </p>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Nama Transportir <span class="text-error">*</span></label
-              >
+              <label class="block text-xs text-muted mb-1">Nama Transportir <span class="text-error">*</span></label>
               <UInput
                 v-model="lengkapiForm.transport_name"
                 placeholder="PT. Transport Logistik"
@@ -857,9 +962,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >ID Transportir</label
-              >
+              <label class="block text-xs text-muted mb-1">ID Transportir</label>
               <UInput
                 v-model="lengkapiForm.transport_id"
                 placeholder="ID / nama lengkap"
@@ -867,9 +970,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div class="col-span-2">
-              <label class="block text-xs text-muted mb-1"
-                >Alamat Transportir</label
-              >
+              <label class="block text-xs text-muted mb-1">Alamat Transportir</label>
               <UInput
                 v-model="lengkapiForm.transport_address"
                 placeholder="Alamat transportir"
@@ -893,9 +994,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Tanggal Transportir Terima</label
-              >
+              <label class="block text-xs text-muted mb-1">Tanggal Transportir Terima</label>
               <UInput
                 v-model="lengkapiForm.transport_date"
                 type="date"
@@ -914,19 +1013,15 @@ const columns: TableColumn<any>[] = [
           </p>
           <div class="grid grid-cols-3 gap-3">
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Nama Produk <span class="text-error">*</span></label
-              >
+              <label class="block text-xs text-muted mb-1">Nama Produk <span class="text-error">*</span></label>
               <UInput
                 v-model="lengkapiForm.product_name"
-                placeholder="Bio Diesel"
+                placeholder="Nama Produk"
                 size="sm"
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Volume (Liter) <span class="text-error">*</span></label
-              >
+              <label class="block text-xs text-muted mb-1">Volume (Liter) <span class="text-error">*</span></label>
               <UInput
                 v-model.number="lengkapiForm.fuel_qty"
                 type="number"
@@ -935,9 +1030,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Tanggal Berlaku</label
-              >
+              <label class="block text-xs text-muted mb-1">Tanggal Berlaku</label>
               <UInput v-model="lengkapiForm.due_date" type="date" size="sm" />
             </div>
             <div>
@@ -985,9 +1078,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Jenis Kendaraan</label
-              >
+              <label class="block text-xs text-muted mb-1">Jenis Kendaraan</label>
               <UInput
                 v-model="lengkapiForm.transport_type"
                 placeholder="Truk Tangki"
@@ -1031,9 +1122,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Jam Tiba di Depo</label
-              >
+              <label class="block text-xs text-muted mb-1">Jam Tiba di Depo</label>
               <UInput
                 v-model="lengkapiForm.depot_arrival_time"
                 type="time"
@@ -1041,9 +1130,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Jam Mulai Bongkar</label
-              >
+              <label class="block text-xs text-muted mb-1">Jam Mulai Bongkar</label>
               <UInput
                 v-model="lengkapiForm.unloading_time"
                 type="time"
@@ -1062,19 +1149,15 @@ const columns: TableColumn<any>[] = [
           </p>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Koordinator MAP</label
-              >
+              <label class="block text-xs text-muted mb-1">Koordinator MAP</label>
               <UInput
                 v-model="lengkapiForm.company_coordinator"
-                placeholder="Admin"
+                placeholder="Nama Koordinator"
                 size="sm"
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Admin Distribusi</label
-              >
+              <label class="block text-xs text-muted mb-1">Admin Distribusi</label>
               <UInput
                 v-model="lengkapiForm.distribution_admin"
                 :placeholder="user?.name || ''"
@@ -1090,9 +1173,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Tanda Tangan Penerima</label
-              >
+              <label class="block text-xs text-muted mb-1">Tanda Tangan Penerima</label>
               <UFileUpload
                 v-model="lengkapiForm.receiver_sign_file"
                 label="Upload Tanda Tangan"
@@ -1109,9 +1190,7 @@ const columns: TableColumn<any>[] = [
               </span>
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Nama Driver/Officer</label
-              >
+              <label class="block text-xs text-muted mb-1">Nama Driver/Officer</label>
               <UInput
                 v-model="lengkapiForm.driver_sign"
                 placeholder="Nama driver"
@@ -1119,9 +1198,7 @@ const columns: TableColumn<any>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1"
-                >Tanda Tangan Driver</label
-              >
+              <label class="block text-xs text-muted mb-1">Tanda Tangan Driver</label>
               <UFileUpload
                 v-model="lengkapiForm.driver_sign_file"
                 label="Upload Tanda Tangan"
@@ -1157,9 +1234,13 @@ const columns: TableColumn<any>[] = [
           }}
         </UButton>
 
-        <UButton color="neutral" variant="ghost" @click="lengkapiOpen = false"
-          >Batal</UButton
+        <UButton
+          color="neutral"
+          variant="ghost"
+          @click="lengkapiOpen = false"
         >
+          Batal
+        </UButton>
       </div>
     </template>
   </UModal>

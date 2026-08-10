@@ -1,19 +1,68 @@
 <script setup lang="ts">
-import { sub } from 'date-fns'
-import type { Period, Range } from '~/types'
+import type { Price } from '~/components/marketing/price/MarketingPriceForm.vue'
 
-const range = shallowRef<Range>({
-  start: sub(new Date(), { days: 14 }),
-  end: new Date()
-})
-const period = ref<Period>('daily')
+const { get } = useApi()
 
-definePageMeta({ layout: 'marketing' })
+const { data: prices, pending } = await useAsyncData<Price[]>(
+  'prices-all',
+  () => get<Price[]>('/prices'),
+  { default: () => [] }
+)
+
+const categoryLabel: Record<string, string> = {
+  fuel: 'Solar',
+  shipping: 'Pengiriman'
+}
+
+const formatted = computed(() =>
+  prices.value.map(p => ({
+    id: p.id,
+    nama: p.name,
+    kategori: categoryLabel[p.category] || p.category,
+    harga: formatCurrency(p.price),
+    unit: p.unit,
+    berlaku: p.effective_date ? formatDate(p.effective_date) : '-',
+    catatan: p.notes || '-'
+  }))
+)
 </script>
 
 <template>
-  <h1 class="text-3xl font-bold dark:text-neutral-50 text-neutral-900">
-    Rekap Histori Harga
-  </h1>
-  <HomeSales :period="period" :range="range" />
+  <UDashboardPanel id="price-history">
+    <template #header>
+      <UDashboardNavbar title="Rekap Histori Harga" />
+    </template>
+
+    <template #body>
+      <UPageCard variant="subtle">
+        <UTable
+          :columns="[{
+            accessorKey: 'nama',
+            header: 'Nama Harga'
+          }, {
+            accessorKey: 'kategori',
+            header: 'Kategori'
+          }, {
+            accessorKey: 'harga',
+            header: 'Harga'
+          }, {
+            accessorKey: 'unit',
+            header: 'Satuan'
+          }, {
+            accessorKey: 'berlaku',
+            header: 'Berlaku Mulai'
+          }, {
+            accessorKey: 'catatan',
+            header: 'Catatan'
+          }]"
+          :data="formatted"
+          :loading="pending"
+          :empty-state="{
+            icon: 'i-lucide-circle-off',
+            label: 'Belum ada harga tersimpan.'
+          }"
+        />
+      </UPageCard>
+    </template>
+  </UDashboardPanel>
 </template>

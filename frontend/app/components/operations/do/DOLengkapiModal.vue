@@ -1,151 +1,156 @@
 <script setup lang="ts">
-// @ts-nocheck
-import * as z from "zod";
-import type { FormSubmitEvent } from "@nuxt/ui";
+import * as z from 'zod'
+import type { FormSubmitEvent } from '@nuxt/ui'
 
 const props = defineProps<{
-  open: boolean;
-  doId: string | null;
-  doNumber?: string;
-  customerName?: string;
-  poNumber?: string;
-}>();
+  open: boolean
+  doId: string | null
+  doNumber?: string
+  customerName?: string
+  poNumber?: string
+  companyInformation?: {
+    name: string
+    nameSub?: string
+    address: string
+    phoneNumber: string
+  }
+}>()
 
-const emit = defineEmits<{ "update:open": [boolean]; updated: [] }>();
+const emit = defineEmits<{ 'update:open': [boolean], 'updated': [] }>()
 
-const toast = useToast();
-const { put, get } = useApi();
-const saving = ref(false);
-const { user } = useAuth();
+const toast = useToast()
+const { put } = useApi()
+const saving = ref(false)
+const { user } = useAuth()
 
 const schema = z.object({
-  do_number: z.string().min(1, "Wajib diisi"),
-  transport_name: z.string().min(1, "Wajib diisi"),
-  product_name: z.string().min(1, "Wajib diisi"),
-  fuel_qty: z.number().min(1, "Wajib diisi"),
-  do_date: z.string().min(1, "Wajib diisi"),
+  do_number: z.string().min(1, 'Wajib diisi'),
+  transport_name: z.string().min(1, 'Wajib diisi'),
+  product_name: z.string().min(1, 'Wajib diisi'),
+  fuel_qty: z.number().min(1, 'Wajib diisi'),
+  do_date: z.string().min(1, 'Wajib diisi'),
   transport_number: z.string().optional(),
   driver_name: z.string().optional(),
   company_coordinator: z.string().optional(),
-  distribution_admin: z.string().optional(),
-});
+  distribution_admin: z.string().optional()
+})
 
-type Schema = z.output<typeof schema>;
+type Schema = z.output<typeof schema>
 
 const form = reactive<Partial<Schema>>({
-  do_number: "",
-  transport_name: "",
-  product_name: "Bio Diesel",
+  do_number: '',
+  transport_name: '',
+  product_name: '',
   fuel_qty: 0,
-  do_date: new Date().toISOString().split("T")[0],
-  transport_number: "",
-  driver_name: "",
-  company_coordinator: "Admin",
-  distribution_admin: user.value?.name || "",
-});
+  do_date: new Date().toISOString().split('T')[0],
+  transport_number: '',
+  driver_name: '',
+  company_coordinator: '',
+  distribution_admin: user.value?.name || ''
+})
 
 // Isi default dari props saat modal dibuka
 watch(
   () => props.open,
   (open) => {
     if (open) {
-      form.do_number = props.doNumber || "";
-      form.distribution_admin = user.value?.name || "";
+      form.do_number = props.doNumber || ''
+      form.distribution_admin = user.value?.name || ''
     }
-  },
-);
+  }
+)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  if (saving.value || !props.doId) return;
-  saving.value = true;
+  if (saving.value || !props.doId) return
+  saving.value = true
   try {
     const details = {
       companyInformation: {
-        name: "PT. MITRA ANDALAN PETROLEUM",
-        nameSub: "Distributor for Elnusa Petrofin",
-        address: "Jl. Belatuk Samarinda, Indonesia",
-        phoneNumber: "0541-1234567",
+        name: props.companyInformation?.name || '',
+        nameSub: props.companyInformation?.nameSub || '',
+        address: props.companyInformation?.address || '',
+        phoneNumber: props.companyInformation?.phoneNumber || ''
       },
       doInformation: {
         doNumber: event.data.do_number,
         doDateCreated: event.data.do_date,
-        poCustomerNumber: { purchaseOrderNumber: props.poNumber || "" },
-        soNumber: "",
+        poCustomerNumber: { purchaseOrderNumber: props.poNumber || '' },
+        soNumber: ''
       },
-      customerName: props.customerName || "",
-      customerId: "",
-      customerAddress: "",
-      receiverInformation: { name: "", phoneNumber: "" },
+      customerName: props.customerName || '',
+      customerId: '',
+      customerAddress: '',
+      receiverInformation: { name: '', phoneNumber: '' },
       receiverDateReceived: event.data.do_date,
       transportName: event.data.transport_name,
-      transportId: "",
-      transportAddress: "",
+      transportId: '',
+      transportAddress: '',
       driverInformation: {
-        name: event.data.driver_name || "",
-        phoneNumber: "",
+        name: event.data.driver_name || '',
+        phoneNumber: ''
       },
       transportDateReceived: event.data.do_date,
-      helperName: "",
+      helperName: '',
       dueDate: event.data.do_date,
       total: event.data.fuel_qty,
       productInformation: {
         name: event.data.product_name,
         qty: event.data.fuel_qty,
-        topSeal: "",
-        bottomSeal: "",
-        temperature: 0,
+        topSeal: '',
+        bottomSeal: '',
+        temperature: 0
       },
       transportInformation: {
-        startKm: "",
-        endKm: "",
-        sgMeter: "",
+        startKm: '',
+        endKm: '',
+        sgMeter: '',
         timeInformation: {
-          departureTime: "",
-          arrivalTime: "",
-          depotArrivalTime: "",
-          unloadingTime: "",
+          departureTime: '',
+          arrivalTime: '',
+          depotArrivalTime: '',
+          unloadingTime: ''
         },
-        transportNumber: event.data.transport_number || "",
-        transportType: "",
+        transportNumber: event.data.transport_number || '',
+        transportType: ''
       },
       notes: [
         {
-          note: "Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan",
+          note: 'Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan'
         },
         {
-          note: "Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami",
+          note: 'Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami'
         },
-        { note: "Lainnya :" },
+        { note: 'Lainnya :' }
       ],
       fuelReceived: event.data.fuel_qty,
-      companyCoordinator: event.data.company_coordinator || "Admin",
-      distributionAdmin: event.data.distribution_admin || "",
-      receiver: "",
-      driver: event.data.driver_name || "",
-    };
+      companyCoordinator: event.data.company_coordinator || '',
+      distributionAdmin: event.data.distribution_admin || '',
+      receiver: '',
+      driver: event.data.driver_name || ''
+    }
 
     await put(`/delivery-orders/${props.doId}`, {
       do_number: event.data.do_number,
       transport_name: event.data.transport_name,
       fuel_total: event.data.fuel_qty,
-      details,
-    });
+      details
+    })
 
     toast.add({
-      title: "Berhasil",
-      description: "Data DO berhasil dilengkapi. Surat siap dirender.",
-      color: "success",
-    });
-    emit("update:open", false);
-    emit("updated");
+      title: 'Berhasil',
+      description: 'Data DO berhasil dilengkapi. Surat siap dirender.',
+      color: 'success'
+    })
+    emit('update:open', false)
+    emit('updated')
   } catch (err: any) {
     toast.add({
-      title: "Error",
-      description: err.message || "Gagal menyimpan data.",
-      color: "error",
-    });
+      title: 'Error',
+      description: err.message || 'Gagal menyimpan data.',
+      color: 'error'
+    })
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 </script>
@@ -167,7 +172,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       <div
         class="mb-4 rounded-lg bg-warning/10 border border-warning/30 px-4 py-3 text-sm text-warning"
       >
-        <p class="font-medium">Data DO belum lengkap untuk dicetak.</p>
+        <p class="font-medium">
+          Data DO belum lengkap untuk dicetak.
+        </p>
         <p class="text-xs mt-1 text-muted">
           Isi data berikut agar surat DO dapat dirender.
         </p>
@@ -213,7 +220,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UFormField name="product_name" label="Nama Produk" required>
             <UInput
               v-model="form.product_name"
-              placeholder="Bio Diesel"
+              placeholder="Nama Produk"
               class="w-full"
             />
           </UFormField>
@@ -258,8 +265,9 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             color="neutral"
             variant="ghost"
             @click="emit('update:open', false)"
-            >Batal</UButton
           >
+            Batal
+          </UButton>
         </div>
       </UForm>
     </template>

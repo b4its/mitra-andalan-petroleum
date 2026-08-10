@@ -1,57 +1,82 @@
 <script setup lang="ts">
-import type { AuthFormField, FormSubmitEvent } from "@nuxt/ui";
-import { z } from "zod";
-import type { Role } from "~/types";
+import type { AuthFormField, FormSubmitEvent } from '@nuxt/ui'
+import { z } from 'zod'
+import type { Role } from '~/types'
 
-const toast = useToast();
-const router = useRouter();
-const { setUser } = useAuth();
-const { post } = useApi();
+const toast = useToast()
+const router = useRouter()
+const { setUser } = useAuth()
+const { post, get } = useApi()
+
+interface Account {
+  id: string
+  name: string
+  email: string
+  role: string
+}
+
+const { data: accounts } = await useAsyncData<Account[]>(
+  'login-accounts',
+  () => get<Account[]>('/profiles'),
+  { default: () => [], lazy: true }
+)
 
 const schema = z.object({
-  email: z.email("Invalid email"),
-  password: z.string().min(6, "Must be at least 6 characters"),
-});
+  email: z.email('Invalid email'),
+  password: z.string().min(6, 'Must be at least 6 characters')
+})
 
-type Schema = z.output<typeof schema>;
+type Schema = z.output<typeof schema>
 
 const fields: AuthFormField[] = [
   {
-    name: "email",
-    type: "email",
-    label: "Email",
-    placeholder: "Enter your email",
-    required: true,
+    name: 'email',
+    type: 'email',
+    label: 'Email',
+    placeholder: 'Enter your email',
+    required: true
   },
   {
-    name: "password",
-    type: "password",
-    label: "Password",
-    placeholder: "Enter your password",
-    required: true,
-  },
-];
+    name: 'password',
+    type: 'password',
+    label: 'Password',
+    placeholder: 'Enter your password',
+    required: true
+  }
+]
 
-const loading = ref(false);
+const loading = ref(false)
+
+const authFormRef = useTemplateRef('authFormRef')
+
+function fillEmail(email: string) {
+  const formRef = authFormRef.value
+  if (formRef) {
+    formRef.state.email = email
+  }
+}
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  loading.value = true;
+  loading.value = true
 
   try {
     const result = await post<
       {
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-        token: string;
-        logged_in_at: string;
+        id: string
+        name: string
+        email: string
+        role: string
+        token: string
+        logged_in_at: string
       },
-      {}
-    >("/auth/login", {
+      {
+        email: string
+        password: string
+      }
+    >('/auth/login', {
       email: event.data.email,
-      password: event.data.password,
-    });
+      password: event.data.password
+    })
 
     setUser({
       id: result.id,
@@ -60,25 +85,25 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       password: event.data.password,
       role: result.role as Role,
       token: result.token,
-      loggedInAt: result.logged_in_at,
-    });
+      loggedInAt: result.logged_in_at
+    })
 
     toast.add({
-      title: "Berhasil Masuk",
-      icon: "i-lucide-check-circle",
+      title: 'Berhasil Masuk',
+      icon: 'i-lucide-check-circle',
       description: `Welcome, ${result.name}! (${result.role})`,
-      color: "success",
-    });
+      color: 'success'
+    })
 
-    router.push(`/${result.role}`);
+    router.push(`/${result.role}`)
   } catch (err: any) {
     toast.add({
-      title: "Login Gagal",
-      description: err.message || "Invalid email or password.",
-      color: "error",
-    });
+      title: 'Login Gagal',
+      description: err.message || 'Invalid email or password.',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 </script>
@@ -86,6 +111,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
   <UPageCard class="max-w-md mx-auto mt-48">
     <UAuthForm
+      ref="authFormRef"
       title="Sign In MAP"
       description="Login dengan akun Anda"
       icon="i-lucide-log-in"
@@ -98,9 +124,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     <template #footer>
       <div class="text-xs text-muted space-y-1">
-        <p class="font-medium">Akun tersedia:</p>
-        <p v-for="acc in dummyAccounts" :key="acc.email">
-          {{ acc.role }}: {{ acc.email }} / {{ acc.password }}
+        <p class="font-medium">
+          Akun terdaftar di sistem:
+        </p>
+        <p v-for="acc in accounts" :key="acc.id">
+          {{ acc.role }}:
+          <button type="button" class="underline hover:text-primary" @click="fillEmail(acc.email)">
+            {{ acc.email }}
+          </button>
         </p>
       </div>
     </template>
