@@ -70,8 +70,17 @@ const { data, pending, error, refresh } = await useAsyncData(
   { default: () => ({ metrics: [], trends: [], distributions: {}, notifications: [], activities: [] }), watch: [range] },
 );
 
-const mappedAnalytics = computed(() =>
-  (data.value?.metrics ?? []).filter(Boolean)
+interface MetricCard {
+  key: string;
+  icon: string;
+  title: string;
+  description: string;
+  unit: string;
+  value: number;
+}
+
+const mappedAnalytics = computed<MetricCard[]>(() =>
+  (data.value?.metrics ?? []).filter(Boolean) as MetricCard[],
 );
 
 function showMetric(metric: any) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { h } from "vue";
-import type { TableColumn } from "@nuxt/ui";
+import type { DropdownMenuItem, TableColumn } from "@nuxt/ui";
 import type { ExportColumn } from "~/composables/useExport";
 import type {
   AccountingAccount,
@@ -314,7 +314,7 @@ const trialColumns: TableColumn<any>[] = [
       h(
         "span",
         { class: "text-xs text-muted" },
-        typeLabels[row.getValue("account_type")] ??
+        typeLabels[String(row.getValue("account_type"))] ??
           row.getValue("account_type"),
       ),
   },
@@ -332,7 +332,9 @@ const trialColumns: TableColumn<any>[] = [
   },
 ];
 
-const exportItems = (onSelect: (format: "excel" | "pdf" | "csv") => void) => [
+const exportItems = (
+  onSelect: (format: "excel" | "pdf" | "csv") => void,
+): DropdownMenuItem[] => [
   { type: "label", label: "Export Data" },
   { type: "separator" },
   {
