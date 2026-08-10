@@ -18,7 +18,7 @@ const unreadCount = computed(() =>
 )
 
 const typeBadge = (type: string) => {
-  const colors: Record<string, string> = {
+  const colors: Record<string, 'info' | 'warning' | 'success' | 'error' | 'neutral'> = {
     info: 'info',
     warning: 'warning',
     success: 'success',
