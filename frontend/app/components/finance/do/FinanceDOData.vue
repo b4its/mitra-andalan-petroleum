@@ -1,31 +1,67 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from "@tanstack/vue-table";
-import { h, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
 
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-const table = useTemplateRef("table");
-const columnPinning = ref({ right: ["actions"] });
-const toast = useToast();
-const { get, post } = useApi();
+interface DeliveryOrderItem {
+  id: string
+  do_number: string
+  customer_name: string
+  po_number: string
+  transport_name: string
+  created_at?: string
+  status: string
+  status_rilis_dana?: boolean
+  rilis_dana_at?: string | null
+  status_ready_order?: boolean
+  ready_order_at?: string | null
+  status_selesai_dikirim?: boolean
+  selesai_dikirim_at?: string | null
+  status_lunas_ongkir?: boolean
+  lunas_ongkir_at?: string | null
+}
 
-const search = ref("");
-const debouncedSearch = refDebounced(search, 300);
+interface FinanceDoRow {
+  id: string
+  deliveryOrderNumber: string
+  customerName: string
+  purchaseOrderNumber: string
+  transportName: string
+  dateCreated: string
+  status: string
+  statusRilisDana: boolean
+  rilisDanaAt?: string | null
+  statusReadyOrder: boolean
+  readyOrderAt?: string | null
+  statusSelesaiDikirim: boolean
+  selesaiDikirimAt?: string | null
+  statusLunasOngkir: boolean
+  lunasOngkirAt?: string | null
+}
+
+const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const table = useTemplateRef('table')
+const columnPinning = ref({ right: ['actions'] })
+const toast = useToast()
+const { get, post } = useApi()
+
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 const { data: DoData, pending, refresh } = await useAsyncData(
-  "finance-delivery-orders",
+  'finance-delivery-orders',
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 100 };
-    if (debouncedSearch.value) params.search = debouncedSearch.value;
-    const res = await get<{ items: any[] }>("/delivery-orders", params);
-    return (res.items || []).map((d: any) => ({
+    const params: Record<string, string | number> = { page: 1, page_size: 100 }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const res = await get<{ items: DeliveryOrderItem[] }>('/delivery-orders', params)
+    return (res.items || []).map((d: DeliveryOrderItem) => ({
       id: d.id,
       deliveryOrderNumber: d.do_number,
       customerName: d.customer_name,
       purchaseOrderNumber: d.po_number,
       transportName: d.transport_name,
-      dateCreated: d.created_at?.toString() || "",
+      dateCreated: d.created_at?.toString() || '',
       status: d.status,
       statusRilisDana: d.status_rilis_dana ?? false,
       rilisDanaAt: d.rilis_dana_at,
@@ -34,172 +70,172 @@ const { data: DoData, pending, refresh } = await useAsyncData(
       statusSelesaiDikirim: d.status_selesai_dikirim ?? false,
       selesaiDikirimAt: d.selesai_dikirim_at,
       statusLunasOngkir: d.status_lunas_ongkir ?? false,
-      lunasOngkirAt: d.lunas_ongkir_at,
-    }));
+      lunasOngkirAt: d.lunas_ongkir_at
+    }))
   },
-  { default: () => [], watch: [debouncedSearch] },
-);
+  { default: () => [], watch: [debouncedSearch] }
+)
 
 // ── Modal Rilis Dana ──────────────────────────────────────────
-const rilisDanaOpen = ref(false);
-const rilisDanaTarget = ref<any>(null);
-const rilisDanaLoading = ref(false);
+const rilisDanaOpen = ref(false)
+const rilisDanaTarget = ref<FinanceDoRow | null>(null)
+const rilisDanaLoading = ref(false)
 
-function openRilisDana(row: any) {
-  rilisDanaTarget.value = row;
-  rilisDanaOpen.value = true;
+function openRilisDana(row: FinanceDoRow) {
+  rilisDanaTarget.value = row
+  rilisDanaOpen.value = true
 }
 
 async function confirmRilisDana() {
-  if (rilisDanaLoading.value || !rilisDanaTarget.value) return;
-  rilisDanaLoading.value = true;
+  if (rilisDanaLoading.value || !rilisDanaTarget.value) return
+  rilisDanaLoading.value = true
   try {
-    await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {});
+    await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {})
     toast.add({
-      title: "Berhasil",
-      description: "Dana telah dirilis. DO tersedia di Operations.",
-      color: "success",
-    });
-    rilisDanaOpen.value = false;
-    rilisDanaTarget.value = null;
-    refresh();
-  } catch (err: any) {
+      title: 'Berhasil',
+      description: 'Dana telah dirilis. DO tersedia di Operations.',
+      color: 'success'
+    })
+    rilisDanaOpen.value = false
+    rilisDanaTarget.value = null
+    refresh()
+  } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err.message || "Gagal merilis dana.",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Gagal merilis dana.',
+      color: 'error'
+    })
   } finally {
-    rilisDanaLoading.value = false;
+    rilisDanaLoading.value = false
   }
 }
 
 // ── Modal Lunas Ongkir ────────────────────────────────────────
-const lunasOngkirOpen = ref(false);
-const lunasOngkirTarget = ref<any>(null);
-const lunasOngkirLoading = ref(false);
+const lunasOngkirOpen = ref(false)
+const lunasOngkirTarget = ref<FinanceDoRow | null>(null)
+const lunasOngkirLoading = ref(false)
 
-function openLunasOngkir(row: any) {
-  lunasOngkirTarget.value = row;
-  lunasOngkirOpen.value = true;
+function openLunasOngkir(row: FinanceDoRow) {
+  lunasOngkirTarget.value = row
+  lunasOngkirOpen.value = true
 }
 
 async function confirmLunasOngkir() {
-  if (lunasOngkirLoading.value || !lunasOngkirTarget.value) return;
-  lunasOngkirLoading.value = true;
+  if (lunasOngkirLoading.value || !lunasOngkirTarget.value) return
+  lunasOngkirLoading.value = true
   try {
     await post(
       `/delivery-orders/${lunasOngkirTarget.value.id}/lunas-ongkir`,
-      {},
-    );
+      {}
+    )
     toast.add({
-      title: "Berhasil",
-      description: "Ongkir telah dilunasi.",
-      color: "success",
-    });
-    lunasOngkirOpen.value = false;
-    lunasOngkirTarget.value = null;
-    refresh();
-  } catch (err: any) {
+      title: 'Berhasil',
+      description: 'Ongkir telah dilunasi.',
+      color: 'success'
+    })
+    lunasOngkirOpen.value = false
+    lunasOngkirTarget.value = null
+    refresh()
+  } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err.message || "Gagal melunasi ongkir.",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Gagal melunasi ongkir.',
+      color: 'error'
+    })
   } finally {
-    lunasOngkirLoading.value = false;
+    lunasOngkirLoading.value = false
   }
 }
 
 // ── Detail modal ──────────────────────────────────────────────
-const detailOpen = ref(false);
-const detailId = ref<string | null>(null);
+const detailOpen = ref(false)
+const detailId = ref<string | null>(null)
 function openDetail(id: string) {
-  detailId.value = id;
-  detailOpen.value = true;
+  detailId.value = id
+  detailOpen.value = true
 }
 
 // ── Status badge helper ───────────────────────────────────────
-function statusBadge(done: boolean, label: string, at: any) {
-  return h("div", { class: "flex flex-col gap-0.5" }, [
+function statusBadge(done: boolean, label: string, at?: string | null) {
+  return h('div', { class: 'flex flex-col gap-0.5' }, [
     h(
       UBadge,
       {
-        variant: "subtle",
-        color: done ? "success" : "neutral",
-        class: "text-xs",
+        variant: 'subtle',
+        color: done ? 'success' : 'neutral',
+        class: 'text-xs'
       },
-      () => (done ? label : "-"),
+      () => (done ? label : '-')
     ),
     done && at
-      ? h("span", { class: "text-[10px] text-muted" }, formatDate(at))
-      : null,
-  ]);
+      ? h('span', { class: 'text-[10px] text-muted' }, formatDate(at))
+      : null
+  ])
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 });
+const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
-const columns: TableColumn<any>[] = [
-  { accessorKey: "deliveryOrderNumber", header: "Nomor DO" },
-  { accessorKey: "customerName", header: "Customer" },
-  { accessorKey: "purchaseOrderNumber", header: "Nomor PO" },
+const columns: TableColumn<FinanceDoRow>[] = [
+  { accessorKey: 'deliveryOrderNumber', header: 'Nomor DO' },
+  { accessorKey: 'customerName', header: 'Customer' },
+  { accessorKey: 'purchaseOrderNumber', header: 'Nomor PO' },
   {
-    accessorKey: "statusRilisDana",
-    header: "Rilis Dana",
+    accessorKey: 'statusRilisDana',
+    header: 'Rilis Dana',
     cell: ({ row }) => {
-      const val = row.original.statusRilisDana as boolean;
-      return h("div", { class: "flex flex-col gap-0.5" }, [
+      const val = row.original.statusRilisDana as boolean
+      return h('div', { class: 'flex flex-col gap-0.5' }, [
         h(
           UBadge,
           {
-            variant: "subtle",
-            color: val ? "success" : "warning",
-            class: "text-xs",
+            variant: 'subtle',
+            color: val ? 'success' : 'warning',
+            class: 'text-xs'
           },
-          () => (val ? "Dirilis" : "Belum"),
+          () => (val ? 'Dirilis' : 'Belum')
         ),
         val && row.original.rilisDanaAt
           ? h(
-              "span",
-              { class: "text-[10px] text-muted" },
-              formatDate(row.original.rilisDanaAt),
+              'span',
+              { class: 'text-[10px] text-muted' },
+              formatDate(row.original.rilisDanaAt)
             )
-          : null,
-      ]);
-    },
+          : null
+      ])
+    }
   },
   {
-    accessorKey: "statusReadyOrder",
-    header: "Siap Kirim",
+    accessorKey: 'statusReadyOrder',
+    header: 'Siap Kirim',
     cell: ({ row }) =>
       statusBadge(
         row.original.statusReadyOrder,
-        "Siap",
-        row.original.readyOrderAt,
-      ),
+        'Siap',
+        row.original.readyOrderAt
+      )
   },
   {
-    accessorKey: "statusSelesaiDikirim",
-    header: "Selesai Kirim",
+    accessorKey: 'statusSelesaiDikirim',
+    header: 'Selesai Kirim',
     cell: ({ row }) =>
       statusBadge(
         row.original.statusSelesaiDikirim,
-        "Selesai",
-        row.original.selesaiDikirimAt,
-      ),
+        'Selesai',
+        row.original.selesaiDikirimAt
+      )
   },
   {
-    accessorKey: "statusLunasOngkir",
-    header: "Lunas Ongkir",
+    accessorKey: 'statusLunasOngkir',
+    header: 'Lunas Ongkir',
     cell: ({ row }) =>
       statusBadge(
         row.original.statusLunasOngkir,
-        "Lunas",
-        row.original.lunasOngkirAt,
-      ),
+        'Lunas',
+        row.original.lunasOngkirAt
+      )
   },
-  { id: "actions", header: "Aksi", size: 220 },
-];
+  { id: 'actions', header: 'Aksi', size: 220 }
+]
 </script>
 
 <template>
@@ -228,7 +264,7 @@ const columns: TableColumn<any>[] = [
         thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
         tbody: '[&>tr]:last:[&>td]:border-b-0',
         th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-        td: 'border-b border-default',
+        td: 'border-b border-default'
       }"
       :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
     >
@@ -304,8 +340,7 @@ const columns: TableColumn<any>[] = [
         untuk Delivery Order
         <span class="font-semibold text-highlighted">{{
           rilisDanaTarget?.deliveryOrderNumber
-        }}</span
-        >?
+        }}</span>?
       </p>
       <p class="mt-2 text-xs text-dimmed">
         Setelah dirilis, DO akan muncul di halaman Operations dan tim dapat
@@ -322,9 +357,13 @@ const columns: TableColumn<any>[] = [
         >
           Konfirmasi Rilis Dana
         </UButton>
-        <UButton color="neutral" variant="ghost" @click="rilisDanaOpen = false"
-          >Batal</UButton
+        <UButton
+          color="neutral"
+          variant="ghost"
+          @click="rilisDanaOpen = false"
         >
+          Batal
+        </UButton>
       </div>
     </template>
   </UModal>
@@ -344,8 +383,7 @@ const columns: TableColumn<any>[] = [
         untuk Delivery Order
         <span class="font-semibold text-highlighted">{{
           lunasOngkirTarget?.deliveryOrderNumber
-        }}</span
-        >?
+        }}</span>?
       </p>
       <p class="mt-2 text-xs text-dimmed">
         Tindakan ini akan menandai pelunasan ongkir dengan waktu saat ini (WITA)
@@ -367,11 +405,12 @@ const columns: TableColumn<any>[] = [
           color="neutral"
           variant="ghost"
           @click="lunasOngkirOpen = false"
-          >Batal</UButton
         >
+          Batal
+        </UButton>
       </div>
     </template>
   </UModal>
 
-  <RecordDetailModal v-model:open="detailOpen" type="do" :id="detailId" />
+  <RecordDetailModal :id="detailId" v-model:open="detailOpen" type="do" />
 </template>

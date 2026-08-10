@@ -11,7 +11,9 @@ const { notifications, isSlideoverOpen, openDetail, loading } = useNotifications
 
       <div v-else-if="!notifications.length" class="flex flex-col items-center justify-center gap-3 py-12 text-center">
         <UIcon name="i-lucide-bell-off" class="size-10 text-muted" />
-        <p class="text-sm text-muted">Tidak ada notifikasi</p>
+        <p class="text-sm text-muted">
+          Tidak ada notifikasi
+        </p>
       </div>
 
       <div v-else class="flex flex-col gap-1">

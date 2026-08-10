@@ -2,7 +2,6 @@
 import type { BalanceSheetResponse } from '~/types/accounting'
 
 const { get } = useApi()
-const toast = useToast()
 
 const dateFrom = ref('')
 const dateTo = ref('')
@@ -35,7 +34,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Neraca (Balance Sheet)</p>
+            <p class="text-base font-semibold">
+              Neraca (Balance Sheet)
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Laporan posisi keuangan: Aset, Kewajiban, dan Ekuitas
             </p>
@@ -162,16 +163,28 @@ definePageMeta({ layout: 'accounting' })
             <!-- Summary -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <UCard color="info" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Aset</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(neraca.total_assets) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Aset
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(neraca.total_assets) }}
+                </p>
               </UCard>
               <UCard color="warning" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Kewajiban</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(neraca.total_liabilities) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Kewajiban
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(neraca.total_liabilities) }}
+                </p>
               </UCard>
               <UCard color="primary" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Ekuitas</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(neraca.total_equity) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Ekuitas
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(neraca.total_equity) }}
+                </p>
               </UCard>
             </div>
           </template>

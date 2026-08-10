@@ -6,7 +6,7 @@ const AUTH = JSON.stringify({
 })
 
 async function loginAndGoto(page: Page, path: string) {
-  await page.addInitScript((v) => localStorage.setItem('auth', v), AUTH)
+  await page.addInitScript(v => localStorage.setItem('auth', v), AUTH)
   await page.goto(path, { waitUntil: 'networkidle' })
   await page.waitForLoadState('networkidle')
 }

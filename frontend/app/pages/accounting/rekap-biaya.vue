@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
 import type { ExportColumn } from '~/composables/useExport'
-import type { CostRecapResponse, CostRecapGroup, CostRecapRow } from '~/types/accounting'
+import type { CostRecapResponse, CostRecapRow } from '~/types/accounting'
 
 const { get } = useApi()
 const { toCSV, toExcel, toPDF } = useExport()
-const toast = useToast()
 
 const dateFrom = ref('')
 const dateTo = ref('')
 const expandedGroups = ref<Set<string>>(new Set())
 
-const exportColumns: ExportColumn[] = [
+const exportColumns: ExportColumn<CostRecapRow>[] = [
   { header: 'Tanggal', accessor: (row: CostRecapRow) => formatDate(row.entry_date) },
   { header: 'Deskripsi', accessor: (row: CostRecapRow) => row.description },
   { header: 'Akun', accessor: (row: CostRecapRow) => `${row.account_code} · ${row.account_name}` },
@@ -63,7 +60,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Rekap Biaya</p>
+            <p class="text-base font-semibold">
+              Rekap Biaya
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Seluruh biaya (expense) yang dikelompokkan per akun
             </p>
@@ -99,7 +98,12 @@ definePageMeta({ layout: 'accounting' })
                   { label: 'Export to CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
                 ]"
               >
-                <UButton icon="i-lucide-download" color="neutral" variant="soft" :disabled="!data">
+                <UButton
+                  icon="i-lucide-download"
+                  color="neutral"
+                  variant="soft"
+                  :disabled="!data"
+                >
                   Export
                 </UButton>
               </UDropdownMenu>
@@ -147,7 +151,9 @@ definePageMeta({ layout: 'accounting' })
                       class="flex items-center justify-between py-2 text-sm"
                     >
                       <div class="min-w-0">
-                        <p class="truncate max-w-96">{{ item.description }}</p>
+                        <p class="truncate max-w-96">
+                          {{ item.description }}
+                        </p>
                         <p class="text-xs text-neutral-500 dark:text-neutral-400">
                           {{ formatDate(item.entry_date) }}
                           <span v-if="item.reference">· {{ item.reference }}</span>

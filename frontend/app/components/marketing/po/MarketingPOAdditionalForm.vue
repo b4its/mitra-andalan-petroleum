@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   marketingPOAdditionalSchema,
-  type MarketingPOAdditionalState,
-} from "~/types/schemas";
+  type MarketingPOAdditionalState
+} from '~/types/schemas'
 
 defineProps<{
-  isLoading: boolean | undefined;
-}>();
+  isLoading: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<MarketingPOAdditionalState>({ required: true });
+const state = defineModel<MarketingPOAdditionalState>({ required: true })
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -60,7 +60,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
           :format-options="{
             style: 'unit',
             unit: 'kilometer',
-            unitDisplay: 'short',
+            unitDisplay: 'short'
           }"
           :increment="false"
           :decrement="false"

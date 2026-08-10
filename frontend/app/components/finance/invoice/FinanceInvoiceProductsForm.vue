@@ -1,61 +1,61 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   financeInvoiceProductsSchema,
-  type FinanceInvoiceProductsState,
-} from "~/types/schemas";
-import angkaTerbilang from "@develoka/angka-terbilang-js";
-import { useChangeCase } from "@vueuse/integrations/useChangeCase";
+  type FinanceInvoiceProductsState
+} from '~/types/schemas'
+import angkaTerbilang from '@develoka/angka-terbilang-js'
+import { useChangeCase } from '@vueuse/integrations/useChangeCase'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-}>();
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<FinanceInvoiceProductsState>({ required: true });
+const state = defineModel<FinanceInvoiceProductsState>({ required: true })
 
 function emptyProduct() {
-  return { name: "", qty: 1, unit: "", price: 0, totalPrice: 0 };
+  return { name: '', qty: 1, unit: '', price: 0, totalPrice: 0 }
 }
 
-const products = computed(() => state.value.products);
+const products = computed(() => state.value.products)
 
 watch(
   () => [
     state.value.priceSummary.subTotal,
     state.value.priceSummary.discount,
-    state.value.priceSummary.prePaid,
+    state.value.priceSummary.prePaid
   ],
   ([subTotal, discount, prePaid]) => {
-    const ppn = Math.round((subTotal || 0) * 0.11);
-    const grandTotal = (subTotal || 0) + ppn - (discount || 0) - (prePaid || 0);
+    const ppn = Math.round((subTotal || 0) * 0.11)
+    const grandTotal = (subTotal || 0) + ppn - (discount || 0) - (prePaid || 0)
 
-    state.value.priceSummary.ppn = ppn;
-    state.value.priceSummary.grandTotal = grandTotal;
+    state.value.priceSummary.ppn = ppn
+    state.value.priceSummary.grandTotal = grandTotal
 
-    const spellNumber = angkaTerbilang(Math.max(0, Math.round(grandTotal)));
+    const spellNumber = angkaTerbilang(Math.max(0, Math.round(grandTotal)))
 
     state.value.priceSummary.spellNumber = useChangeCase(
       spellNumber,
-      "capitalCase",
-    ).value;
+      'capitalCase'
+    ).value
   },
-  { immediate: true },
-);
+  { immediate: true }
+)
 
 function addItem() {
   if (!state.value.products) {
-    state.value.products = [];
+    state.value.products = []
   }
-  state.value.products.push(emptyProduct());
+  state.value.products.push(emptyProduct())
 }
 
 function removeItem(index: number) {
-  state.value.products.splice(index, 1);
+  state.value.products.splice(index, 1)
 }
 
 // Keep row totalPrice, grand total, and spell number in sync
@@ -63,22 +63,22 @@ watch(
   () => state.value.products,
   (products) => {
     products?.forEach((p) => {
-      p.totalPrice = (p.qty || 0) * (p.price || 0);
-    });
+      p.totalPrice = (p.qty || 0) * (p.price || 0)
+    })
     state.value.priceSummary.subTotal = (products || []).reduce(
       (sum, p) => sum + (p.totalPrice || 0),
-      0,
-    );
+      0
+    )
   },
-  { deep: true, immediate: true },
-);
+  { deep: true, immediate: true }
+)
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -138,7 +138,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
               :format-options="{
                 style: 'currency',
                 currency: 'IDR',
-                currencyDisplay: 'narrowSymbol',
+                currencyDisplay: 'narrowSymbol'
               }"
               :min="0"
             />
@@ -156,7 +156,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
               :format-options="{
                 style: 'currency',
                 currency: 'IDR',
-                currencyDisplay: 'narrowSymbol',
+                currencyDisplay: 'narrowSymbol'
               }"
               :decrement="false"
               :increment="false"
@@ -201,7 +201,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             :format-options="{
               style: 'currency',
               currency: 'IDR',
-              currencyDisplay: 'narrowSymbol',
+              currencyDisplay: 'narrowSymbol'
             }"
             :decrement="false"
             :increment="false"
@@ -209,7 +209,12 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
           />
         </UFormField>
 
-        <UFormField name="pricePpn" label="PPn" class="w-full" required>
+        <UFormField
+          name="pricePpn"
+          label="PPn"
+          class="w-full"
+          required
+        >
           <UInputNumber
             v-model="state.priceSummary.ppn"
             class="w-full"
@@ -217,7 +222,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             :format-options="{
               style: 'currency',
               currency: 'IDR',
-              currencyDisplay: 'narrowSymbol',
+              currencyDisplay: 'narrowSymbol'
             }"
             :decrement="false"
             :increment="false"
@@ -240,7 +245,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             :format-options="{
               style: 'currency',
               currency: 'IDR',
-              currencyDisplay: 'narrowSymbol',
+              currencyDisplay: 'narrowSymbol'
             }"
             :decrement="false"
             :increment="false"
@@ -260,7 +265,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             :format-options="{
               style: 'currency',
               currency: 'IDR',
-              currencyDisplay: 'narrowSymbol',
+              currencyDisplay: 'narrowSymbol'
             }"
             :decrement="false"
             :increment="false"
@@ -282,7 +287,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
             :format-options="{
               style: 'currency',
               currency: 'IDR',
-              currencyDisplay: 'narrowSymbol',
+              currencyDisplay: 'narrowSymbol'
             }"
             :decrement="false"
             :increment="false"

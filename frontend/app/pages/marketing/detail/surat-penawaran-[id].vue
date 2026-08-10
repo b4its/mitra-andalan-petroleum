@@ -481,7 +481,7 @@ const loadPdf = async () => {
           ]
         },
         ...(details?.informasiTambahan?.filter(Boolean) || []).map(
-          (informasi) => ({
+          informasi => ({
             marginTop: 1,
             marginLeft: 15,
             columns: [

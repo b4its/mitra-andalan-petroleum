@@ -37,7 +37,7 @@ test.describe('Admin Database Konfigurasi', () => {
     const downloadPromise = page.waitForEvent('download', { timeout: 15000 })
     await page.getByRole('button', { name: 'Export SQL' }).click()
     await expect(
-      page.getByRole('dialog').getByText('Export data SQL?'),
+      page.getByRole('dialog').getByText('Export data SQL?')
     ).toBeVisible()
     await page.getByRole('dialog').getByRole('button', { name: 'Ya, Export SQL' }).click()
     const download = await downloadPromise
@@ -51,7 +51,7 @@ test.describe('Admin Database Konfigurasi', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'test.sql',
       mimeType: 'application/sql',
-      buffer: Buffer.from('SELECT 1;'),
+      buffer: Buffer.from('SELECT 1;')
     })
     await expect(importButton).toBeDisabled()
     await page.getByPlaceholder('Ketik IMPORT SQL').fill('IMPORT SQL')
@@ -62,12 +62,12 @@ test.describe('Admin Database Konfigurasi', () => {
     await page.locator('input[type="file"]').setInputFiles({
       name: 'test.sql',
       mimeType: 'application/sql',
-      buffer: Buffer.from('SELECT 1;'),
+      buffer: Buffer.from('SELECT 1;')
     })
     await page.getByPlaceholder('Ketik IMPORT SQL').fill('IMPORT SQL')
     await page.getByRole('button', { name: 'Import SQL' }).click()
     await expect(
-      page.getByRole('dialog').getByText('Import data SQL?'),
+      page.getByRole('dialog').getByText('Import data SQL?')
     ).toBeVisible()
     await page.getByRole('dialog').getByRole('button', { name: 'Ya, Import SQL' }).click()
     await expect(page.getByText('Import selesai', { exact: true })).toBeVisible()

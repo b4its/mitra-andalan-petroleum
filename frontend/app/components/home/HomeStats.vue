@@ -6,14 +6,6 @@ const props = defineProps<{
   range: Range
 }>()
 
-function formatCurrency(value: number): string {
-  return value.toLocaleString('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  })
-}
-
 const { data: stats, pending } = await useAsyncData<Stat[]>('home-stats', async () => {
   const { get } = useApi()
   const res = await get<{ stats: any[] }>('/stats/home')

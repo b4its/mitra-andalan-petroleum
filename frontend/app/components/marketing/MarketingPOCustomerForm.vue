@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { OfferingLetters } from '~/types/marketing'
 import {
   marketingPOCustomerSchema,
   type MarketingPOCustomerState
 } from '~/types/schemas'
 
-const props = defineProps<{
+defineProps<{
   offeringLetters: any
 }>()
 

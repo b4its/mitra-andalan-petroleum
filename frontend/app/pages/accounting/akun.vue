@@ -1,196 +1,196 @@
 <script setup lang="ts">
-import { h, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
-import type { ExportColumn } from "~/composables/useExport";
-import type { AccountingAccount, AccountType } from "~/types/accounting";
+import { h, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import type { ExportColumn } from '~/composables/useExport'
+import type { AccountingAccount, AccountType } from '~/types/accounting'
 
-const { get, post, put } = useApi();
-const toast = useToast();
-const loading = ref(false);
-const search = ref("");
-const debouncedSearch = refDebounced(search, 300);
-const { toCSV, toExcel, toPDF } = useExport();
+const { get, post, put } = useApi()
+const toast = useToast()
+const loading = ref(false)
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
+const { toCSV, toExcel, toPDF } = useExport()
 
-const exportColumns: ExportColumn[] = [
-  { header: "Kode", accessor: (row: AccountingAccount) => row.code },
-  { header: "Nama Akun", accessor: (row: AccountingAccount) => row.name },
+const exportColumns: ExportColumn<AccountingAccount>[] = [
+  { header: 'Kode', accessor: (row: AccountingAccount) => row.code },
+  { header: 'Nama Akun', accessor: (row: AccountingAccount) => row.name },
   {
-    header: "Jenis",
-    accessor: (row: AccountingAccount) => typeLabel(row.type),
+    header: 'Jenis',
+    accessor: (row: AccountingAccount) => typeLabel(row.type)
   },
   {
-    header: "Status",
+    header: 'Status',
     accessor: (row: AccountingAccount) =>
-      row.is_active ? "Aktif" : "Nonaktif",
+      row.is_active ? 'Aktif' : 'Nonaktif'
   },
   {
-    header: "Deskripsi",
-    accessor: (row: AccountingAccount) => row.description ?? "",
-  },
-];
+    header: 'Deskripsi',
+    accessor: (row: AccountingAccount) => row.description ?? ''
+  }
+]
 
-function onExport(format: "excel" | "pdf" | "csv") {
-  const filename = `chart-of-accounts-${new Date().toISOString().slice(0, 10)}`;
-  if (format === "excel")
-    toExcel(filename, "Chart of Accounts", exportColumns, accounts.value);
-  else if (format === "pdf")
-    toPDF(filename, "Chart of Accounts", exportColumns, accounts.value, {
-      subtitle: "Daftar akun untuk jurnal umum",
-    });
-  else toCSV(filename, exportColumns, accounts.value);
+function onExport(format: 'excel' | 'pdf' | 'csv') {
+  const filename = `chart-of-accounts-${new Date().toISOString().slice(0, 10)}`
+  if (format === 'excel')
+    toExcel(filename, 'Chart of Accounts', exportColumns, accounts.value)
+  else if (format === 'pdf')
+    toPDF(filename, 'Chart of Accounts', exportColumns, accounts.value, {
+      subtitle: 'Daftar akun untuk jurnal umum'
+    })
+  else toCSV(filename, exportColumns, accounts.value)
 }
 
 const { data: accounts, refresh, pending } = await useAsyncData(
-  "accounting-accounts",
+  'accounting-accounts',
   async () => {
     const params: Record<string, string | number | boolean> = {
-      include_inactive: true,
-    };
-    if (debouncedSearch.value) params.search = debouncedSearch.value;
-    const res = await get<AccountingAccount[]>("/accounting/accounts", params);
-    return res;
+      include_inactive: true
+    }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const res = await get<AccountingAccount[]>('/accounting/accounts', params)
+    return res
   },
-  { default: () => [], watch: [debouncedSearch], server: false },
-);
+  { default: () => [], watch: [debouncedSearch], server: false }
+)
 
-const typeOptions: { label: string; value: AccountType; color: string }[] = [
-  { label: "Aset", value: "asset", color: "info" },
-  { label: "Kewajiban", value: "liability", color: "warning" },
-  { label: "Ekuitas", value: "equity", color: "primary" },
-  { label: "Pendapatan", value: "revenue", color: "success" },
-  { label: "Beban", value: "expense", color: "error" },
-];
+const typeOptions: { label: string, value: AccountType, color: string }[] = [
+  { label: 'Aset', value: 'asset', color: 'info' },
+  { label: 'Kewajiban', value: 'liability', color: 'warning' },
+  { label: 'Ekuitas', value: 'equity', color: 'primary' },
+  { label: 'Pendapatan', value: 'revenue', color: 'success' },
+  { label: 'Beban', value: 'expense', color: 'error' }
+]
 
 const typeLabel = (type: string) =>
-  typeOptions.find((o) => o.value === type)?.label ?? type;
+  typeOptions.find(o => o.value === type)?.label ?? type
 const typeColor = (type: string) =>
-  typeOptions.find((o) => o.value === type)?.color ?? "primary";
+  typeOptions.find(o => o.value === type)?.color ?? 'primary'
 
 const columns: TableColumn<AccountingAccount>[] = [
   {
-    accessorKey: "code",
-    header: "Kode",
-    cell: ({ row }) => `${row.getValue("code")}`,
+    accessorKey: 'code',
+    header: 'Kode',
+    cell: ({ row }) => `${row.getValue('code')}`
   },
   {
-    accessorKey: "name",
-    header: "Nama Akun",
-    cell: ({ row }) => `${row.getValue("name")}`,
+    accessorKey: 'name',
+    header: 'Nama Akun',
+    cell: ({ row }) => `${row.getValue('name')}`
   },
   {
-    accessorKey: "type",
-    header: "Jenis",
+    accessorKey: 'type',
+    header: 'Jenis',
     meta: {
-      class: { th: "text-center", td: "text-center" },
+      class: { th: 'text-center', td: 'text-center' }
     },
     cell: ({ row }) => {
-      const type = row.getValue("type") as AccountType;
+      const type = row.getValue('type') as AccountType
       return h(
-        resolveComponent("UBadge"),
-        { variant: "soft", color: typeColor(type), class: "capitalize" },
-        () => typeLabel(type),
-      );
-    },
+        resolveComponent('UBadge'),
+        { variant: 'soft', color: typeColor(type), class: 'capitalize' },
+        () => typeLabel(type)
+      )
+    }
   },
   {
-    accessorKey: "is_active",
-    header: "Status",
+    accessorKey: 'is_active',
+    header: 'Status',
     meta: {
-      class: { th: "text-center", td: "text-center" },
+      class: { th: 'text-center', td: 'text-center' }
     },
     cell: ({ row }) => {
-      const active = row.getValue("is_active") as boolean;
+      const active = row.getValue('is_active') as boolean
       return h(
-        resolveComponent("UBadge"),
-        { variant: "soft", color: active ? "success" : "neutral" },
-        () => (active ? "Aktif" : "Nonaktif"),
-      );
-    },
+        resolveComponent('UBadge'),
+        { variant: 'soft', color: active ? 'success' : 'neutral' },
+        () => (active ? 'Aktif' : 'Nonaktif')
+      )
+    }
   },
   {
-    id: "actions",
-    header: "Aksi",
-  },
-];
+    id: 'actions',
+    header: 'Aksi'
+  }
+]
 
 // ── Form ──────────────────────────────────────────────────────
 
-const modalOpen = ref(false);
-const editingId = ref<string | null>(null);
+const modalOpen = ref(false)
+const editingId = ref<string | null>(null)
 const form = reactive({
-  code: "",
-  name: "",
-  type: "asset" as AccountType,
-  description: "",
-  is_active: true,
-});
+  code: '',
+  name: '',
+  type: 'asset' as AccountType,
+  description: '',
+  is_active: true
+})
 
 function openCreate() {
-  editingId.value = null;
-  form.code = "";
-  form.name = "";
-  form.type = "asset";
-  form.description = "";
-  form.is_active = true;
-  modalOpen.value = true;
+  editingId.value = null
+  form.code = ''
+  form.name = ''
+  form.type = 'asset'
+  form.description = ''
+  form.is_active = true
+  modalOpen.value = true
 }
 
 function openEdit(account: AccountingAccount) {
-  editingId.value = account.id;
-  form.code = account.code;
-  form.name = account.name;
-  form.type = account.type;
-  form.description = account.description ?? "";
-  form.is_active = account.is_active;
-  modalOpen.value = true;
+  editingId.value = account.id
+  form.code = account.code
+  form.name = account.name
+  form.type = account.type
+  form.description = account.description ?? ''
+  form.is_active = account.is_active
+  modalOpen.value = true
 }
 
 async function onSubmit() {
   try {
-    if (loading.value) return;
-    loading.value = true;
+    if (loading.value) return
+    loading.value = true
 
     const body = {
       code: form.code.trim(),
       name: form.name.trim(),
       type: form.type,
       description: form.description.trim() || null,
-      is_active: form.is_active,
-    };
-
-    if (editingId.value) {
-      await put(`/accounting/accounts/${editingId.value}`, body);
-      toast.add({
-        title: "Berhasil",
-        description: "Akun berhasil diperbarui",
-        icon: "i-lucide-check-circle",
-        color: "success",
-      });
-    } else {
-      await post("/accounting/accounts", body);
-      toast.add({
-        title: "Berhasil",
-        description: "Akun berhasil dibuat",
-        icon: "i-lucide-check-circle",
-        color: "success",
-      });
+      is_active: form.is_active
     }
 
-    modalOpen.value = false;
-    refresh();
+    if (editingId.value) {
+      await put(`/accounting/accounts/${editingId.value}`, body)
+      toast.add({
+        title: 'Berhasil',
+        description: 'Akun berhasil diperbarui',
+        icon: 'i-lucide-check-circle',
+        color: 'success'
+      })
+    } else {
+      await post('/accounting/accounts', body)
+      toast.add({
+        title: 'Berhasil',
+        description: 'Akun berhasil dibuat',
+        icon: 'i-lucide-check-circle',
+        color: 'success'
+      })
+    }
+
+    modalOpen.value = false
+    refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err instanceof Error ? err.message : "Terjadi kesalahan",
-      icon: "i-lucide-alert-triangle",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Terjadi kesalahan',
+      icon: 'i-lucide-alert-triangle',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-definePageMeta({ layout: "accounting" });
+definePageMeta({ layout: 'accounting' })
 </script>
 
 <template>
@@ -202,7 +202,9 @@ definePageMeta({ layout: "accounting" });
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Chart of Accounts</p>
+            <p class="text-base font-semibold">
+              Chart of Accounts
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Daftar akun untuk jurnal umum
             </p>
@@ -232,18 +234,18 @@ definePageMeta({ layout: "accounting" });
                   {
                     label: 'Export to Excel',
                     icon: 'i-lucide-file-spreadsheet',
-                    onSelect: () => onExport('excel'),
+                    onSelect: () => onExport('excel')
                   },
                   {
                     label: 'Export to PDF',
                     icon: 'i-lucide-file-text',
-                    onSelect: () => onExport('pdf'),
+                    onSelect: () => onExport('pdf')
                   },
                   {
                     label: 'Export to CSV',
                     icon: 'i-lucide-file-down',
-                    onSelect: () => onExport('csv'),
-                  },
+                    onSelect: () => onExport('csv')
+                  }
                 ]"
               >
                 <UButton
@@ -270,7 +272,7 @@ definePageMeta({ layout: "accounting" });
                 thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
                 tbody: '[&>tr]:last:[&>td]:border-b-0',
                 th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-                td: 'border-b border-default',
+                td: 'border-b border-default'
               }"
             >
               <template #actions-cell="{ row }">

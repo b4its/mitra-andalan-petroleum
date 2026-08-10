@@ -197,9 +197,9 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.departureTime)"
-            @update:model-value="state.transportInformation.timeInformation.departureTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
+            @update:model-value="state.transportInformation.timeInformation.departureTime = fromTime($event)"
           />
         </UFormField>
 
@@ -211,9 +211,9 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.arrivalTime)"
-            @update:model-value="state.transportInformation.timeInformation.arrivalTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
+            @update:model-value="state.transportInformation.timeInformation.arrivalTime = fromTime($event)"
           />
         </UFormField>
       </div>
@@ -227,9 +227,9 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.unloadingTime)"
-            @update:model-value="state.transportInformation.timeInformation.unloadingTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
+            @update:model-value="state.transportInformation.timeInformation.unloadingTime = fromTime($event)"
           />
         </UFormField>
 
@@ -241,9 +241,9 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.depotArrivalTime)"
-            @update:model-value="state.transportInformation.timeInformation.depotArrivalTime = fromTime($event)"
             class="w-full justify-center"
             :hour-cycle="24"
+            @update:model-value="state.transportInformation.timeInformation.depotArrivalTime = fromTime($event)"
           />
         </UFormField>
       </div>

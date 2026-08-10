@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { Customer } from '~/types/marketing'
 import {
   marketingOLHeaderSchema,
   type MarketingOLHeaderState
@@ -15,13 +14,6 @@ const emit = defineEmits<{
   submit: []
   previous: []
 }>()
-
-const options = {
-  mask: '###/AAA/AA-##/##',
-  tokens: {
-    A: { pattern: /[a-zA-Z]/, transform: (chr: string) => chr.toUpperCase() }
-  }
-}
 
 const state = defineModel<MarketingOLHeaderState>({ required: true })
 

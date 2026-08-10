@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { VisXYContainer, VisLine, VisAxis, VisArea, VisCrosshair, VisTooltip } from '@unovis/vue'
 import type { Period, Range } from '~/types'
 
@@ -15,29 +15,42 @@ type DataRecord = {
   amount: number
 }
 
+interface RevenuePoint {
+  date: string
+  label: string
+  amount: number
+}
+
 const { width } = useElementSize(cardRef)
+const { get } = useApi()
 
 const data = ref<DataRecord[]>([])
 
-watch([() => props.period, () => props.range], () => {
-  const dates = ({
-    daily: eachDayOfInterval,
-    weekly: eachWeekOfInterval,
-    monthly: eachMonthOfInterval
-  } as Record<Period, typeof eachDayOfInterval>)[props.period](props.range)
+async function loadRevenue() {
+  const params = new URLSearchParams({
+    period: props.period,
+    date_from: props.range.start.toISOString(),
+    date_to: props.range.end.toISOString()
+  })
+  try {
+    const res = await get<{ points: RevenuePoint[] }>(`/stats/revenue?${params.toString()}`)
+    data.value = (res?.points ?? []).map(p => ({
+      date: parseISO(p.date),
+      amount: p.amount
+    }))
+  } catch {
+    data.value = []
+  }
+}
 
-  const min = 1000
-  const max = 10000
-
-  data.value = dates.map(date => ({ date, amount: Math.floor(Math.random() * (max - min + 1)) + min }))
-}, { immediate: true })
+watch([() => props.period, () => props.range], loadRevenue, { immediate: true })
 
 const x = (_: DataRecord, i: number) => i
 const y = (d: DataRecord) => d.amount
 
 const total = computed(() => data.value.reduce((acc: number, { amount }) => acc + amount, 0))
 
-const formatNumber = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format
+const formatNumber = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format
 
 const formatDate = (date: Date): string => {
   return ({

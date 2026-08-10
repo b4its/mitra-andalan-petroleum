@@ -1,132 +1,132 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from "@tanstack/vue-table";
-import { h } from "vue";
-import type { TableColumn } from "@nuxt/ui";
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { h } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
 
-definePageMeta({ layout: "admin" });
+definePageMeta({ layout: 'admin' })
 
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-const table = useTemplateRef("table");
-const columnPinning = ref({ right: ["actions"] });
-const toast = useToast();
-const { get, put, post, del } = useApi();
+const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
+const table = useTemplateRef('table')
+const columnPinning = ref({ right: ['actions'] })
+const toast = useToast()
+const { get, put, post, del } = useApi()
 
-const search = ref("");
-const debouncedSearch = refDebounced(search, 300);
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 interface DeliveryOrderRow {
-  id: string;
-  do_number: string;
-  customer_id: string;
-  customer_name: string;
-  po_number: string | null;
-  transport_name: string | null;
-  fuel_total: number;
-  status: string;
-  status_rilis_dana: boolean;
-  rilis_dana_at: string | null;
-  status_ready_order: boolean;
-  ready_order_at: string | null;
-  status_selesai_dikirim: boolean;
-  selesai_dikirim_at: string | null;
-  status_lunas_ongkir: boolean;
-  lunas_ongkir_at: string | null;
+  id: string
+  do_number: string
+  customer_id: string
+  customer_name: string
+  po_number: string | null
+  transport_name: string | null
+  fuel_total: number
+  status: string
+  status_rilis_dana: boolean
+  rilis_dana_at: string | null
+  status_ready_order: boolean
+  ready_order_at: string | null
+  status_selesai_dikirim: boolean
+  selesai_dikirim_at: string | null
+  status_lunas_ongkir: boolean
+  lunas_ongkir_at: string | null
 }
 
 interface CustomerOption {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 const { data: dos, refresh, pending } = await useAsyncData(
-  "admin-delivery-orders",
+  'admin-delivery-orders',
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 100 };
-    if (debouncedSearch.value) params.search = debouncedSearch.value;
+    const params: Record<string, string | number> = { page: 1, page_size: 100 }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
     const res = await get<{ items: DeliveryOrderRow[] }>(
-      "/delivery-orders",
-      params,
-    );
-    return res.items || [];
+      '/delivery-orders',
+      params
+    )
+    return res.items || []
   },
-  { default: () => [], watch: [debouncedSearch], server: false },
-);
+  { default: () => [], watch: [debouncedSearch], server: false }
+)
 
 const { data: customers, pending: pendingCustomers } = await useAsyncData(
-  "admin-customers-options",
-  () => get<CustomerOption[]>("/customers"),
-  { default: () => [], server: false },
-);
+  'admin-customers-options',
+  () => get<CustomerOption[]>('/customers'),
+  { default: () => [], server: false }
+)
 const customerItems = computed(() =>
-  customers.value.map((c: CustomerOption) => ({ label: c.name, value: c.id })),
-);
+  customers.value.map((c: CustomerOption) => ({ label: c.name, value: c.id }))
+)
 
 const statusLabel: Record<string, string> = {
-  created: "Dibuat",
-  document_returned: "Dokumen Kembali",
-};
+  created: 'Dibuat',
+  document_returned: 'Dokumen Kembali'
+}
 const statusColor: Record<string, string> = {
-  created: "info",
-  document_returned: "success",
-};
+  created: 'info',
+  document_returned: 'success'
+}
 
 function statusBadge(
   done: boolean,
   label: string,
-  at: string | null | undefined,
+  at: string | null | undefined
 ) {
-  return h("div", { class: "flex flex-col gap-0.5" }, [
+  return h('div', { class: 'flex flex-col gap-0.5' }, [
     h(
       UBadge,
       {
-        variant: "subtle",
-        color: done ? "success" : "neutral",
-        class: "text-xs",
+        variant: 'subtle',
+        color: done ? 'success' : 'neutral',
+        class: 'text-xs'
       },
-      () => (done ? label : "-"),
+      () => (done ? label : '-')
     ),
     done && at
-      ? h("span", { class: "text-[10px] text-muted" }, formatDate(at))
-      : null,
-  ]);
+      ? h('span', { class: 'text-[10px] text-muted' }, formatDate(at))
+      : null
+  ])
 }
 
 // ── Modal detail ─────────────────────────────────────────────
-const detailOpen = ref(false);
-const detailId = ref<string | null>(null);
+const detailOpen = ref(false)
+const detailId = ref<string | null>(null)
 function openDetail(id: string) {
-  detailId.value = id;
-  detailOpen.value = true;
+  detailId.value = id
+  detailOpen.value = true
 }
 
 // ── Modal edit ───────────────────────────────────────────────
-const editOpen = ref(false);
-const editTarget = ref<DeliveryOrderRow | null>(null);
-const editLoading = ref(false);
+const editOpen = ref(false)
+const editTarget = ref<DeliveryOrderRow | null>(null)
+const editLoading = ref(false)
 const form = reactive({
-  do_number: "",
-  customer_id: "",
-  po_number: "",
-  transport_name: "",
+  do_number: '',
+  customer_id: '',
+  po_number: '',
+  transport_name: '',
   fuel_total: 0,
-  status: "created",
-});
+  status: 'created'
+})
 
 function openEdit(row: DeliveryOrderRow) {
-  editTarget.value = row;
-  form.do_number = row.do_number;
-  form.customer_id = row.customer_id;
-  form.po_number = row.po_number ?? "";
-  form.transport_name = row.transport_name ?? "";
-  form.fuel_total = row.fuel_total ?? 0;
-  form.status = row.status ?? "created";
-  editOpen.value = true;
+  editTarget.value = row
+  form.do_number = row.do_number
+  form.customer_id = row.customer_id
+  form.po_number = row.po_number ?? ''
+  form.transport_name = row.transport_name ?? ''
+  form.fuel_total = row.fuel_total ?? 0
+  form.status = row.status ?? 'created'
+  editOpen.value = true
 }
 
 async function submitEdit() {
-  if (editLoading.value || !editTarget.value) return;
-  editLoading.value = true;
+  if (editLoading.value || !editTarget.value) return
+  editLoading.value = true
   try {
     await put(`/delivery-orders/${editTarget.value.id}`, {
       do_number: form.do_number.trim(),
@@ -134,206 +134,206 @@ async function submitEdit() {
       po_number: form.po_number.trim() || null,
       transport_name: form.transport_name.trim() || null,
       fuel_total: Number(form.fuel_total) || 0,
-      status: form.status,
-    });
+      status: form.status
+    })
     toast.add({
-      title: "Berhasil",
-      description: "Delivery order berhasil diperbarui",
-      icon: "i-lucide-check-circle",
-      color: "success",
-    });
-    editOpen.value = false;
-    refresh();
+      title: 'Berhasil',
+      description: 'Delivery order berhasil diperbarui',
+      icon: 'i-lucide-check-circle',
+      color: 'success'
+    })
+    editOpen.value = false
+    refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
+      title: 'Gagal',
       description:
-        err instanceof Error ? err.message : "Gagal memperbarui delivery order",
-      icon: "i-lucide-alert-triangle",
-      color: "error",
-    });
+        err instanceof Error ? err.message : 'Gagal memperbarui delivery order',
+      icon: 'i-lucide-alert-triangle',
+      color: 'error'
+    })
   } finally {
-    editLoading.value = false;
+    editLoading.value = false
   }
 }
 
 // ── Modal Rilis Dana ──────────────────────────────────────────
-const rilisDanaOpen = ref(false);
-const rilisDanaTarget = ref<DeliveryOrderRow | null>(null);
-const rilisDanaLoading = ref(false);
+const rilisDanaOpen = ref(false)
+const rilisDanaTarget = ref<DeliveryOrderRow | null>(null)
+const rilisDanaLoading = ref(false)
 
 function openRilisDana(row: DeliveryOrderRow) {
-  rilisDanaTarget.value = row;
-  rilisDanaOpen.value = true;
+  rilisDanaTarget.value = row
+  rilisDanaOpen.value = true
 }
 
 async function confirmRilisDana() {
-  if (rilisDanaLoading.value || !rilisDanaTarget.value) return;
-  rilisDanaLoading.value = true;
+  if (rilisDanaLoading.value || !rilisDanaTarget.value) return
+  rilisDanaLoading.value = true
   try {
-    await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {});
+    await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {})
     toast.add({
-      title: "Berhasil",
-      description: "Dana telah dirilis. DO tersedia di Operations.",
-      color: "success",
-    });
-    rilisDanaOpen.value = false;
-    rilisDanaTarget.value = null;
-    refresh();
+      title: 'Berhasil',
+      description: 'Dana telah dirilis. DO tersedia di Operations.',
+      color: 'success'
+    })
+    rilisDanaOpen.value = false
+    rilisDanaTarget.value = null
+    refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err instanceof Error ? err.message : "Gagal merilis dana.",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Gagal merilis dana.',
+      color: 'error'
+    })
   } finally {
-    rilisDanaLoading.value = false;
+    rilisDanaLoading.value = false
   }
 }
 
 // ── Modal Lunas Ongkir ────────────────────────────────────────
-const lunasOngkirOpen = ref(false);
-const lunasOngkirTarget = ref<DeliveryOrderRow | null>(null);
-const lunasOngkirLoading = ref(false);
+const lunasOngkirOpen = ref(false)
+const lunasOngkirTarget = ref<DeliveryOrderRow | null>(null)
+const lunasOngkirLoading = ref(false)
 
 function openLunasOngkir(row: DeliveryOrderRow) {
-  lunasOngkirTarget.value = row;
-  lunasOngkirOpen.value = true;
+  lunasOngkirTarget.value = row
+  lunasOngkirOpen.value = true
 }
 
 async function confirmLunasOngkir() {
-  if (lunasOngkirLoading.value || !lunasOngkirTarget.value) return;
-  lunasOngkirLoading.value = true;
+  if (lunasOngkirLoading.value || !lunasOngkirTarget.value) return
+  lunasOngkirLoading.value = true
   try {
     await post(
       `/delivery-orders/${lunasOngkirTarget.value.id}/lunas-ongkir`,
-      {},
-    );
+      {}
+    )
     toast.add({
-      title: "Berhasil",
-      description: "Ongkir telah dilunasi.",
-      color: "success",
-    });
-    lunasOngkirOpen.value = false;
-    lunasOngkirTarget.value = null;
-    refresh();
+      title: 'Berhasil',
+      description: 'Ongkir telah dilunasi.',
+      color: 'success'
+    })
+    lunasOngkirOpen.value = false
+    lunasOngkirTarget.value = null
+    refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
+      title: 'Gagal',
       description:
-        err instanceof Error ? err.message : "Gagal melunasi ongkir.",
-      color: "error",
-    });
+        err instanceof Error ? err.message : 'Gagal melunasi ongkir.',
+      color: 'error'
+    })
   } finally {
-    lunasOngkirLoading.value = false;
+    lunasOngkirLoading.value = false
   }
 }
 
 // ── Modal hapus ──────────────────────────────────────────────
-const deleteOpen = ref(false);
-const deleteTarget = ref<DeliveryOrderRow | null>(null);
-const deleteLoading = ref(false);
+const deleteOpen = ref(false)
+const deleteTarget = ref<DeliveryOrderRow | null>(null)
+const deleteLoading = ref(false)
 
 function openDelete(row: DeliveryOrderRow) {
-  deleteTarget.value = row;
-  deleteOpen.value = true;
+  deleteTarget.value = row
+  deleteOpen.value = true
 }
 
 async function confirmDelete() {
-  if (deleteLoading.value || !deleteTarget.value) return;
-  deleteLoading.value = true;
+  if (deleteLoading.value || !deleteTarget.value) return
+  deleteLoading.value = true
   try {
-    await del(`/delivery-orders/${deleteTarget.value.id}`);
+    await del(`/delivery-orders/${deleteTarget.value.id}`)
     toast.add({
-      title: "Berhasil",
-      description: "Delivery order berhasil dihapus",
-      icon: "i-lucide-check-circle",
-      color: "success",
-    });
-    deleteOpen.value = false;
-    deleteTarget.value = null;
-    refresh();
+      title: 'Berhasil',
+      description: 'Delivery order berhasil dihapus',
+      icon: 'i-lucide-check-circle',
+      color: 'success'
+    })
+    deleteOpen.value = false
+    deleteTarget.value = null
+    refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
+      title: 'Gagal',
       description:
-        err instanceof Error ? err.message : "Gagal menghapus delivery order",
-      icon: "i-lucide-alert-triangle",
-      color: "error",
-    });
+        err instanceof Error ? err.message : 'Gagal menghapus delivery order',
+      icon: 'i-lucide-alert-triangle',
+      color: 'error'
+    })
   } finally {
-    deleteLoading.value = false;
+    deleteLoading.value = false
   }
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 });
+const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
 const columns: TableColumn<DeliveryOrderRow>[] = [
-  { accessorKey: "do_number", header: "Nomor DO" },
-  { accessorKey: "customer_name", header: "Customer" },
-  { accessorKey: "po_number", header: "Nomor PO" },
-  { accessorKey: "transport_name", header: "Transportir" },
+  { accessorKey: 'do_number', header: 'Nomor DO' },
+  { accessorKey: 'customer_name', header: 'Customer' },
+  { accessorKey: 'po_number', header: 'Nomor PO' },
+  { accessorKey: 'transport_name', header: 'Transportir' },
   {
-    accessorKey: "fuel_total",
-    header: "Volume (L)",
-    cell: ({ row }) => formatNumber(row.original.fuel_total ?? 0),
+    accessorKey: 'fuel_total',
+    header: 'Volume (L)',
+    cell: ({ row }) => formatNumber(row.original.fuel_total ?? 0)
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ row }) =>
       h(
         UBadge,
         {
-          variant: "subtle",
-          color: statusColor[row.original.status] ?? "neutral",
-          class: "text-xs",
+          variant: 'subtle',
+          color: statusColor[row.original.status] ?? 'neutral',
+          class: 'text-xs'
         },
-        () => statusLabel[row.original.status] ?? row.original.status,
-      ),
+        () => statusLabel[row.original.status] ?? row.original.status
+      )
   },
   {
-    accessorKey: "status_rilis_dana",
-    header: "Rilis Dana",
+    accessorKey: 'status_rilis_dana',
+    header: 'Rilis Dana',
     cell: ({ row }) =>
       statusBadge(
         row.original.status_rilis_dana,
-        "Dirilis",
-        row.original.rilis_dana_at,
-      ),
+        'Dirilis',
+        row.original.rilis_dana_at
+      )
   },
   {
-    accessorKey: "status_ready_order",
-    header: "Siap Kirim",
+    accessorKey: 'status_ready_order',
+    header: 'Siap Kirim',
     cell: ({ row }) =>
       statusBadge(
         row.original.status_ready_order,
-        "Siap",
-        row.original.ready_order_at,
-      ),
+        'Siap',
+        row.original.ready_order_at
+      )
   },
   {
-    accessorKey: "status_selesai_dikirim",
-    header: "Selesai Kirim",
+    accessorKey: 'status_selesai_dikirim',
+    header: 'Selesai Kirim',
     cell: ({ row }) =>
       statusBadge(
         row.original.status_selesai_dikirim,
-        "Selesai",
-        row.original.selesai_dikirim_at,
-      ),
+        'Selesai',
+        row.original.selesai_dikirim_at
+      )
   },
   {
-    accessorKey: "status_lunas_ongkir",
-    header: "Lunas Ongkir",
+    accessorKey: 'status_lunas_ongkir',
+    header: 'Lunas Ongkir',
     cell: ({ row }) =>
       statusBadge(
         row.original.status_lunas_ongkir,
-        "Lunas",
-        row.original.lunas_ongkir_at,
-      ),
+        'Lunas',
+        row.original.lunas_ongkir_at
+      )
   },
-  { id: "actions", header: "Aksi", size: 300 },
-];
+  { id: 'actions', header: 'Aksi', size: 300 }
+]
 </script>
 
 <template>
@@ -381,10 +381,10 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
               thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
               tbody: '[&>tr]:last:[&>td]:border-b-0',
               th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-              td: 'border-b border-default',
+              td: 'border-b border-default'
             }"
             :pagination-options="{
-              getPaginationRowModel: getPaginationRowModel(),
+              getPaginationRowModel: getPaginationRowModel()
             }"
           >
             <template #actions-cell="{ row }">
@@ -405,8 +405,8 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
                   <!-- Lunasi Ongkir: muncul setelah siap dikirim (ready_order=true) dan belum lunas -->
                   <UButton
                     v-if="
-                      row.original.status_ready_order &&
-                      !row.original.status_lunas_ongkir
+                      row.original.status_ready_order
+                        && !row.original.status_lunas_ongkir
                     "
                     size="xs"
                     color="warning"
@@ -449,8 +449,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
                     color="error"
                     variant="soft"
                     @click="openDelete(row.original)"
-                  >
-                  </UButton>
+                  />
                 </div>
               </div>
             </template>
@@ -520,7 +519,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
               v-model="form.status"
               :items="[
                 { label: 'Dibuat', value: 'created' },
-                { label: 'Dokumen Kembali', value: 'document_returned' },
+                { label: 'Dokumen Kembali', value: 'document_returned' }
               ]"
               value-key="value"
             />
@@ -554,8 +553,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
         Apakah Anda yakin ingin menghapus Delivery Order
         <span class="font-semibold text-highlighted">{{
           deleteTarget?.do_number
-        }}</span
-        >?
+        }}</span>?
       </p>
       <p class="mt-2 text-xs text-dimmed">
         Tindakan ini juga menghapus dokumen terkait dan tidak dapat dibatalkan.
@@ -591,8 +589,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
         untuk Delivery Order
         <span class="font-semibold text-highlighted">{{
           rilisDanaTarget?.do_number
-        }}</span
-        >?
+        }}</span>?
       </p>
       <p class="mt-2 text-xs text-dimmed">
         Setelah dirilis, DO akan muncul di halaman Operations dan tim dapat
@@ -632,8 +629,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
         untuk Delivery Order
         <span class="font-semibold text-highlighted">{{
           lunasOngkirTarget?.do_number
-        }}</span
-        >?
+        }}</span>?
       </p>
       <p class="mt-2 text-xs text-dimmed">
         Tindakan ini akan menandai pelunasan ongkir dengan waktu saat ini (WITA)

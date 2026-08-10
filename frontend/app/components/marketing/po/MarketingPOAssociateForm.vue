@@ -1,13 +1,12 @@
 <script setup lang="ts">
-// @ts-ignore
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import {
   marketingPOAssociateSchema,
   type MarketingPOAssociateState
 } from '~/types/schemas'
 
-const props = defineProps<{
+defineProps<{
   hasPrevious: boolean | undefined
   receivers: any
 }>()

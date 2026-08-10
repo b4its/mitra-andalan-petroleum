@@ -89,7 +89,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Akuntansi</p>
+            <p class="text-base font-semibold">
+              Akuntansi
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Rekap pemasukan, pengeluaran, dan jurnal umum
             </p>
@@ -124,200 +126,200 @@ definePageMeta({ layout: 'accounting' })
       <div v-else class="p-4 lg:p-6">
         <section class="flex flex-col gap-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <UCard v-for="card in cards" :key="card.title">
-        <div class="flex items-center justify-between gap-2">
-          <div>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">
-              {{ card.title }}
-            </p>
-            <p class="mt-1 text-2xl font-bold">
-              {{ card.value }}
-            </p>
-          </div>
-          <UBadge
-            :color="card.color"
-            variant="soft"
-            :ui="{ base: 'size-10 rounded-full' }"
-          >
-            <UIcon :name="card.icon" class="size-5" />
-          </UBadge>
-        </div>
-      </UCard>
-    </div>
-
-    <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
-      <UCard v-for="card in countCards" :key="card.title">
-        <div class="flex items-center gap-3">
-          <UIcon :name="card.icon" class="size-6 text-primary" />
-          <div>
-            <p class="text-2xl font-bold">
-              {{ card.value }}
-            </p>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">
-              {{ card.title }}
-            </p>
-          </div>
-        </div>
-      </UCard>
-    </div>
-
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <UCard>
-        <template #header>
-          <span class="font-semibold">Jurnal Terbaru</span>
-          <UButton
-            to="/accounting/jurnal-umum"
-            size="sm"
-            variant="ghost"
-            color="primary"
-          >
-            Lihat Semua
-          </UButton>
-        </template>
-
-        <div class="flex flex-col divide-y divide-default">
-          <div
-            v-for="journal in summary?.recent_journals ?? []"
-            :key="journal.id"
-            class="flex items-center justify-between gap-2 py-2"
-          >
-            <div class="min-w-0">
-              <p class="truncate font-medium">
-                {{ journal.description }}
-              </p>
-              <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                {{ journal.entry_number }} · {{ formatDate(journal.entry_date) }}
-              </p>
-            </div>
-            <div class="shrink-0 text-right">
-              <p class="font-semibold">
-                {{ formatCurrency(totalDebit(journal)) }}
-              </p>
-              <p
-                class="text-xs text-neutral-500 dark:text-neutral-400"
-              >
-                {{ journal.lines.length }} baris
-              </p>
-            </div>
+            <UCard v-for="card in cards" :key="card.title">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                    {{ card.title }}
+                  </p>
+                  <p class="mt-1 text-2xl font-bold">
+                    {{ card.value }}
+                  </p>
+                </div>
+                <UBadge
+                  :color="card.color"
+                  variant="soft"
+                  :ui="{ base: 'size-10 rounded-full' }"
+                >
+                  <UIcon :name="card.icon" class="size-5" />
+                </UBadge>
+              </div>
+            </UCard>
           </div>
 
-          <p
-            v-if="!summary?.recent_journals?.length"
-            class="py-6 text-center text-sm text-neutral-500"
-          >
-            Belum ada jurnal
-          </p>
-        </div>
-      </UCard>
+          <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <UCard v-for="card in countCards" :key="card.title">
+              <div class="flex items-center gap-3">
+                <UIcon :name="card.icon" class="size-6 text-primary" />
+                <div>
+                  <p class="text-2xl font-bold">
+                    {{ card.value }}
+                  </p>
+                  <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                    {{ card.title }}
+                  </p>
+                </div>
+              </div>
+            </UCard>
+          </div>
 
-      <UCard>
-        <template #header>
-          <span class="font-semibold">Menu Cepat</span>
-        </template>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <UCard>
+              <template #header>
+                <span class="font-semibold">Jurnal Terbaru</span>
+                <UButton
+                  to="/accounting/jurnal-umum"
+                  size="sm"
+                  variant="ghost"
+                  color="primary"
+                >
+                  Lihat Semua
+                </UButton>
+              </template>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <UButton
-            to="/accounting/jurnal-umum"
-            icon="i-lucide-book-open"
-            block
-            color="neutral"
-            variant="soft"
-          >
-            Jurnal Umum
-          </UButton>
-          <UButton
-            to="/accounting/buku-besar"
-            icon="i-lucide-book-copy"
-            block
-            color="neutral"
-            variant="soft"
-          >
-            Buku Besar
-          </UButton>
-          <UButton
-            to="/accounting/pemasukan"
-            icon="i-lucide-trending-up"
-            block
-            color="success"
-            variant="soft"
-          >
-            Pemasukan
-          </UButton>
-          <UButton
-            to="/accounting/pengeluaran"
-            icon="i-lucide-trending-down"
-            block
-            color="error"
-            variant="soft"
-          >
-            Pengeluaran
-          </UButton>
-          <UButton
-            to="/accounting/akun"
-            icon="i-lucide-list-tree"
-            block
-            color="neutral"
-            variant="soft"
-          >
-            Chart of Accounts
-          </UButton>
-          <UButton
-            to="/accounting/neraca"
-            icon="i-lucide-scale"
-            block
-            color="primary"
-            variant="soft"
-          >
-            Neraca
-          </UButton>
-          <UButton
-            to="/accounting/rekap-cashflow"
-            icon="i-lucide-arrow-left-right"
-            block
-            color="neutral"
-            variant="soft"
-          >
-            Rekap Cashflow
-          </UButton>
-          <UButton
-            to="/accounting/rekap-biaya"
-            icon="i-lucide-receipt"
-            block
-            color="error"
-            variant="soft"
-          >
-            Rekap Biaya
-          </UButton>
-          <UButton
-            to="/accounting/rekap-monitoring"
-            icon="i-lucide-monitor"
-            block
-            color="neutral"
-            variant="soft"
-          >
-            Rekap Monitoring
-          </UButton>
-          <UButton
-            to="/accounting/kas-harian"
-            icon="i-lucide-wallet"
-            block
-            color="neutral"
-            variant="soft"
-          >
-            Kas Harian
-          </UButton>
-          <UButton
-            to="/accounting/rekap-bunga-bank"
-            icon="i-lucide-percent"
-            block
-            color="neutral"
-            variant="soft"
-          >
-            Rekap Bunga Bank
-          </UButton>
-        </div>
-      </UCard>
-    </div>
+              <div class="flex flex-col divide-y divide-default">
+                <div
+                  v-for="journal in summary?.recent_journals ?? []"
+                  :key="journal.id"
+                  class="flex items-center justify-between gap-2 py-2"
+                >
+                  <div class="min-w-0">
+                    <p class="truncate font-medium">
+                      {{ journal.description }}
+                    </p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                      {{ journal.entry_number }} · {{ formatDate(journal.entry_date) }}
+                    </p>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <p class="font-semibold">
+                      {{ formatCurrency(totalDebit(journal)) }}
+                    </p>
+                    <p
+                      class="text-xs text-neutral-500 dark:text-neutral-400"
+                    >
+                      {{ journal.lines.length }} baris
+                    </p>
+                  </div>
+                </div>
+
+                <p
+                  v-if="!summary?.recent_journals?.length"
+                  class="py-6 text-center text-sm text-neutral-500"
+                >
+                  Belum ada jurnal
+                </p>
+              </div>
+            </UCard>
+
+            <UCard>
+              <template #header>
+                <span class="font-semibold">Menu Cepat</span>
+              </template>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <UButton
+                  to="/accounting/jurnal-umum"
+                  icon="i-lucide-book-open"
+                  block
+                  color="neutral"
+                  variant="soft"
+                >
+                  Jurnal Umum
+                </UButton>
+                <UButton
+                  to="/accounting/buku-besar"
+                  icon="i-lucide-book-copy"
+                  block
+                  color="neutral"
+                  variant="soft"
+                >
+                  Buku Besar
+                </UButton>
+                <UButton
+                  to="/accounting/pemasukan"
+                  icon="i-lucide-trending-up"
+                  block
+                  color="success"
+                  variant="soft"
+                >
+                  Pemasukan
+                </UButton>
+                <UButton
+                  to="/accounting/pengeluaran"
+                  icon="i-lucide-trending-down"
+                  block
+                  color="error"
+                  variant="soft"
+                >
+                  Pengeluaran
+                </UButton>
+                <UButton
+                  to="/accounting/akun"
+                  icon="i-lucide-list-tree"
+                  block
+                  color="neutral"
+                  variant="soft"
+                >
+                  Chart of Accounts
+                </UButton>
+                <UButton
+                  to="/accounting/neraca"
+                  icon="i-lucide-scale"
+                  block
+                  color="primary"
+                  variant="soft"
+                >
+                  Neraca
+                </UButton>
+                <UButton
+                  to="/accounting/rekap-cashflow"
+                  icon="i-lucide-arrow-left-right"
+                  block
+                  color="neutral"
+                  variant="soft"
+                >
+                  Rekap Cashflow
+                </UButton>
+                <UButton
+                  to="/accounting/rekap-biaya"
+                  icon="i-lucide-receipt"
+                  block
+                  color="error"
+                  variant="soft"
+                >
+                  Rekap Biaya
+                </UButton>
+                <UButton
+                  to="/accounting/rekap-monitoring"
+                  icon="i-lucide-monitor"
+                  block
+                  color="neutral"
+                  variant="soft"
+                >
+                  Rekap Monitoring
+                </UButton>
+                <UButton
+                  to="/accounting/kas-harian"
+                  icon="i-lucide-wallet"
+                  block
+                  color="neutral"
+                  variant="soft"
+                >
+                  Kas Harian
+                </UButton>
+                <UButton
+                  to="/accounting/rekap-bunga-bank"
+                  icon="i-lucide-percent"
+                  block
+                  color="neutral"
+                  variant="soft"
+                >
+                  Rekap Bunga Bank
+                </UButton>
+              </div>
+            </UCard>
+          </div>
         </section>
       </div>
     </template>

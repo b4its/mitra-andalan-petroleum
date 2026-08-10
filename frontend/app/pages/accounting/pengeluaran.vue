@@ -10,7 +10,7 @@ const { toCSV, toExcel, toPDF } = useExport()
 const dateFrom = ref('')
 const dateTo = ref('')
 
-const exportColumns: ExportColumn[] = [
+const exportColumns: ExportColumn<AccountingIncomeExpenseRow>[] = [
   { header: 'Tanggal', accessor: (row: AccountingIncomeExpenseRow) => formatDate(row.entry_date) },
   { header: 'Nomor Jurnal', accessor: (row: AccountingIncomeExpenseRow) => row.entry_number },
   { header: 'Deskripsi', accessor: (row: AccountingIncomeExpenseRow) => row.description },
@@ -105,7 +105,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Pengeluaran</p>
+            <p class="text-base font-semibold">
+              Pengeluaran
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Mutasi debit pada akun beban
             </p>
@@ -117,84 +119,83 @@ definePageMeta({ layout: 'accounting' })
     <template #body>
       <div class="p-4 lg:p-6">
         <section class="flex flex-col lg:gap-4">
+          <UCard>
+            <div class="flex flex-wrap items-end gap-3">
+              <UFormField label="Dari Tanggal">
+                <UInput v-model="dateFrom" type="date" />
+              </UFormField>
+              <UFormField label="Sampai Tanggal">
+                <UInput v-model="dateTo" type="date" />
+              </UFormField>
+              <UButton
+                icon="i-lucide-search"
+                :loading="pending"
+                @click="() => refresh()"
+              >
+                Tampilkan
+              </UButton>
+              <UDropdownMenu
+                :items="[
+                  { type: 'label', label: 'Export Data' },
+                  { type: 'separator' },
+                  { label: 'Export to Excel', icon: 'i-lucide-file-spreadsheet', onSelect: () => onExport('excel') },
+                  { label: 'Export to PDF', icon: 'i-lucide-file-text', onSelect: () => onExport('pdf') },
+                  { label: 'Export to CSV', icon: 'i-lucide-file-down', onSelect: () => onExport('csv') }
+                ]"
+              >
+                <UButton icon="i-lucide-download" color="neutral" variant="soft">
+                  Export
+                </UButton>
+              </UDropdownMenu>
+            </div>
+          </UCard>
 
-    <UCard>
-      <div class="flex flex-wrap items-end gap-3">
-        <UFormField label="Dari Tanggal">
-          <UInput v-model="dateFrom" type="date" />
-        </UFormField>
-        <UFormField label="Sampai Tanggal">
-          <UInput v-model="dateTo" type="date" />
-        </UFormField>
-        <UButton
-          icon="i-lucide-search"
-          :loading="pending"
-          @click="() => refresh()"
-        >
-          Tampilkan
-        </UButton>
-        <UDropdownMenu
-          :items="[
-            { type: 'label', label: 'Export Data' },
-            { type: 'separator' },
-            { label: 'Export to Excel', icon: 'i-lucide-file-spreadsheet', onSelect: () => onExport('excel') },
-            { label: 'Export to PDF', icon: 'i-lucide-file-text', onSelect: () => onExport('pdf') },
-            { label: 'Export to CSV', icon: 'i-lucide-file-down', onSelect: () => onExport('csv') }
-          ]"
-        >
-          <UButton icon="i-lucide-download" color="neutral" variant="soft">
-            Export
-          </UButton>
-        </UDropdownMenu>
-      </div>
-    </UCard>
+          <div v-if="pending" class="flex flex-col gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <USkeleton v-for="i in 2" :key="i" class="h-24 rounded-lg" />
+            </div>
+            <USkeleton class="h-64 rounded-lg" />
+          </div>
+          <template v-else>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <UCard>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Transaksi
+                </p>
+                <p class="mt-1 text-xl font-bold">
+                  {{ rows.total }} transaksi
+                </p>
+              </UCard>
+              <UCard>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Pengeluaran
+                </p>
+                <p class="mt-1 text-xl font-bold text-error">
+                  {{ formatCurrency(totalAmount) }}
+                </p>
+              </UCard>
+            </div>
 
-    <div v-if="pending" class="flex flex-col gap-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <USkeleton v-for="i in 2" :key="i" class="h-24 rounded-lg" />
-      </div>
-      <USkeleton class="h-64 rounded-lg" />
-    </div>
-    <template v-else>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <UCard>
-        <p class="text-sm text-neutral-500 dark:text-neutral-400">
-          Total Transaksi
-        </p>
-        <p class="mt-1 text-xl font-bold">
-          {{ rows.total }} transaksi
-        </p>
-      </UCard>
-      <UCard>
-        <p class="text-sm text-neutral-500 dark:text-neutral-400">
-          Total Pengeluaran
-        </p>
-        <p class="mt-1 text-xl font-bold text-error">
-          {{ formatCurrency(totalAmount) }}
-        </p>
-      </UCard>
-    </div>
-
-    <UCard>
-      <UTable
-        :data="rows.items"
-        :columns="columns"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default'
-        }"
-      />
-      <p
-        v-if="rows.items.length === 0"
-        class="py-6 text-center text-sm text-neutral-500"
-      >
-        Belum ada data pengeluaran
-      </p>
-    </UCard>
-    </template>
+            <UCard>
+              <UTable
+                :data="rows.items"
+                :columns="columns"
+                :ui="{
+                  base: 'table-fixed border-separate border-spacing-0',
+                  thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+                  tbody: '[&>tr]:last:[&>td]:border-b-0',
+                  th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+                  td: 'border-b border-default'
+                }"
+              />
+              <p
+                v-if="rows.items.length === 0"
+                class="py-6 text-center text-sm text-neutral-500"
+              >
+                Belum ada data pengeluaran
+              </p>
+            </UCard>
+          </template>
         </section>
       </div>
     </template>

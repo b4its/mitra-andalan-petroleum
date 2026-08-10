@@ -16,7 +16,7 @@ const yearOptions = computed(() => {
   return years
 })
 
-const exportColumns: ExportColumn[] = [
+const exportColumns: ExportColumn<MonitoringRow>[] = [
   { header: 'Bulan', accessor: (row: MonitoringRow) => row.bulan },
   { header: 'Invoice', accessor: (row: MonitoringRow) => row.invoice },
   { header: 'Modal Elnusa', accessor: (row: MonitoringRow) => row.modal_elnusa },
@@ -39,7 +39,7 @@ function onExport(format: 'excel' | 'pdf' | 'csv') {
   else toCSV(filename, exportColumns, data.value.rows)
 }
 
-const { data, refresh, pending } = await useAsyncData(
+const { data, pending } = await useAsyncData(
   'accounting-monitoring',
   () => get<MonitoringResponse>('/accounting/monitoring', { year: year.value }),
   { default: () => null, watch: [year], server: false }
@@ -110,7 +110,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Rekap Monitoring</p>
+            <p class="text-base font-semibold">
+              Rekap Monitoring
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Monitoring pendapatan, biaya, dan margin per bulan
             </p>
@@ -140,7 +142,12 @@ definePageMeta({ layout: 'accounting' })
                   { label: 'Export to CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
                 ]"
               >
-                <UButton icon="i-lucide-download" color="neutral" variant="soft" :disabled="!data">
+                <UButton
+                  icon="i-lucide-download"
+                  color="neutral"
+                  variant="soft"
+                  :disabled="!data"
+                >
                   Export
                 </UButton>
               </UDropdownMenu>
@@ -157,20 +164,36 @@ definePageMeta({ layout: 'accounting' })
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <UCard color="success" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Penghasilan</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.total_penghasilan) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Penghasilan
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.total_penghasilan) }}
+                </p>
               </UCard>
               <UCard color="error" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Operasional</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.total_operasional) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Operasional
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.total_operasional) }}
+                </p>
               </UCard>
               <UCard color="primary" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Gross Margin</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.total_gross_margin) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Gross Margin
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.total_gross_margin) }}
+                </p>
               </UCard>
               <UCard color="info" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total OAT</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.total_oat) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total OAT
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.total_oat) }}
+                </p>
               </UCard>
             </div>
 
@@ -192,32 +215,60 @@ definePageMeta({ layout: 'accounting' })
             <UCard color="neutral" variant="subtle">
               <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 text-center">
                 <div>
-                  <p class="text-xs text-muted">Invoice</p>
-                  <p class="font-bold">{{ data.total_invoice }}</p>
+                  <p class="text-xs text-muted">
+                    Invoice
+                  </p>
+                  <p class="font-bold">
+                    {{ data.total_invoice }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-xs text-muted">Modal Elnusa</p>
-                  <p class="font-bold">{{ formatCurrency(data.total_modal) }}</p>
+                  <p class="text-xs text-muted">
+                    Modal Elnusa
+                  </p>
+                  <p class="font-bold">
+                    {{ formatCurrency(data.total_modal) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-xs text-muted">OAT</p>
-                  <p class="font-bold">{{ formatCurrency(data.total_oat) }}</p>
+                  <p class="text-xs text-muted">
+                    OAT
+                  </p>
+                  <p class="font-bold">
+                    {{ formatCurrency(data.total_oat) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-xs text-muted">Gross Margin</p>
-                  <p class="font-bold">{{ formatCurrency(data.total_gross_margin) }}</p>
+                  <p class="text-xs text-muted">
+                    Gross Margin
+                  </p>
+                  <p class="font-bold">
+                    {{ formatCurrency(data.total_gross_margin) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-xs text-muted">Penghasilan</p>
-                  <p class="font-bold">{{ formatCurrency(data.total_penghasilan) }}</p>
+                  <p class="text-xs text-muted">
+                    Penghasilan
+                  </p>
+                  <p class="font-bold">
+                    {{ formatCurrency(data.total_penghasilan) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-xs text-muted">Operasional</p>
-                  <p class="font-bold">{{ formatCurrency(data.total_operasional) }}</p>
+                  <p class="text-xs text-muted">
+                    Operasional
+                  </p>
+                  <p class="font-bold">
+                    {{ formatCurrency(data.total_operasional) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-xs text-muted">Fee Manajemen</p>
-                  <p class="font-bold">{{ formatCurrency(data.total_fee_manajemen) }}</p>
+                  <p class="text-xs text-muted">
+                    Fee Manajemen
+                  </p>
+                  <p class="font-bold">
+                    {{ formatCurrency(data.total_fee_manajemen) }}
+                  </p>
                 </div>
               </div>
             </UCard>

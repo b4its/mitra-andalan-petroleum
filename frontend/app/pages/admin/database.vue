@@ -1,173 +1,173 @@
 <script setup lang="ts">
-definePageMeta({ layout: "admin" });
+definePageMeta({ layout: 'admin' })
 
-const toast = useToast();
-const exporting = ref(false);
-const importing = ref(false);
-const clearing = ref(false);
-const sqlFile = ref<File | null>(null);
-const confirmation = ref("");
-const clearConfirmation = ref("");
-const confirmOpen = ref(false);
-const pendingAction = ref<"export" | "import" | "clear" | null>(null);
+const toast = useToast()
+const exporting = ref(false)
+const importing = ref(false)
+const clearing = ref(false)
+const sqlFile = ref<File | null>(null)
+const confirmation = ref('')
+const clearConfirmation = ref('')
+const confirmOpen = ref(false)
+const pendingAction = ref<'export' | 'import' | 'clear' | null>(null)
 
 const canImport = computed(
-  () => Boolean(sqlFile.value) && confirmation.value === "IMPORT SQL",
-);
+  () => Boolean(sqlFile.value) && confirmation.value === 'IMPORT SQL'
+)
 const canClear = computed(
-  () => clearConfirmation.value === "BERSIHKAN DATABASE",
-);
+  () => clearConfirmation.value === 'BERSIHKAN DATABASE'
+)
 
 function onFileChange(event: Event) {
-  const input = event.target as HTMLInputElement;
-  sqlFile.value = input.files?.[0] ?? null;
+  const input = event.target as HTMLInputElement
+  sqlFile.value = input.files?.[0] ?? null
 }
 
 const confirmContent = computed(() => {
-  if (pendingAction.value === "export") {
+  if (pendingAction.value === 'export') {
     return {
-      title: "Export data SQL?",
-      description: "Seluruh data tabel database akan disimpan ke file .sql.",
-      confirmLabel: "Ya, Export SQL",
-      icon: "i-lucide-download",
-      color: "primary" as const,
-    };
+      title: 'Export data SQL?',
+      description: 'Seluruh data tabel database akan disimpan ke file .sql.',
+      confirmLabel: 'Ya, Export SQL',
+      icon: 'i-lucide-download',
+      color: 'primary' as const
+    }
   }
-  if (pendingAction.value === "import") {
+  if (pendingAction.value === 'import') {
     return {
-      title: "Import data SQL?",
+      title: 'Import data SQL?',
       description:
-        "File SQL yang dipilih akan dijalankan dan dapat mengubah data database.",
-      confirmLabel: "Ya, Import SQL",
-      icon: "i-lucide-upload",
-      color: "error" as const,
-    };
+        'File SQL yang dipilih akan dijalankan dan dapat mengubah data database.',
+      confirmLabel: 'Ya, Import SQL',
+      icon: 'i-lucide-upload',
+      color: 'error' as const
+    }
   }
   return {
-    title: "Bersihkan database?",
+    title: 'Bersihkan database?',
     description:
-      "Seluruh data tabel aplikasi akan dihapus. Aksi ini tidak bisa dibatalkan tanpa backup SQL.",
-    confirmLabel: "Ya, Bersihkan",
-    icon: "i-lucide-trash-2",
-    color: "error" as const,
-  };
-});
+      'Seluruh data tabel aplikasi akan dihapus. Aksi ini tidak bisa dibatalkan tanpa backup SQL.',
+    confirmLabel: 'Ya, Bersihkan',
+    icon: 'i-lucide-trash-2',
+    color: 'error' as const
+  }
+})
 
 const confirming = computed(
-  () => exporting.value || importing.value || clearing.value,
-);
+  () => exporting.value || importing.value || clearing.value
+)
 
-function openConfirm(action: "export" | "import" | "clear") {
-  pendingAction.value = action;
-  confirmOpen.value = true;
+function openConfirm(action: 'export' | 'import' | 'clear') {
+  pendingAction.value = action
+  confirmOpen.value = true
 }
 
 async function runConfirmedAction() {
-  if (pendingAction.value === "export") {
-    await downloadExport();
-  } else if (pendingAction.value === "import") {
-    await importSql();
-  } else if (pendingAction.value === "clear") {
-    await clearDatabase();
+  if (pendingAction.value === 'export') {
+    await downloadExport()
+  } else if (pendingAction.value === 'import') {
+    await importSql()
+  } else if (pendingAction.value === 'clear') {
+    await clearDatabase()
   }
-  confirmOpen.value = false;
-  pendingAction.value = null;
+  confirmOpen.value = false
+  pendingAction.value = null
 }
 
 async function downloadExport() {
-  if (exporting.value) return;
-  exporting.value = true;
+  if (exporting.value) return
+  exporting.value = true
   try {
-    const res = await fetch("/api/v1/admin/database/export");
+    const res = await fetch('/api/v1/admin/database/export')
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || "Gagal export data SQL");
+      const err = await res.json().catch(() => ({ detail: res.statusText }))
+      throw new Error(err.detail || 'Gagal export data SQL')
     }
 
-    const blob = await res.blob();
-    const disposition = res.headers.get("content-disposition") || "";
-    const filename =
-      disposition.match(/filename="?([^";]+)"?/)?.[1] || "mandalan-data.sql";
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+    const blob = await res.blob()
+    const disposition = res.headers.get('content-disposition') || ''
+    const filename
+      = disposition.match(/filename="?([^";]+)"?/)?.[1] || 'mandalan-data.sql'
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
     toast.add({
-      title: "Berhasil",
-      description: "File SQL berhasil diunduh.",
-      color: "success",
-    });
+      title: 'Berhasil',
+      description: 'File SQL berhasil diunduh.',
+      color: 'success'
+    })
   } catch (err: any) {
     toast.add({
-      title: "Error",
-      description: err.message || "Gagal export data SQL.",
-      color: "error",
-    });
+      title: 'Error',
+      description: err.message || 'Gagal export data SQL.',
+      color: 'error'
+    })
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
 }
 
 async function importSql() {
-  if (importing.value || !sqlFile.value || !canImport.value) return;
-  importing.value = true;
+  if (importing.value || !sqlFile.value || !canImport.value) return
+  importing.value = true
   try {
-    const formData = new FormData();
-    formData.append("file", sqlFile.value);
+    const formData = new FormData()
+    formData.append('file', sqlFile.value)
 
-    const res = await fetch("/api/v1/admin/database/import", {
-      method: "POST",
-      body: formData,
-    });
-    const body = await res.json().catch(() => ({}));
+    const res = await fetch('/api/v1/admin/database/import', {
+      method: 'POST',
+      body: formData
+    })
+    const body = await res.json().catch(() => ({}))
     if (!res.ok) {
-      throw new Error(body.detail || "Gagal import data SQL");
+      throw new Error(body.detail || 'Gagal import data SQL')
     }
 
     toast.add({
-      title: "Import selesai",
+      title: 'Import selesai',
       description: `${body.statements ?? 0} statement SQL berhasil dijalankan.`,
-      color: "success",
-    });
-    sqlFile.value = null;
-    confirmation.value = "";
+      color: 'success'
+    })
+    sqlFile.value = null
+    confirmation.value = ''
   } catch (err: any) {
     toast.add({
-      title: "Error",
-      description: err.message || "Gagal import data SQL.",
-      color: "error",
-    });
+      title: 'Error',
+      description: err.message || 'Gagal import data SQL.',
+      color: 'error'
+    })
   } finally {
-    importing.value = false;
+    importing.value = false
   }
 }
 
 async function clearDatabase() {
-  if (clearing.value || !canClear.value) return;
-  clearing.value = true;
+  if (clearing.value || !canClear.value) return
+  clearing.value = true
   try {
-    const res = await fetch("/api/v1/admin/database/clear", { method: "POST" });
-    const body = await res.json().catch(() => ({}));
+    const res = await fetch('/api/v1/admin/database/clear', { method: 'POST' })
+    const body = await res.json().catch(() => ({}))
     if (!res.ok) {
-      throw new Error(body.detail || "Gagal membersihkan database");
+      throw new Error(body.detail || 'Gagal membersihkan database')
     }
 
     toast.add({
-      title: "Database dibersihkan",
+      title: 'Database dibersihkan',
       description: `${body.tables ?? 0} tabel berhasil dikosongkan.`,
-      color: "success",
-    });
-    clearConfirmation.value = "";
+      color: 'success'
+    })
+    clearConfirmation.value = ''
   } catch (err: any) {
     toast.add({
-      title: "Error",
-      description: err.message || "Gagal membersihkan database.",
-      color: "error",
-    });
+      title: 'Error',
+      description: err.message || 'Gagal membersihkan database.',
+      color: 'error'
+    })
   } finally {
-    clearing.value = false;
+    clearing.value = false
   }
 }
 </script>
@@ -198,7 +198,9 @@ async function clearDatabase() {
               <div class="flex items-center gap-3">
                 <UIcon name="i-lucide-download" class="size-5 text-success" />
                 <div>
-                  <h2 class="font-semibold">Export Data SQL</h2>
+                  <h2 class="font-semibold">
+                    Export Data SQL
+                  </h2>
                   <p class="text-sm text-muted">
                     Download seluruh data sebagai file `.sql`.
                   </p>
@@ -227,7 +229,9 @@ async function clearDatabase() {
               <div class="flex items-center gap-3">
                 <UIcon name="i-lucide-upload" class="size-5 text-warning" />
                 <div>
-                  <h2 class="font-semibold">Import Data SQL</h2>
+                  <h2 class="font-semibold">
+                    Import Data SQL
+                  </h2>
                   <p class="text-sm text-muted">
                     Upload file `.sql` untuk restore data.
                   </p>
@@ -242,7 +246,7 @@ async function clearDatabase() {
                   accept=".sql,application/sql,text/sql,text/plain"
                   class="block w-full rounded-md border border-default bg-default px-3 py-2 text-sm"
                   @change="onFileChange"
-                />
+                >
               </UFormField>
 
               <UFormField label="Konfirmasi" required>
@@ -271,7 +275,9 @@ async function clearDatabase() {
             <div class="flex items-center gap-3">
               <UIcon name="i-lucide-trash-2" class="size-5 text-error" />
               <div>
-                <h2 class="font-semibold">Bersihkan Database</h2>
+                <h2 class="font-semibold">
+                  Bersihkan Database
+                </h2>
                 <p class="text-sm text-muted">
                   Kosongkan seluruh tabel database aplikasi.
                 </p>

@@ -31,11 +31,11 @@ async function loginAs(page: Page, role: string) {
 function filterBenignErrors(errors: string[]): string[] {
   return errors.filter(
     e =>
-      !e.includes('favicon') &&
-      !e.includes('favicon.ico') &&
-      !e.includes('Hydration completed but contains mismatches') &&
-      !e.includes('Download the Vue Devtools extension') &&
-      !e.includes('experimental feature')
+      !e.includes('favicon')
+      && !e.includes('favicon.ico')
+      && !e.includes('Hydration completed but contains mismatches')
+      && !e.includes('Download the Vue Devtools extension')
+      && !e.includes('experimental feature')
   )
 }
 

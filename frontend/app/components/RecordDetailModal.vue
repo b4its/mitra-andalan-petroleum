@@ -1,145 +1,188 @@
 <script setup lang="ts">
-type DocType = "ol" | "po" | "do" | "invoice";
+type DocType = 'ol' | 'po' | 'do' | 'invoice'
+
+interface RecordDetail {
+  id: string
+  offering_letter_number: string
+  po_number: string
+  do_number: string
+  invoice_number: string
+  status: string
+  invoice_status: string
+  deadline_status: string
+  type: string
+  customer_name: string
+  supplier_name: string
+  date: string
+  location: string
+  regarding: string
+  receiver: string
+  fuel_total_price: number
+  transport_price: number
+  total: number
+  grand_total: number
+  terms_day: number
+  fuel_total: number
+  transport_name: string
+  status_rilis_dana: boolean
+  rilis_dana_at: string | null
+  status_ready_order: boolean
+  ready_order_at: string | null
+  status_selesai_dikirim: boolean
+  selesai_dikirim_at: string | null
+  status_lunas_ongkir: boolean
+  lunas_ongkir_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+interface RecordUpload {
+  id: string
+  url: string
+  original_filename: string
+  mime_type: string
+  size: number
+}
 
 const props = defineProps<{
-  open: boolean;
-  type: DocType;
-  id: string | null;
-}>();
+  open: boolean
+  type: DocType
+  id: string | null
+}>()
 
-const emit = defineEmits<{ "update:open": [value: boolean] }>();
+const emit = defineEmits<{ 'update:open': [value: boolean] }>()
 
-const { get } = useApi();
+const { get } = useApi()
 
 const endpointMap: Record<DocType, string> = {
-  ol: "/offering-letters",
-  po: "/purchase-orders",
-  do: "/delivery-orders",
-  invoice: "/invoices",
-};
+  ol: '/offering-letters',
+  po: '/purchase-orders',
+  do: '/delivery-orders',
+  invoice: '/invoices'
+}
 
 const titleMap: Record<DocType, string> = {
-  ol: "Detail Surat Penawaran",
-  po: "Detail Purchase Order",
-  do: "Detail Delivery Order",
-  invoice: "Detail Invoice",
-};
+  ol: 'Detail Surat Penawaran',
+  po: 'Detail Purchase Order',
+  do: 'Detail Delivery Order',
+  invoice: 'Detail Invoice'
+}
 
 // ── Fetch record ──────────────────────────────────────────────
 const { data, pending, error } = await useAsyncData(
   () => `record-detail-${props.type}-${props.id}`,
   () => {
-    if (!props.id) return Promise.resolve(null);
-    return get<any>(`${endpointMap[props.type]}/${props.id}`);
+    if (!props.id) return Promise.resolve(null)
+    return get<RecordDetail>(`${endpointMap[props.type]}/${props.id}`)
   },
-  { watch: [() => props.id, () => props.type] },
-);
+  { watch: [() => props.id, () => props.type] }
+)
 
 // ── Fetch files terkait ───────────────────────────────────────
 const { data: uploads, pending: uploadsPending } = await useAsyncData(
   () => `record-uploads-${props.type}-${props.id}`,
   () => {
-    if (!props.id) return Promise.resolve([]);
-    return get<any[]>("/uploads", {
+    if (!props.id) return Promise.resolve([])
+    return get<RecordUpload[]>('/uploads', {
       document_type: props.type,
-      document_id: props.id,
-    });
+      document_id: props.id
+    })
   },
-  { watch: [() => props.id, () => props.type], default: () => [] },
-);
+  { watch: [() => props.id, () => props.type], default: () => [] }
+)
 
 // ── Format helpers ────────────────────────────────────────────
-function fmt(v: any): string {
-  if (v === null || v === undefined || v === "") return "-";
-  return String(v);
+function fmt(v: unknown): string {
+  if (v === null || v === undefined || v === '') return '-'
+  return String(v)
 }
-function fmtCurrency(v: any): string {
-  if (v === null || v === undefined) return "-";
-  return formatCurrency(Number(v));
+function fmtCurrency(v: unknown): string {
+  if (v === null || v === undefined) return '-'
+  return formatCurrency(Number(v))
 }
-function fmtDateTime(v: any): string {
-  if (!v) return "-";
-  const d = new Date(v);
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `${dd}-${mm}-${yyyy}, ${hh}:${min}`;
+function fmtDateTime(v: unknown): string {
+  if (!v) return '-'
+  const d = new Date(v as string | number)
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${dd}-${mm}-${yyyy}, ${hh}:${min}`
 }
 function fmtSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 // ── Status maps ───────────────────────────────────────────────
 const olStatusLabel: Record<string, string> = {
-  created: "Dibuat",
-  under_revision: "Revisi",
-  po_received: "PO Diterima",
-};
-const olStatusColor: Record<string, "info" | "warning" | "success"> = {
-  created: "info",
-  under_revision: "warning",
-  po_received: "success",
-};
+  created: 'Dibuat',
+  under_revision: 'Revisi',
+  po_received: 'PO Diterima'
+}
+const olStatusColor: Record<string, 'info' | 'warning' | 'success'> = {
+  created: 'info',
+  under_revision: 'warning',
+  po_received: 'success'
+}
 const doStatusLabel: Record<string, string> = {
-  created: "Dibuat",
-  document_returned: "Dokumen Kembali",
-};
-const doStatusColor: Record<string, "info" | "success"> = {
-  created: "info",
-  document_returned: "success",
-};
+  created: 'Dibuat',
+  document_returned: 'Dokumen Kembali'
+}
+const doStatusColor: Record<string, 'info' | 'success'> = {
+  created: 'info',
+  document_returned: 'success'
+}
 const invStatusLabel: Record<string, string> = {
-  unpaid: "Belum Lunas",
-  paid: "Lunas",
-  overdue: "Jatuh Tempo",
-};
-const invStatusColor: Record<string, "warning" | "success" | "error"> = {
-  unpaid: "warning",
-  paid: "success",
-  overdue: "error",
-};
+  unpaid: 'Belum Lunas',
+  paid: 'Lunas',
+  overdue: 'Jatuh Tempo'
+}
+const invStatusColor: Record<string, 'warning' | 'success' | 'error'> = {
+  unpaid: 'warning',
+  paid: 'success',
+  overdue: 'error'
+}
 const deadlineLabel: Record<string, string> = {
-  on_time: "Tepat Waktu",
-  due_soon: "Segera",
-  overdue: "Terlewat",
-};
-const deadlineColor: Record<string, "info" | "warning" | "error"> = {
-  on_time: "info",
-  due_soon: "warning",
-  overdue: "error",
-};
+  on_time: 'Tepat Waktu',
+  due_soon: 'Segera',
+  overdue: 'Terlewat'
+}
+const deadlineColor: Record<string, 'info' | 'warning' | 'error'> = {
+  on_time: 'info',
+  due_soon: 'warning',
+  overdue: 'error'
+}
 
 // ── File helpers ──────────────────────────────────────────────
 function fileIcon(mimeType: string): string {
-  if (mimeType.startsWith("image/")) return "i-lucide-image";
-  if (mimeType === "application/pdf") return "i-lucide-file-text";
-  if (mimeType.includes("spreadsheet") || mimeType.includes("excel"))
-    return "i-lucide-table";
-  if (mimeType.includes("word")) return "i-lucide-file-type";
-  return "i-lucide-paperclip";
+  if (mimeType.startsWith('image/')) return 'i-lucide-image'
+  if (mimeType === 'application/pdf') return 'i-lucide-file-text'
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel'))
+    return 'i-lucide-table'
+  if (mimeType.includes('word')) return 'i-lucide-file-type'
+  return 'i-lucide-paperclip'
 }
 
 function fileUrl(url: string): string {
   // backend mengembalikan url seperti /media/folder/filename
   // di dev mode Nuxt proxy /media → backend:8000/media
-  if (url.startsWith("http")) return url;
-  return url; // /media/... sudah cukup, proxied oleh nitro devProxy
+  if (url.startsWith('http')) return url
+  return url // /media/... sudah cukup, proxied oleh nitro devProxy
 }
 
-async function downloadFile(upload: any) {
-  const url = fileUrl(upload.url);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = upload.original_filename;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+async function downloadFile(upload: RecordUpload) {
+  const url = fileUrl(upload.url)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = upload.original_filename
+  a.target = '_blank'
+  a.rel = 'noopener noreferrer'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 }
 </script>
 
@@ -189,38 +232,49 @@ async function downloadFile(upload: any) {
               <UBadge
                 :color="olStatusColor[data.status] ?? 'neutral'"
                 variant="subtle"
-                >{{ olStatusLabel[data.status] ?? data.status }}</UBadge
               >
+                {{ olStatusLabel[data.status] ?? data.status }}
+              </UBadge>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Customer
               </p>
-              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.customer_name) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Tanggal
               </p>
-              <p class="font-medium">{{ fmt(data.date) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.date) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Lokasi
               </p>
-              <p class="font-medium">{{ fmt(data.location) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.location) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Perihal
               </p>
-              <p class="font-medium">{{ fmt(data.regarding) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.regarding) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Penerima
               </p>
-              <p class="font-medium">{{ fmt(data.receiver) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.receiver) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -242,19 +296,25 @@ async function downloadFile(upload: any) {
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Dibuat
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.created_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Diperbarui
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.updated_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 ID
               </p>
-              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+              <p class="font-mono text-xs text-muted truncate">
+                {{ data.id }}
+              </p>
             </div>
           </div>
         </div>
@@ -266,7 +326,9 @@ async function downloadFile(upload: any) {
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor PO
               </p>
-              <p class="font-semibold">{{ fmt(data.po_number) }}</p>
+              <p class="font-semibold">
+                {{ fmt(data.po_number) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -276,26 +338,33 @@ async function downloadFile(upload: any) {
                 :color="data.type === 'customer' ? 'info' : 'warning'"
                 variant="subtle"
                 class="capitalize"
-                >{{ data.type }}</UBadge
               >
+                {{ data.type }}
+              </UBadge>
             </div>
             <div v-if="data.customer_name">
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Customer
               </p>
-              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.customer_name) }}
+              </p>
             </div>
             <div v-if="data.supplier_name">
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Supplier
               </p>
-              <p class="font-medium">{{ fmt(data.supplier_name) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.supplier_name) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Tanggal
               </p>
-              <p class="font-medium">{{ fmt(data.date) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.date) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -309,27 +378,35 @@ async function downloadFile(upload: any) {
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Status
               </p>
-              <UBadge color="neutral" variant="subtle" class="capitalize">{{
-                fmt(data.status)
-              }}</UBadge>
+              <UBadge color="neutral" variant="subtle" class="capitalize">
+                {{
+                  fmt(data.status)
+                }}
+              </UBadge>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Dibuat
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.created_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Diperbarui
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.updated_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 ID
               </p>
-              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+              <p class="font-mono text-xs text-muted truncate">
+                {{ data.id }}
+              </p>
             </div>
           </div>
         </div>
@@ -341,7 +418,9 @@ async function downloadFile(upload: any) {
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor DO
               </p>
-              <p class="font-semibold">{{ fmt(data.do_number) }}</p>
+              <p class="font-semibold">
+                {{ fmt(data.do_number) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -350,26 +429,33 @@ async function downloadFile(upload: any) {
               <UBadge
                 :color="doStatusColor[data.status] ?? 'neutral'"
                 variant="subtle"
-                >{{ doStatusLabel[data.status] ?? data.status }}</UBadge
               >
+                {{ doStatusLabel[data.status] ?? data.status }}
+              </UBadge>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Customer
               </p>
-              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.customer_name) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor PO
               </p>
-              <p class="font-medium">{{ fmt(data.po_number) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.po_number) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Transportir
               </p>
-              <p class="font-medium">{{ fmt(data.transport_name) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.transport_name) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -383,19 +469,25 @@ async function downloadFile(upload: any) {
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Dibuat
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.created_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Diperbarui
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.updated_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 ID
               </p>
-              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+              <p class="font-mono text-xs text-muted truncate">
+                {{ data.id }}
+              </p>
             </div>
           </div>
 
@@ -416,7 +508,9 @@ async function downloadFile(upload: any) {
                       data.status_rilis_dana ? 'text-success' : 'text-muted'
                     "
                   />
-                  <p class="text-xs font-medium">Rilis Dana</p>
+                  <p class="text-xs font-medium">
+                    Rilis Dana
+                  </p>
                   <UBadge
                     :color="data.status_rilis_dana ? 'success' : 'warning'"
                     variant="subtle"
@@ -438,7 +532,9 @@ async function downloadFile(upload: any) {
                       data.status_ready_order ? 'text-info' : 'text-muted'
                     "
                   />
-                  <p class="text-xs font-medium">Siap Kirim</p>
+                  <p class="text-xs font-medium">
+                    Siap Kirim
+                  </p>
                   <UBadge
                     :color="data.status_ready_order ? 'info' : 'neutral'"
                     variant="subtle"
@@ -462,7 +558,9 @@ async function downloadFile(upload: any) {
                         : 'text-muted'
                     "
                   />
-                  <p class="text-xs font-medium">Selesai Dikirim</p>
+                  <p class="text-xs font-medium">
+                    Selesai Dikirim
+                  </p>
                   <UBadge
                     :color="data.status_selesai_dikirim ? 'success' : 'neutral'"
                     variant="subtle"
@@ -487,7 +585,9 @@ async function downloadFile(upload: any) {
                       data.status_lunas_ongkir ? 'text-success' : 'text-muted'
                     "
                   />
-                  <p class="text-xs font-medium">Lunas Ongkir</p>
+                  <p class="text-xs font-medium">
+                    Lunas Ongkir
+                  </p>
                   <UBadge
                     :color="data.status_lunas_ongkir ? 'success' : 'neutral'"
                     variant="subtle"
@@ -511,7 +611,9 @@ async function downloadFile(upload: any) {
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor Invoice
               </p>
-              <p class="font-semibold">{{ fmt(data.invoice_number) }}</p>
+              <p class="font-semibold">
+                {{ fmt(data.invoice_number) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -520,16 +622,19 @@ async function downloadFile(upload: any) {
               <UBadge
                 :color="invStatusColor[data.invoice_status] ?? 'neutral'"
                 variant="subtle"
-                >{{
-                  invStatusLabel[data.invoice_status] ?? data.invoice_status
-                }}</UBadge
               >
+                {{
+                  invStatusLabel[data.invoice_status] ?? data.invoice_status
+                }}
+              </UBadge>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Customer
               </p>
-              <p class="font-medium">{{ fmt(data.customer_name) }}</p>
+              <p class="font-medium">
+                {{ fmt(data.customer_name) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -538,10 +643,11 @@ async function downloadFile(upload: any) {
               <UBadge
                 :color="deadlineColor[data.deadline_status] ?? 'neutral'"
                 variant="subtle"
-                >{{
-                  deadlineLabel[data.deadline_status] ?? data.deadline_status
-                }}</UBadge
               >
+                {{
+                  deadlineLabel[data.deadline_status] ?? data.deadline_status
+                }}
+              </UBadge>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
@@ -555,25 +661,33 @@ async function downloadFile(upload: any) {
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Terms
               </p>
-              <p class="font-medium">{{ fmt(data.terms_day) }} hari</p>
+              <p class="font-medium">
+                {{ fmt(data.terms_day) }} hari
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Dibuat
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.created_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.created_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Diperbarui
               </p>
-              <p class="font-medium">{{ fmtDateTime(data.updated_at) }}</p>
+              <p class="font-medium">
+                {{ fmtDateTime(data.updated_at) }}
+              </p>
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 ID
               </p>
-              <p class="font-mono text-xs text-muted truncate">{{ data.id }}</p>
+              <p class="font-mono text-xs text-muted truncate">
+                {{ data.id }}
+              </p>
             </div>
           </div>
         </div>

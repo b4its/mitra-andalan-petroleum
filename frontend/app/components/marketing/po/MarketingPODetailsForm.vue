@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   marketingPODetailsSchema,
-  type MarketingPODetailsState,
-} from "~/types/schemas";
+  type MarketingPODetailsState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-  offeringLetters: any;
-}>();
+  hasPrevious: boolean | undefined
+  offeringLetters: any
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<MarketingPODetailsState>({ required: true });
+const state = defineModel<MarketingPODetailsState>({ required: true })
 function emptyProduct() {
-  return { name: "", qty: 1, unit: "", price: 0, totalPrice: 0 };
+  return { name: '', qty: 1, unit: '', price: 0, totalPrice: 0 }
 }
 
-const products = computed(() => state.value.products);
+const products = computed(() => state.value.products)
 
 function addItem() {
   if (!state.value.products) {
-    state.value.products = [];
+    state.value.products = []
   }
-  state.value.products.push(emptyProduct());
+  state.value.products.push(emptyProduct())
 }
 
 function removeItem(index: number) {
-  state.value.products.splice(index, 1);
+  state.value.products.splice(index, 1)
 }
 
 // Keep row totalPrice + grand total in sync
@@ -38,22 +38,22 @@ watch(
   () => state.value.products,
   (products) => {
     products?.forEach((p) => {
-      p.totalPrice = (p.qty || 0) * (p.price || 0);
-    });
+      p.totalPrice = (p.qty || 0) * (p.price || 0)
+    })
     state.value.totalProductsPrice = (products || []).reduce(
       (sum, p) => sum + (p.totalPrice || 0),
-      0,
-    );
+      0
+    )
   },
-  { deep: true, immediate: true },
-);
+  { deep: true, immediate: true }
+)
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -83,7 +83,12 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
           />
         </UFormField>
 
-        <UFormField name="po.number" label="Nomor PO" required class="flex-1">
+        <UFormField
+          name="po.number"
+          label="Nomor PO"
+          required
+          class="flex-1"
+        >
           <UInput
             v-model="state.po.number"
             type="text"
@@ -125,16 +130,21 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
           />
         </UFormField>
 
-        <UFormField label="VAT" name="vat" class="w-full" required>
+        <UFormField
+          label="VAT"
+          name="vat"
+          class="w-full"
+          required
+        >
           <UInputNumber
             v-model="state.vat"
             :ui="{
-              root: 'w-full',
+              root: 'w-full'
             }"
             orientation="vertical"
             :step="0.01"
             :format-options="{
-              style: 'percent',
+              style: 'percent'
             }"
           />
         </UFormField>
@@ -164,7 +174,9 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
       <USeparator />
 
       <div class="space-y-3">
-        <p class="font-medium">Daftar Produk</p>
+        <p class="font-medium">
+          Daftar Produk
+        </p>
 
         <div
           v-for="(product, index) in products"
@@ -210,7 +222,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
               :format-options="{
                 style: 'currency',
                 currency: 'IDR',
-                currencyDisplay: 'narrowSymbol',
+                currencyDisplay: 'narrowSymbol'
               }"
               :step="1"
               :min="0"
@@ -231,7 +243,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
               :format-options="{
                 style: 'currency',
                 currency: 'IDR',
-                currencyDisplay: 'narrowSymbol',
+                currencyDisplay: 'narrowSymbol'
               }"
               :decrement="false"
               :increment="false"
