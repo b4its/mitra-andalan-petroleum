@@ -82,7 +82,7 @@ const doHeader = reactive<OperationsDOHeaderState>({
   doInformation: {
     doNumber: "0000/DO/MAP/I/0000",
     doDateCreated: `${new Date().toISOString().split("T")[0]}`,
-    poCustomerNumber: undefined,
+    poCustomerNumber: {},
     soNumber: undefined,
   },
 });

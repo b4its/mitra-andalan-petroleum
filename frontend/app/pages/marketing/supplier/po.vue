@@ -130,7 +130,7 @@ const letterOfferDetails = reactive<MarketingPODetailsState>({
     accountNumber: "123456789",
     accountName: "PT. Sumber Jaya",
   },
-  selectedOfferingLetter: undefined,
+  selectedOfferingLetter: {},
   products: [
     {
       name: "Solar",

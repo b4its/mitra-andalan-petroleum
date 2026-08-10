@@ -82,7 +82,7 @@ const loadPdf = async () => {
 
   const detailsData = details.value;
   const surat = detailsData;
-  const tableBodyNotes = [
+  const tableBodyNotes: { text: string; border: [boolean, boolean, boolean, boolean] }[][] = [
     [
       {
         text: "Catatan :",
