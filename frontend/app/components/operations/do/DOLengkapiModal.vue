@@ -38,15 +38,15 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const form = reactive<Partial<Schema>>({
-  do_number: '',
-  transport_name: '',
-  product_name: '',
-  fuel_qty: 0,
+  do_number: '005/DO/MAP/VIII/26',
+  transport_name: 'PT. Trans Borneo',
+  product_name: 'Bio Solar',
+  fuel_qty: 10000,
   do_date: new Date().toISOString().split('T')[0],
-  transport_number: '',
-  driver_name: '',
-  company_coordinator: '',
-  distribution_admin: user.value?.name || ''
+  transport_number: 'KT 1234 AB',
+  driver_name: 'Jaya',
+  company_coordinator: 'Andi Wijaya',
+  distribution_admin: user.value?.name || 'Rina Kartika'
 })
 
 // Isi default dari props saat modal dibuka
