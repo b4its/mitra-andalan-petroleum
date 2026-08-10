@@ -82,7 +82,7 @@ const financeDetails = reactive<FinanceInvoiceDetailsState>({
   },
   customerPurchaseInformation: {
     deliveryOrderNumberData: [],
-    customerPurchaseOrderNumber: undefined, // needs to be dropdown like do data
+    customerPurchaseOrderNumber: {}, // needs to be dropdown like do data
     taxInvoiceNumber: "010023456789",
     salesOrderNumber: undefined,
   },
@@ -141,7 +141,7 @@ const purchaseOrders = ref(
   }),
 );
 
-const deliveryOrderGroups = computed(() => {
+const deliveryOrderGroups = computed<SelectMenuItem[][]>(() => {
   const selectedPO =
     financeDetails.customerPurchaseInformation.customerPurchaseOrderNumber;
 
@@ -169,7 +169,7 @@ const deliveryOrderGroups = computed(() => {
         acc[curr.customerName] = [];
       }
 
-      acc[curr.customerName].push({
+      acc[curr.customerName]!.push({
         label: curr.deliveryOrderNumber,
         value: curr.deliveryOrderNumber,
       });
@@ -186,7 +186,7 @@ const deliveryOrderGroups = computed(() => {
         type: "label",
         label: customerName,
       },
-      ...grouped[customerName],
+      ...(grouped[customerName] ?? []),
     ];
   });
 });
@@ -215,7 +215,7 @@ watch(
     if (value) {
       console.log(value);
       // financeProducts.products[0].price = value.fuelTotalPrice;
-      financeProducts.products[0].qty = value.fuelTotalQty;
+      financeProducts.products[0]!.qty = value.fuelTotalQty ?? 0;
     }
   },
 );
@@ -246,7 +246,7 @@ async function onFormSubmit() {
     const res = await post<any, InvoicePost>("/invoices", {
       customer_id:
         invoiceData.customerPurchaseInformation.customerPurchaseOrderNumber
-          .customerId,
+          .customerId || "",
       deadline_status: "due_soon",
       invoice_status: "unpaid",
       grand_total: invoiceData.priceSummary.grandTotal,
