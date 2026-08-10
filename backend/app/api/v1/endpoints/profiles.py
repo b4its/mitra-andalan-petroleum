@@ -5,7 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.models.user import User
-from app.schemas.profile import ProfileResponse, ProfileCreate, ProfileUpdate
+from app.schemas.profile import (
+    ProfileResponse,
+    ProfileDemoResponse,
+    ProfileCreate,
+    ProfileUpdate,
+)
 from app.schemas.common import MessageResponse
 
 router = APIRouter()
@@ -18,6 +23,21 @@ router = APIRouter()
     description="Daftar semua user/profile (terbaru di atas).",
 )
 async def list_profiles(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).order_by(User.created_at.desc()))
+    return result.scalars().all()
+
+
+@router.get(
+    "/profiles/demo",
+    response_model=list[ProfileDemoResponse],
+    summary="List users (demo)",
+    description=(
+        "Sama seperti GET /profiles, tetapi menyertakan kolom password "
+        "(password yang tersimpan) untuk keperluan DEMO/login bantuan. "
+        "Jangan dipakai di production."
+    ),
+)
+async def list_profiles_demo(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).order_by(User.created_at.desc()))
     return result.scalars().all()
 

@@ -10,6 +10,10 @@ class ProfileResponse(BaseModel):
     role: str
 
 
+class ProfileDemoResponse(ProfileResponse):
+    password: str
+
+
 class ProfileCreate(BaseModel):
     name: str
     email: str
