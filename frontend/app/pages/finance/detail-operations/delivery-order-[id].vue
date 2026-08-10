@@ -22,9 +22,9 @@ const { data: doDetails, pending } = await useAsyncData(
   { default: () => null },
 );
 
-const details: Details = doDetails.value?.details!;
+const details: Details = doDetails.value?.details as Details;
 
-const tableBodyNotes: { text: string; border: [boolean, boolean, boolean, boolean] }[][] = [
+const tableBodyNotes: { text: string, border: [boolean, boolean, boolean, boolean] }[][] = [
   [
     {
       text: "Catatan :",

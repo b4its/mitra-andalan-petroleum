@@ -71,16 +71,16 @@ const { data, pending, error, refresh } = await useAsyncData(
 );
 
 interface MetricCard {
-  key: string;
-  icon: string;
-  title: string;
-  description: string;
-  unit: string;
-  value: number;
+  key: string
+  icon: string
+  title: string
+  description: string
+  unit: string
+  value: number
 }
 
 const mappedAnalytics = computed<MetricCard[]>(() =>
-  (data.value?.metrics ?? []).filter(Boolean) as MetricCard[],
+  (data.value?.metrics ?? []).filter(Boolean) as MetricCard[]
 );
 
 function showMetric(metric: any) {

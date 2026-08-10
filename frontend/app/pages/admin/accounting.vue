@@ -333,7 +333,7 @@ const trialColumns: TableColumn<any>[] = [
 ];
 
 const exportItems = (
-  onSelect: (format: "excel" | "pdf" | "csv") => void,
+  onSelect: (format: "excel" | "pdf" | "csv") => void
 ): DropdownMenuItem[] => [
   { type: "label", label: "Export Data" },
   { type: "separator" },
