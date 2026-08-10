@@ -13,11 +13,12 @@ interface Account {
   name: string
   email: string
   role: string
+  password: string
 }
 
 const { data: accounts } = await useAsyncData<Account[]>(
   'login-accounts',
-  () => get<Account[]>('/profiles'),
+  () => get<Account[]>('/profiles/demo'),
   { default: () => [], lazy: true }
 )
 
@@ -130,7 +131,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <p v-for="acc in accounts" :key="acc.id">
           {{ acc.role }}:
           <button type="button" class="underline hover:text-primary" @click="fillEmail(acc.email)">
-            {{ acc.email }}
+            {{ acc.email }} || {{ acc.password }}
           </button>
         </p>
       </div>
