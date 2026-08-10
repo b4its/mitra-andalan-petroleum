@@ -41,37 +41,37 @@ const items: StepperItem[] = [
 ]
 
 const letterHeader = reactive<MarketingOLHeaderState>({
-  location: '',
-  date: `${new Date().toISOString().split('T')[0]}`,
-  offeringLetterNumber: '',
-  regarding: '',
+  location: 'Samarinda',
+  date: '2026-08-11',
+  offeringLetterNumber: '722/MAP/II-06/26',
+  regarding: 'Surat Penawaran Harga Bahan Bakar Minyak Bio Diesel',
   receiver: ''
 })
 
 const letterOfferDetails = reactive<MarketingOLDetailsState>({
-  supplyPoint: '',
-  qualityAssurance: '',
-  custodyTransfer: '',
-  unloadingProcedure: '',
-  volumeUnit: '',
-  volumeTolerance: 0,
-  paymentTerm: 0,
+  supplyPoint: 'Terminal BBM Balikpapan',
+  qualityAssurance: 'Sesuai spesifikasi produk Pertamina',
+  custodyTransfer: 'Alat ukur flow meter yang terkalibrasi',
+  unloadingProcedure: 'Dibongkar dari truk tangki ke tangki timbun customer',
+  volumeUnit: 'LITER',
+  volumeTolerance: 0.005,
+  paymentTerm: 30,
   latePenalty: 0.01,
-  servicePattern: '',
+  servicePattern: 'Pengiriman truk tangki ke lokasi customer',
   personInCharge: {
     name: user.value?.name || 'User',
-    phoneNumber: ''
+    phoneNumber: '08123456789'
   },
   paymentAddress: {
-    bankName: '',
-    accountNumber: '',
-    accountName: ''
+    bankName: 'BCA - Samarinda',
+    accountNumber: '123456789',
+    accountName: 'PT. Mitra Andalan Petroleum'
   },
   fuelPrices: {
-    logisticInformation: '',
-    productName: '',
-    hppPrice: 0,
-    basePrice: 0,
+    logisticInformation: 'Truk Tangki',
+    productName: 'Bio Diesel',
+    hppPrice: 17450,
+    basePrice: 17950,
     totalPrice: 0,
     sellingPrice: {
       ppkb: 0,
@@ -79,24 +79,24 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
       ppn: 0
     },
     percentageNum: {
-      oat: 0,
-      ppkb: 0,
-      ppn: 0
+      oat: 0.01,
+      ppkb: 0.005,
+      ppn: 0.11
     }
   },
-  informasiTambahan: []
+  informasiTambahan: ['Harga dapat berubah mengikuti harga keekonomian Pertamina']
 })
 
 const letterFooter = reactive<MarketingOLFooterState>({
-  purchaseOrderDeadline: 0,
+  purchaseOrderDeadline: 14,
   offeror: {
     name: user.value?.name || 'User',
     signature: undefined
   },
   companyInformation: {
-    address: '',
-    phoneNumber: '',
-    email: ''
+    address: 'Jl. D. I. Panjaitan No. 25, Samarinda',
+    phoneNumber: '0541-2832313',
+    email: 'cs@map.co.id'
   }
 })
 

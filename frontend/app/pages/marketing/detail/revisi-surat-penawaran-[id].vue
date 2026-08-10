@@ -55,42 +55,55 @@ const { data: offeringLetter, pending: pendingOL } = await useAsyncData(
 )
 
 const letterHeader = reactive<MarketingOLHeaderState>({
-  location: offeringLetter.value?.details.location || '',
+  location: offeringLetter.value?.details.location || 'Samarinda',
   date:
-    new Date(offeringLetter.value?.details.date || new Date())
+    new Date(offeringLetter.value?.details.date || '2026-08-11')
       .toISOString()
       .split('T')[0] ?? '',
-  offeringLetterNumber: offeringLetter.value?.offering_letter_number || '',
-  regarding: offeringLetter.value?.details.regarding || '',
+  offeringLetterNumber: offeringLetter.value?.offering_letter_number
+    || '722/MAP/II-06/26',
+  regarding: offeringLetter.value?.details.regarding
+    || 'Surat Penawaran Harga Bahan Bakar Minyak Bio Diesel',
   receiver: offeringLetter.value?.details.receiver || ''
 })
 
 const letterOfferDetails = reactive<MarketingOLDetailsState>({
-  supplyPoint: offeringLetter.value?.details.supplyPoint || '',
-  qualityAssurance: offeringLetter.value?.details.qualityAssurance || '',
-  custodyTransfer: offeringLetter.value?.details.custodyTransfer || '',
-  unloadingProcedure: offeringLetter.value?.details.unloadingProcedure || '',
-  volumeUnit: offeringLetter.value?.details.volumeUnit || '',
-  volumeTolerance: offeringLetter.value?.details.volumeTolerance || 0,
-  paymentTerm: offeringLetter.value?.details.paymentTerm || 0,
-  latePenalty: offeringLetter.value?.details.latePenalty || 0,
-  servicePattern: offeringLetter.value?.details.servicePattern || '',
+  supplyPoint: offeringLetter.value?.details.supplyPoint
+    || 'Terminal BBM Balikpapan',
+  qualityAssurance: offeringLetter.value?.details.qualityAssurance
+    || 'Sesuai spesifikasi produk Pertamina',
+  custodyTransfer: offeringLetter.value?.details.custodyTransfer
+    || 'Alat ukur flow meter yang terkalibrasi',
+  unloadingProcedure: offeringLetter.value?.details.unloadingProcedure
+    || 'Dibongkar dari truk tangki ke tangki timbun customer',
+  volumeUnit: offeringLetter.value?.details.volumeUnit || 'LITER',
+  volumeTolerance: offeringLetter.value?.details.volumeTolerance || 0.005,
+  paymentTerm: offeringLetter.value?.details.paymentTerm || 30,
+  latePenalty: offeringLetter.value?.details.latePenalty || 0.01,
+  servicePattern: offeringLetter.value?.details.servicePattern
+    || 'Pengiriman truk tangki ke lokasi customer',
   personInCharge: {
-    name: offeringLetter.value?.details.personInCharge.name || '',
-    phoneNumber: offeringLetter.value?.details.personInCharge.phoneNumber || ''
+    name: offeringLetter.value?.details.personInCharge.name || 'Budi Santoso',
+    phoneNumber: offeringLetter.value?.details.personInCharge.phoneNumber
+      || '08123456789'
   },
   paymentAddress: {
-    bankName: offeringLetter.value?.details.paymentAddress.bankName || '',
+    bankName: offeringLetter.value?.details.paymentAddress.bankName
+      || 'BCA - Samarinda',
     accountNumber:
-      offeringLetter.value?.details.paymentAddress.accountNumber || '',
-    accountName: offeringLetter.value?.details.paymentAddress.accountName || ''
+      offeringLetter.value?.details.paymentAddress.accountNumber
+      || '123456789',
+    accountName: offeringLetter.value?.details.paymentAddress.accountName
+      || 'PT. Mitra Andalan Petroleum'
   },
   fuelPrices: {
     logisticInformation:
-      offeringLetter.value?.details.fuelPrices.logisticInformation || '',
-    productName: offeringLetter.value?.details.fuelPrices.productName || '',
-    hppPrice: offeringLetter.value?.details.fuelPrices.hppPrice || 0,
-    basePrice: offeringLetter.value?.details.fuelPrices.basePrice || 0,
+      offeringLetter.value?.details.fuelPrices.logisticInformation
+      || 'Truk Tangki',
+    productName: offeringLetter.value?.details.fuelPrices.productName
+      || 'Bio Diesel',
+    hppPrice: offeringLetter.value?.details.fuelPrices.hppPrice || 17450,
+    basePrice: offeringLetter.value?.details.fuelPrices.basePrice || 17950,
     totalPrice: offeringLetter.value?.details.fuelPrices.totalPrice || 0,
     sellingPrice: {
       ppkb: offeringLetter.value?.details.fuelPrices.sellingPrice.ppkb || 0,
@@ -98,27 +111,32 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
       ppn: offeringLetter.value?.details.fuelPrices.sellingPrice.ppn || 0
     },
     percentageNum: {
-      oat: offeringLetter.value?.details.fuelPrices.percentageNum.oat || 0,
-      ppkb: offeringLetter.value?.details.fuelPrices.percentageNum.ppkb || 0,
-      ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0
+      oat: offeringLetter.value?.details.fuelPrices.percentageNum.oat || 0.01,
+      ppkb: offeringLetter.value?.details.fuelPrices.percentageNum.ppkb
+        || 0.005,
+      ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0.11
     }
   },
   informasiTambahan:
-    offeringLetter.value?.details.informasiTambahan || []
+    offeringLetter.value?.details.informasiTambahan
+    || ['Harga dapat berubah mengikuti harga keekonomian Pertamina']
 })
 
 const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline:
-    offeringLetter.value?.details.purchaseOrderDeadline || 0,
+    offeringLetter.value?.details.purchaseOrderDeadline || 14,
   offeror: {
-    name: offeringLetter.value?.details.offeror.name || '',
+    name: offeringLetter.value?.details.offeror.name || 'Budi Santoso',
     signature: undefined
   },
   companyInformation: {
-    address: offeringLetter.value?.details.companyInformation.address || '',
+    address: offeringLetter.value?.details.companyInformation.address
+      || 'Jl. D. I. Panjaitan No. 25, Samarinda',
     phoneNumber:
-      offeringLetter.value?.details.companyInformation.phoneNumber || '', // add masking
-    email: offeringLetter.value?.details.companyInformation.email || ''
+      offeringLetter.value?.details.companyInformation.phoneNumber
+      || '0541-2832313', // add masking
+    email: offeringLetter.value?.details.companyInformation.email
+      || 'cs@map.co.id'
   }
 })
 
