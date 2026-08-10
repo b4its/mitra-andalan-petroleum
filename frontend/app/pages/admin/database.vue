@@ -175,7 +175,7 @@ async function clearDatabase() {
 <template>
   <UDashboardPanel id="admin-database">
     <template #header>
-      <UDashboardNavbar title="Database Konfigurasi">
+      <UDashboardNavbar title="Konfigurasi Database">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

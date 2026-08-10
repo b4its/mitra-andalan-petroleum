@@ -144,7 +144,7 @@ const links = [
           }
         },
         {
-          label: 'Database Konfigurasi',
+          label: 'Konfigurasi Database',
           to: '/admin/database',
           exact: true,
           onSelect: () => {
