@@ -41,6 +41,18 @@ def test_create_po_supplier(client: TestClient, seeded_db):
     assert response.status_code == 201
 
 
+def test_create_po_customer_with_invalid_created_by(client: TestClient, seeded_db):
+    """Regresi 500: created_by stale (id user tidak ada) tidak boleh menggagalkan pembuatan PO."""
+    list_resp = client.get("/api/v1/customers")
+    cust_id = list_resp.json()[0]["id"]
+    response = client.post("/api/v1/purchase-orders", json={
+        "po_number": "STALE/PO/001", "type": "customer",
+        "customer_id": cust_id, "total": 1000,
+        "created_by": "00000000-0000-0000-0000-000000000000",
+    })
+    assert response.status_code == 201
+
+
 def test_create_po_customer_missing_customer_id(client: TestClient, seeded_db):
     response = client.post("/api/v1/purchase-orders", json={
         "po_number": "ERR/PO/001", "type": "customer", "total": 1000

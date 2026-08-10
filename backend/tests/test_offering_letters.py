@@ -35,6 +35,19 @@ def test_create_offering_letter(client: TestClient, seeded_db):
     assert response.json()["status"] == "created"
 
 
+def test_create_ol_with_invalid_created_by(client: TestClient, seeded_db):
+    """Regresi 500: created_by stale (id user tidak ada) tidak boleh menggagalkan pembuatan OL."""
+    list_resp = client.get("/api/v1/customers")
+    cust_id = list_resp.json()[0]["id"]
+    response = client.post("/api/v1/offering-letters", json={
+        "offering_letter_number": "STALE/OL/001",
+        "customer_id": cust_id,
+        "created_by": "00000000-0000-0000-0000-000000000000",
+        "details": {"additionalInfo": [{"text": "Info tambahan"}]},
+    })
+    assert response.status_code == 201
+
+
 def test_create_ol_missing_number(client: TestClient, seeded_db):
     list_resp = client.get("/api/v1/customers")
     cust_id = list_resp.json()[0]["id"]
