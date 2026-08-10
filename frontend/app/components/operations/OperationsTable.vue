@@ -13,7 +13,7 @@ const UBadge = resolveComponent('UBadge')
 const { data, pending } = await useAsyncData('operations-sales', async () => {
   const { get } = useApi()
   const res = await get<{ items?: any[] }>('/sales')
-  return (res || []).map((s: any) => ({
+  return (res.items || []).map((s: any) => ({
     id: s.id,
     date: s.created_at,
     status: s.status,
