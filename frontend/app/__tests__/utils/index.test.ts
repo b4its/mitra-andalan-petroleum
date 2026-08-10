@@ -4,7 +4,8 @@ import {
   formatDate,
   formatDateDoc,
   formatPercent,
-  formatNumber
+  formatNumber,
+  formatNPWP
 } from '~/utils/index'
 
 describe('formatCurrency', () => {
@@ -60,5 +61,30 @@ describe('formatNumber', () => {
     const result = formatNumber(1000000)
     expect(result).toContain('1')
     expect(result).toContain('000')
+  })
+})
+
+describe('formatNPWP', () => {
+  it('formats complete 15 digits', () => {
+    expect(formatNPWP('012345678901234')).toBe('01.234.567.8-901.234')
+  })
+
+  it('formats partial digits as typed', () => {
+    expect(formatNPWP('012')).toBe('01.2')
+    expect(formatNPWP('01234567')).toBe('01.234.567')
+    expect(formatNPWP('012345678')).toBe('01.234.567.8')
+    expect(formatNPWP('0123456789')).toBe('01.234.567.8-9')
+  })
+
+  it('strip non-digit characters and existing separators', () => {
+    expect(formatNPWP('01.234.567.8-901.234')).toBe('01.234.567.8-901.234')
+    expect(formatNPWP('01 23 45 67 89 01 23 4')).toBe('01.234.567.8-901.234')
+  })
+
+  it('truncates beyond 15 digits and handles empty', () => {
+    expect(formatNPWP('0123456789012345')).toBe('01.234.567.8-901.234')
+    expect(formatNPWP('')).toBe('')
+    expect(formatNPWP(null)).toBe('')
+    expect(formatNPWP(undefined)).toBe('')
   })
 })
