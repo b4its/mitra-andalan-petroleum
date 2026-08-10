@@ -26,6 +26,8 @@ from app.schemas.stats import (
     AdminMetric,
     AdminStatsResponse,
     AdminTrend,
+    RevenuePoint,
+    RevenueResponse,
     SingleStat,
     StatsResponse,
 )
@@ -46,10 +48,10 @@ async def marketing_stats(db: AsyncSession = Depends(get_db)):
     po_logistik = await _count(db, select(OfferingLetter).where(OfferingLetter.status == "under_revision"))
 
     return StatsResponse(stats=[
-        SingleStat(title="Penawaran dibuat", icon="i-lucide-file-text", value=total_ol, variation=12.5, to="/marketing/customer"),
-        SingleStat(title="Penawaran belum disetujui", icon="i-lucide-clock", value=pending_ol, variation=-5.2, to="/marketing/customer"),
-        SingleStat(title="PO dari Customer", icon="i-lucide-shopping-cart", value=po_customer, variation=8.3, to="/marketing/customer"),
-        SingleStat(title="PO untuk logistik", icon="i-lucide-truck", value=po_logistik, variation=3.1, to="/marketing/supplier"),
+        SingleStat(title="Penawaran dibuat", icon="i-lucide-file-text", value=total_ol, variation=await _variation(db, OfferingLetter), to="/marketing/customer"),
+        SingleStat(title="Penawaran belum disetujui", icon="i-lucide-clock", value=pending_ol, variation=await _variation(db, OfferingLetter, OfferingLetter.status == "created"), to="/marketing/customer"),
+        SingleStat(title="PO dari Customer", icon="i-lucide-shopping-cart", value=po_customer, variation=await _variation(db, OfferingLetter, OfferingLetter.status == "po_received"), to="/marketing/customer"),
+        SingleStat(title="PO untuk logistik", icon="i-lucide-truck", value=po_logistik, variation=await _variation(db, OfferingLetter, OfferingLetter.status == "under_revision"), to="/marketing/supplier"),
     ])
 
 
@@ -63,7 +65,7 @@ async def operations_stats(db: AsyncSession = Depends(get_db)):
     total_do = await _count(db, select(DeliveryOrder))
 
     return StatsResponse(stats=[
-        SingleStat(title="Delivery Order Dibuat", icon="i-lucide-file-text", value=total_do, variation=7.8, to="/operations"),
+        SingleStat(title="Delivery Order Dibuat", icon="i-lucide-file-text", value=total_do, variation=await _variation(db, DeliveryOrder), to="/operations"),
     ])
 
 
@@ -80,9 +82,9 @@ async def finance_stats(db: AsyncSession = Depends(get_db)):
     invoice_belum = total_invoice - unpaid
 
     return StatsResponse(stats=[
-        SingleStat(title="DO Diterima", icon="i-lucide-file-check", value=do_diterima, variation=5.4, to="/finance/do"),
-        SingleStat(title="Invoice Belum Dibuat", icon="i-lucide-file-minus", value=invoice_belum, variation=-2.1, to="/finance/invoice"),
-        SingleStat(title="Invoice Belum Lunas", icon="i-lucide-alert-circle", value=unpaid, variation=11.3, to="/finance/invoice/data-invoice-customer"),
+        SingleStat(title="DO Diterima", icon="i-lucide-file-check", value=do_diterima, variation=await _variation(db, DeliveryOrder), to="/finance/do"),
+        SingleStat(title="Invoice Belum Dibuat", icon="i-lucide-file-minus", value=invoice_belum, variation=await _variation(db, Invoice, Invoice.invoice_status != "unpaid"), to="/finance/invoice"),
+        SingleStat(title="Invoice Belum Lunas", icon="i-lucide-alert-circle", value=unpaid, variation=await _variation(db, Invoice, Invoice.invoice_status == "unpaid"), to="/finance/invoice/data-invoice-customer"),
     ])
 
 
@@ -99,15 +101,84 @@ async def home_stats(db: AsyncSession = Depends(get_db)):
     total_ol = await _count(db, select(OfferingLetter))
 
     return StatsResponse(stats=[
-        SingleStat(title="Customers", icon="i-lucide-users", value=total_customers, variation=3.2, to="/marketing/customer"),
-        SingleStat(title="Revenue", icon="i-lucide-trending-up", value=total_revenue, variation=8.1, to="/finance"),
-        SingleStat(title="Orders", icon="i-lucide-shopping-bag", value=total_ol, variation=-1.5, to="/operations"),
+        SingleStat(title="Customers", icon="i-lucide-users", value=total_customers, variation=await _variation(db, OfferingLetter, None, func.count(func.distinct(OfferingLetter.customer_id))), to="/marketing/customer"),
+        SingleStat(title="Revenue", icon="i-lucide-trending-up", value=total_revenue, variation=await _variation(db, Invoice, None, func.sum(Invoice.grand_total)), to="/finance"),
+        SingleStat(title="Orders", icon="i-lucide-shopping-bag", value=total_ol, variation=await _variation(db, OfferingLetter), to="/operations"),
     ])
+
+
+@router.get(
+    "/stats/revenue",
+    response_model=RevenueResponse,
+    summary="Revenue time series",
+    description="Revenue (jumlah grand total invoice) per periode: daily, weekly, atau monthly.",
+)
+async def revenue_stats(
+    period: str = Query(default="daily", pattern="^(daily|weekly|monthly)$"),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    start, end = _range(date_from, date_to)
+    invoices = await _records(db, Invoice, start, end)
+
+    def _bucket_key(created_at):
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        if period == "monthly":
+            return created_at.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if period == "weekly":
+            day = created_at.isocalendar()
+            first_weekday = created_at - timedelta(days=day.weekday)
+            return first_weekday.replace(hour=0, minute=0, second=0, microsecond=0)
+        return created_at.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    totals: dict[datetime, float] = {}
+    for invoice in invoices:
+        key = _bucket_key(invoice.created_at)
+        totals[key] = totals.get(key, 0.0) + (invoice.grand_total or 0)
+
+    step = {"daily": timedelta(days=1), "weekly": timedelta(days=7), "monthly": None}[period]
+    points = []
+    cursor = _bucket_key(start)
+    while cursor <= end:
+        amount = totals.get(cursor, 0.0)
+        if period == "monthly":
+            next_cursor = (cursor.replace(day=28) + timedelta(days=4)).replace(day=1)
+            label = cursor.strftime("%b %Y")
+        else:
+            next_cursor = cursor + step
+            label = cursor.strftime("%d %b")
+        points.append(RevenuePoint(date=cursor.date().isoformat(), label=label, amount=amount))
+        cursor = next_cursor
+
+    return RevenueResponse(period=period, start=start, end=end, points=points)
 
 
 async def _count(db, stmt):
     result = await db.execute(select(func.count()).select_from(stmt.subquery()))
     return result.scalar() or 0
+
+
+async def _variation(db, model, where=None, aggregate=None):
+    now = datetime.now(timezone.utc)
+    cur_start = now - timedelta(days=30)
+    prev_start = now - timedelta(days=60)
+
+    async def _measure(start, end):
+        stmt = select(model).where(model.created_at >= start, model.created_at < end)
+        if where is not None:
+            stmt = stmt.where(where)
+        if aggregate is None:
+            return await _count(db, stmt)
+        result = await db.execute(select(aggregate).select_from(stmt.subquery()))
+        return result.scalar() or 0
+
+    current = await _measure(cur_start, now)
+    previous = await _measure(prev_start, cur_start)
+    if previous == 0:
+        return 0.0
+    return round((current - previous) / previous * 100, 1)
 
 
 def _range(date_from: datetime | None, date_to: datetime | None):
