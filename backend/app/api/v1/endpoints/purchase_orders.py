@@ -115,6 +115,14 @@ async def get_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     description="Membuat PO baru. Jika type=customer, otomatis membuat DO draft dan menyimpan relasinya.",
 )
 async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = Depends(get_db)):
+    if body.customer_id:
+        c = await db.execute(select(Customer).where(Customer.id == body.customer_id))
+        if not c.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
+    if body.supplier_id:
+        s = await db.execute(select(Supplier).where(Supplier.id == body.supplier_id))
+        if not s.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Supplier tidak ditemukan")
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
     po = PurchaseOrder(**data)
