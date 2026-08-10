@@ -246,7 +246,7 @@ async function onFormSubmit() {
     const res = await post<any, InvoicePost>("/invoices", {
       customer_id:
         invoiceData.customerPurchaseInformation.customerPurchaseOrderNumber
-          .customerId || "",
+          .customerId || '',
       deadline_status: "due_soon",
       invoice_status: "unpaid",
       grand_total: invoiceData.priceSummary.grandTotal,
