@@ -108,15 +108,17 @@ async def get_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     description="Membuat surat penawaran baru. Field `details` bisa diisi dengan form data dari frontend (supplyPoint, fuelPrices, personInCharge, dll).",
 )
 async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = Depends(get_db)):
+    customer = await db.execute(select(Customer).where(Customer.id == body.customer_id))
+    c = customer.scalar_one_or_none()
+    if not c:
+        raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
     ol = OfferingLetter(**data)
     db.add(ol)
     await db.flush()
     await db.refresh(ol)
-    customer = await db.execute(select(Customer).where(Customer.id == ol.customer_id))
-    c = customer.scalar_one_or_none()
-    customer_name = c.name if c else ""
+    customer_name = c.name
     await create_document_notification(
         db,
         title="Surat Penawaran Baru Dibuat",
@@ -139,7 +141,12 @@ async def update_offering_letter(id: str, body: OfferingLetterUpdate, db: AsyncS
     ol = result.scalar_one_or_none()
     if not ol:
         raise HTTPException(status_code=404, detail="Not found")
-    for key, val in body.model_dump(exclude_unset=True).items():
+    data = body.model_dump(exclude_unset=True)
+    if "customer_id" in data and data["customer_id"]:
+        cust = await db.execute(select(Customer).where(Customer.id == data["customer_id"]))
+        if not cust.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
+    for key, val in data.items():
         if key == "details":
             val = _details_to_str(val)
         setattr(ol, key, val)
@@ -148,7 +155,6 @@ async def update_offering_letter(id: str, body: OfferingLetterUpdate, db: AsyncS
     customer = await db.execute(select(Customer).where(Customer.id == ol.customer_id))
     c = customer.scalar_one_or_none()
     return _to_response(ol, c.name if c else "")
-
 
 async def _delete_upload_files(uploads: list[Upload]):
     from pathlib import Path
