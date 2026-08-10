@@ -10,7 +10,7 @@ const { toCSV, toExcel, toPDF } = useExport()
 const dateFrom = ref('')
 const dateTo = ref('')
 
-const exportColumns: ExportColumn[] = [
+const exportColumns: ExportColumn<DailyCashRow>[] = [
   { header: 'Tanggal', accessor: (row: DailyCashRow) => formatDate(row.entry_date) },
   { header: 'Deskripsi', accessor: (row: DailyCashRow) => row.description },
   { header: 'Akun', accessor: (row: DailyCashRow) => `${row.account_code} · ${row.account_name}` },
@@ -99,7 +99,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Kas Harian</p>
+            <p class="text-base font-semibold">
+              Kas Harian
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Mutasi kas/bank harian dengan saldo berjalan
             </p>
@@ -135,7 +137,12 @@ definePageMeta({ layout: 'accounting' })
                   { label: 'Export to CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
                 ]"
               >
-                <UButton icon="i-lucide-download" color="neutral" variant="soft" :disabled="!data">
+                <UButton
+                  icon="i-lucide-download"
+                  color="neutral"
+                  variant="soft"
+                  :disabled="!data"
+                >
                   Export
                 </UButton>
               </UDropdownMenu>
@@ -152,20 +159,36 @@ definePageMeta({ layout: 'accounting' })
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <UCard color="neutral" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Saldo Awal</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.opening_balance) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Saldo Awal
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.opening_balance) }}
+                </p>
               </UCard>
               <UCard color="success" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Masuk</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.total_debit) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Masuk
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.total_debit) }}
+                </p>
               </UCard>
               <UCard color="error" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Total Keluar</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.total_credit) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Total Keluar
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.total_credit) }}
+                </p>
               </UCard>
               <UCard color="primary" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Saldo Akhir</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(data.closing_balance) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Saldo Akhir
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(data.closing_balance) }}
+                </p>
               </UCard>
             </div>
 

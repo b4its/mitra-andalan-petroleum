@@ -1,6 +1,8 @@
-export interface ExportColumn {
+import type { Content } from 'pdfmake/build/pdfmake'
+
+export interface ExportColumn<T> {
   header: string
-  accessor: (row: any) => string | number
+  accessor: (row: T) => string | number
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -13,14 +15,14 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 export function useExport() {
-  function buildRows(columns: ExportColumn[], rows: any[]) {
-    return rows.map(row => columns.map(col => {
+  function buildRows<T>(columns: ExportColumn<T>[], rows: T[]) {
+    return rows.map(row => columns.map((col) => {
       const value = col.accessor(row)
       return value === null || value === undefined ? '' : value
     }))
   }
 
-  function toCSV(filename: string, columns: ExportColumn[], rows: any[]) {
+  function toCSV<T>(filename: string, columns: ExportColumn<T>[], rows: T[]) {
     const csv = [
       columns.map(col => `"${String(col.header).replace(/"/g, '""')}"`).join(';'),
       ...buildRows(columns, rows).map(line =>
@@ -31,7 +33,7 @@ export function useExport() {
     downloadBlob(blob, `${filename}.csv`)
   }
 
-  async function toExcel(filename: string, sheetName: string, columns: ExportColumn[], rows: any[]) {
+  async function toExcel<T>(filename: string, sheetName: string, columns: ExportColumn<T>[], rows: T[]) {
     const { utils, writeFile } = await import('xlsx')
     const sheet = utils.aoa_to_sheet([
       columns.map(col => col.header),
@@ -42,11 +44,11 @@ export function useExport() {
     writeFile(workbook, `${filename}.xlsx`)
   }
 
-  function toPDF(
+  function toPDF<T>(
     filename: string,
     title: string,
-    columns: ExportColumn[],
-    rows: any[],
+    columns: ExportColumn<T>[],
+    rows: T[],
     options?: { subtitle?: string, totals?: { label: string, value: string | number }[] }
   ) {
     const pdfMake = usePDFMake()
@@ -68,7 +70,7 @@ export function useExport() {
       })))
     }
 
-    const content: any[] = [
+    const content: Content[] = [
       {
         text: title,
         style: 'title'

@@ -20,7 +20,7 @@ definePageMeta({ layout: 'finance' })
 <template>
   <UDashboardPanel id="detail-invoice" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Invoice ${idInvoice}`"">
+      <UDashboardNavbar :title="`Invoice ${idInvoice}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import type { ResUploads } from "~/types";
-import { useFileUpload } from "~/composables/useFileUpload";
+import type { ResUploads } from '~/types'
+import { useFileUpload } from '~/composables/useFileUpload'
 
 const props = defineProps<{
-  folder: string;
-  documentType?: string;
-  documentId?: string;
-  label?: string;
-  description?: string;
-  accept?: string;
-  multiple?: boolean;
-}>();
+  folder: string
+  documentType?: string
+  documentId?: string
+  label?: string
+  description?: string
+  accept?: string
+  multiple?: boolean
+}>()
 
 const emit = defineEmits<{
-  uploaded: [files: ResUploads[]];
-}>();
+  uploaded: [files: ResUploads[]]
+}>()
 
 const {
   pendingFiles,
@@ -23,50 +23,50 @@ const {
   addFiles,
   removeFile,
   cancelAll,
-  uploadAll,
-} = useFileUpload();
+  uploadAll
+} = useFileUpload()
 
-const dropZoneRef = ref<HTMLDivElement>();
+const dropZoneRef = ref<HTMLDivElement>()
 
 function onDrop(files: FileList | File[]) {
-  addFiles(files);
+  addFiles(files)
 }
 
 function onFileChange(event: Event) {
-  const target = event.target as HTMLInputElement;
+  const target = event.target as HTMLInputElement
   if (target.files?.length) {
-    addFiles(target.files);
-    target.value = "";
+    addFiles(target.files)
+    target.value = ''
   }
 }
 
 function onRemove(index: number) {
-  removeFile(index);
+  removeFile(index)
 }
 
 function onCancelAll() {
-  cancelAll();
+  cancelAll()
 }
 
 async function onUploadAll() {
   const results = await uploadAll(
     props.folder,
     props.documentType,
-    props.documentId,
-  );
+    props.documentId
+  )
   if (results.length) {
-    emit("uploaded", results);
+    emit('uploaded', results)
   }
 }
 
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
 function isImage(mime: string): boolean {
-  return mime.startsWith("image/");
+  return mime.startsWith('image/')
 }
 </script>
 
@@ -86,7 +86,12 @@ function isImage(mime: string): boolean {
       <p v-if="description" class="mt-1 text-xs text-neutral-400">
         {{ description }}
       </p>
-      <UButton tag="label" size="sm" variant="soft" class="mt-3 cursor-pointer">
+      <UButton
+        tag="label"
+        size="sm"
+        variant="soft"
+        class="mt-3 cursor-pointer"
+      >
         Pilih File
         <input
           type="file"
@@ -94,7 +99,7 @@ function isImage(mime: string): boolean {
           :multiple="multiple ?? true"
           class="hidden"
           @change="onFileChange"
-        />
+        >
       </UButton>
     </div>
 
@@ -115,7 +120,12 @@ function isImage(mime: string): boolean {
             Upload Semua
           </UButton>
 
-          <UButton size="xs" color="error" variant="ghost" @click="onCancelAll">
+          <UButton
+            size="xs"
+            color="error"
+            variant="ghost"
+            @click="onCancelAll"
+          >
             Batal Semua
           </UButton>
         </div>
@@ -136,7 +146,7 @@ function isImage(mime: string): boolean {
               :src="item.previewUrl"
               :alt="item.file.name"
               class="size-full object-cover"
-            />
+            >
           </div>
 
           <!-- Non-image icon -->
@@ -170,7 +180,9 @@ function isImage(mime: string): boolean {
 
     <!-- Uploaded files -->
     <div v-if="uploadedFiles.length" class="space-y-2">
-      <p class="text-sm font-medium text-green-600">Telah diupload:</p>
+      <p class="text-sm font-medium text-green-600">
+        Telah diupload:
+      </p>
       <div
         v-for="upload in uploadedFiles"
         :key="upload.id"

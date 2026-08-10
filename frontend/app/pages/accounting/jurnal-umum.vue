@@ -1,247 +1,247 @@
 <script setup lang="ts">
-import { h } from "vue";
-import type { TableColumn } from "@nuxt/ui";
-import type { ExportColumn } from "~/composables/useExport";
+import { h } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+import type { ExportColumn } from '~/composables/useExport'
 import type {
   AccountingAccount,
   AccountingJournal,
-  AccountingJournalPost,
-} from "~/types/accounting";
+  AccountingJournalPost
+} from '~/types/accounting'
 
-const { get, post } = useApi();
-const toast = useToast();
-const loading = ref(false);
-const search = ref("");
-const debouncedSearch = refDebounced(search, 300);
+const { get, post } = useApi()
+const toast = useToast()
+const loading = ref(false)
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
-const { toCSV, toExcel, toPDF } = useExport();
+const { toCSV, toExcel, toPDF } = useExport()
 
-const exportColumns: ExportColumn[] = [
+const exportColumns: ExportColumn<AccountingJournal>[] = [
   {
-    header: "Nomor Jurnal",
-    accessor: (row: AccountingJournal) => row.entry_number,
+    header: 'Nomor Jurnal',
+    accessor: (row: AccountingJournal) => row.entry_number
   },
   {
-    header: "Tanggal",
-    accessor: (row: AccountingJournal) => formatDate(row.entry_date),
+    header: 'Tanggal',
+    accessor: (row: AccountingJournal) => formatDate(row.entry_date)
   },
   {
-    header: "Deskripsi",
-    accessor: (row: AccountingJournal) => row.description,
+    header: 'Deskripsi',
+    accessor: (row: AccountingJournal) => row.description
   },
-  { header: "Nominal", accessor: (row: AccountingJournal) => totalDebit(row) },
-];
+  { header: 'Nominal', accessor: (row: AccountingJournal) => totalDebit(row) }
+]
 
-function onExport(format: "excel" | "pdf" | "csv") {
-  const filename = `jurnal-umum-${new Date().toISOString().slice(0, 10)}`;
-  if (format === "excel")
-    toExcel(filename, "Jurnal Umum", exportColumns, journals.value);
-  else if (format === "pdf")
-    toPDF(filename, "Jurnal Umum", exportColumns, journals.value, {
-      subtitle: "Catatan transaksi keuangan (debit & kredit)",
-    });
-  else toCSV(filename, exportColumns, journals.value);
+function onExport(format: 'excel' | 'pdf' | 'csv') {
+  const filename = `jurnal-umum-${new Date().toISOString().slice(0, 10)}`
+  if (format === 'excel')
+    toExcel(filename, 'Jurnal Umum', exportColumns, journals.value)
+  else if (format === 'pdf')
+    toPDF(filename, 'Jurnal Umum', exportColumns, journals.value, {
+      subtitle: 'Catatan transaksi keuangan (debit & kredit)'
+    })
+  else toCSV(filename, exportColumns, journals.value)
 }
 
 const { data: journals, refresh, pending: pendingJournals } = await useAsyncData(
-  "accounting-journals",
+  'accounting-journals',
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 50 };
-    if (debouncedSearch.value) params.search = debouncedSearch.value;
+    const params: Record<string, string | number> = { page: 1, page_size: 50 }
+    if (debouncedSearch.value) params.search = debouncedSearch.value
     const res = await get<{ items: AccountingJournal[] }>(
-      "/accounting/journal",
-      params,
-    );
-    return res.items;
+      '/accounting/journal',
+      params
+    )
+    return res.items
   },
-  { default: () => [], watch: [debouncedSearch], server: false },
-);
+  { default: () => [], watch: [debouncedSearch], server: false }
+)
 
 const { data: accounts, pending: pendingAccounts } = await useAsyncData(
-  "accounting-accounts-options",
-  () => get<AccountingAccount[]>("/accounting/accounts"),
-  { default: () => [], server: false },
-);
+  'accounting-accounts-options',
+  () => get<AccountingAccount[]>('/accounting/accounts'),
+  { default: () => [], server: false }
+)
 
 const accountItems = computed(() =>
-  accounts.value.map((account) => ({
+  accounts.value.map(account => ({
     label: `${account.code} · ${account.name}`,
-    value: account.id,
-  })),
-);
+    value: account.id
+  }))
+)
 
 const totalDebit = (journal: AccountingJournal) =>
-  journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0);
+  journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0)
 
 const columns: TableColumn<AccountingJournal>[] = [
   {
-    accessorKey: "entry_number",
-    header: "Nomor Jurnal",
-    cell: ({ row }) => `${row.getValue("entry_number")}`,
+    accessorKey: 'entry_number',
+    header: 'Nomor Jurnal',
+    cell: ({ row }) => `${row.getValue('entry_number')}`
   },
   {
-    accessorKey: "entry_date",
-    header: "Tanggal",
+    accessorKey: 'entry_date',
+    header: 'Tanggal',
     meta: {
-      class: { th: "text-center", td: "text-center" },
+      class: { th: 'text-center', td: 'text-center' }
     },
-    cell: ({ row }) => `${formatDate(row.getValue("entry_date"))}`,
+    cell: ({ row }) => `${formatDate(row.getValue('entry_date'))}`
   },
   {
-    accessorKey: "description",
-    header: "Deskripsi",
+    accessorKey: 'description',
+    header: 'Deskripsi',
     cell: ({ row }) => {
-      const desc = row.getValue("description") as string;
-      return h("div", { class: "flex flex-col gap-1" }, [
-        h("span", { class: "truncate max-w-64" }, desc),
+      const desc = row.getValue('description') as string
+      return h('div', { class: 'flex flex-col gap-1' }, [
+        h('span', { class: 'truncate max-w-64' }, desc),
         h(
-          "span",
-          { class: "text-xs text-neutral-500 dark:text-neutral-400" },
-          row.original.lines.map((line) => line.account_code).join(", "),
-        ),
-      ]);
-    },
+          'span',
+          { class: 'text-xs text-neutral-500 dark:text-neutral-400' },
+          row.original.lines.map(line => line.account_code).join(', ')
+        )
+      ])
+    }
   },
   {
-    accessorKey: "amount",
-    header: "Nominal",
+    accessorKey: 'amount',
+    header: 'Nominal',
     meta: {
-      class: { th: "text-right", td: "text-right" },
+      class: { th: 'text-right', td: 'text-right' }
     },
-    cell: ({ row }) => `${formatCurrency(totalDebit(row.original))}`,
+    cell: ({ row }) => `${formatCurrency(totalDebit(row.original))}`
   },
   {
-    id: "actions",
-    header: "Aksi",
-  },
-];
+    id: 'actions',
+    header: 'Aksi'
+  }
+]
 
 // ── Form ──────────────────────────────────────────────────────
 
-const modalOpen = ref(false);
-const detailId = ref<string | null>(null);
+const modalOpen = ref(false)
+const detailId = ref<string | null>(null)
 const form = reactive({
   entry_date: new Date().toISOString().slice(0, 10),
-  description: "",
-  reference: "",
+  description: '',
+  reference: '',
   lines: [
     {
       account_id: undefined as string | undefined,
-      description: "",
+      description: '',
       debit: 0,
-      credit: 0,
+      credit: 0
     },
     {
       account_id: undefined as string | undefined,
-      description: "",
+      description: '',
       debit: 0,
-      credit: 0,
-    },
-  ],
-});
+      credit: 0
+    }
+  ]
+})
 
 function openCreate() {
-  form.entry_date = new Date().toISOString().slice(0, 10);
-  form.description = "";
-  form.reference = "";
+  form.entry_date = new Date().toISOString().slice(0, 10)
+  form.description = ''
+  form.reference = ''
   form.lines = [
     {
       account_id: undefined as string | undefined,
-      description: "",
+      description: '',
       debit: 0,
-      credit: 0,
+      credit: 0
     },
     {
       account_id: undefined as string | undefined,
-      description: "",
+      description: '',
       debit: 0,
-      credit: 0,
-    },
-  ];
-  modalOpen.value = true;
+      credit: 0
+    }
+  ]
+  modalOpen.value = true
 }
 
 function addLine() {
   form.lines.push({
     account_id: undefined as string | undefined,
-    description: "",
+    description: '',
     debit: 0,
-    credit: 0,
-  });
+    credit: 0
+  })
 }
 
 function removeLine(index: number) {
-  if (form.lines.length > 2) form.lines.splice(index, 1);
+  if (form.lines.length > 2) form.lines.splice(index, 1)
 }
 
 const formTotalDebit = computed(() =>
-  form.lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0),
-);
+  form.lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0)
+)
 const formTotalCredit = computed(() =>
-  form.lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0),
-);
+  form.lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0)
+)
 const isBalanced = computed(
   () =>
-    formTotalDebit.value > 0 && formTotalDebit.value === formTotalCredit.value,
-);
+    formTotalDebit.value > 0 && formTotalDebit.value === formTotalCredit.value
+)
 
 async function onSubmit() {
   try {
-    if (loading.value) return;
+    if (loading.value) return
     if (!isBalanced.value) {
       toast.add({
-        title: "Tidak Balance",
+        title: 'Tidak Balance',
         description:
-          "Total debit harus sama dengan total credit dan lebih dari 0",
-        icon: "i-lucide-alert-triangle",
-        color: "warning",
-      });
-      return;
+          'Total debit harus sama dengan total credit dan lebih dari 0',
+        icon: 'i-lucide-alert-triangle',
+        color: 'warning'
+      })
+      return
     }
 
-    loading.value = true;
+    loading.value = true
 
     const body: AccountingJournalPost = {
       entry_date: form.entry_date,
       description: form.description.trim(),
       reference: form.reference.trim() || null,
       lines: form.lines
-        .filter((line) => line.account_id)
-        .map((line) => ({
+        .filter(line => line.account_id)
+        .map(line => ({
           account_id: line.account_id as string,
           description: line.description.trim() || null,
           debit: Number(line.debit) || 0,
-          credit: Number(line.credit) || 0,
-        })),
-    };
+          credit: Number(line.credit) || 0
+        }))
+    }
 
     await post<AccountingJournal, AccountingJournalPost>(
-      "/accounting/journal",
-      body,
-    );
+      '/accounting/journal',
+      body
+    )
 
     toast.add({
-      title: "Berhasil",
-      description: "Jurnal berhasil dibuat",
-      icon: "i-lucide-check-circle",
-      color: "success",
-    });
+      title: 'Berhasil',
+      description: 'Jurnal berhasil dibuat',
+      icon: 'i-lucide-check-circle',
+      color: 'success'
+    })
 
-    modalOpen.value = false;
-    refresh();
+    modalOpen.value = false
+    refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err instanceof Error ? err.message : "Terjadi kesalahan",
-      icon: "i-lucide-alert-triangle",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Terjadi kesalahan',
+      icon: 'i-lucide-alert-triangle',
+      color: 'error'
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-definePageMeta({ layout: "accounting" });
+definePageMeta({ layout: 'accounting' })
 </script>
 
 <template>
@@ -253,7 +253,9 @@ definePageMeta({ layout: "accounting" });
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Jurnal Umum</p>
+            <p class="text-base font-semibold">
+              Jurnal Umum
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Catatan transaksi keuangan (debit & kredit)
             </p>
@@ -280,18 +282,18 @@ definePageMeta({ layout: "accounting" });
                   {
                     label: 'Export to Excel',
                     icon: 'i-lucide-file-spreadsheet',
-                    onSelect: () => onExport('excel'),
+                    onSelect: () => onExport('excel')
                   },
                   {
                     label: 'Export to PDF',
                     icon: 'i-lucide-file-text',
-                    onSelect: () => onExport('pdf'),
+                    onSelect: () => onExport('pdf')
                   },
                   {
                     label: 'Export to CSV',
                     icon: 'i-lucide-file-down',
-                    onSelect: () => onExport('csv'),
-                  },
+                    onSelect: () => onExport('csv')
+                  }
                 ]"
               >
                 <UButton
@@ -321,7 +323,7 @@ definePageMeta({ layout: "accounting" });
                 thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
                 tbody: '[&>tr]:last:[&>td]:border-b-0',
                 th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-                td: 'border-b border-default',
+                td: 'border-b border-default'
               }"
             >
               <template #actions-cell="{ row }">
@@ -340,7 +342,9 @@ definePageMeta({ layout: "accounting" });
 
           <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-3xl' }">
             <template #title>
-              <h3 class="font-semibold">Buat Jurnal Umum</h3>
+              <h3 class="font-semibold">
+                Buat Jurnal Umum
+              </h3>
             </template>
 
             <template #body>
@@ -365,7 +369,9 @@ definePageMeta({ layout: "accounting" });
 
                 <div>
                   <div class="flex items-center justify-between mb-2">
-                    <p class="text-sm font-medium">Baris Jurnal</p>
+                    <p class="text-sm font-medium">
+                      Baris Jurnal
+                    </p>
                     <UButton
                       icon="i-lucide-plus"
                       size="sm"
@@ -423,12 +429,8 @@ definePageMeta({ layout: "accounting" });
                   <div
                     class="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-elevated/50 px-3 py-2 text-sm"
                   >
-                    <span class="font-medium"
-                      >Total Debit: {{ formatCurrency(formTotalDebit) }}</span
-                    >
-                    <span class="font-medium"
-                      >Total Kredit: {{ formatCurrency(formTotalCredit) }}</span
-                    >
+                    <span class="font-medium">Total Debit: {{ formatCurrency(formTotalDebit) }}</span>
+                    <span class="font-medium">Total Kredit: {{ formatCurrency(formTotalCredit) }}</span>
                     <UBadge
                       variant="soft"
                       :color="isBalanced ? 'success' : 'warning'"
@@ -470,7 +472,9 @@ definePageMeta({ layout: "accounting" });
             "
           >
             <template #title>
-              <h3 class="font-semibold">Detail Jurnal</h3>
+              <h3 class="font-semibold">
+                Detail Jurnal
+              </h3>
             </template>
 
             <template #body>
@@ -484,8 +488,8 @@ definePageMeta({ layout: "accounting" });
                     <span class="font-medium">Tanggal:</span>
                     {{
                       formatDate(
-                        journals.find((j) => j.id === detailId)?.entry_date ??
-                          "",
+                        journals.find((j) => j.id === detailId)?.entry_date
+                          ?? ""
                       )
                     }}
                   </p>
@@ -504,14 +508,14 @@ definePageMeta({ layout: "accounting" });
                       accessorKey: 'debit',
                       header: 'Debit',
                       cell: ({ row }) =>
-                        formatCurrency(row.getValue('debit') || 0),
+                        formatCurrency(row.getValue('debit') || 0)
                     },
                     {
                       accessorKey: 'credit',
                       header: 'Kredit',
                       cell: ({ row }) =>
-                        formatCurrency(row.getValue('credit') || 0),
-                    },
+                        formatCurrency(row.getValue('credit') || 0)
+                    }
                   ]"
                 />
               </div>

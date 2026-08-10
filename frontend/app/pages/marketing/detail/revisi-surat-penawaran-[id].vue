@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import type { StepperItem } from "@nuxt/ui";
-import type { ResUploads } from "~/types";
-import type { Customer, OfferingLetterPost } from "~/types/marketing";
+import type { StepperItem } from '@nuxt/ui'
+import type { ResUploads } from '~/types'
+import type { Customer, OfferingLetterPost } from '~/types/marketing'
 import type {
   MarketingOLDetailsState,
   MarketingOLFooterState,
-  MarketingOLHeaderState,
-} from "~/types/schemas";
+  MarketingOLHeaderState
+} from '~/types/schemas'
 
-const toast = useToast();
-const { get, put, postFile } = useApi();
+const toast = useToast()
+const { get, put, postFile } = useApi()
 
-const { data: customerList, pending: pendingCustomers } = await useAsyncData("customers", async () => {
-  const res = await get<Customer[]>("/customers");
+const { data: customerList, pending: pendingCustomers } = await useAsyncData('customers', async () => {
+  const res = await get<Customer[]>('/customers')
   return res.map((receiver: Customer) => ({
     id: receiver.id,
     name: receiver.name,
     npwp: receiver.npwp,
     address: receiver.address,
     phone: receiver.phone,
-    email: receiver.email,
-  }));
-}, { default: () => [] });
+    email: receiver.email
+  }))
+}, { default: () => [] })
 
 const receivers = computed(() =>
   customerList.value.map((receiver: Customer) => {
@@ -29,98 +29,98 @@ const receivers = computed(() =>
       label: receiver.name,
       value: receiver.id,
       npwp: receiver.npwp,
-      address: receiver.address,
-    };
-  }),
-);
+      address: receiver.address
+    }
+  })
+)
 
 const items: StepperItem[] = [
-  { title: "Kop Surat Penawaran", slot: "letterHeader" },
-  { title: "Rincian Penawaran", slot: "letterOfferDetails" },
-  { title: "Penutup Surat Penawaran", slot: "letterFooter" },
-];
+  { title: 'Kop Surat Penawaran', slot: 'letterHeader' },
+  { title: 'Rincian Penawaran', slot: 'letterOfferDetails' },
+  { title: 'Penutup Surat Penawaran', slot: 'letterFooter' }
+]
 
 // fetch data based on id and insert into each reactive
-const route = useRoute();
-const idOfferingLetter = route.params.id;
+const route = useRoute()
+const idOfferingLetter = route.params.id
 
 const { data: offeringLetter, pending: pendingOL } = await useAsyncData(
-  "offering-letter",
+  'offering-letter',
   async () => {
     const res = await get<OfferingLetterPost>(
-      `/offering-letters/${idOfferingLetter}`,
-    );
-    return res;
-  },
-);
+      `/offering-letters/${idOfferingLetter}`
+    )
+    return res
+  }
+)
 
 const letterHeader = reactive<MarketingOLHeaderState>({
-  location: offeringLetter.value?.details.location || "",
+  location: offeringLetter.value?.details.location || '',
   date:
     new Date(offeringLetter.value?.details.date || new Date())
       .toISOString()
-      .split("T")[0] ?? "",
-  offeringLetterNumber: offeringLetter.value?.offering_letter_number || "",
-  regarding: offeringLetter.value?.details.regarding || "",
-  receiver: offeringLetter.value?.details.receiver || "",
-});
+      .split('T')[0] ?? '',
+  offeringLetterNumber: offeringLetter.value?.offering_letter_number || '',
+  regarding: offeringLetter.value?.details.regarding || '',
+  receiver: offeringLetter.value?.details.receiver || ''
+})
 
 const letterOfferDetails = reactive<MarketingOLDetailsState>({
-  supplyPoint: offeringLetter.value?.details.supplyPoint || "",
-  qualityAssurance: offeringLetter.value?.details.qualityAssurance || "",
-  custodyTransfer: offeringLetter.value?.details.custodyTransfer || "",
-  unloadingProcedure: offeringLetter.value?.details.unloadingProcedure || "",
-  volumeUnit: offeringLetter.value?.details.volumeUnit || "",
+  supplyPoint: offeringLetter.value?.details.supplyPoint || '',
+  qualityAssurance: offeringLetter.value?.details.qualityAssurance || '',
+  custodyTransfer: offeringLetter.value?.details.custodyTransfer || '',
+  unloadingProcedure: offeringLetter.value?.details.unloadingProcedure || '',
+  volumeUnit: offeringLetter.value?.details.volumeUnit || '',
   volumeTolerance: offeringLetter.value?.details.volumeTolerance || 0,
   paymentTerm: offeringLetter.value?.details.paymentTerm || 0,
   latePenalty: offeringLetter.value?.details.latePenalty || 0,
-  servicePattern: offeringLetter.value?.details.servicePattern || "",
+  servicePattern: offeringLetter.value?.details.servicePattern || '',
   personInCharge: {
-    name: offeringLetter.value?.details.personInCharge.name || "",
-    phoneNumber: offeringLetter.value?.details.personInCharge.phoneNumber || "",
+    name: offeringLetter.value?.details.personInCharge.name || '',
+    phoneNumber: offeringLetter.value?.details.personInCharge.phoneNumber || ''
   },
   paymentAddress: {
-    bankName: offeringLetter.value?.details.paymentAddress.bankName || "",
+    bankName: offeringLetter.value?.details.paymentAddress.bankName || '',
     accountNumber:
-      offeringLetter.value?.details.paymentAddress.accountNumber || "",
-    accountName: offeringLetter.value?.details.paymentAddress.accountName || "",
+      offeringLetter.value?.details.paymentAddress.accountNumber || '',
+    accountName: offeringLetter.value?.details.paymentAddress.accountName || ''
   },
   fuelPrices: {
     logisticInformation:
-      offeringLetter.value?.details.fuelPrices.logisticInformation || "",
-    productName: offeringLetter.value?.details.fuelPrices.productName || "",
+      offeringLetter.value?.details.fuelPrices.logisticInformation || '',
+    productName: offeringLetter.value?.details.fuelPrices.productName || '',
     hppPrice: offeringLetter.value?.details.fuelPrices.hppPrice || 0,
     basePrice: offeringLetter.value?.details.fuelPrices.basePrice || 0,
     totalPrice: offeringLetter.value?.details.fuelPrices.totalPrice || 0,
     sellingPrice: {
       ppkb: offeringLetter.value?.details.fuelPrices.sellingPrice.ppkb || 0,
       oat: offeringLetter.value?.details.fuelPrices.sellingPrice.oat || 0,
-      ppn: offeringLetter.value?.details.fuelPrices.sellingPrice.ppn || 0,
+      ppn: offeringLetter.value?.details.fuelPrices.sellingPrice.ppn || 0
     },
     percentageNum: {
       oat: offeringLetter.value?.details.fuelPrices.percentageNum.oat || 0,
       ppkb: offeringLetter.value?.details.fuelPrices.percentageNum.ppkb || 0,
-      ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0,
-    },
+      ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0
+    }
   },
   informasiTambahan:
-    offeringLetter.value?.details.informasiTambahan || [],
-});
+    offeringLetter.value?.details.informasiTambahan || []
+})
 
 const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline:
     offeringLetter.value?.details.purchaseOrderDeadline || 0,
   offeror: {
-    name: offeringLetter.value?.details.offeror.name || "",
-    signature: undefined,
+    name: offeringLetter.value?.details.offeror.name || '',
+    signature: undefined
   },
   companyInformation: {
-    address: offeringLetter.value?.details.companyInformation.address || "",
+    address: offeringLetter.value?.details.companyInformation.address || '',
     phoneNumber:
-      offeringLetter.value?.details.companyInformation.phoneNumber || "", // add masking
-    email: offeringLetter.value?.details.companyInformation.email || "",
-  },
-});
+      offeringLetter.value?.details.companyInformation.phoneNumber || '', // add masking
+    email: offeringLetter.value?.details.companyInformation.email || ''
+  }
+})
 
 const { data: signature, pending: pendingSignature } = await useAsyncData('signature', async () => {
   let res = await get<ResUploads[]>('/uploads', {
@@ -136,9 +136,9 @@ const { data: signature, pending: pendingSignature } = await useAsyncData('signa
   }
 
   return {
-    url: res[0]?.url,
-  };
-});
+    url: res[0]?.url
+  }
+})
 
 const loadedSignatureFile = ref<File | null>(null)
 
@@ -150,26 +150,26 @@ async function loadExistingFile() {
   const blob = await response.blob()
   const filename = url.split('/').pop()!
   const file = new File([blob], filename, {
-    type: blob.type,
+    type: blob.type
   })
   letterFooter.offeror.signature = file
   loadedSignatureFile.value = file
 }
 
-onMounted(loadExistingFile);
+onMounted(loadExistingFile)
 
-const stepper = useTemplateRef("stepper");
+const stepper = useTemplateRef('stepper')
 
 function previousNavigation() {
-  stepper.value?.prev();
+  stepper.value?.prev()
 }
 
 function onHeaderSubmit() {
-  stepper.value?.next();
+  stepper.value?.next()
 }
 
 function onDetailsSubmit() {
-  stepper.value?.next();
+  stepper.value?.next()
 }
 
 async function onFooterSubmit() {
@@ -183,22 +183,22 @@ async function onFooterSubmit() {
         offering_letter_number: letterHeader.offeringLetterNumber,
         regarding: letterHeader.regarding,
         receiver: letterHeader.receiver,
-        status: "under_revision",
+        status: 'under_revision',
         transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
         fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
         details: {
           ...letterHeader,
           ...letterOfferDetails,
           ...letterFooter,
-          offeror: { ...letterFooter.offeror, signature: undefined },
-        },
-      },
-    );
-    console.log(res);
+          offeror: { ...letterFooter.offeror, signature: undefined }
+        }
+      }
+    )
+    console.log(res)
 
-    const signature = letterFooter.offeror.signature;
+    const signature = letterFooter.offeror.signature
     if (!signature) {
-      throw new Error("Tanda tangan belum diunggah");
+      throw new Error('Tanda tangan belum diunggah')
     }
 
     if (signature !== loadedSignatureFile.value) {
@@ -209,24 +209,24 @@ async function onFooterSubmit() {
         document_id: String(idOfferingLetter)
       })
 
-      console.log(resUpload);
+      console.log(resUpload)
       loadedSignatureFile.value = signature
     }
 
     toast.add({
-      title: "Sukses",
-      icon: "i-lucide-check-circle",
-      description: "Data Penawaran berhasil dibuat",
-      color: "success",
-    });
+      title: 'Sukses',
+      icon: 'i-lucide-check-circle',
+      description: 'Data Penawaran berhasil dibuat',
+      color: 'success'
+    })
 
     // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
   } catch (e: any) {
-    toast.add({ title: "Error", description: e.message, color: "error" });
+    toast.add({ title: 'Error', description: e.message, color: 'error' })
   }
 }
 
-definePageMeta({ layout: "marketing" });
+definePageMeta({ layout: 'marketing' })
 </script>
 
 <template>
@@ -236,7 +236,12 @@ definePageMeta({ layout: "marketing" });
       <USkeleton class="h-10 w-full rounded-lg" />
     </div>
   </div>
-  <UStepper v-else ref="stepper" disabled :items>
+  <UStepper
+    v-else
+    ref="stepper"
+    disabled
+    :items
+  >
     <template #letterHeader>
       <MarketingOLHeaderForm
         v-model="letterHeader"

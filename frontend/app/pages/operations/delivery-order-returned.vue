@@ -1,74 +1,74 @@
 <script setup lang="ts">
-import type { StepperItem, NavigationMenuItem } from "@nuxt/ui";
-import type { ResUploads } from "~/types";
-import { type OperationsDOState } from "~/types/schemas";
+import type { StepperItem, NavigationMenuItem } from '@nuxt/ui'
+import type { ResUploads } from '~/types'
+import type { OperationsDOState } from '~/types/schemas'
 
-const { postFile } = useApi();
-const toast = useToast();
-const uploading = ref(false);
+const { postFile } = useApi()
+const toast = useToast()
+const uploading = ref(false)
 
 const items: StepperItem[] = [
   {
-    title: "Upload Surat DO",
-    slot: "doReturned",
-    icon: "i-lucide-receipt-text",
-  },
-];
+    title: 'Upload Surat DO',
+    slot: 'doReturned',
+    icon: 'i-lucide-receipt-text'
+  }
+]
 
 const doReturned = reactive<OperationsDOState>({
-  deliveryOrderNumber: "",
-  doDocument: undefined,
-});
+  deliveryOrderNumber: '',
+  doDocument: undefined
+})
 
 async function onDoSubmit() {
-  if (uploading.value) return;
+  if (uploading.value) return
   const file = Array.isArray(doReturned.doDocument)
     ? doReturned.doDocument[0]
-    : doReturned.doDocument;
+    : doReturned.doDocument
 
   if (!doReturned.deliveryOrderNumber || !file) {
-    toast.add({ title: "Validasi", description: "Pilih nomor DO dan file yang akan diupload.", color: "warning" });
-    return;
+    toast.add({ title: 'Validasi', description: 'Pilih nomor DO dan file yang akan diupload.', color: 'warning' })
+    return
   }
 
-  uploading.value = true;
+  uploading.value = true
   try {
-    await postFile<ResUploads[]>("/upload", {
+    await postFile<ResUploads[]>('/upload', {
       files: [file],
-      folder: "do",
-      document_type: "do",
-      document_id: doReturned.deliveryOrderNumber,
-    });
-    toast.add({ title: "Sukses", description: "File Delivery Order berhasil diupload.", color: "success" });
-    doReturned.deliveryOrderNumber = "";
-    doReturned.doDocument = undefined;
+      folder: 'do',
+      document_type: 'do',
+      document_id: doReturned.deliveryOrderNumber
+    })
+    toast.add({ title: 'Sukses', description: 'File Delivery Order berhasil diupload.', color: 'success' })
+    doReturned.deliveryOrderNumber = ''
+    doReturned.doDocument = undefined
   } catch (error: any) {
-    toast.add({ title: "Error", description: error.message || "Gagal upload file Delivery Order.", color: "error" });
+    toast.add({ title: 'Error', description: error.message || 'Gagal upload file Delivery Order.', color: 'error' })
   } finally {
-    uploading.value = false;
+    uploading.value = false
   }
 }
 
 const links = [
   [
     {
-      label: "Buat Delivery Order",
-      icon: "i-lucide-truck",
-      to: "/operations/delivery-order",
+      label: 'Buat Delivery Order',
+      icon: 'i-lucide-truck',
+      to: '/operations/delivery-order'
     },
     {
-      label: "Upload Delivery Order (Yang sudah dikembalikan)",
-      icon: "i-lucide-file-output",
-      to: "/operations/delivery-order-returned",
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+      label: 'Upload Delivery Order (Yang sudah dikembalikan)',
+      icon: 'i-lucide-file-output',
+      to: '/operations/delivery-order-returned'
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
-definePageMeta({ layout: "operations" });
+definePageMeta({ layout: 'operations' })
 </script>
 
 <template>
-  <UDashboardPanel :ui="{ body: 'w-full' }" id="do">
+  <UDashboardPanel id="do" :ui="{ body: 'w-full' }">
     <template #header>
       <UDashboardNavbar
         title="Form Pembuatan Delivery Order"
@@ -88,7 +88,7 @@ definePageMeta({ layout: "operations" });
     </template>
 
     <template #body>
-      <UStepper disabled ref="stepper" :items>
+      <UStepper ref="stepper" disabled :items>
         <template #doReturned>
           <!-- <MarketingPOCustomerForm v-model="doReturned" @submit="onDoSubmit" /> -->
           <OperationsDOReturnedForm v-model="doReturned" @submit="onDoSubmit" />

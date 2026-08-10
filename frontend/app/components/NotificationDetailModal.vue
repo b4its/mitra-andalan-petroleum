@@ -1,20 +1,20 @@
 <script setup lang="ts">
-const router = useRouter();
-const { selectedNotification, isDetailModalOpen, closeDetail } =
-  useNotifications();
+const router = useRouter()
+const { selectedNotification, isDetailModalOpen, closeDetail }
+  = useNotifications()
 
 function handleView() {
-  const to = selectedNotification.value?.to;
-  closeDetail();
-  if (to) router.push(to);
+  const to = selectedNotification.value?.to
+  closeDetail()
+  if (to) router.push(to)
 }
 
-const typeColor: Record<string, "info" | "success" | "warning" | "error"> = {
-  info: "info",
-  success: "success",
-  warning: "warning",
-  error: "error",
-};
+const typeColor: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
+  info: 'info',
+  success: 'success',
+  warning: 'warning',
+  error: 'error'
+}
 </script>
 
 <template>

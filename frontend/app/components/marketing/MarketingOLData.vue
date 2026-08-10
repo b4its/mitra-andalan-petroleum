@@ -223,5 +223,5 @@ function openDetail(id: string) {
     </div>
   </section>
 
-  <RecordDetailModal v-model:open="detailOpen" type="ol" :id="detailId" />
+  <RecordDetailModal :id="detailId" v-model:open="detailOpen" type="ol" />
 </template>

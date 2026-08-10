@@ -12,7 +12,7 @@ const { get } = useApi()
 
 const { toCSV, toExcel, toPDF } = useExport()
 
-const exportColumns: ExportColumn[] = [
+const exportColumns: ExportColumn<AccountingLedgerRow>[] = [
   { header: 'Tanggal', accessor: (row: AccountingLedgerRow) => formatDate(row.entry_date) },
   { header: 'Nomor Jurnal', accessor: (row: AccountingLedgerRow) => row.entry_number },
   { header: 'Deskripsi', accessor: (row: AccountingLedgerRow) => row.description },
@@ -162,7 +162,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Buku Besar</p>
+            <p class="text-base font-semibold">
+              Buku Besar
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Riwayat mutasi per akun dengan saldo berjalan
             </p>
@@ -174,102 +176,106 @@ definePageMeta({ layout: 'accounting' })
     <template #body>
       <div class="p-4 lg:p-6">
         <section class="flex flex-col lg:gap-4">
+          <UCard>
+            <div v-if="pendingAccounts" class="flex flex-wrap items-end gap-3">
+              <div class="space-y-2">
+                <USkeleton class="h-4 w-16 rounded" />
+                <USkeleton class="h-10 w-72 rounded-lg" />
+              </div>
+              <div class="space-y-2">
+                <USkeleton class="h-4 w-24 rounded" />
+                <USkeleton class="h-10 w-40 rounded-lg" />
+              </div>
+              <div class="space-y-2">
+                <USkeleton class="h-4 w-24 rounded" />
+                <USkeleton class="h-10 w-40 rounded-lg" />
+              </div>
+              <USkeleton class="h-10 w-32 rounded-lg" />
+            </div>
+            <div v-else class="flex flex-wrap items-end gap-3">
+              <UFormField label="Akun" class="w-72">
+                <USelect
+                  v-model="accountId"
+                  :items="accountItems"
+                  value-key="value"
+                  placeholder="Pilih akun"
+                />
+              </UFormField>
+              <UFormField label="Dari Tanggal">
+                <UInput v-model="dateFrom" type="date" />
+              </UFormField>
+              <UFormField label="Sampai Tanggal">
+                <UInput v-model="dateTo" type="date" />
+              </UFormField>
+              <UButton
+                icon="i-lucide-search"
+                :disabled="!accountId"
+                @click="onSearch"
+              >
+                Tampilkan
+              </UButton>
+              <UDropdownMenu
+                :items="[
+                  { type: 'label', label: 'Export Data' },
+                  { type: 'separator' },
+                  { label: 'Export to Excel', icon: 'i-lucide-file-spreadsheet', disabled: !ledger, onSelect: () => onExport('excel') },
+                  { label: 'Export to PDF', icon: 'i-lucide-file-text', disabled: !ledger, onSelect: () => onExport('pdf') },
+                  { label: 'Export to CSV', icon: 'i-lucide-file-down', disabled: !ledger, onSelect: () => onExport('csv') }
+                ]"
+              >
+                <UButton
+                  icon="i-lucide-download"
+                  color="neutral"
+                  variant="soft"
+                  :disabled="!ledger"
+                >
+                  Export
+                </UButton>
+              </UDropdownMenu>
+            </div>
+          </UCard>
 
-    <UCard>
-      <div v-if="pendingAccounts" class="flex flex-wrap items-end gap-3">
-        <div class="space-y-2">
-          <USkeleton class="h-4 w-16 rounded" />
-          <USkeleton class="h-10 w-72 rounded-lg" />
-        </div>
-        <div class="space-y-2">
-          <USkeleton class="h-4 w-24 rounded" />
-          <USkeleton class="h-10 w-40 rounded-lg" />
-        </div>
-        <div class="space-y-2">
-          <USkeleton class="h-4 w-24 rounded" />
-          <USkeleton class="h-10 w-40 rounded-lg" />
-        </div>
-        <USkeleton class="h-10 w-32 rounded-lg" />
-      </div>
-      <div v-else class="flex flex-wrap items-end gap-3">
-        <UFormField label="Akun" class="w-72">
-          <USelect
-            v-model="accountId"
-            :items="accountItems"
-            value-key="value"
-            placeholder="Pilih akun"
+          <template v-if="ledger">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <UCard v-for="card in summaryCards" :key="card.title">
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  {{ card.title }}
+                </p>
+                <p class="mt-1 text-xl font-bold">
+                  {{ card.value }}
+                </p>
+              </UCard>
+            </div>
+
+            <UCard>
+              <UTable
+                :data="ledger.rows"
+                :columns="columns"
+                :ui="{
+                  base: 'table-fixed border-separate border-spacing-0',
+                  thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+                  tbody: '[&>tr]:last:[&>td]:border-b-0',
+                  th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+                  td: 'border-b border-default'
+                }"
+              />
+              <p
+                v-if="ledger.rows.length === 0"
+                class="py-6 text-center text-sm text-neutral-500"
+              >
+                Belum ada mutasi untuk akun ini
+              </p>
+            </UCard>
+          </template>
+
+          <UAlert
+            v-else-if="status !== 'pending'"
+            title="Pilih Akun"
+            description="Pilih akun di atas untuk melihat buku besarnya."
+            icon="i-lucide-info"
+            color="info"
+            variant="soft"
           />
-        </UFormField>
-        <UFormField label="Dari Tanggal">
-          <UInput v-model="dateFrom" type="date" />
-        </UFormField>
-        <UFormField label="Sampai Tanggal">
-          <UInput v-model="dateTo" type="date" />
-        </UFormField>
-        <UButton
-          icon="i-lucide-search"
-          :disabled="!accountId"
-          @click="onSearch"
-        >
-          Tampilkan
-        </UButton>
-        <UDropdownMenu
-          :items="[
-            { type: 'label', label: 'Export Data' },
-            { type: 'separator' },
-            { label: 'Export to Excel', icon: 'i-lucide-file-spreadsheet', disabled: !ledger, onSelect: () => onExport('excel') },
-            { label: 'Export to PDF', icon: 'i-lucide-file-text', disabled: !ledger, onSelect: () => onExport('pdf') },
-            { label: 'Export to CSV', icon: 'i-lucide-file-down', disabled: !ledger, onSelect: () => onExport('csv') }
-          ]"
-        >
-          <UButton icon="i-lucide-download" color="neutral" variant="soft" :disabled="!ledger">
-            Export
-          </UButton>
-        </UDropdownMenu>
-      </div>
-    </UCard>
-
-    <template v-if="ledger">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <UCard v-for="card in summaryCards" :key="card.title">
-          <p class="text-sm text-neutral-500 dark:text-neutral-400">
-            {{ card.title }}
-          </p>
-          <p class="mt-1 text-xl font-bold">
-            {{ card.value }}
-          </p>
-        </UCard>
-      </div>
-
-      <UCard>
-        <UTable
-          :data="ledger.rows"
-          :columns="columns"
-          :ui="{
-            base: 'table-fixed border-separate border-spacing-0',
-            thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-            tbody: '[&>tr]:last:[&>td]:border-b-0',
-            th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-            td: 'border-b border-default'
-          }"
-        />
-        <p
-          v-if="ledger.rows.length === 0"
-          class="py-6 text-center text-sm text-neutral-500"
-        >
-          Belum ada mutasi untuk akun ini
-        </p>
-      </UCard>
-    </template>
-
-    <UAlert
-      v-else-if="status !== 'pending'"
-      title="Pilih Akun"
-      description="Pilih akun di atas untuk melihat buku besarnya."
-      icon="i-lucide-info"
-      color="info"
-      variant="soft"
-    />
         </section>
       </div>
     </template>

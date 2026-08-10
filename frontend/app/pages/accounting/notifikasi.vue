@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
 import type { Notifications } from '~/types/notification'
 
 const { get, put } = useApi()
@@ -120,12 +118,19 @@ definePageMeta({ layout: 'accounting' })
         <template #title>
           <div class="flex items-center gap-3">
             <div>
-              <p class="text-base font-semibold">Notifikasi</p>
+              <p class="text-base font-semibold">
+                Notifikasi
+              </p>
               <p class="text-xs text-neutral-500 dark:text-neutral-400">
                 Notifikasi khusus untuk role accounting
               </p>
             </div>
-            <UBadge v-if="unreadCount" color="error" variant="solid" size="sm">
+            <UBadge
+              v-if="unreadCount"
+              color="error"
+              variant="solid"
+              size="sm"
+            >
               {{ unreadCount }} belum dibaca
             </UBadge>
           </div>
@@ -168,7 +173,9 @@ definePageMeta({ layout: 'accounting' })
             class="flex flex-col items-center justify-center gap-4 py-20"
           >
             <UIcon name="i-lucide-bell-off" class="size-16 text-muted" />
-            <p class="text-lg font-medium text-muted">Tidak ada notifikasi</p>
+            <p class="text-lg font-medium text-muted">
+              Tidak ada notifikasi
+            </p>
             <p class="text-sm text-muted">
               Belum ada notifikasi untuk role accounting.
             </p>
@@ -305,29 +312,53 @@ definePageMeta({ layout: 'accounting' })
         <!-- Detail fields -->
         <div class="space-y-3 text-sm">
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Judul</p>
-            <p class="font-semibold text-highlighted">{{ selectedNotification.title }}</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Judul
+            </p>
+            <p class="font-semibold text-highlighted">
+              {{ selectedNotification.title }}
+            </p>
           </div>
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Pesan</p>
-            <p class="text-muted leading-relaxed">{{ selectedNotification.message }}</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Pesan
+            </p>
+            <p class="text-muted leading-relaxed">
+              {{ selectedNotification.message }}
+            </p>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">Pengguna</p>
-              <p class="font-medium">{{ selectedNotification.user_name || '-' }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                Pengguna
+              </p>
+              <p class="font-medium">
+                {{ selectedNotification.user_name || '-' }}
+              </p>
             </div>
             <div>
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">Waktu</p>
-              <p class="font-medium">{{ formatDateTime(selectedNotification.created_at) }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                Waktu
+              </p>
+              <p class="font-medium">
+                {{ formatDateTime(selectedNotification.created_at) }}
+              </p>
             </div>
             <div v-if="selectedNotification.to">
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">Tautan</p>
-              <p class="font-mono text-xs text-primary truncate">{{ selectedNotification.to }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                Tautan
+              </p>
+              <p class="font-mono text-xs text-primary truncate">
+                {{ selectedNotification.to }}
+              </p>
             </div>
             <div>
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">ID</p>
-              <p class="font-mono text-xs text-muted truncate">{{ selectedNotification.id }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                ID
+              </p>
+              <p class="font-mono text-xs text-muted truncate">
+                {{ selectedNotification.id }}
+              </p>
             </div>
           </div>
         </div>

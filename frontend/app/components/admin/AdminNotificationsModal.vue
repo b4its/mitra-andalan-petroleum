@@ -29,17 +29,17 @@ const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return notifications.value
 
-  return notifications.value.filter(n => {
+  return notifications.value.filter((n) => {
     // Gunakan kurung kurawal {} dan let/const di sini
-    let is_reading = n.is_read ? "Dibaca" : "Belum";
+    const is_reading = n.is_read ? 'Dibaca' : 'Belum'
 
     // Wajib pakai 'return' untuk mengembalikan hasil filternya
     return (
-      n.title?.toLowerCase().includes(q) ||
-      n.message?.toLowerCase().includes(q) ||
-      n.user_name?.toLowerCase().includes(q) ||
-      is_reading.toLowerCase().includes(q) || 
-      n.type?.toLowerCase().includes(q)
+      n.title?.toLowerCase().includes(q)
+      || n.message?.toLowerCase().includes(q)
+      || n.user_name?.toLowerCase().includes(q)
+      || is_reading.toLowerCase().includes(q)
+      || n.type?.toLowerCase().includes(q)
     )
   })
 })
@@ -47,7 +47,9 @@ const filtered = computed(() => {
 // ── Pagination ────────────────────────────────────────────────
 const page = ref(1)
 const PAGE_SIZE = 10
-watch(search, () => { page.value = 1 })
+watch(search, () => {
+  page.value = 1
+})
 
 const paged = computed(() => {
   const start = (page.value - 1) * PAGE_SIZE
@@ -129,7 +131,6 @@ const columns: TableColumn<any>[] = [
   { accessorKey: 'title', header: 'Judul' },
   { accessorKey: 'message', header: 'Pesan' },
 
-
   {
     id: 'actions',
     header: '',
@@ -168,7 +169,12 @@ const columns: TableColumn<any>[] = [
     @update:open="emit('update:open', $event)"
   >
     <template #body>
-      <UAlert v-if="error" color="error" title="Gagal memuat notifikasi" :description="error.message" />
+      <UAlert
+        v-if="error"
+        color="error"
+        title="Gagal memuat notifikasi"
+        :description="error.message"
+      />
 
       <div v-else-if="pending" class="space-y-3">
         <USkeleton v-for="i in 5" :key="i" class="h-12 w-full" />
@@ -254,29 +260,53 @@ const columns: TableColumn<any>[] = [
         <!-- Detail fields -->
         <div class="space-y-3 text-sm">
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Judul</p>
-            <p class="font-semibold text-highlighted">{{ selectedNotif.title }}</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Judul
+            </p>
+            <p class="font-semibold text-highlighted">
+              {{ selectedNotif.title }}
+            </p>
           </div>
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Pesan</p>
-            <p class="text-muted leading-relaxed">{{ selectedNotif.message }}</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Pesan
+            </p>
+            <p class="text-muted leading-relaxed">
+              {{ selectedNotif.message }}
+            </p>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">Pengguna</p>
-              <p class="font-medium">{{ selectedNotif.user_name || '-' }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                Pengguna
+              </p>
+              <p class="font-medium">
+                {{ selectedNotif.user_name || '-' }}
+              </p>
             </div>
             <div>
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">Waktu</p>
-              <p class="font-medium">{{ formatDateTime(selectedNotif.created_at) }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                Waktu
+              </p>
+              <p class="font-medium">
+                {{ formatDateTime(selectedNotif.created_at) }}
+              </p>
             </div>
             <div v-if="selectedNotif.to">
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">Tautan</p>
-              <p class="font-mono text-xs text-primary truncate">{{ selectedNotif.to }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                Tautan
+              </p>
+              <p class="font-mono text-xs text-primary truncate">
+                {{ selectedNotif.to }}
+              </p>
             </div>
             <div>
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">ID</p>
-              <p class="font-mono text-xs text-muted truncate">{{ selectedNotif.id }}</p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">
+                ID
+              </p>
+              <p class="font-mono text-xs text-muted truncate">
+                {{ selectedNotif.id }}
+              </p>
             </div>
           </div>
         </div>

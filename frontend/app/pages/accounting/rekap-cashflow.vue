@@ -60,7 +60,9 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">Rekap Arus Kas (Cashflow)</p>
+            <p class="text-base font-semibold">
+              Rekap Arus Kas (Cashflow)
+            </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Laporan arus kas: operasi, investasi, dan pendanaan
             </p>
@@ -100,21 +102,33 @@ definePageMeta({ layout: 'accounting' })
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <UCard color="neutral" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Saldo Awal</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(cashflow.opening_balance) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Saldo Awal
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(cashflow.opening_balance) }}
+                </p>
               </UCard>
               <UCard color="success" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Arus Kas Bersih</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Arus Kas Bersih
+                </p>
                 <p class="text-2xl font-bold" :class="cashflow.net_cashflow >= 0 ? 'text-success' : 'text-error'">
                   {{ formatCurrency(cashflow.net_cashflow) }}
                 </p>
               </UCard>
               <UCard color="primary" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Saldo Akhir</p>
-                <p class="text-2xl font-bold">{{ formatCurrency(cashflow.closing_balance) }}</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Saldo Akhir
+                </p>
+                <p class="text-2xl font-bold">
+                  {{ formatCurrency(cashflow.closing_balance) }}
+                </p>
               </UCard>
               <UCard color="info" variant="subtle">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Arus Kas Operasi</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Arus Kas Operasi
+                </p>
                 <p class="text-2xl font-bold" :class="cashflow.operating.total >= 0 ? 'text-success' : 'text-error'">
                   {{ formatCurrency(cashflow.operating.total) }}
                 </p>

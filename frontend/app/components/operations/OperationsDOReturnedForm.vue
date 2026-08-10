@@ -25,14 +25,13 @@ const deliveryOrders = computed(() =>
   deliveryOrderList.value.map((deliveryOrder: any) => ({
     label: deliveryOrder.customer_name || deliveryOrder.do_number,
     value: deliveryOrder.id,
-    doNumber: deliveryOrder.do_number,
+    doNumber: deliveryOrder.do_number
   }))
 )
 
 function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
   emit('submit')
 }
-
 </script>
 
 <template>
@@ -56,39 +55,39 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
       </div>
       <template v-else>
         <UFormField name="deliveryOrder" label="Nomor Delivery Order" required>
-        <USelect
-          v-model="state.deliveryOrderNumber"
-          :items="deliveryOrders"
-          placeholder="Pilih "
-          value-key="value"
-          :ui="{ content: 'min-w-fit' }"
-          class="w-full"
+          <USelect
+            v-model="state.deliveryOrderNumber"
+            :items="deliveryOrders"
+            placeholder="Pilih "
+            value-key="value"
+            :ui="{ content: 'min-w-fit' }"
+            class="w-full"
+          >
+            <template #item-label="{ item }">
+              {{ item.label }}
+
+              <span class="text-muted text-xs"> ({{ item.doNumber }}) </span>
+            </template>
+          </USelect>
+        </UFormField>
+
+        <UFormField
+          name="doFile"
+          label="File Delivery Order Yang Dikembalikan"
+          required
         >
-          <template #item-label="{ item }">
-            {{ item.label }}
+          <UFileUpload
+            v-model="state.doDocument"
+            label="Upload File Delivery Order"
+            description="Format file .pdf dengan max 50MB"
+          />
+        </UFormField>
 
-            <span class="text-muted text-xs"> ({{ item.doNumber }}) </span>
-          </template>
-        </USelect>
-      </UFormField>
-
-      <UFormField
-        name="doFile"
-        label="File Delivery Order Yang Dikembalikan"
-        required
-      >
-        <UFileUpload
-          v-model="state.doDocument"
-          label="Upload File Delivery Order"
-          description="Format file .pdf dengan max 50MB"
-        />
-      </UFormField>
-
-      <div class="flex justify-end pt-4">
-        <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-          Upload DO
-        </UButton>
-      </div>
+        <div class="flex justify-end pt-4">
+          <UButton type="submit" trailing-icon="i-lucide-arrow-right">
+            Upload DO
+          </UButton>
+        </div>
       </template>
     </UPageCard>
   </UForm>

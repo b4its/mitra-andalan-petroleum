@@ -111,7 +111,7 @@ test.describe('Accounting pages', () => {
     ]) {
       await page.goto(path, { waitUntil: 'networkidle' })
       await expect(
-        page.locator('p').filter({ hasText: title }).first(),
+        page.locator('p').filter({ hasText: title }).first()
       ).toBeVisible()
     }
   })
@@ -155,9 +155,9 @@ test.describe('Accounting pages', () => {
     }
     const filtered = errors.filter(
       e =>
-        !e.includes('favicon') &&
-        !e.includes('favicon.ico') &&
-        !e.includes('Hydration completed but contains mismatches')
+        !e.includes('favicon')
+        && !e.includes('favicon.ico')
+        && !e.includes('Hydration completed but contains mismatches')
     )
     expect(filtered).toHaveLength(0)
   })

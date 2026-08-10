@@ -5,7 +5,7 @@ import {
   type OperationsDOFooterState
 } from '~/types/schemas'
 
-const props = defineProps<{
+defineProps<{
   isLoading: boolean | undefined
 }>()
 
