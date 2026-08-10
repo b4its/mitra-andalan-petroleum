@@ -112,11 +112,11 @@ export interface OfferingLetterDetails {
   fuelPrices: FuelPrices;
   purchaseOrderDeadline: number;
   offeror: Offeror;
-  companyInformation: CompanyInformation;
+  companyInformation: OfferingLetterCompanyInformation;
   informasiTambahan?: string[];
 }
 
-export interface CompanyInformation {
+export interface OfferingLetterCompanyInformation {
   address: string;
   phoneNumber: string;
   email: string;
@@ -125,11 +125,12 @@ export interface CompanyInformation {
 export interface FuelPrices {
   logisticInformation: string;
   productName: string;
+  hppPrice: number;
   basePrice: number;
   totalPrice: number;
   sellingPrice: {
     ppkb: number;
-    oat: number;
+    oat: number | null;
     ppn: number;
   };
   percentageNum: {
@@ -141,7 +142,7 @@ export interface FuelPrices {
 
 export interface Offeror {
   name: string;
-  signature: Signature;
+  signature: Signature | undefined;
 }
 
 export interface Signature {}
