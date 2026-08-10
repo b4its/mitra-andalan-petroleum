@@ -100,60 +100,64 @@ const items: StepperItem[] = [
 
 const letterCompanyMain = reactive<MarketingPOCompanyState>({
   companyInformation: {
-    name: '',
-    address: '',
-    npwp: '',
-    contactPerson: '',
-    email: ''
+    name: 'PT. Mitra Andalan Petroleum',
+    address: 'Jl. D. I. Panjaitan No. 25, Samarinda',
+    npwp: '02.123.456.7-901.000',
+    contactPerson: '0541-2832313',
+    email: 'cs@map.co.id'
   }
 })
 
 const letterCompanyAssociate = reactive<MarketingPOAssociateState>({
   receiver: {
     id: '',
-    name: '',
-    address: '',
-    contactPerson: '',
-    email: '',
-    npwp: ''
+    name: 'PT. Sumber Rejeki Transport',
+    address: 'Jl. Awang Long No. 77, Samarinda',
+    contactPerson: '081298765432',
+    email: 'marketing@sumberrejeki.co.id',
+    npwp: '01.234.567.8-901.000'
   }
 })
 
 const letterOfferDetails = reactive<MarketingPODetailsState>({
   po: {
-    date: `${new Date().toISOString().split('T')[0]}`,
-    number: ''
+    date: '2026-08-11',
+    number: '0543/PO/MAP/I/05/26'
   },
   vat: 0.11,
   paymentAddress: {
-    bankName: '',
-    accountNumber: '',
-    accountName: ''
+    bankName: 'BCA - Samarinda',
+    accountNumber: '123456789',
+    accountName: 'PT. Mitra Andalan Petroleum'
   },
   selectedOfferingLetter: {},
   products: [
     {
-      name: '',
-      qty: 0,
-      unit: '',
-      price: 0,
-      totalPrice: 0
+      name: 'Bio Diesel',
+      qty: 10000,
+      unit: 'LITER',
+      price: 17950,
+      totalPrice: 179500000
     }
   ],
-  totalProductsPrice: 0
+  totalProductsPrice: 179500000
 })
 
 const letterAdditional = reactive<MarketingPOAdditionalState>({
-  termAndCondition: '',
+  termAndCondition: 'Pembayaran 30 hari setelah dokumen lengkap diterima',
   delivery: {
-    distance: 0
+    loadingTerminal: 'Terminal BBM Balikpapan',
+    loadingDate: '2026-08-11',
+    picOperationMap: 'Budi Santoso',
+    distance: 120
   },
+  details: 'Pengiriman dilakukan bertahap sesuai kebutuhan customer',
   forwarder: {
-    trucking: ''
+    trucking: 'Truk Tangki 32.000 L - PT. Sumber Rejeki Transport'
   },
   signed: {
     createdBy: user.value?.name || '',
-    approvedBy: ''
+    approvedBy: 'Dwi Hartanto'
   }
 })
 

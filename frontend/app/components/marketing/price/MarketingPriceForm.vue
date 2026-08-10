@@ -86,11 +86,11 @@ const modalMode = ref<'add' | 'edit'>('add')
 const selectedPrice = ref<Price | null>(null)
 
 const formState = reactive({
-  name: '',
-  price: 0,
-  unit: '',
-  effective_date: '',
-  notes: ''
+  name: 'Bio Diesel / Solar',
+  price: 17950,
+  unit: 'LITER',
+  effective_date: '2026-08-11',
+  notes: 'Harga per liter termasuk ongkos angkut'
 })
 
 const saving = ref(false)
@@ -98,11 +98,11 @@ const saving = ref(false)
 function openAdd() {
   modalMode.value = 'add'
   selectedPrice.value = null
-  formState.name = ''
-  formState.price = 0
+  formState.name = 'Bio Diesel / Solar'
+  formState.price = 17950
   formState.unit = props.unitPlaceholder
-  formState.effective_date = ''
-  formState.notes = ''
+  formState.effective_date = '2026-08-11'
+  formState.notes = 'Harga per liter termasuk ongkos angkut'
   modalOpen.value = true
 }
 

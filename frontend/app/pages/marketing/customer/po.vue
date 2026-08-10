@@ -68,9 +68,9 @@ const offeringLetters = computed(() =>
 const poCustomer = reactive<MarketingPOCustomerState>({
   selectedOfferingLetter: {},
   poDocument: undefined,
-  purchaseOrderNumber: '',
-  poReceivedDate: new Date().toISOString().split('T')[0]?.toString() || '',
-  total: 0
+  purchaseOrderNumber: '0543/PO/MAP/I/05/26',
+  poReceivedDate: '2026-08-11',
+  total: 10000
 })
 
 const toast = useToast()
