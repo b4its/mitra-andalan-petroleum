@@ -52,7 +52,7 @@ export function useExport() {
     const pdfMake = usePDFMake()
     if (!pdfMake) return
 
-    const body = [
+    const body: any[] = [
       columns.map(col => ({
         text: col.header,
         style: 'tableHeader',

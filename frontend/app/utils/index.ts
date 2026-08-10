@@ -72,7 +72,10 @@ export function calculateDynamicStatus(
   dateCreated: string | Date,
   termsDay: number,
   currentInvoiceStatus: string,
-) {
+): {
+  invoiceStatus: "unpaid" | "paid" | "overdue";
+  deadlineStatus: "on_time" | "overdue" | "due_soon";
+} {
   // If it's already marked as paid in the database, keep it paid.
   if (currentInvoiceStatus === "paid") {
     return {
@@ -101,8 +104,8 @@ export function calculateDynamicStatus(
   const msPerDay = 1000 * 60 * 60 * 24;
   const daysRemaining = Math.floor((deadlineUTC - todayUTC) / msPerDay);
 
-  let invoiceStatus = "unpaid";
-  let deadlineStatus = "on_time";
+  let invoiceStatus: "unpaid" | "paid" | "overdue" = "unpaid";
+  let deadlineStatus: "on_time" | "overdue" | "due_soon" = "on_time";
 
   if (daysRemaining < 0) {
     invoiceStatus = "overdue";

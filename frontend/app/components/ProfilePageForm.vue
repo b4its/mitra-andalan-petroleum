@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import type { Role } from '~/types'
 
 const props = withDefaults(
   defineProps<{
@@ -71,7 +72,7 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
       name: updated.name || event.data.name,
       email: updated.email || event.data.email,
       password: event.data.password || auth.user.value?.password || '',
-      role: auth.user.value?.role || 'staff',
+      role: (auth.user.value?.role || 'admin') as Role,
       token: auth.user.value?.token || '',
       loggedInAt: auth.user.value?.loggedInAt || ''
     })
