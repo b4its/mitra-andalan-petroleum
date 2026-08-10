@@ -74,62 +74,62 @@ const items: StepperItem[] = [
 
 const doHeader = reactive<OperationsDOHeaderState>({
   companyInformation: {
-    name: '',
-    nameSub: undefined,
-    address: '',
-    phoneNumber: ''
+    name: 'PT. Mitra Andalan Petroleum',
+    nameSub: 'Distributor BBM Elnusa Petrofin',
+    address: 'Jl. Poros Samarinda-Balikpapan KM 23, Samarinda',
+    phoneNumber: '(0541) 123456'
   },
   doInformation: {
-    doNumber: '',
+    doNumber: '005/DO/MAP/VIII/26',
     doDateCreated: `${new Date().toISOString().split('T')[0]}`,
     poCustomerNumber: {},
-    soNumber: undefined
+    soNumber: 'SO/088/MAP/VIII/26'
   }
 })
 const doReceiver = reactive<OperationsDOReceiverState>({
-  customerName: '',
+  customerName: 'PT. Bina Karya Sentosa',
   customerId: '',
-  customerAddress: '',
+  customerAddress: 'Jl. Ahmad Yani No. 88, Sungai Pinang Luar, Samarinda',
   receiverInformation: {
-    name: undefined,
-    phoneNumber: undefined
+    name: 'Budi Santoso',
+    phoneNumber: '081234567890'
   },
   receiverDateReceived: `${new Date().toISOString().split('T')[0]}`
 })
 const doTransport = reactive<OperationsDOTransportState>({
-  transportName: '',
-  transportId: '',
-  transportAddress: '',
+  transportName: 'PT. Trans Borneo',
+  transportId: 'TRB-001',
+  transportAddress: 'Jl. Poros Samarinda-Balikpapan KM 23',
   driverInformation: {
-    name: '',
-    phoneNumber: undefined
+    name: 'Jaya',
+    phoneNumber: '081234567890'
   },
   transportDateReceived: `${new Date().toISOString().split('T')[0]}`,
   helperName: undefined
 })
 const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
-  dueDate: undefined,
-  total: 0,
+  dueDate: '2026-08-11',
+  total: 10000,
   productInformation: {
-    name: '',
-    qty: 0,
-    topSeal: undefined,
-    bottomSeal: undefined,
-    temperature: 0
+    name: 'Bio Solar',
+    qty: 10000,
+    topSeal: 'TS-001',
+    bottomSeal: 'BS-001',
+    temperature: 32
   },
   transportInformation: {
-    startKm: undefined,
-    endKm: undefined,
-    sgMeter: undefined,
+    startKm: 12500,
+    endKm: 12720,
+    sgMeter: 0.841,
     // isWaterFree: true, // need to discuss
     timeInformation: {
-      departureTime: undefined,
-      arrivalTime: undefined,
-      depotArrivalTime: undefined,
-      unloadingTime: undefined
+      departureTime: '07:00',
+      arrivalTime: '12:30',
+      depotArrivalTime: '13:15',
+      unloadingTime: '13:30'
     },
-    transportNumber: '',
-    transportType: undefined
+    transportNumber: 'KT 1234 AB',
+    transportType: 'Tangki'
   }
 })
 const doAdditional = reactive<OperationsDOAdditionalState>({
@@ -144,16 +144,16 @@ const doAdditional = reactive<OperationsDOAdditionalState>({
       note: 'Lainnya :'
     }
   ],
-  t2Depot: undefined,
-  t2Unloading: undefined,
-  indexSensitivity: undefined,
-  fuelReceived: 0
+  t2Depot: 125.1,
+  t2Unloading: 125.2,
+  indexSensitivity: 0.5,
+  fuelReceived: 10000
 })
 const doFooter = reactive<OperationsDOFooterState>({
-  companyCoordinator: user.value?.name || '',
-  distributionAdmin: user.value?.name || '',
-  receiver: undefined,
-  driver: undefined
+  companyCoordinator: user.value?.name || 'Andi Wijaya',
+  distributionAdmin: user.value?.name || 'Rina Kartika',
+  receiver: 'Budi Santoso',
+  driver: 'Jaya'
 })
 
 const { data: existingDeliveryOrder, pending: pendingExisting } = await useAsyncData(
