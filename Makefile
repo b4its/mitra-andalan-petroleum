@@ -46,6 +46,77 @@ help: ## Tampilkan semua perintah yang tersedia
 	@echo -e "Contoh: $(C_BOLD)make full-up$(C_RESET)  — jalankan semua service"
 
 # ============================================================================
+#  QUICK START — jalankan program dengan cara yang BENAR (anti 500)
+#  Error 500 internal server hampir selalu karena container menjalankan
+#  KODE LAMA (image tidak di-rebuild). Semua target di section ini WAJIB
+#  menjalankan `--build` sehingga image selalu dibuat ulang dari source.
+#  Gunakan:   make run        → sekali jalan, semua service terbaru
+# ============================================================================
+.PHONY: run
+run: ## [Cara Benar] Build + jalankan semua service (db, backend, frontend) — anti 500
+	$(COMPOSE_DEV) $(PROFILE_FULL) up -d --build
+	@echo -e "$(C_GREEN)Semua service berjalan dengan kode terbaru.$(C_RESET)"
+	@$(MAKE) --no-print-directory status
+	@$(MAKE) --no-print-directory info
+
+.PHONY: run-prod
+run-prod: ## Build + jalankan tanpa volume mount (mode production-like) — anti 500
+	$(COMPOSE) $(PROFILE_FULL) up -d --build
+	@echo -e "$(C_GREEN)Semua service berjalan dengan kode terbaru.$(C_RESET)"
+	@$(MAKE) --no-print-directory status
+
+.PHONY: run-backend
+run-backend: ## Build + restart hanya backend (penyebab 500 paling sering)
+	$(COMPOSE_DEV) $(PROFILE_FULL) up -d --build backend
+	@echo -e "$(C_GREEN)Backend di-rebuild & restart.$(C_RESET)"
+
+.PHONY: run-frontend
+run-frontend: ## Build + restart hanya frontend
+	$(COMPOSE_DEV) $(PROFILE_FULL) up -d --build frontend
+	@echo -e "$(C_GREEN)Frontend di-rebuild & restart.$(C_RESET)"
+
+.PHONY: fix-500
+fix-500: ## [Penyembuhan] Reset container lama + rebuild ulang semua — atasi 500 kode basi
+	$(COMPOSE) down
+	@echo -e "$(C_YEL)Container lama dihapus. Rebuild image dari source terbaru...$(C_RESET)"
+	$(COMPOSE_DEV) $(PROFILE_FULL) up -d --build
+	@echo -e "$(C_YEL)Menunggu service siap (10 detik)...$(C_RESET)"
+	@sleep 10
+	@$(MAKE) --no-print-directory check
+
+.PHONY: check
+check: ## Cek kesehatan service + deteksi kode basi (penyebab 500)
+	@$(MAKE) --no-print-directory status
+	@echo -e ""
+	@echo -e "$(C_BOLD)Cek umur image vs source:$(C_RESET)"
+	@for svc in backend frontend; do \
+		img=$$(docker inspect -f '{{.Created}}' mandalan-$$svc 2>/dev/null); \
+		if [ -z "$$img" ]; then \
+			echo -e "  $(C_RED)✘ mandalan-$$svc tidak berjalan$(C_RESET)"; \
+		else \
+			img_epoch=$$(date -d "$$img" +%s); \
+			stale=$$(find $$svc -type f -newermt "@$$img_epoch" \
+				-not -path '*/node_modules/*' -not -path '*/env/*' -not -path '*/__pycache__/*' \
+				-not -path '*/.nuxt/*' -not -path '*/.output/*' -not -path '*/.git/*' 2>/dev/null | head -1); \
+			if [ -n "$$stale" ]; then \
+				echo -e "  $(C_YEL)• mandalan-$$svc: KODE LEBIH BARU dari image → jalankan $(C_BOLD)make run$(C_RESET)"; \
+			else \
+				echo -e "  $(C_GREEN)✔ mandalan-$$svc: image sudah terbaru$(C_RESET)"; \
+			fi; \
+		fi; \
+	done
+	@echo -e ""
+	@echo -e "$(C_BOLD)Cek respons HTTP:$(C_RESET)"
+	@code=$$(curl -s -o /dev/null -m 5 -w "%{http_code}" http://localhost:8080/ 2>/dev/null); \
+		[ -n "$$code" ] && echo -e "  Frontend :8080 → $$code" || echo -e "  $(C_RED)✘ Frontend :8080 tidak merespons$(C_RESET)"
+	@code=$$(curl -s -o /dev/null -m 5 -w "%{http_code}" http://localhost:8000/docs 2>/dev/null); \
+		[ -n "$$code" ] && echo -e "  Backend  :8000 → $$code" || echo -e "  $(C_RED)✘ Backend  :8000 tidak merespons$(C_RESET)"
+	@echo -e ""
+	@echo -e "$(C_BOLD)Error 500 di log backend (10 menit terakhir):$(C_RESET)"
+	@$(COMPOSE) logs --since 10m backend 2>/dev/null | grep -cE "500 Internal Server Error|HTTP/1.1\" 500" | \
+		sed 's/^0$$/  0 — bersih, tidak ada 500/'
+
+# ============================================================================
 #  FULL STACK — db + backend + frontend (mode development / hot-reload)
 # ============================================================================
 .PHONY: full-up
@@ -54,7 +125,13 @@ full-up: ## Build + jalankan semua service (db, backend, frontend) — mode dev
 	@$(MAKE) --no-print-directory status
 
 .PHONY: full-up-local
-full-up-local: ## Jalankan semua service tanpa build (mode dev, volume mount aktif)
+full-up-local: ## ⚠ JANGAN dipakai setelah kode berubah — tanpa build = kode lama = 500!
+	@echo -e "$(C_RED)PERINGATAN: target ini TANPA --build.$(C_RESET)"
+	@echo -e "$(C_RED)Jika source berubah dan image belum di-build, container tetap menjalankan kode lama → error 500.$(C_RESET)"
+	@echo -e "$(C_RED)Gunakan: make run (atau make run-backend / make run-frontend) agar selalu di-rebuild.$(C_RESET)"
+	@echo -e ""
+	@read -p "Tetap lanjutkan tanpa build? [y/N] " ans; \
+		[ "$$ans" = "y" ] || [ "$$ans" = "Y" ] || { echo "Dibatalkan."; exit 1; }
 	$(COMPOSE_DEV) $(PROFILE_FULL) up -d
 	@$(MAKE) --no-print-directory status
 
@@ -103,7 +180,13 @@ core-up: ## Build + jalankan hanya db dan backend
 	$(COMPOSE_DEV) $(PROFILE_CORE) up -d --build
 
 .PHONY: core-up-local
-core-up-local: ## Jalankan hanya db dan backend (tanpa build)
+core-up-local: ## ⚠ JANGAN dipakai setelah kode berubah — tanpa build = kode lama = 500!
+	@echo -e "$(C_RED)PERINGATAN: target ini TANPA --build.$(C_RESET)"
+	@echo -e "$(C_RED)Jika source berubah dan image belum di-build, container tetap menjalankan kode lama → error 500.$(C_RESET)"
+	@echo -e "$(C_RED)Gunakan: make run-backend agar selalu di-rebuild.$(C_RESET)"
+	@echo -e ""
+	@read -p "Tetap lanjutkan tanpa build? [y/N] " ans; \
+		[ "$$ans" = "y" ] || [ "$$ans" = "Y" ] || { echo "Dibatalkan."; exit 1; }
 	$(COMPOSE_DEV) $(PROFILE_CORE) up -d
 
 .PHONY: core-build
@@ -159,11 +242,13 @@ shell-db: ## Masuk ke shell MySQL (mysql client)
 test: test-backend test-frontend ## Jalankan semua test (backend + frontend vitest)
 
 .PHONY: test-backend
-test-backend: ## Jalankan test backend (pytest) di dalam container
+test-backend: ## Jalankan test backend (pytest) di dalam container — auto-install dev-deps
+	$(COMPOSE) exec $(BACKEND_SVC) python -m pip install -q pytest aiosqlite httpx
 	$(COMPOSE) exec $(BACKEND_SVC) python -m pytest tests/ -v
 
 .PHONY: test-backend-coverage
 test-backend-coverage: ## Test backend dengan coverage
+	$(COMPOSE) exec $(BACKEND_SVC) python -m pip install -q pytest aiosqlite httpx pytest-cov
 	$(COMPOSE) exec $(BACKEND_SVC) python -m pytest tests/ -v --cov=app --cov-report=term-missing
 
 .PHONY: test-frontend
