@@ -108,3 +108,22 @@ export function calculateDynamicStatus(
 
   return { invoiceStatus, deadlineStatus }
 }
+
+export function formatNPWP(value?: string | null): string {
+  const digits = (value ?? '').replace(/\D/g, '').slice(0, 15)
+  if (!digits) return ''
+  const groups = [2, 3, 3, 1, 3, 3]
+  const separators = ['.', '.', '.', '-', '.', '']
+  let out = ''
+  let i = 0
+  groups.forEach((size, idx) => {
+    if (i >= digits.length) return
+    const part = digits.slice(i, i + size)
+    out += part
+    i += size
+    if (i < digits.length) {
+      out += separators[idx]!
+    }
+  })
+  return out
+}

@@ -2,6 +2,7 @@
 import { h } from 'vue'
 import * as z from 'zod'
 import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
+import { formatNPWP } from '~/utils'
 
 definePageMeta({ layout: 'admin' })
 
@@ -63,7 +64,7 @@ const columns: TableColumn<Customer>[] = [
   {
     accessorKey: 'npwp',
     header: 'NPWP',
-    cell: ({ row }) => row.getValue('npwp') || '-'
+    cell: ({ row }) => formatNPWP(row.getValue('npwp')) || '-'
   },
   {
     accessorKey: 'email',
@@ -135,7 +136,7 @@ function openEdit(customer: Customer) {
   modalMode.value = 'edit'
   selectedCustomer.value = customer
   formState.name = customer.name
-  formState.npwp = customer.npwp ?? ''
+  formState.npwp = formatNPWP(customer.npwp ?? '')
   formState.address = customer.address ?? ''
   formState.phone = customer.phone ?? ''
   formState.email = customer.email ?? ''
@@ -147,9 +148,9 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
   if (saving.value) return
   saving.value = true
   try {
-    const npwp = event.data.npwp?.trim() || ''
-    if (npwp && !/^\d{2}\.\d{3}\.\d{3}\.\d{1}-\d{3}\.\d{3}$/.test(npwp)) {
-      toast.add({ title: 'Format NPWP salah', description: 'Gunakan format 00.000.000.0-000.000', color: 'warning' })
+    const npwp = (event.data.npwp ?? '').replace(/\D/g, '')
+    if (npwp && npwp.length !== 15) {
+      toast.add({ title: 'NPWP harus 15 digit', description: 'Contoh: 00.000.000.0-000.000', color: 'warning' })
       saving.value = false
       return
     }
@@ -184,9 +185,9 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
   if (saving.value || !selectedCustomer.value) return
   saving.value = true
   try {
-    const npwp = event.data.npwp?.trim() || ''
-    if (npwp && !/^\d{2}\.\d{3}\.\d{3}\.\d{1}-\d{3}\.\d{3}$/.test(npwp)) {
-      toast.add({ title: 'Format NPWP salah', description: 'Gunakan format 00.000.000.0-000.000', color: 'warning' })
+    const npwp = (event.data.npwp ?? '').replace(/\D/g, '')
+    if (npwp && npwp.length !== 15) {
+      toast.add({ title: 'NPWP harus 15 digit', description: 'Contoh: 00.000.000.0-000.000', color: 'warning' })
       saving.value = false
       return
     }
@@ -375,7 +376,7 @@ const modalTitle = computed(() => {
               NPWP
             </p>
             <p class="font-medium">
-              {{ selectedCustomer.npwp || "-" }}
+              {{ formatNPWP(selectedCustomer.npwp) || "-" }}
             </p>
           </div>
           <div>
@@ -434,6 +435,8 @@ const modalTitle = computed(() => {
         <UFormField name="npwp" label="NPWP">
           <UInput
             v-model="formState.npwp"
+            v-maska="'##.###.###.#-###.###'"
+            inputmode="numeric"
             placeholder="00.000.000.0-000.000"
             autocomplete="off"
           />
