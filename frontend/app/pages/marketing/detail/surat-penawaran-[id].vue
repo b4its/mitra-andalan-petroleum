@@ -480,6 +480,16 @@ const loadPdf = async () => {
             }
           ]
         },
+        ...(details?.informasiTambahan?.filter(Boolean) || []).map(
+          (informasi) => ({
+            marginTop: 1,
+            marginLeft: 15,
+            columns: [
+              { text: '***', width: 'auto', marginRight: 3, bold: true },
+              { text: informasi }
+            ]
+          })
+        ),
         {
           text: [
             'Mohon Purchase Order (PO) dapat dikirimkan minimal ',

@@ -59,6 +59,17 @@ function previous() {
   emit("previous");
 }
 
+function addInformasiTambahan() {
+  if (!state.value.informasiTambahan) {
+    state.value.informasiTambahan = [];
+  }
+  state.value.informasiTambahan.push("");
+}
+
+function removeInformasiTambahan(index: number) {
+  state.value.informasiTambahan?.splice(index, 1);
+}
+
 function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
   emit("submit");
 }
@@ -414,6 +425,45 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
           disabled
         />
       </UFormField>
+
+      <USeparator />
+
+      <div class="space-y-3">
+        <p>Informasi Tambahan</p>
+
+        <div
+          v-for="(item, index) in state.informasiTambahan || []"
+          :key="`informasi-${index}`"
+          class="flex items-end gap-2"
+        >
+          <UFormField
+            :name="`informasiTambahan.${index}`"
+            label="Keterangan"
+            class="w-full"
+          >
+            <UInput
+              v-model="state.informasiTambahan![index]"
+              placeholder="Informasi tambahan 1"
+            />
+          </UFormField>
+
+          <UButton
+            icon="i-lucide-trash-2"
+            color="error"
+            variant="ghost"
+            @click="removeInformasiTambahan(index)"
+          />
+        </div>
+
+        <UButton
+          icon="i-lucide-plus"
+          color="neutral"
+          variant="subtle"
+          size="sm"
+          label="Tambah Informasi"
+          @click="addInformasiTambahan"
+        />
+      </div>
 
       <div class="flex justify-between pt-4">
         <UButton
