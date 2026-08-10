@@ -1,3 +1,5 @@
+import type { DummyAccount } from '~/types'
+
 export const dummyAccounts: DummyAccount[] = [
   {
     email: 'admin@email.com',

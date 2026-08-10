@@ -1,3 +1,5 @@
+import type { ResUploads, Uploads } from '~/types'
+
 export interface TempFile {
   file: File
   previewUrl: string
