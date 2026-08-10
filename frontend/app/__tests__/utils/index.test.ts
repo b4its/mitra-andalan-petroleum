@@ -4,9 +4,7 @@ import {
   formatDate,
   formatDateDoc,
   formatPercent,
-  formatNumber,
-  randomInt,
-  randomFrom
+  formatNumber
 } from '~/utils/index'
 
 describe('formatCurrency', () => {
@@ -62,33 +60,5 @@ describe('formatNumber', () => {
     const result = formatNumber(1000000)
     expect(result).toContain('1')
     expect(result).toContain('000')
-  })
-})
-
-describe('randomInt', () => {
-  it('returns number within range', () => {
-    for (let i = 0; i < 100; i++) {
-      const result = randomInt(5, 10)
-      expect(result).toBeGreaterThanOrEqual(5)
-      expect(result).toBeLessThanOrEqual(10)
-    }
-  })
-
-  it('handles min == max', () => {
-    expect(randomInt(7, 7)).toBe(7)
-  })
-})
-
-describe('randomFrom', () => {
-  it('returns element from array', () => {
-    const arr = ['a', 'b', 'c']
-    for (let i = 0; i < 50; i++) {
-      const result = randomFrom(arr)
-      expect(arr).toContain(result)
-    }
-  })
-
-  it('handles single element array', () => {
-    expect(randomFrom(['x'])).toBe('x')
   })
 })
