@@ -29,9 +29,15 @@ Endpoint demo **bukan** perubahan dari endpoint lama — endpoint lama
 
 ## Catatan penting (keamanan)
 
-1. Password di database tersimpan sebagai **bcrypt hash**, bukan plaintext.
-   Kolom `password` pada respons demo berisi **hash yang tersimpan** — bukan
-   kata sandi asli yang bisa dipakai login.
+1. Password login tersimpan sebagai **bcrypt hash** di kolom `password`
+   (satu arah, tidak bisa di-decrypt). Endpoint demo membaca salinan plaintext
+   dari kolom **`demo_password`** (hanya untuk demo):
+   - `User.demo_password` diisi saat user dibuat/diubah (`POST/PUT /profiles`)
+     dan saat seed (`backend/app/db/seed.py`).
+   - Endpoint demo mengembalikan `password` = nilai `demo_password`
+     (fallback `""` bila kosong, misal user lama/buatan luar sistem).
+   - Kolom `demo_password` **tidak pernah** digunakan untuk autentikasi —
+     login tetap `bcrypt.verify` terhadap kolom `password`.
 2. Endpoint demo **jangan pernah diaktifkan di production**. Kalau perlu
    dilindungi, tambahkan auth dependency di handler-nya.
 3. Akun seed (lihat `backend/app/db/seed.py` dan docstring
@@ -41,6 +47,24 @@ Endpoint demo **bukan** perubahan dari endpoint lama — endpoint lama
    - `ops@email.com` / `ops123` (operations)
    - `marketing@email.com` / `marketing123` (marketing)
    - `finance@email.com` / `finance123` (finance)
+   - `accounting@email.com` / `accounting123` (accounting)
+
+## Migrasi database
+
+Kolom `demo_password` ditambahkan ke model `User`, tetapi `create_all`
+tidak mengubah tabel yang sudah ada. Untuk database lama, jalankan sekali:
+
+```bash
+docker exec mandalan-db mysql -uroot -proot mandalan \
+  -e "ALTER TABLE users ADD COLUMN demo_password VARCHAR(255) NULL"
+```
+
+Lalu isi user existing (contoh, sesuai kebutuhan):
+
+```bash
+docker exec mandalan-db mysql -uroot -proot mandalan \
+  -e "UPDATE users SET demo_password='xxx' WHERE email='user@example.com'"
+```
 
 ## Verifikasi
 
@@ -50,5 +74,6 @@ curl -s http://localhost:8000/api/v1/profiles | python3 -m json.tool | head -8
 curl -s http://localhost:8000/api/v1/profiles/demo | python3 -m json.tool | head -8
 ```
 
-Respons demo memiliki satu field `password` ekstra per user; respons
-`/profiles` tidak.
+Respons demo memiliki satu field `password` ekstra per user (plaintext dari
+`demo_password`); respons `/profiles` tidak, dan autentikasi tetap memakai
+hash bcrypt (kolom `password`).
