@@ -90,6 +90,9 @@ importers:
       '@playwright/test':
         specifier: ^1.62.0
         version: 1.62.0
+      '@types/pdfmake':
+        specifier: 0.3.3
+        version: 0.3.3
       eslint:
         specifier: ^10.6.0
         version: 10.6.0(jiti@2.7.0)

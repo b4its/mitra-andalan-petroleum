@@ -1,127 +1,127 @@
 <script setup lang="ts">
-// @ts-nocheck
+import type { TableCell } from 'pdfmake'
 import type {
   Details,
   PaymentAddress,
   Product,
-  PurchaseOrderDetails,
-} from "~/types/marketing";
+  PurchaseOrderDetails
+} from '~/types/marketing'
 
-const pdfLink = ref<string | null>(null);
-const route = useRoute();
-const idPoLetter = route.params.id;
-const { user } = useAuth();
+const pdfLink = ref<string | null>(null)
+const route = useRoute()
+const idPoLetter = route.params.id
+const { user } = useAuth()
 
-const { get } = useApi();
+const { get } = useApi()
 
 const { data: purchaseOrderDetails, pending } = await useAsyncData(
-  "purchase-order-detail-po-supplier",
+  'purchase-order-detail-po-supplier',
   async () => {
     const res = await get<PurchaseOrderDetails>(
-      `/purchase-orders/${idPoLetter}`,
-    );
-    return res;
-  },
-);
+      `/purchase-orders/${idPoLetter}`
+    )
+    return res
+  }
+)
 
-const details: Details = purchaseOrderDetails.value?.details;
-const products: Product[] = details.products || [];
-const paymentAddress: PaymentAddress = details.paymentAddress || {};
+const details: Details = purchaseOrderDetails.value?.details as Details
+const products: Product[] = details.products || []
+const paymentAddress: PaymentAddress = details.paymentAddress || {}
 
 // 2. Initialize the table body array with the Header row
-const tableBodyDetails = [
+const tableBodyDetails: TableCell[][] = [
   [
     {
-      text: "No",
+      text: 'No',
       bold: true,
-      alignment: "center",
-      border: [true, false, true, true],
+      alignment: 'center',
+      border: [true, false, true, true]
     },
     {
-      text: "Product",
+      text: 'Product',
       bold: true,
-      alignment: "center",
-      border: [true, false, true, true],
+      alignment: 'center',
+      border: [true, false, true, true]
     },
     {
-      text: "Qty",
+      text: 'Qty',
       bold: true,
-      alignment: "center",
-      border: [true, false, true, true],
+      alignment: 'center',
+      border: [true, false, true, true]
     },
     {
-      text: "Unit",
+      text: 'Unit',
       bold: true,
-      alignment: "center",
-      border: [true, false, true, true],
+      alignment: 'center',
+      border: [true, false, true, true]
     },
     {
-      text: "Unit Price",
+      text: 'Unit Price',
       bold: true,
-      alignment: "center",
-      border: [true, false, true, true],
+      alignment: 'center',
+      border: [true, false, true, true]
     },
     {
-      text: "Total",
+      text: 'Total',
       bold: true,
-      alignment: "center",
-      border: [true, false, true, true],
-    },
-  ],
-];
+      alignment: 'center',
+      border: [true, false, true, true]
+    }
+  ]
+]
 
 // 3. Generate exactly 8 rows reserved for products
 for (let i = 0; i < 8; i++) {
   if (i < products.length) {
     // If product exists, populate the data
-    const product = products[i];
+    const product = products[i] as Product
     tableBodyDetails.push([
       {
         text: (i + 1).toString(),
-        alignment: "center",
-        border: [true, false, true, true],
+        alignment: 'center',
+        border: [true, false, true, true]
       },
       {
-        text: product.name || "",
-        alignment: "left",
-        border: [true, false, true, true],
+        text: product.name || '',
+        alignment: 'left',
+        border: [true, false, true, true]
       },
       {
         text: formatNumber(product.qty || 0),
-        alignment: "center",
-        border: [true, false, true, true],
+        alignment: 'center',
+        border: [true, false, true, true]
       },
       {
-        text: product.unit || "",
-        alignment: "center",
-        border: [true, false, true, true],
+        text: product.unit || '',
+        alignment: 'center',
+        border: [true, false, true, true]
       },
       {
         text: formatCurrency(product.price || 0),
-        alignment: "center",
-        border: [true, false, true, true],
+        alignment: 'center',
+        border: [true, false, true, true]
       },
       {
         text: formatCurrency(product?.totalPrice || 0),
-        alignment: "right",
-        border: [true, false, true, true],
-      },
-    ]);
+        alignment: 'right',
+        border: [true, false, true, true]
+      }
+    ])
   } else {
     // If no product, output a blank row but keep the borders intact for the grid
     tableBodyDetails.push([
-      { text: "", border: [true, false, true, true] },
-      { text: "", border: [true, false, true, true] },
-      { text: "", border: [true, false, true, true] },
-      { text: "", border: [true, false, true, true] },
-      { text: "", border: [true, false, true, true] },
-      { text: "", border: [true, false, true, true] },
-    ]);
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] },
+      { text: '', border: [true, false, true, true] }
+    ])
   }
 }
 
 // 4. Blank row ABOVE VAT
-tableBodyDetails.push([{}, {}, {}, {}, {}, {}]);
+tableBodyDetails.push([{}, {}, {}, {}, {}, {}])
 
 // 5. VAT Row
 tableBodyDetails.push([
@@ -130,164 +130,164 @@ tableBodyDetails.push([
   {},
   {},
   {},
-  {},
-]);
+  {}
+])
 
 // 6. Blank row BELOW VAT
-tableBodyDetails.push([{}, {}, {}, {}, {}, {}]);
+tableBodyDetails.push([{}, {}, {}, {}, {}, {}])
 
 // 7. Transfer Detail Header
 tableBodyDetails.push([
   {},
-  { text: "Transfer Detail :", bold: true },
+  { text: 'Transfer Detail :', bold: true },
   {},
   {},
   {},
-  {},
-]);
+  {}
+])
 
 // 8. 3 Reserved rows for Payment Address details
 tableBodyDetails.push([
   {},
-  { text: paymentAddress.bankName || "", bold: true },
+  { text: paymentAddress.bankName || '', bold: true },
   {},
   {},
   {},
-  {},
-]);
+  {}
+])
 tableBodyDetails.push([
   {},
-  { text: paymentAddress.accountName || "", bold: true },
+  { text: paymentAddress.accountName || '', bold: true },
   {},
   {},
   {},
-  {},
-]);
+  {}
+])
 tableBodyDetails.push([
   {},
   {
     text: paymentAddress.accountNumber
       ? `No. Rek. ${paymentAddress.accountNumber}`
-      : "No. Rek. ",
+      : 'No. Rek. '
   },
   {},
   {},
   {},
-  {},
-]);
+  {}
+])
 
 // 9. Blank row BELOW "No. Rek."
-tableBodyDetails.push([{}, {}, {}, {}, {}, {}]);
+tableBodyDetails.push([{}, {}, {}, {}, {}, {}])
 
 // 10. Subtotal Row
 tableBodyDetails.push([
-  { text: "Subtotal", colSpan: 5, bold: true, alignment: "right" },
+  { text: 'Subtotal', colSpan: 5, bold: true, alignment: 'right' },
   {},
   {},
   {},
   {},
   {
     text: formatCurrency(details.totalProductsPrice || 0),
-    alignment: "right",
-    bold: true,
-  },
-]);
+    alignment: 'right',
+    bold: true
+  }
+])
 
 const loadPdf = async () => {
-  const pdfMake = usePDFMake();
-  if (!pdfMake) return;
+  const pdfMake = usePDFMake()
+  if (!pdfMake) return
 
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
         title: `Purchase Order (${purchaseOrderDetails.value?.po_number}) | ${purchaseOrderDetails.value?.supplier_name}`,
-        author: "PT. Mitra Andalan Petroleum",
+        author: 'PT. Mitra Andalan Petroleum',
         creator: user.value?.name,
-        producer: "PT. Mitra Andalan Petroleum",
+        producer: 'PT. Mitra Andalan Petroleum'
       },
       pageMargins: [24, 24, 24, 24],
-      pageSize: "A4",
+      pageSize: 'A4',
       content: [
         {
           layout: {
-            paddingLeft: function (i) {
-              return 2;
+            paddingLeft: function () {
+              return 2
             },
             paddingBottom: function (i) {
-              return i === 1 ? 10 : 0;
+              return i === 1 ? 10 : 0
             },
             paddingTop: function () {
-              return 2;
+              return 2
             },
             fillColor: function (i) {
-              return i === 0 ? "#e5e5e5" : null;
-            },
+              return i === 0 ? '#e5e5e5' : null
+            }
           },
           table: {
-            widths: ["*", "*"],
+            widths: ['*', '*'],
             body: [
               [
                 {
-                  text: "To",
+                  text: 'To',
                   colSpan: 2,
-                  bold: true,
+                  bold: true
                 },
-                {},
+                {}
               ],
               [
                 {
                   text: [
                     {
                       text: `${purchaseOrderDetails.value?.supplier_name}\n`,
-                      bold: true,
+                      bold: true
                     },
-                    `${details.receiver.address || ""}\n`,
-                  ],
+                    `${details.receiver.address || ''}\n`
+                  ]
                 },
                 {
                   text: [
                     {
-                      text: `${details.companyInformation.name || ""}\n`,
-                      bold: true,
+                      text: `${details.companyInformation.name || ''}\n`,
+                      bold: true
                     },
-                    `${details.companyInformation.address || ""}\n`,
-                    `Phone: ${details.companyInformation.contactPerson || ""}\n`,
-                    `Email: ${details.companyInformation.email || ""}\n`,
-                    `NPWP: ${details.companyInformation.npwp || ""}\n`,
-                  ],
-                },
-              ],
-            ],
-          },
+                    `${details.companyInformation.address || ''}\n`,
+                    `Phone: ${details.companyInformation.contactPerson || ''}\n`,
+                    `Email: ${details.companyInformation.email || ''}\n`,
+                    `NPWP: ${details.companyInformation.npwp || ''}\n`
+                  ]
+                }
+              ]
+            ]
+          }
         },
         {
           layout: {
-            paddingRight: function (i) {
-              return 1;
+            paddingRight: function () {
+              return 1
             },
-            paddingLeft: function (i) {
-              return 1;
+            paddingLeft: function () {
+              return 1
             },
-            paddingBottom: function (i) {
-              return 1;
+            paddingBottom: function () {
+              return 1
             },
-            paddingTop: function (i) {
-              return 1;
-            },
+            paddingTop: function () {
+              return 1
+            }
           },
           table: {
-            widths: ["auto", "*", "auto", "auto", "auto", 118],
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 118],
             body: [
               // HEADER
               [
                 {
-                  text: "PURCHASE ORDER",
+                  text: 'PURCHASE ORDER',
                   colSpan: 5,
                   rowSpan: 3,
                   bold: true,
-                  alignment: "center",
-                  verticalAlignment: "middle",
-                  border: [true, false, true, true],
+                  alignment: 'center',
+                  verticalAlignment: 'middle',
+                  border: [true, false, true, true]
                 },
                 {},
                 {},
@@ -296,8 +296,8 @@ const loadPdf = async () => {
                 {
                   text: `PO Date : ${details.po.date}`,
                   bold: true,
-                  border: [true, false, true, true],
-                },
+                  border: [true, false, true, true]
+                }
               ],
               [
                 {},
@@ -308,157 +308,157 @@ const loadPdf = async () => {
                 {
                   text: `PO Number : \n${details.po.number}`,
                   bold: true,
-                  border: [true, false, true, true],
-                },
+                  border: [true, false, true, true]
+                }
               ],
-              [{}, {}, {}, {}, {}, {}],
-            ],
-          },
+              [{}, {}, {}, {}, {}, {}]
+            ]
+          }
         },
         {
           layout: {
-            paddingRight: function (i) {
-              return 10;
+            paddingRight: function () {
+              return 10
             },
-            paddingLeft: function (i) {
-              return 10;
+            paddingLeft: function () {
+              return 10
             },
-            paddingBottom: function (i) {
-              return 1;
+            paddingBottom: function () {
+              return 1
             },
-            paddingTop: function (i) {
-              return 1;
+            paddingTop: function () {
+              return 1
             },
             fillColor: function (i) {
-              return i === 0 ? "#e5e5e5" : null;
-            },
+              return i === 0 ? '#e5e5e5' : null
+            }
           },
           table: {
-            widths: ["auto", "*", "auto", "auto", "auto", 100],
-            body: tableBodyDetails,
-          },
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 100],
+            body: tableBodyDetails
+          }
         },
         {
           layout: {
-            paddingRight: function (i) {
-              return 2;
+            paddingRight: function () {
+              return 2
             },
-            paddingLeft: function (i) {
-              return 2;
+            paddingLeft: function () {
+              return 2
             },
-            paddingBottom: function (i) {
-              return 2;
+            paddingBottom: function () {
+              return 2
             },
-            paddingTop: function (i) {
-              return 2;
+            paddingTop: function () {
+              return 2
             },
             fillColor: function (i) {
-              return [0, 2].includes(i) ? "#e5e5e5" : null;
-            },
+              return [0, 2].includes(i) ? '#e5e5e5' : null
+            }
           },
           table: {
-            widths: ["*", "*"],
+            widths: ['*', '*'],
             body: [
               [
                 {
-                  text: "Term & Condition",
+                  text: 'Term & Condition',
                   bold: true,
-                  border: [true, false, true, true],
+                  border: [true, false, true, true]
                 },
                 {
-                  text: "Details",
+                  text: 'Details',
                   bold: true,
-                  border: [true, false, true, true],
-                },
+                  border: [true, false, true, true]
+                }
               ],
               [
                 {
                   text: `${details.termAndCondition}`,
-                  border: [true, false, true, true],
+                  border: [true, false, true, true]
                 },
-                {},
+                {}
               ],
               [
                 {
-                  text: "Delivery",
+                  text: 'Delivery',
                   bold: true,
-                  border: [true, false, true, true],
+                  border: [true, false, true, true]
                 },
                 {
-                  text: "Forwarder",
+                  text: 'Forwarder',
                   bold: true,
-                  border: [true, false, true, true],
-                },
+                  border: [true, false, true, true]
+                }
               ],
               [
                 {
-                  text: `Jarak KM : ${formatToKm(details.delivery.distance) || ""}\nLoading Terminal : ${details.delivery.loadingTerminal || ""}\nLoading Date : ${details.delivery.loadingDate || ""}\nPIC OPERATION MAP : ${details.delivery.picOperationMap || ""}`,
-                  border: [true, false, true, true],
+                  text: `Jarak KM : ${formatToKm(Number(details.delivery.distance) || 0)}\nLoading Terminal : ${details.delivery.loadingTerminal || ''}\nLoading Date : ${details.delivery.loadingDate || ''}\nPIC OPERATION MAP : ${details.delivery.picOperationMap || ''}`,
+                  border: [true, false, true, true]
                 },
                 {
-                  text: `Trucking : ${details.forwarder.trucking}`,
-                },
-              ],
-            ],
-          },
+                  text: `Trucking : ${details.forwarder.trucking}`
+                }
+              ]
+            ]
+          }
         },
         {
           layout: {
-            paddingRight: function (i) {
-              return 2;
+            paddingRight: function () {
+              return 2
             },
-            paddingLeft: function (i) {
-              return 15;
+            paddingLeft: function () {
+              return 15
             },
-            paddingBottom: function (i) {
-              return 15;
+            paddingBottom: function () {
+              return 15
             },
-            paddingTop: function (i) {
-              return 2;
-            },
+            paddingTop: function () {
+              return 2
+            }
           },
           table: {
-            widths: ["*", "*"],
+            widths: ['*', '*'],
             body: [
               [
                 {
                   text: [
                     {
-                      text: "Created By\n\n\n\n\n\n\n",
+                      text: 'Created By\n\n\n\n\n\n\n'
                     },
                     {
-                      text: `${details.signed.createdBy || ""}`,
-                    },
+                      text: `${details.signed.createdBy || ''}`
+                    }
                   ],
-                  border: [true, false, false, true],
+                  border: [true, false, false, true]
                 },
                 {
                   text: [
                     {
-                      text: "Approved By\n\n\n\n\n\n\n",
+                      text: 'Approved By\n\n\n\n\n\n\n'
                     },
                     {
-                      text: `${details.signed.approvedBy || ""}`,
-                    },
+                      text: `${details.signed.approvedBy || ''}`
+                    }
                   ],
-                  border: [false, false, true, true],
-                },
-              ],
-            ],
-          },
-        },
+                  border: [false, false, true, true]
+                }
+              ]
+            ]
+          }
+        }
       ],
       defaultStyle: {
-        color: "#000000",
-        fontSize: 9,
-      },
+        color: '#000000',
+        fontSize: 9
+      }
     })
-    .getDataUrl();
-};
+    .getDataUrl()
+}
 
 onMounted(() => {
-  loadPdf();
-});
+  loadPdf()
+})
 </script>
 
 <template>

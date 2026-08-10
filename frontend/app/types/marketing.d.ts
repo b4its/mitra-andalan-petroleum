@@ -1,245 +1,244 @@
 export interface Customer {
-  id: string;
-  name: string;
-  npwp: string | null;
-  address: string;
-  phone: string;
-  email: string;
+  id: string
+  name: string
+  npwp: string | null
+  address: string
+  phone: string
+  email: string
 }
 
 export interface PurchaseOrderDetails {
-  id: string;
-  po_number: string;
-  type: "customer" | "supplier";
-  customer_id: null;
-  supplier_id: string;
-  customer_name: string;
-  supplier_name: string;
-  date: Date;
-  total: number;
-  status: string;
-  details: Details;
-  created_at: Date;
-  updated_at: Date;
+  id: string
+  po_number: string
+  type: 'customer' | 'supplier'
+  customer_id: null
+  supplier_id: string
+  customer_name: string
+  supplier_name: string
+  date: Date
+  total: number
+  status: string
+  details: Details
+  created_at: Date
+  updated_at: Date
 }
 
 export interface Details {
-  companyInformation: CompanyInformation;
-  receiver: CompanyInformation;
-  po: Po;
-  vat: number;
-  paymentAddress: PaymentAddress;
-  selectedOfferingLetter: SelectedOfferingLetter;
-  products: Product[];
-  totalProductsPrice: number;
-  termAndCondition: string;
-  delivery: Delivery;
-  forwarder: Forwarder;
-  signed: Signed;
+  companyInformation: CompanyInformation
+  receiver: CompanyInformation
+  po: Po
+  vat: number
+  paymentAddress: PaymentAddress
+  selectedOfferingLetter: SelectedOfferingLetter
+  products: Product[]
+  totalProductsPrice: number
+  termAndCondition: string
+  delivery: Delivery
+  forwarder: Forwarder
+  signed: Signed
 }
 
 export interface CompanyInformation {
-  name: string;
-  address: string;
-  npwp: string;
-  contactPerson: string;
-  email: string;
+  name: string
+  address: string
+  npwp: string
+  contactPerson: string
+  email: string
 }
 
 export interface Delivery {
-  loadingTerminal: string;
-  loadingDate: Date;
-  picOperationMap: string;
+  loadingTerminal: string
+  loadingDate: Date
+  picOperationMap: string
+  distance?: string
 }
 
 export interface Forwarder {
-  trucking: string;
+  trucking: string
 }
 
 export interface PaymentAddress {
-  bankName: string;
-  accountNumber: string;
-  accountName: string;
+  bankName: string
+  accountNumber: string
+  accountName: string
 }
 
 export interface Po {
-  date: Date;
-  number: string;
+  date: Date
+  number: string
 }
 
 export interface Product {
-  name: string;
-  qty: number;
-  unit: string;
-  price: number;
-  totalPrice: number;
+  name: string
+  qty: number
+  unit: string
+  price: number
+  totalPrice: number
 }
 
 export interface SelectedOfferingLetter {
-  id: string;
-  offeringLetterNumber: string;
-  customerName: string;
-  customerId: string;
-  fuelTotalPrice: number;
-  transportPrice: number;
-  dateCreated: Date;
-  dateChanged: Date;
-  status: string;
+  id: string
+  offeringLetterNumber: string
+  customerName: string
+  customerId: string
+  fuelTotalPrice: number
+  transportPrice: number
+  dateCreated: Date
+  dateChanged: Date
+  status: string
 }
 
 export interface Signed {
-  createdBy: string;
-  approvedBy: string;
+  createdBy: string
+  approvedBy: string
 }
 
 export interface OfferingLetterDetails {
-  location: string;
-  date: Date | string;
-  offeringLetterNumber: string;
-  regarding: string;
-  receiver: string;
-  supplyPoint: string;
-  qualityAssurance: string;
-  custodyTransfer: string;
-  unloadingProcedure: string;
-  volumeUnit: string;
-  volumeTolerance: number;
-  paymentTerm: number;
-  latePenalty: number;
-  servicePattern: string;
-  personInCharge: PersonInCharge;
-  paymentAddress: PaymentAddress;
-  fuelPrices: FuelPrices;
-  purchaseOrderDeadline: number;
-  offeror: Offeror;
-  companyInformation: OfferingLetterCompanyInformation;
-  informasiTambahan?: string[];
+  location: string
+  date: Date | string
+  offeringLetterNumber: string
+  regarding: string
+  receiver: string
+  supplyPoint: string
+  qualityAssurance: string
+  custodyTransfer: string
+  unloadingProcedure: string
+  volumeUnit: string
+  volumeTolerance: number
+  paymentTerm: number
+  latePenalty: number
+  servicePattern: string
+  personInCharge: PersonInCharge
+  paymentAddress: PaymentAddress
+  fuelPrices: FuelPrices
+  purchaseOrderDeadline: number
+  offeror: Offeror
+  companyInformation: OfferingLetterCompanyInformation
+  informasiTambahan?: string[]
 }
 
 export interface OfferingLetterCompanyInformation {
-  address: string;
-  phoneNumber: string;
-  email: string;
+  address: string
+  phoneNumber: string
+  email: string
 }
 
 export interface FuelPrices {
-  logisticInformation: string;
-  productName: string;
-  hppPrice: number;
-  basePrice: number;
-  totalPrice: number;
+  logisticInformation: string
+  productName: string
+  hppPrice: number
+  basePrice: number
+  totalPrice: number
   sellingPrice: {
-    ppkb: number;
-    oat: number | null;
-    ppn: number;
-  };
+    ppkb: number
+    oat: number | null
+    ppn: number
+  }
   percentageNum: {
-    ppkb: number;
-    oat: number;
-    ppn: number;
-  };
+    ppkb: number
+    oat: number
+    ppn: number
+  }
 }
 
 export interface Offeror {
-  name: string;
-  signature: Signature | undefined;
+  name: string
+  signature: File | undefined
 }
 
-export interface Signature {}
-
 export interface PaymentAddress {
-  bankName: string;
-  accountNumber: string;
-  accountName: string;
+  bankName: string
+  accountNumber: string
+  accountName: string
 }
 
 export interface PersonInCharge {
-  name: string;
-  phoneNumber: string;
+  name: string
+  phoneNumber: string
 }
 
 export interface OfferingLetterPost {
-  offering_letter_number: string;
-  customer_id: string;
-  location: string | null;
-  date: string | null;
-  regarding: string | null;
-  receiver: string;
-  fuel_total_price: number;
-  transport_price: number;
-  status: string;
-  details: OfferingLetterDetails;
-  created_by?: string | null;
+  offering_letter_number: string
+  customer_id: string
+  location: string | null
+  date: string | null
+  regarding: string | null
+  receiver: string
+  fuel_total_price: number
+  transport_price: number
+  status: string
+  details: OfferingLetterDetails
+  created_by?: string | null
 }
 
 export interface OfferingLetters {
-  id: string;
-  offering_letter_number: string;
-  customer_id: string;
-  customer_name: CustomerName;
-  location: Location;
-  date: Date | string;
-  regarding: Regarding;
-  receiver: CustomerName;
-  fuel_total_price: number;
-  transport_price: number;
-  status: Status;
-  created_at: Date | string;
-  updated_at: Date | string;
-  details: OfferingLetterDetails;
+  id: string
+  offering_letter_number: string
+  customer_id: string
+  customer_name: CustomerName
+  location: Location
+  date: Date | string
+  regarding: Regarding
+  receiver: CustomerName
+  fuel_total_price: number
+  transport_price: number
+  status: Status
+  created_at: Date | string
+  updated_at: Date | string
+  details: OfferingLetterDetails
 }
 
 export interface PurchaseOrdersSupplier {
-  id: string;
-  po_number: string;
-  type: string;
-  customer_id: string | null;
-  supplier_id: string;
-  customer_name: string;
-  supplier_name: string;
-  date: Date;
-  total: number;
-  status: "created" | "under_revision" | "po_received";
-  created_at: Date;
-  updated_at: Date;
-  details: any;
+  id: string
+  po_number: string
+  type: string
+  customer_id: string | null
+  supplier_id: string
+  customer_name: string
+  supplier_name: string
+  date: Date
+  total: number
+  status: 'created' | 'under_revision' | 'po_received'
+  created_at: Date
+  updated_at: Date
+  details: Details
 }
 
 export interface PurchaseOrdersCustomerPost {
-  po_number: string;
-  type: "customer" | "supplier";
-  customer_id: string | null;
-  supplier_id: string | null;
-  date: string;
-  total: number;
-  status: string;
-  details?: Record<string, any>;
-  created_by?: string | null;
-  id_offering_letters?: string | null;
+  po_number: string
+  type: 'customer' | 'supplier'
+  customer_id: string | null
+  supplier_id: string | null
+  date: string
+  total: number
+  status: string
+  details?: Record<string, unknown>
+  created_by?: string | null
+  id_offering_letters?: string | null
 }
 
 export interface PurchaseOrdersDetails {
-  id: string;
-  po_number: string;
-  type: "customer" | "supplier";
-  customer_id: string | null;
-  supplier_id: string;
-  customer_name: string;
-  supplier_name: string;
-  date: Date;
-  total: number;
-  status: string;
-  created_at: Date;
-  updated_at: Date;
+  id: string
+  po_number: string
+  type: 'customer' | 'supplier'
+  customer_id: string | null
+  supplier_id: string
+  customer_name: string
+  supplier_name: string
+  date: Date
+  total: number
+  status: string
+  created_at: Date
+  updated_at: Date
 }
 
-export type CustomerName =
-  | "CV. Maju Jaya Abadi"
-  | "PT. Bina Karya Sentosa"
-  | "PT. Sumber Rejeki Mandiri";
+export type CustomerName
+  = | 'CV. Maju Jaya Abadi'
+    | 'PT. Bina Karya Sentosa'
+    | 'PT. Sumber Rejeki Mandiri'
 
-export type Location = "Jakarta";
+export type Location = 'Jakarta'
 
-export type Regarding = "Penawaran BBM Solar Industri";
+export type Regarding = 'Penawaran BBM Solar Industri'
 
-export type Status = "created" | "under_revision" | "po_received";
+export type Status = 'created' | 'under_revision' | 'po_received'

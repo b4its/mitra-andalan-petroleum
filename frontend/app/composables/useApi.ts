@@ -7,13 +7,15 @@ import type {
 
 const API_BASE = '/api/v1'
 
-function apiUrl(path: string, params?: Record<string, any>) {
+function apiUrl(path: string, params?: Record<string, unknown>) {
   const search = params
     ? '?' + new URLSearchParams(
-        Object.fromEntries(
-          Object.entries(params).filter(([, v]) => v !== undefined && v !== null)
-        )
-      ).toString()
+      Object.fromEntries(
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => [k, String(v)] as [string, string])
+      )
+    ).toString()
     : ''
   const url = `${API_BASE}${path}${search}`
 
@@ -30,23 +32,35 @@ async function parseError(res: Response) {
   throw new Error(err.detail || `API error: ${res.status}`)
 }
 
+interface SortableItem {
+  created_at?: string | null
+  dateCreated?: string | null
+  createdAt?: string | null
+}
+
 function newestFirst<T>(data: T, path: string): T {
   if (path.startsWith('/accounting/accounts') || path.startsWith('/accounting/ledger') || path.startsWith('/accounting/trial-balance')) {
     return data
   }
 
-  const sort = (items: any[]) => [...items].sort((a, b) => {
-    const aTime = Date.parse(a?.created_at ?? a?.dateCreated ?? a?.createdAt ?? '')
-    const bTime = Date.parse(b?.created_at ?? b?.dateCreated ?? b?.createdAt ?? '')
-    if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0
-    return bTime - aTime
-  })
+  const sort = (items: unknown[]): unknown[] => {
+    const toTime = (item: unknown): number => {
+      const sortable = item as Partial<SortableItem>
+      return Date.parse(sortable.created_at ?? sortable.dateCreated ?? sortable.createdAt ?? '')
+    }
+    return [...items].sort((a, b) => {
+      const aTime = toTime(a)
+      const bTime = toTime(b)
+      if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0
+      return bTime - aTime
+    })
+  }
 
   if (Array.isArray(data)) {
     return sort(data) as T
   }
-  if (data && typeof data === 'object' && Array.isArray((data as any).items)) {
-    return { ...(data as any), items: sort((data as any).items) }
+  if (data && typeof data === 'object' && Array.isArray((data as unknown as { items?: unknown[] }).items)) {
+    return { ...(data as Record<string, unknown>), items: sort((data as unknown as { items: unknown[] }).items) } as T
   }
   return data
 }
@@ -65,7 +79,7 @@ async function request(input: string, init?: RequestInit) {
 export function useApi() {
   async function get<T>(
     path: string,
-    params?: Record<string, any>
+    params?: Record<string, unknown>
   ): Promise<T> {
     const res = await request(apiUrl(path, params))
     if (!res.ok) {
@@ -220,15 +234,6 @@ export interface ApiInvoice {
   deadline_status: string
   created_at: string
   updated_at: string
-}
-
-export interface ApiSale {
-  id: string
-  date: string
-  status: string
-  email: string
-  amount: number
-  created_at: string
 }
 
 export interface ApiPurchaseOrder {
