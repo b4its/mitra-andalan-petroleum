@@ -191,6 +191,129 @@ const isBalanced = computed(() => {
   return Math.abs(n.total_assets - (n.total_liabilities + n.total_equity)) < 1
 })
 
+const balanceSheetChart = computed(() => {
+  const n = data.value?.balanceSheet
+  if (!n) return null
+  return {
+    labels: ['Aset', 'Kewajiban', 'Ekuitas'],
+    datasets: [
+      {
+        label: 'Nilai',
+        data: [n.total_assets, n.total_liabilities, n.total_equity],
+        backgroundColor: [
+          'rgba(59,130,246,0.8)',
+          'rgba(245,158,11,0.8)',
+          'rgba(16,185,129,0.8)'
+        ]
+      }
+    ]
+  }
+})
+
+// ── Rekap Cashflow ───────────────────────────────────────────
+const cashflowChart = computed(() => {
+  const c = data.value?.cashflow
+  if (!c) return null
+  return {
+    labels: ['Operasi', 'Investasi', 'Pendanaan'],
+    datasets: [
+      {
+        label: 'Arus Kas',
+        data: [c.operating.total, c.investing.total, c.financing.total],
+        backgroundColor: [
+          c.operating.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)',
+          c.investing.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)',
+          c.financing.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)'
+        ]
+      }
+    ]
+  }
+})
+
+// ── Kas Harian ───────────────────────────────────────────────
+const dailyCashChart = computed(() => {
+  const d = data.value?.dailyCash
+  if (!d) return null
+  return {
+    labels: ['Saldo Awal', 'Total Masuk', 'Total Keluar', 'Saldo Akhir'],
+    datasets: [
+      {
+        label: 'Nominal',
+        data: [d.opening_balance, d.total_debit, d.total_credit, d.closing_balance],
+        backgroundColor: [
+          'rgba(100,116,139,0.8)',
+          'rgba(16,185,129,0.8)',
+          'rgba(239,68,68,0.8)',
+          'rgba(59,130,246,0.8)'
+        ]
+      }
+    ]
+  }
+})
+
+// ── Rekap Biaya ──────────────────────────────────────────────
+const costRecapChart = computed(() => {
+  const groups = data.value?.costRecap?.groups || []
+  if (!groups.length) return null
+  const top = [...groups].sort((a, b) => b.total - a.total).slice(0, 10)
+  return {
+    labels: top.map(g => `${g.account_code} · ${g.account_name}`),
+    datasets: [
+      {
+        label: 'Total Biaya',
+        data: top.map(g => g.total),
+        backgroundColor: 'rgba(239,68,68,0.8)'
+      }
+    ]
+  }
+})
+
+// ── Rekap Monitoring ─────────────────────────────────────────
+const monitoringChart = computed(() => {
+  const rows = data.value?.monitoring?.rows || []
+  if (!rows.length) return null
+  return {
+    labels: rows.map(r => r.bulan),
+    datasets: [
+      {
+        label: 'Penghasilan',
+        data: rows.map(r => r.penghasilan),
+        backgroundColor: 'rgba(16,185,129,0.8)'
+      },
+      {
+        label: 'Operasional',
+        data: rows.map(r => r.operasional),
+        backgroundColor: 'rgba(239,68,68,0.8)'
+      },
+      {
+        label: 'Gross Margin',
+        data: rows.map(r => r.gross_margin),
+        backgroundColor: 'rgba(59,130,246,0.8)'
+      }
+    ]
+  }
+})
+
+// ── Rekap Bunga Bank ─────────────────────────────────────────
+const bankInterestChart = computed(() => {
+  const b = data.value?.bankInterest
+  if (!b) return null
+  return {
+    labels: ['Pokok Pinjaman', 'Total Bunga', 'Total Pembayaran'],
+    datasets: [
+      {
+        label: 'Nominal',
+        data: [b.total_principal, b.total_interest, b.total_paid],
+        backgroundColor: [
+          'rgba(59,130,246,0.8)',
+          'rgba(245,158,11,0.8)',
+          'rgba(16,185,129,0.8)'
+        ]
+      }
+    ]
+  }
+})
+
 // ── Kas Harian ───────────────────────────────────────────────
 const dailyCashColumns: TableColumn<DailyCashRow>[] = [
   {
@@ -998,6 +1121,18 @@ const exportItems = (
                 </div>
               </div>
             </div>
+
+            <div class="mt-4">
+              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+                Grafik Neraca
+              </p>
+              <AdminBarChart
+                v-if="balanceSheetChart"
+                :labels="balanceSheetChart.labels"
+                :datasets="balanceSheetChart.datasets"
+                :height="220"
+              />
+            </div>
           </UCard>
 
           <!-- Kas Harian -->
@@ -1038,6 +1173,18 @@ const exportItems = (
                   {{ formatCurrency(data.dailyCash.closing_balance) }}
                 </p>
               </div>
+            </div>
+
+            <div class="mt-4">
+              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+                Grafik Kas Harian
+              </p>
+              <AdminBarChart
+                v-if="dailyCashChart"
+                :labels="dailyCashChart.labels"
+                :datasets="dailyCashChart.datasets"
+                :height="220"
+              />
             </div>
 
             <UTable :data="data.dailyCash.rows.slice(0, 10)" :columns="dailyCashColumns" />
@@ -1098,6 +1245,14 @@ const exportItems = (
             <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
               Arus Kas Operasi
             </p>
+            <div class="mt-4 mb-4">
+              <AdminBarChart
+                v-if="cashflowChart"
+                :labels="cashflowChart.labels"
+                :datasets="cashflowChart.datasets"
+                :height="220"
+              />
+            </div>
             <UTable :data="data.cashflow.operating.items" :columns="cashflowColumns" />
             <p
               v-if="!data.cashflow.operating.items.length"
@@ -1169,12 +1324,24 @@ const exportItems = (
                 </p>
               </div>
 
-              <p
-                v-if="!data.costRecap.groups.length"
-                class="py-4 text-center text-sm text-muted"
-              >
-                Belum ada data biaya
+<p
+              v-if="!data.costRecap.groups.length"
+              class="py-4 text-center text-sm text-muted"
+            >
+              Belum ada data biaya
+            </p>
+
+            <div class="mt-4">
+              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+                Grafik Rekap Biaya per Akun
               </p>
+              <AdminBarChart
+                v-if="costRecapChart"
+                :labels="costRecapChart.labels"
+                :datasets="costRecapChart.datasets"
+                :height="240"
+              />
+            </div>
             </div>
           </UCard>
 
@@ -1218,6 +1385,18 @@ const exportItems = (
               </div>
             </div>
 
+            <div class="mt-4">
+              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+                Grafik Monitoring per Bulan
+              </p>
+              <AdminBarChart
+                v-if="monitoringChart"
+                :labels="monitoringChart.labels"
+                :datasets="monitoringChart.datasets"
+                :height="260"
+              />
+            </div>
+
             <UTable :data="data.monitoring.rows" :columns="monitoringColumns" />
             <p
               v-if="!data.monitoring.rows.length"
@@ -1259,6 +1438,18 @@ const exportItems = (
                   {{ formatCurrency(data.bankInterest.total_paid) }}
                 </p>
               </div>
+            </div>
+
+            <div class="mt-4">
+              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+                Grafik Rekap Bunga Bank
+              </p>
+              <AdminBarChart
+                v-if="bankInterestChart"
+                :labels="bankInterestChart.labels"
+                :datasets="bankInterestChart.datasets"
+                :height="220"
+              />
             </div>
 
             <UTable :data="data.bankInterest.rows.slice(0, 10)" :columns="bankInterestColumns" />
