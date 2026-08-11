@@ -57,7 +57,9 @@ const loadPdf = async () => {
           width: 160
         },
         {
-          text: `Samarinda, ${formatDateDoc(details?.date || new Date())}`,
+          text: details?.location
+            ? `${details.location.split(',')[0].trim()}, ${formatDateDoc(details?.date || new Date())}`
+            : formatDateDoc(details?.date || new Date()),
           alignment: 'right',
           marginTop: 10,
           marginBottom: 15

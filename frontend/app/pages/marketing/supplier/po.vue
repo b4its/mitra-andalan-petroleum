@@ -101,7 +101,7 @@ const items: StepperItem[] = [
 const letterCompanyMain = reactive<MarketingPOCompanyState>({
   companyInformation: {
     name: 'PT. Mitra Andalan Petroleum',
-    address: 'Jl. D. I. Panjaitan No. 25, Samarinda',
+    address: '',
     npwp: '02.123.456.7-901.000',
     contactPerson: '0541-2832313',
     email: 'cs@map.co.id'
@@ -112,7 +112,7 @@ const letterCompanyAssociate = reactive<MarketingPOAssociateState>({
   receiver: {
     id: '',
     name: 'PT. Sumber Rejeki Transport',
-    address: 'Jl. Awang Long No. 77, Samarinda',
+    address: '',
     contactPerson: '081298765432',
     email: 'marketing@sumberrejeki.co.id',
     npwp: '01.234.567.8-901.000'

@@ -18,7 +18,23 @@ const state = defineModel<MarketingPOCompanyState>({ required: true })
 
 const regionProvince = ref('')
 const regionCity = ref('')
-const baseStreet = ref(state.value.companyInformation.address)
+const baseStreet = ref('')
+
+watch(
+  () => state.value.companyInformation.address,
+  (value) => {
+    const suffix = [regionCity.value, regionProvince.value]
+      .filter(Boolean)
+      .join(', ')
+    if (suffix && value && value.endsWith(suffix)) {
+      baseStreet.value = value
+        .slice(0, value.length - suffix.length)
+        .replace(/[, ]+$/, '')
+    } else {
+      baseStreet.value = value
+    }
+  }
+)
 
 watch([regionProvince, regionCity], () => {
   if (regionCity.value) {
