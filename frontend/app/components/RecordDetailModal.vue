@@ -91,6 +91,47 @@ const { data: uploads, pending: uploadsPending } = await useAsyncData(
   { watch: [() => props.id, () => props.type], default: () => [] }
 )
 
+interface RelatedPO {
+  id: string
+  po_number: string
+}
+
+// ── Fetch PO customer terkait offering letter ─────────────────
+const { data: relatedPos, pending: relatedPosPending } = await useAsyncData(
+  () => `record-related-pos-${props.type}-${props.id}`,
+  () => {
+    if (!props.id || props.type !== 'ol') return Promise.resolve([])
+    return get<{ items: RelatedPO[] }>('/purchase-orders', {
+      type: 'customer',
+      offering_letter_id: props.id,
+      page: 1,
+      page_size: 50
+    }).then(r => r.items)
+  },
+  { watch: [() => props.id, () => props.type], default: () => [] }
+)
+
+// ── Fetch uploads lampiran PO customer ────────────────────────
+const { data: poUploads, pending: poUploadsPending } = await useAsyncData(
+  () => `record-po-uploads-${props.type}-${props.id}`,
+  async () => {
+    if (!props.id || props.type !== 'ol') return []
+    const files: RecordUpload[] = []
+    for (const po of relatedPos.value) {
+      const ups = await get<RecordUpload[]>('/uploads', {
+        document_type: 'po',
+        document_id: po.id
+      })
+      files.push(...ups)
+    }
+    return files
+  },
+  {
+    watch: [() => props.id, () => props.type, () => relatedPos.value],
+    default: () => []
+  }
+)
+
 // ── Format helpers ────────────────────────────────────────────
 function fmt(v: unknown): string {
   if (v === null || v === undefined || v === '') return '-'
@@ -699,7 +740,7 @@ async function downloadFile(upload: RecordUpload) {
           <p
             class="text-xs font-semibold text-muted uppercase tracking-wide mb-3"
           >
-            Lampiran
+            Lampiran Surat Penawaran
           </p>
 
           <!-- Loading files -->
@@ -734,15 +775,89 @@ async function downloadFile(upload: RecordUpload) {
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
-                <!-- Lihat (buka di tab baru) -->
+                <!-- Lihat (redirect ke halaman lampiran) -->
                 <UButton
                   icon="i-lucide-eye"
                   size="xs"
                   color="neutral"
                   variant="ghost"
-                  :to="fileUrl(file.url)"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  :to="`/lampiran/${file.id}`"
+                  aria-label="Lihat file"
+                />
+                <!-- Download -->
+                <UButton
+                  icon="i-lucide-download"
+                  size="xs"
+                  color="primary"
+                  variant="ghost"
+                  aria-label="Unduh file"
+                  @click="downloadFile(file)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Lampiran Purchase Order Customer ── -->
+        <div
+          v-if="type === 'ol'"
+          class="mt-5 border-t border-default pt-4"
+        >
+          <p
+            class="text-xs font-semibold text-muted uppercase tracking-wide mb-3"
+          >
+            Lampiran Purchase Order Customer
+          </p>
+
+          <!-- Loading PO -->
+          <div v-if="relatedPosPending" class="space-y-2">
+            <USkeleton v-for="i in 1" :key="i" class="h-12 rounded-lg" />
+          </div>
+
+          <!-- Loading files PO -->
+          <div v-else-if="poUploadsPending" class="space-y-2">
+            <USkeleton v-for="i in 2" :key="i" class="h-12 rounded-lg" />
+          </div>
+
+          <!-- No PO -->
+          <p v-else-if="!relatedPos?.length" class="text-sm text-dimmed">
+            Tidak ada Purchase Order Customer untuk surat penawaran ini.
+          </p>
+
+          <!-- No files PO -->
+          <p v-else-if="!poUploads?.length" class="text-sm text-dimmed">
+            Tidak ada file lampiran untuk Purchase Order Customer ini.
+          </p>
+
+          <!-- File list PO -->
+          <div v-else class="space-y-2">
+            <div
+              v-for="file in poUploads"
+              :key="file.id"
+              class="flex items-center justify-between gap-3 rounded-lg border border-default bg-muted/30 px-3 py-2.5"
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <UIcon
+                  :name="fileIcon(file.mime_type)"
+                  class="size-5 shrink-0 text-primary"
+                />
+                <div class="min-w-0">
+                  <p class="text-sm font-medium truncate">
+                    {{ file.original_filename }}
+                  </p>
+                  <p class="text-xs text-muted">
+                    {{ fmtSize(file.size) }} · {{ file.mime_type }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <!-- Lihat (redirect ke halaman lampiran) -->
+                <UButton
+                  icon="i-lucide-eye"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :to="`/lampiran/${file.id}`"
                   aria-label="Lihat file"
                 />
                 <!-- Download -->

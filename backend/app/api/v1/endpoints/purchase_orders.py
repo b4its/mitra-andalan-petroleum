@@ -69,6 +69,10 @@ def _to_response(po, customer_name, supplier_name):
 async def list_purchase_orders(
     page: int = 1, page_size: int = 20, type: str | None = None,
     search: str | None = Query(default=None),
+    offering_letter_id: str | None = Query(
+        default=None,
+        description="Filter PO yang terkait dengan offering letter (dicocokkan pada id_offering_letters)",
+    ),
     db: AsyncSession = Depends(get_db)
 ):
     base = select(PurchaseOrder)
@@ -79,6 +83,8 @@ async def list_purchase_orders(
             PurchaseOrder.po_number.ilike(f"%{search}%"),
             PurchaseOrder.status.ilike(f"%{search}%"),
         ))
+    if offering_letter_id:
+        base = base.where(PurchaseOrder.id_offering_letters.like(f'%"{offering_letter_id}"%'))
     total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0
 
