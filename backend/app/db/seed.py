@@ -27,6 +27,14 @@ _CLEAR_ORDER = [
 
 
 async def seed_database(db: AsyncSession):
+    # Jangan hapus data yang sudah ada: seed hanya untuk database yang masih kosong.
+    # Tanpa guard ini, setiap restart backend akan memanggil _clear_all() yang
+    # menghapus SEMUA data termasuk `uploads` (record lampiran), sehingga file yang
+    # sudah di-upload user hilang dari sistem meski file-nya masih ada di disk.
+    existing = (await db.execute(select(User))).scalars().all()
+    if existing:
+        return
+
     await _clear_all(db)
     await _seed_users(db)
     await _seed_customers(db)
