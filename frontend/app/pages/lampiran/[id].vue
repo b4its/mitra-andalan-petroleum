@@ -14,7 +14,9 @@ const { data: upload, pending, error } = await useAsyncData(
 )
 
 watch(upload, (value) => {
-  if (import.meta.client && value && fileKind(value) === 'spreadsheet') loadExcel()
+  if (!import.meta.client || !value) return
+  if (fileKind(value) === 'spreadsheet') loadExcel()
+  else if (fileKind(value) === 'word') loadWord()
 })
 
 const EXT = /\.([a-z0-9]+)$/i
@@ -84,6 +86,38 @@ function selectSheet(name: string) {
   sheetHtml.value = xlsx.utils.sheet_to_html(workbook.Sheets[name], {
     header: ''
   })
+}
+
+const wordEl = ref<HTMLElement | null>(null)
+const wordPending = ref(false)
+const wordFailed = ref(false)
+
+async function loadWord() {
+  if (!upload.value || fileKind(upload.value) !== 'word') return
+  // docx-preview hanya mendukung .docx (bukan .doc biner lama)
+  if (extOf(upload.value.original_filename) !== 'docx') {
+    wordFailed.value = true
+    return
+  }
+  wordPending.value = true
+  wordFailed.value = false
+  try {
+    const blob = await $fetch<Blob>(upload.value.url, { responseType: 'blob' })
+    const { renderAsync } = await import('docx-preview')
+    await nextTick()
+    if (!wordEl.value) return
+    wordEl.value.innerHTML = ''
+    await renderAsync(blob, wordEl.value, undefined, {
+      className: 'docx',
+      inWrapper: true,
+      ignoreWidth: true,
+      ignoreHeight: true
+    })
+  } catch {
+    wordFailed.value = true
+  } finally {
+    wordPending.value = false
+  }
 }
 
 function fileIcon(u: ResUploads | null | undefined): string {
@@ -233,6 +267,29 @@ async function downloadFile() {
             />
             <!-- eslint-enable vue/no-v-html -->
           </div>
+        </template>
+
+        <!-- Preview Word (.docx) -->
+        <template v-else-if="fileKind(upload) === 'word'">
+          <div
+            v-if="wordPending"
+            class="flex h-64 items-center justify-center rounded-lg border border-default bg-elevated"
+          >
+            <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
+          </div>
+
+          <UEmpty
+            v-else-if="wordFailed"
+            icon="i-lucide-eye-off"
+            title="Preview tidak tersedia"
+            description="File dokumen ini tidak dapat ditampilkan di browser. Gunakan tombol Download untuk mengunduhnya."
+          />
+
+          <div
+            v-show="!wordPending && !wordFailed"
+            ref="wordEl"
+            class="mx-auto max-w-full overflow-auto rounded-lg border border-default bg-elevated p-4"
+          />
         </template>
 
         <!-- Tipe tidak bisa di-preview -->
