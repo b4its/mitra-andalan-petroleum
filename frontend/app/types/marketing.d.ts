@@ -3,6 +3,8 @@ export interface Customer {
   name: string
   npwp: string | null
   address: string
+  province: string | null
+  city: string | null
   phone: string
   email: string
 }

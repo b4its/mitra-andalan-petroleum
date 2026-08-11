@@ -77,9 +77,9 @@ async def _seed_users(db: AsyncSession):
 
 async def _seed_customers(db: AsyncSession):
     customers = [
-        Customer(name="PT. Bina Karya Sentosa", npwp="01.234.567.8-901.000", address="Jl. Jenderal Sudirman No. 45, Samarinda", phone="0541-1234567", email="bina@karya-sentosa.com"),
-        Customer(name="CV. Maju Jaya Abadi", npwp="02.345.678.9-012.000", address="Jl. Pahlawan No. 88, Balikpapan", phone="0542-2345678", email="maju.jaya@abadi.co.id"),
-        Customer(name="PT. Sumber Rejeki Mandiri", npwp="03.456.789.0-123.000", address="Jl. Empat Lima No. 12, Tenggarong", phone="0541-3456789", email="sumber.rejeki@gmail.com"),
+        Customer(name="PT. Bina Karya Sentosa", npwp="01.234.567.8-901.000", address="Jl. Jenderal Sudirman No. 45, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-1234567", email="bina@karya-sentosa.com"),
+        Customer(name="CV. Maju Jaya Abadi", npwp="02.345.678.9-012.000", address="Jl. Pahlawan No. 88, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-2345678", email="maju.jaya@abadi.co.id"),
+        Customer(name="PT. Sumber Rejeki Mandiri", npwp="03.456.789.0-123.000", address="Jl. Empat Lima No. 12, Tenggarong", province="Kalimantan Timur", city="Tenggarong", phone="0541-3456789", email="sumber.rejeki@gmail.com"),
     ]
     for c in customers:
         db.add(c)
@@ -90,8 +90,8 @@ async def _seed_customers(db: AsyncSession):
 
 async def _seed_suppliers(db: AsyncSession):
     suppliers = [
-        Supplier(name="PT. Supplier Logistik Mandiri", address="Jl. Industri No. 7, Samarinda", phone="021-5678910", email="logistik@mandiri.co.id"),
-        Supplier(name="CV. Bahan Bakar Utama", address="Jl. Minyak No. 33, Balikpapan", phone="0542-1234567", email="bbu@bahanbakar.com"),
+        Supplier(name="PT. Supplier Logistik Mandiri", npwp="021234567890123", address="Jl. Industri No. 7, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="021-5678910", email="logistik@mandiri.co.id"),
+        Supplier(name="CV. Bahan Bakar Utama", npwp="032345678901234", address="Jl. Minyak No. 33, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-1234567", email="bbu@bahanbakar.com"),
     ]
     for s in suppliers:
         db.add(s)

@@ -2,6 +2,7 @@
 import { h } from 'vue'
 import * as z from 'zod'
 import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
+import { formatNPWP } from '~/utils'
 
 definePageMeta({ layout: 'admin' })
 
@@ -12,7 +13,10 @@ const { get, post, put, del } = useApi()
 interface Supplier {
   id: string
   name: string
+  npwp: string | null
   address: string | null
+  province: string | null
+  city: string | null
   phone: string | null
   email: string | null
 }
@@ -40,9 +44,12 @@ const filtered = computed(() => {
   return list.filter(
     s =>
       s.name.toLowerCase().includes(q)
+      || (s.npwp ?? '').toLowerCase().includes(q)
       || (s.email ?? '').toLowerCase().includes(q)
       || (s.phone ?? '').toLowerCase().includes(q)
       || (s.address ?? '').toLowerCase().includes(q)
+      || (s.province ?? '').toLowerCase().includes(q)
+      || (s.city ?? '').toLowerCase().includes(q)
   )
 })
 
@@ -59,6 +66,11 @@ watch(search, () => {
 const columns: TableColumn<Supplier>[] = [
   { accessorKey: 'name', header: 'Nama' },
   {
+    accessorKey: 'npwp',
+    header: 'NPWP',
+    cell: ({ row }) => formatNPWP(row.getValue('npwp')) || '-'
+  },
+  {
     accessorKey: 'email',
     header: 'Email',
     cell: ({ row }) => row.getValue('email') || '-'
@@ -67,6 +79,16 @@ const columns: TableColumn<Supplier>[] = [
     accessorKey: 'phone',
     header: 'Telepon',
     cell: ({ row }) => row.getValue('phone') || '-'
+  },
+  {
+    accessorKey: 'province',
+    header: 'Provinsi',
+    cell: ({ row }) => row.getValue('province') || '-'
+  },
+  {
+    accessorKey: 'city',
+    header: 'Kota',
+    cell: ({ row }) => row.getValue('city') || '-'
   },
   {
     accessorKey: 'address',
@@ -88,16 +110,22 @@ const selectedSupplier = ref<Supplier | null>(null)
 // ── Form schema ───────────────────────────────────────────────
 const schema = z.object({
   name: z.string().min(2, 'Minimal 2 karakter'),
+  npwp: z.string().optional(),
   address: z.string().optional(),
+  province: z.string().optional(),
+  city: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email('Email tidak valid').optional()
+  email: z.string().email('Email tidak valid').optional().or(z.literal(''))
 })
 
 type Schema = z.output<typeof schema>
 
 const formState = reactive({
   name: '',
+  npwp: '',
   address: '',
+  province: '',
+  city: '',
   phone: '',
   email: ''
 })
@@ -109,7 +137,10 @@ function openAdd() {
   modalMode.value = 'add'
   selectedSupplier.value = null
   formState.name = ''
+  formState.npwp = ''
   formState.address = ''
+  formState.province = ''
+  formState.city = ''
   formState.phone = ''
   formState.email = ''
   modalOpen.value = true
@@ -125,7 +156,10 @@ function openEdit(supplier: Supplier) {
   modalMode.value = 'edit'
   selectedSupplier.value = supplier
   formState.name = supplier.name
+  formState.npwp = formatNPWP(supplier.npwp ?? '')
   formState.address = supplier.address ?? ''
+  formState.province = supplier.province ?? ''
+  formState.city = supplier.city ?? ''
   formState.phone = supplier.phone ?? ''
   formState.email = supplier.email ?? ''
   modalOpen.value = true
@@ -136,7 +170,22 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
   if (saving.value) return
   saving.value = true
   try {
-    await post<Supplier, Schema>('/suppliers', event.data)
+    const npwp = (event.data.npwp ?? '').replace(/\D/g, '')
+    if (npwp && npwp.length !== 15) {
+      toast.add({ title: 'NPWP harus 15 digit', description: 'Contoh: 00.000.000.0-000.000', color: 'warning' })
+      saving.value = false
+      return
+    }
+    const payload = {
+      name: event.data.name,
+      npwp: npwp || null,
+      address: event.data.address || null,
+      province: event.data.province || null,
+      city: event.data.city || null,
+      phone: event.data.phone || null,
+      email: event.data.email || null
+    }
+    await post<Supplier, typeof payload>('/suppliers', payload)
     toast.add({
       title: 'Berhasil',
       description: 'Supplier baru berhasil ditambahkan.',
@@ -160,9 +209,24 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
   if (saving.value || !selectedSupplier.value) return
   saving.value = true
   try {
-    await put<Supplier, Schema>(
+    const npwp = (event.data.npwp ?? '').replace(/\D/g, '')
+    if (npwp && npwp.length !== 15) {
+      toast.add({ title: 'NPWP harus 15 digit', description: 'Contoh: 00.000.000.0-000.000', color: 'warning' })
+      saving.value = false
+      return
+    }
+    const payload = {
+      name: event.data.name,
+      npwp: npwp || null,
+      address: event.data.address || null,
+      province: event.data.province || null,
+      city: event.data.city || null,
+      phone: event.data.phone || null,
+      email: event.data.email || null
+    }
+    await put<Supplier, typeof payload>(
       `/suppliers/${selectedSupplier.value.id}`,
-      event.data
+      payload
     )
     toast.add({
       title: 'Berhasil',
@@ -316,7 +380,7 @@ const modalTitle = computed(() => {
   </UDashboardPanel>
 
   <!-- ── Modal Add / Edit / View ── -->
-  <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-lg' }">
+  <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-xl' }">
     <template #title>
       {{ modalTitle }}
     </template>
@@ -335,6 +399,14 @@ const modalTitle = computed(() => {
           </div>
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              NPWP
+            </p>
+            <p class="font-medium">
+              {{ formatNPWP(selectedSupplier.npwp) || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Email
             </p>
             <p class="font-medium">
@@ -347,6 +419,22 @@ const modalTitle = computed(() => {
             </p>
             <p class="font-medium">
               {{ selectedSupplier.phone || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Provinsi
+            </p>
+            <p class="font-medium">
+              {{ selectedSupplier.province || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Kota
+            </p>
+            <p class="font-medium">
+              {{ selectedSupplier.city || "-" }}
             </p>
           </div>
           <div>
@@ -386,6 +474,15 @@ const modalTitle = computed(() => {
             autocomplete="off"
           />
         </UFormField>
+        <UFormField name="npwp" label="NPWP">
+          <UInput
+            v-model="formState.npwp"
+            v-maska="'##.###.###.#-###.###'"
+            inputmode="numeric"
+            placeholder="00.000.000.0-000.000"
+            autocomplete="off"
+          />
+        </UFormField>
         <UFormField name="email" label="Email">
           <UInput
             v-model="formState.email"
@@ -401,6 +498,17 @@ const modalTitle = computed(() => {
             autocomplete="off"
           />
         </UFormField>
+
+        <div class="rounded-lg border border-default p-3 space-y-4">
+          <p class="text-sm font-semibold">
+            Wilayah
+          </p>
+          <WilayahLocationPicker
+            v-model:province="formState.province"
+            v-model:city="formState.city"
+          />
+        </div>
+
         <UFormField name="address" label="Alamat">
           <UTextarea
             v-model="formState.address"
