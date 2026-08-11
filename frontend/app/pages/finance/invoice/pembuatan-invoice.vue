@@ -63,22 +63,29 @@ const items: StepperItem[] = [
   { title: 'Penutup Invoice', slot: 'invoiceFooter' }
 ]
 
+const today = new Date()
+const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
+const toISODate = (date: Date) => `${date.toISOString().split('T')[0]}`
+
 const financeHeader = reactive<FinanceInvoiceHeaderState>({
   billToInformation: '',
   deliveryPointInformation: '',
   companyInformation: {
-    name: '',
-    address: '',
-    phoneNumber: '',
-    email: ''
+    name: 'PT. Mitra Andalan Petroleum',
+    nameSub: 'Distributor BBM Elnusa Petrofin',
+    address: 'Jl. Poros Samarinda-Balikpapan KM 23, Samarinda',
+    phoneNumber: '0541-1234567',
+    email: 'marketing.mapetroleum@gmail.com'
   }
 })
 const financeDetails = reactive<FinanceInvoiceDetailsState>({
   invoiceInformation: {
-    invoiceNumber: '',
-    invoiceDate: `${new Date().toISOString().split('T')[0]}`,
-    invoiceDueDate: `${new Date().toISOString().split('T')[0]}`,
-    terms: 0
+    invoiceNumber: `INV/${today.getFullYear()}/${romanMonths[today.getMonth()]}/001`,
+    invoiceDate: toISODate(today),
+    invoiceDueDate: toISODate(
+      new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+    ),
+    terms: 30
   },
   customerPurchaseInformation: {
     deliveryOrderNumberData: [],
@@ -90,9 +97,9 @@ const financeDetails = reactive<FinanceInvoiceDetailsState>({
 const financeProducts = reactive<FinanceInvoiceProductsState>({
   products: [
     {
-      name: '',
-      qty: 0,
-      unit: '',
+      name: 'Solar Industri (B35)',
+      qty: 1,
+      unit: 'Liter',
       price: 0,
       totalPrice: 0
     }
@@ -107,14 +114,17 @@ const financeProducts = reactive<FinanceInvoiceProductsState>({
   }
 })
 const financeFooter = reactive<FinanceInvoiceFooterState>({
-  termsAndCondition: [],
+  termsAndCondition: [
+    { term: 'Pembayaran dilakukan transfer ke rekening BANK BCA' },
+    { term: 'Invoice jatuh tempo 30 hari setelah diterbitkan' }
+  ],
   paymentInformation: {
-    bankName: '',
-    accountNumber: '',
-    accountName: ''
+    bankName: 'BANK BCA',
+    accountNumber: '1234567890',
+    accountName: 'PT. Mitra Andalan Petroleum'
   },
   signature: {
-    companyName: '',
+    companyName: 'PT. Mitra Andalan Petroleum',
     createdBy: `${user.value?.name || ''}`
   }
 })
