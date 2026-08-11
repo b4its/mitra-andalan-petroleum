@@ -77,10 +77,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCompanyState>) {
       </UFormField>
 
       <UFormField name="address" label="Alamat" required>
-        <UInput
+        <UTextarea
           v-model="state.companyInformation.address"
-          type="text"
           autocomplete="off"
+          :rows="3"
         />
       </UFormField>
 
