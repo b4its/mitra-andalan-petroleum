@@ -1,3 +1,4 @@
+import mimetypes
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,10 +9,17 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from app.api.v1 import v1_router
+from app.api.v1.endpoints.uploads import FALLBACK_MIME
 from app.core.config import settings
 from app.core.database import engine, Base, async_session_factory
 
 MEDIA_DIR = Path(__file__).resolve().parent.parent / "media"
+
+# Container tanpa file mime.types tidak mengenali beberapa ekstensi
+# (mis. .xlsx, .docx). Daftarkan eksplisit agar StaticFiles mengirim
+# content-type yang benar.
+for _ext, _mime in FALLBACK_MIME.items():
+    mimetypes.add_type(_mime, _ext)
 
 
 @asynccontextmanager
