@@ -121,25 +121,33 @@ const { data: DoData, pending, refresh } = await useAsyncData(
     }
     if (debouncedSearch.value) params.search = debouncedSearch.value
     const res = await get<{ items: DeliveryOrderItem[] }>('/delivery-orders', params)
-    return (res.items || []).map((d: DeliveryOrderItem) => ({
-      id: d.id,
-      deliveryOrderNumber: d.do_number,
-      customerName: d.customer_name,
-      purchaseOrderNumber: d.po_number,
-      transportName: d.transport_name,
-      dateCreated: d.created_at?.toString() || '',
-      status: d.status,
-      // Cek apakah details sudah lengkap (ada companyInformation = dibuat via form)
-      detailsLengkap: !!(d.details && d.details.companyInformation),
-      statusRilisDana: d.status_rilis_dana ?? false,
-      rilisDanaAt: d.rilis_dana_at,
-      statusReadyOrder: d.status_ready_order ?? false,
-      readyOrderAt: d.ready_order_at,
-      statusSelesaiDikirim: d.status_selesai_dikirim ?? false,
-      selesaiDikirimAt: d.selesai_dikirim_at,
-      statusLunasOngkir: d.status_lunas_ongkir ?? false,
-      lunasOngkirAt: d.lunas_ongkir_at
-    }))
+    return (res.items || [])
+      .map((d: DeliveryOrderItem) => ({
+        id: d.id,
+        deliveryOrderNumber: d.do_number,
+        customerName: d.customer_name,
+        purchaseOrderNumber: d.po_number,
+        transportName: d.transport_name,
+        dateCreated: d.created_at?.toString() || '',
+        status: d.status,
+        // Cek apakah details sudah lengkap (ada companyInformation = dibuat via form)
+        detailsLengkap: !!(d.details && d.details.companyInformation),
+        statusRilisDana: d.status_rilis_dana ?? false,
+        rilisDanaAt: d.rilis_dana_at,
+        statusReadyOrder: d.status_ready_order ?? false,
+        readyOrderAt: d.ready_order_at,
+        statusSelesaiDikirim: d.status_selesai_dikirim ?? false,
+        selesaiDikirimAt: d.selesai_dikirim_at,
+        statusLunasOngkir: d.status_lunas_ongkir ?? false,
+        lunasOngkirAt: d.lunas_ongkir_at
+      }))
+      .sort((a, b) => {
+        // Rilis dana di atas, lalu urut terbaru
+        if (a.statusRilisDana !== b.statusRilisDana) {
+          return a.statusRilisDana ? -1 : 1
+        }
+        return b.dateCreated.localeCompare(a.dateCreated)
+      })
   },
   { default: () => [], watch: [debouncedSearch] }
 )
