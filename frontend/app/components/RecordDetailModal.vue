@@ -94,6 +94,7 @@ const { data: uploads, pending: uploadsPending } = await useAsyncData(
 interface RelatedPO {
   id: string
   po_number: string
+  id_offering_letters?: string | null
 }
 
 // ── Fetch PO customer terkait offering letter ─────────────────
@@ -128,6 +129,63 @@ const { data: poUploads, pending: poUploadsPending } = await useAsyncData(
   },
   {
     watch: [() => props.id, () => props.type, () => relatedPos.value],
+    default: () => []
+  }
+)
+
+// ── Fetch PO terkait delivery order ────────────────────────────
+const { data: doRelatedPo, pending: doRelatedPoPending } = await useAsyncData(
+  () => `record-do-po-${props.type}-${props.id}`,
+  async () => {
+    if (!props.id || props.type !== 'do' || !data.value) return null
+    const poNumber = (data.value as RecordDetail).po_number
+    if (!poNumber) return null
+    const res = await get<{ items: RelatedPO[] }>('/purchase-orders', {
+      type: 'customer',
+      search: poNumber,
+      page: 1,
+      page_size: 5
+    })
+    return (res.items || []).find(po => po.po_number === poNumber) || null
+  },
+  { watch: [() => props.id, () => props.type, () => data.value], default: null }
+)
+
+// ── Fetch uploads PO + OL terkait delivery order ───────────────
+const { data: doRelatedUploads, pending: doRelatedUploadsPending } = await useAsyncData(
+  () => `record-do-related-uploads-${props.type}-${props.id}`,
+  async () => {
+    if (!props.id || props.type !== 'do' || !doRelatedPo.value) return []
+    const files: RecordUpload[] = []
+    const po = doRelatedPo.value
+
+    // Uploads PO
+    const poUps = await get<RecordUpload[]>('/uploads', {
+      document_type: 'po',
+      document_id: po.id
+    })
+    files.push(...poUps)
+
+    // Uploads OL dari id_offering_letters
+    if (po.id_offering_letters) {
+      try {
+        const olIds: string[] = JSON.parse(po.id_offering_letters)
+        for (const olId of olIds) {
+          const olUps = await get<RecordUpload[]>('/uploads', {
+            document_type: 'offering_letter',
+            document_id: olId
+          })
+          files.push(...olUps)
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
+
+    return files
+  },
+  {
+    watch: [() => props.id, () => props.type, () => doRelatedPo.value],
     default: () => []
   }
 )
@@ -833,6 +891,77 @@ async function downloadFile(upload: RecordUpload) {
           <div v-else class="space-y-2">
             <div
               v-for="file in poUploads"
+              :key="file.id"
+              class="flex items-center justify-between gap-3 rounded-lg border border-default bg-muted/30 px-3 py-2.5"
+            >
+              <div class="flex items-center gap-2.5 min-w-0">
+                <UIcon
+                  :name="fileIcon(file.mime_type)"
+                  class="size-5 shrink-0 text-primary"
+                />
+                <div class="min-w-0">
+                  <p class="text-sm font-medium truncate">
+                    {{ file.original_filename }}
+                  </p>
+                  <p class="text-xs text-muted">
+                    {{ fmtSize(file.size) }} · {{ file.mime_type }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <!-- Lihat (redirect ke halaman lampiran) -->
+                <UButton
+                  icon="i-lucide-eye"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :to="`/lampiran/${file.id}`"
+                  aria-label="Lihat file"
+                />
+                <!-- Download -->
+                <UButton
+                  icon="i-lucide-download"
+                  size="xs"
+                  color="primary"
+                  variant="ghost"
+                  aria-label="Unduh file"
+                  @click="downloadFile(file)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Lampiran Terkait (PO & Surat Penawaran) untuk DO ── -->
+        <div
+          v-if="type === 'do'"
+          class="mt-5 border-t border-default pt-4"
+        >
+          <p
+            class="text-xs font-semibold text-muted uppercase tracking-wide mb-3"
+          >
+            Lampiran Purchase Order & Surat Penawaran
+          </p>
+
+          <!-- Loading -->
+          <div v-if="doRelatedPoPending || doRelatedUploadsPending" class="space-y-2">
+            <USkeleton v-for="i in 2" :key="i" class="h-12 rounded-lg" />
+          </div>
+
+          <!-- PO tidak ditemukan -->
+          <p v-else-if="!doRelatedPo" class="text-sm text-dimmed">
+            Tidak ada Purchase Order terkait Delivery Order ini.
+          </p>
+
+          <!-- Tidak ada file -->
+          <p v-else-if="!doRelatedUploads?.length" class="text-sm text-dimmed">
+            Tidak ada file lampiran untuk Purchase Order atau Surat Penawaran terkait.
+          </p>
+
+          <!-- File list -->
+          <div v-else class="space-y-2">
+            <div
+              v-for="file in doRelatedUploads"
               :key="file.id"
               class="flex items-center justify-between gap-3 rounded-lg border border-default bg-muted/30 px-3 py-2.5"
             >
