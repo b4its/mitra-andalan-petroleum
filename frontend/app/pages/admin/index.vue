@@ -4,6 +4,7 @@ import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
 import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
 import type { ChartClickPayload } from '~/components/admin/AdminChartDetailModal.vue'
 import type { AdminActivity, AdminBreakdown, AdminDrilldownMetric, AdminStats } from '~/types/admin'
+import type { AccountingSummary, AccountingJournal } from '~/types/accounting'
 import type { Range } from '~/types'
 
 definePageMeta({ layout: 'admin' })
@@ -81,6 +82,16 @@ const { data, pending, error, refresh } = await useAsyncData(
     watch: [range]
   }
 )
+
+// ── Data akuntansi ─────────────────────────────────────────────
+const { data: accounting } = await useAsyncData(
+  'admin-accounting-summary',
+  () => get<AccountingSummary>('/accounting/summary'),
+  { default: () => null, server: false }
+)
+
+const totalDebit = (journal: AccountingJournal) =>
+  journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0)
 
 interface MetricCard {
   key: string
@@ -170,6 +181,130 @@ const invoiceLabels = computed(
 const invoiceValues = computed(
   () => data.value?.distributions?.invoices?.map(d => d.value) || []
 )
+
+// ── Distribusi tambahan (keseluruhan data sistem) ──────────────
+const distributionLabels: Record<string, string> = {
+  offering_letters: 'Status Surat Penawaran',
+  purchase_orders: 'Tipe Purchase Order',
+  delivery_orders: 'Status Delivery Order',
+  invoice_deadlines: 'Status Tenggat Invoice',
+  users: 'Role User',
+  notifications: 'Tipe Notifikasi',
+  uploads: 'Tipe Dokumen Upload'
+}
+
+const distributionIcons: Record<string, string> = {
+  offering_letters: 'i-lucide-file-text',
+  purchase_orders: 'i-lucide-shopping-cart',
+  delivery_orders: 'i-lucide-package-check',
+  invoice_deadlines: 'i-lucide-calendar-clock',
+  users: 'i-lucide-user-round',
+  notifications: 'i-lucide-bell',
+  uploads: 'i-lucide-paperclip'
+}
+
+const pieColors = [
+  'rgba(59,130,246,0.8)',
+  'rgba(16,185,129,0.8)',
+  'rgba(245,158,11,0.8)',
+  'rgba(239,68,68,0.8)',
+  'rgba(139,92,246,0.8)',
+  'rgba(6,182,212,0.8)',
+  'rgba(236,72,153,0.8)',
+  'rgba(100,116,139,0.8)'
+]
+
+const distributionKeys = [
+  'offering_letters',
+  'purchase_orders',
+  'delivery_orders',
+  'invoice_deadlines',
+  'users',
+  'notifications',
+  'uploads'
+] as const
+
+function distributionChart(key: string) {
+  const dist = data.value?.distributions?.[key] || []
+  return {
+    labels: dist.map(d => d.label),
+    values: dist.map(d => d.value),
+    colors: dist.map((_, i) => pieColors[i % pieColors.length])
+  }
+}
+
+function onDistributionSegmentClick(key: string, payload: {
+  label: string
+  value: number
+  index: number
+}) {
+  const metricKey: Record<string, string> = {
+    offering_letters: 'offering_letters',
+    purchase_orders: 'customer_purchase_orders',
+    delivery_orders: 'delivery_orders',
+    invoice_deadlines: 'outstanding_value',
+    users: 'users',
+    notifications: 'unread_notifications',
+    uploads: 'uploads'
+  }
+  chartPayload.value = {
+    chartType: 'pie',
+    segmentLabel: payload.label,
+    segmentValue: payload.value
+  }
+  chartDetailOpen.value = true
+}
+
+// ── Kartu akuntansi ────────────────────────────────────────────
+const accountingCards = computed(() => [
+  {
+    title: 'Total Pemasukan',
+    value: formatCurrency(accounting.value?.total_income ?? 0),
+    icon: 'i-lucide-trending-up',
+    color: 'text-success'
+  },
+  {
+    title: 'Total Pengeluaran',
+    value: formatCurrency(accounting.value?.total_expense ?? 0),
+    icon: 'i-lucide-trending-down',
+    color: 'text-error'
+  },
+  {
+    title: 'Laba Bersih',
+    value: formatCurrency(accounting.value?.net_income ?? 0),
+    icon: 'i-lucide-wallet',
+    color: 'text-primary'
+  },
+  {
+    title: 'Saldo Kas & Bank',
+    value: formatCurrency(accounting.value?.cash_balance ?? 0),
+    icon: 'i-lucide-circle-dollar-sign',
+    color: 'text-info'
+  }
+])
+
+const accountingCountCards = computed(() => [
+  {
+    title: 'Jumlah Jurnal',
+    value: accounting.value?.journal_count ?? 0,
+    icon: 'i-lucide-book-open'
+  },
+  {
+    title: 'Jumlah Akun',
+    value: accounting.value?.account_count ?? 0,
+    icon: 'i-lucide-list-tree'
+  },
+  {
+    title: 'Pemasukan',
+    value: accounting.value?.income_count ?? 0,
+    icon: 'i-lucide-banknote-arrow-down'
+  },
+  {
+    title: 'Pengeluaran',
+    value: accounting.value?.expense_count ?? 0,
+    icon: 'i-lucide-banknote-arrow-up'
+  }
+])
 
 // ── Notifikasi tabel + search + pagination ─────────────────────
 const notifSearch = ref('')
@@ -438,6 +573,129 @@ const activityColumns: TableColumn<AdminActivity>[] = [
                 @segment-click="onPieSegmentClick"
               />
               <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+            </UCard>
+          </div>
+
+          <!-- Distribusi Keseluruhan Data Sistem -->
+          <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <UCard
+              v-for="key in distributionKeys"
+              :key="key"
+            >
+              <template #header>
+                <div class="flex items-center justify-between">
+                  <p class="font-medium flex items-center gap-2">
+                    <UIcon
+                      :name="distributionIcons[key] ?? 'i-lucide-chart-pie'"
+                      class="size-4 text-primary"
+                    />
+                    {{ distributionLabels[key] ?? key }}
+                  </p>
+                  <p class="text-xs text-muted">
+                    {{
+                      ((data?.distributions || {})[key] || []).length
+                    }} kategori
+                  </p>
+                </div>
+              </template>
+              <AdminPieChart
+                v-if="distributionChart(key).values.length"
+                :labels="distributionChart(key).labels"
+                :data="distributionChart(key).values"
+                :background-color="distributionChart(key).colors"
+                :height="220"
+                @segment-click="(p) => onDistributionSegmentClick(key, p)"
+              />
+              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+            </UCard>
+          </div>
+
+          <!-- Akuntansi -->
+          <div v-if="accounting" class="space-y-6">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <UCard
+                v-for="card in accountingCards"
+                :key="card.title"
+                variant="subtle"
+              >
+                <template #leading>
+                  <UIcon :name="card.icon" class="size-5" :class="card.color" />
+                </template>
+                <template #title>
+                  {{ card.title }}
+                </template>
+                <p class="text-2xl font-semibold tabular-nums">
+                  {{ card.value }}
+                </p>
+              </UCard>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-4">
+              <UCard
+                v-for="c in accountingCountCards"
+                :key="c.title"
+                variant="subtle"
+                class="text-center"
+              >
+                <UIcon :name="c.icon" class="size-5 text-primary mx-auto mb-1" />
+                <p class="text-2xl font-semibold tabular-nums">
+                  {{ c.value }}
+                </p>
+                <p class="text-xs text-muted mt-1">
+                  {{ c.title }}
+                </p>
+              </UCard>
+            </div>
+
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between">
+                  <p class="font-medium">
+                    Jurnal Terbaru
+                  </p>
+                  <UButton
+                    to="/accounting/jurnal-umum"
+                    size="sm"
+                    variant="ghost"
+                    color="primary"
+                  >
+                    Lihat Semua
+                  </UButton>
+                </div>
+              </template>
+
+              <div class="flex flex-col divide-y divide-default">
+                <div
+                  v-for="journal in accounting.recent_journals ?? []"
+                  :key="journal.id"
+                  class="flex items-center justify-between gap-2 py-2"
+                >
+                  <div class="min-w-0">
+                    <p class="truncate font-medium">
+                      {{ journal.description }}
+                    </p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                      {{ journal.entry_number }}
+                      · {{ formatDate(journal.entry_date) }}
+                    </p>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <p class="font-semibold">
+                      {{ formatCurrency(totalDebit(journal)) }}
+                    </p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                      {{ journal.lines.length }} baris
+                    </p>
+                  </div>
+                </div>
+
+                <p
+                  v-if="!accounting.recent_journals?.length"
+                  class="py-6 text-center text-sm text-neutral-500"
+                >
+                  Belum ada jurnal
+                </p>
+              </div>
             </UCard>
           </div>
 
