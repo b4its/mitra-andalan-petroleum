@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { watch } from 'vue'
+import { formatNPWP } from '~/utils'
 import {
   marketingPOAssociateSchema,
   type MarketingPOAssociateState
@@ -18,38 +19,6 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingPOAssociateState>({ required: true })
 
-const regionProvince = ref('')
-const regionCity = ref('')
-const baseStreet = ref('')
-
-watch(
-  () => state.value.receiver.address,
-  (value) => {
-    const suffix = [regionCity.value, regionProvince.value]
-      .filter(Boolean)
-      .join(', ')
-    if (suffix && value && value.endsWith(suffix)) {
-      baseStreet.value = value
-        .slice(0, value.length - suffix.length)
-        .replace(/[, ]+$/, '')
-    } else {
-      baseStreet.value = value
-    }
-  }
-)
-
-watch([regionProvince, regionCity], () => {
-  if (regionCity.value) {
-    state.value.receiver.address = [
-      baseStreet.value,
-      regionCity.value,
-      regionProvince.value
-    ]
-      .filter(Boolean)
-      .join(', ')
-  }
-})
-
 function previous() {
   emit('previous')
 }
@@ -63,7 +32,7 @@ watch(
   (value) => {
     if (!state.value || !value) return
     state.value.receiver.name = value.name
-    state.value.receiver.npwp = value.npwp || undefined
+    state.value.receiver.npwp = formatNPWP(value.npwp) || undefined
     state.value.receiver.address = value.address || undefined
     state.value.receiver.contactPerson = value.contactPerson || undefined
     state.value.receiver.email = value.email || undefined
@@ -94,7 +63,7 @@ watch(
         <USelectMenu
           v-model="state.receiver"
           :items="receivers"
-          placeholder="Pilih Customer"
+          placeholder="Pilih Supplier"
           value-key="value"
           :ui="{ content: 'min-w-fit' }"
           class="w-full"
@@ -103,7 +72,7 @@ watch(
             {{ item.label }}
 
             <span v-if="item.npwp" class="text-muted text-xs">
-              · NPWP {{ item.npwp }}
+              · NPWP {{ formatNPWP(item.npwp) }}
             </span>
             <span v-if="item.address" class="text-muted text-xs">
               ({{ item.address }})
@@ -113,20 +82,22 @@ watch(
       </UFormField>
 
       <UFormField name="address" label="Alamat">
-        <UInput
+        <UTextarea
           v-model="state.receiver.address"
-          type="text"
           autocomplete="off"
+          :rows="3"
+          class="w-full"
         />
       </UFormField>
 
-      <WilayahLocationPicker
-        v-model:province="regionProvince"
-        v-model:city="regionCity"
-      />
-
       <UFormField name="npwp" label="NPWP">
-        <UInput v-model="state.receiver.npwp" type="text" autocomplete="off" />
+        <UInput
+          v-model="state.receiver.npwp"
+          v-maska="'##.###.###.#-###.###'"
+          inputmode="numeric"
+          placeholder="00.000.000.0-000.000"
+          autocomplete="off"
+        />
       </UFormField>
 
       <div class="flex w-full gap-4">

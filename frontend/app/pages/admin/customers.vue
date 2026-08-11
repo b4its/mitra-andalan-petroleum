@@ -15,6 +15,8 @@ interface Customer {
   name: string
   npwp: string | null
   address: string | null
+  province: string | null
+  city: string | null
   phone: string | null
   email: string | null
 }
@@ -46,6 +48,8 @@ const filtered = computed(() => {
       || (c.email ?? '').toLowerCase().includes(q)
       || (c.phone ?? '').toLowerCase().includes(q)
       || (c.address ?? '').toLowerCase().includes(q)
+      || (c.province ?? '').toLowerCase().includes(q)
+      || (c.city ?? '').toLowerCase().includes(q)
   )
 })
 
@@ -77,6 +81,16 @@ const columns: TableColumn<Customer>[] = [
     cell: ({ row }) => row.getValue('phone') || '-'
   },
   {
+    accessorKey: 'province',
+    header: 'Provinsi',
+    cell: ({ row }) => row.getValue('province') || '-'
+  },
+  {
+    accessorKey: 'city',
+    header: 'Kota',
+    cell: ({ row }) => row.getValue('city') || '-'
+  },
+  {
     accessorKey: 'address',
     header: 'Alamat',
     cell: ({ row }) => {
@@ -98,6 +112,8 @@ const schema = z.object({
   name: z.string().min(2, 'Minimal 2 karakter'),
   npwp: z.string().optional(),
   address: z.string().optional(),
+  province: z.string().optional(),
+  city: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email('Email tidak valid').optional().or(z.literal(''))
 })
@@ -108,6 +124,8 @@ const formState = reactive({
   name: '',
   npwp: '',
   address: '',
+  province: '',
+  city: '',
   phone: '',
   email: ''
 })
@@ -121,6 +139,8 @@ function openAdd() {
   formState.name = ''
   formState.npwp = ''
   formState.address = ''
+  formState.province = ''
+  formState.city = ''
   formState.phone = ''
   formState.email = ''
   modalOpen.value = true
@@ -138,6 +158,8 @@ function openEdit(customer: Customer) {
   formState.name = customer.name
   formState.npwp = formatNPWP(customer.npwp ?? '')
   formState.address = customer.address ?? ''
+  formState.province = customer.province ?? ''
+  formState.city = customer.city ?? ''
   formState.phone = customer.phone ?? ''
   formState.email = customer.email ?? ''
   modalOpen.value = true
@@ -158,6 +180,8 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
       name: event.data.name,
       npwp: npwp || null,
       address: event.data.address || null,
+      province: event.data.province || null,
+      city: event.data.city || null,
       phone: event.data.phone || null,
       email: event.data.email || null
     }
@@ -195,6 +219,8 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
       name: event.data.name,
       npwp: npwp || null,
       address: event.data.address || null,
+      province: event.data.province || null,
+      city: event.data.city || null,
       phone: event.data.phone || null,
       email: event.data.email || null
     }
@@ -354,7 +380,7 @@ const modalTitle = computed(() => {
   </UDashboardPanel>
 
   <!-- ── Modal Add / Edit / View ── -->
-  <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-lg' }">
+  <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-xl' }">
     <template #title>
       {{ modalTitle }}
     </template>
@@ -393,6 +419,22 @@ const modalTitle = computed(() => {
             </p>
             <p class="font-medium">
               {{ selectedCustomer.phone || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Provinsi
+            </p>
+            <p class="font-medium">
+              {{ selectedCustomer.province || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Kota
+            </p>
+            <p class="font-medium">
+              {{ selectedCustomer.city || "-" }}
             </p>
           </div>
           <div>
@@ -456,6 +498,17 @@ const modalTitle = computed(() => {
             autocomplete="off"
           />
         </UFormField>
+
+        <div class="rounded-lg border border-default p-3 space-y-4">
+          <p class="text-sm font-semibold">
+            Wilayah
+          </p>
+          <WilayahLocationPicker
+            v-model:province="formState.province"
+            v-model:city="formState.city"
+          />
+        </div>
+
         <UFormField name="address" label="Alamat">
           <UTextarea
             v-model="formState.address"
