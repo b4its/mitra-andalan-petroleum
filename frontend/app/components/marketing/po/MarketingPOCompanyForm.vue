@@ -81,6 +81,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCompanyState>) {
           v-model="state.companyInformation.address"
           autocomplete="off"
           :rows="3"
+          class="w-full"
         />
       </UFormField>
 

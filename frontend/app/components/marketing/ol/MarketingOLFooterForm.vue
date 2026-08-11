@@ -104,10 +104,11 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
       <p>Informasi Perusahaan</p>
 
       <UFormField name="address" label="Alamat" required>
-        <UInput
+        <UTextarea
           v-model="state.companyInformation.address"
-          type="text"
           autocomplete="off"
+          :rows="3"
+          class="w-full"
         />
       </UFormField>
 
