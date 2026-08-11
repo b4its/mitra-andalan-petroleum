@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem, NavigationMenuItem } from '@nuxt/ui'
-import type { PurchaseOrdersSupplier } from '~/types/marketing'
+import type { Customer, PurchaseOrdersSupplier } from '~/types/marketing'
 import type {
   DeliveryOrderPost,
   DeliveryOrdersDetails
@@ -61,6 +61,17 @@ const { data: linkedDeliveryOrders, pending: pendingLinked } = await useAsyncDat
       })
   },
   { default: () => [], server: false }
+)
+
+// Daftar customer untuk melengkapi alamat otomatis pada "Informasi Customer"
+const { data: customerList } = await useAsyncData(
+  'do-customers',
+  () => get<Customer[]>('/customers'),
+  { default: () => [], server: false }
+)
+
+const customersById = computed(
+  () => new Map(customerList.value.map(c => [c.id, c] as const))
 )
 
 const items: StepperItem[] = [
@@ -261,6 +272,12 @@ watch(
       console.log(value)
       doReceiver.customerName = value.customerName || ''
       doReceiver.customerId = value.customerId || ''
+      // Lengkapi alamat customer dari tabel customers berdasarkan customer_id PO
+      const customer = customersById.value.get(value.customerId || '')
+      if (customer) {
+        if (customer.address) doReceiver.customerAddress = customer.address
+        if (customer.name) doReceiver.customerName = customer.name
+      }
       doDetailsTransport.total = value.fuelTotalQty || 0
       doDetailsTransport.productInformation.qty = value.fuelTotalQty || 0
       doAdditional.fuelReceived = value.fuelTotalQty || 0

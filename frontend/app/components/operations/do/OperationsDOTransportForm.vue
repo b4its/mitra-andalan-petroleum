@@ -63,7 +63,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOTransportState>) {
 
       <USeparator />
 
-      <p>Informasi Penerima BBM + HP</p>
+      <p>Informasi Penerima</p>
 
       <div class="flex w-full gap-4">
         <UFormField name="driverInformation.name" label="Nama Driver" required>
