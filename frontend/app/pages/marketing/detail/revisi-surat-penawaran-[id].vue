@@ -55,7 +55,7 @@ const { data: offeringLetter, pending: pendingOL } = await useAsyncData(
 )
 
 const letterHeader = reactive<MarketingOLHeaderState>({
-  location: offeringLetter.value?.details.location || 'Samarinda',
+  location: offeringLetter.value?.details.location || '',
   date:
     new Date(offeringLetter.value?.details.date || '2026-08-11')
       .toISOString()
@@ -131,7 +131,7 @@ const letterFooter = reactive<MarketingOLFooterState>({
   },
   companyInformation: {
     address: offeringLetter.value?.details.companyInformation.address
-      || 'Jl. D. I. Panjaitan No. 25, Samarinda',
+      || '',
     phoneNumber:
       offeringLetter.value?.details.companyInformation.phoneNumber
       || '0541-2832313', // add masking
@@ -282,6 +282,7 @@ definePageMeta({ layout: 'marketing' })
     <template #letterFooter>
       <MarketingOLFooterForm
         v-model="letterFooter"
+        v-model:location="letterHeader.location"
         :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFooterSubmit"

@@ -11,12 +11,30 @@ const emit = defineEmits<{
 }>()
 
 const state = defineModel<MarketingOLFooterState>({ required: true })
+const location = defineModel<string>('location', { default: '' })
 
 const regionProvince = ref('')
 const regionCity = ref('')
-const baseStreet = ref(state.value.companyInformation.address)
+const baseStreet = ref('')
+
+watch(
+  () => state.value.companyInformation.address,
+  (value) => {
+    const suffix = [regionCity.value, regionProvince.value]
+      .filter(Boolean)
+      .join(', ')
+    if (suffix && value && value.endsWith(suffix)) {
+      baseStreet.value = value
+        .slice(0, value.length - suffix.length)
+        .replace(/[, ]+$/, '')
+    } else {
+      baseStreet.value = value
+    }
+  }
+)
 
 watch([regionProvince, regionCity], () => {
+  location.value = regionCity.value
   if (regionCity.value) {
     state.value.companyInformation.address = [
       baseStreet.value,
@@ -93,10 +111,15 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
         />
       </UFormField>
 
-      <WilayahLocationPicker
-        v-model:province="regionProvince"
-        v-model:city="regionCity"
-      />
+      <div class="w-full">
+        <p class="text-sm font-medium text-muted mb-1.5">
+          Lokasi <span class="text-red-500">*</span>
+        </p>
+        <WilayahLocationPicker
+          v-model:province="regionProvince"
+          v-model:city="regionCity"
+        />
+      </div>
 
       <div class="flex w-full gap-4">
         <UFormField name="phoneNumber" label="Nomor Telepon" required>

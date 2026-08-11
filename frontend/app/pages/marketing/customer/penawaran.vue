@@ -41,7 +41,7 @@ const items: StepperItem[] = [
 ]
 
 const letterHeader = reactive<MarketingOLHeaderState>({
-  location: 'Samarinda',
+  location: '',
   date: '2026-08-11',
   offeringLetterNumber: '722/MAP/II-06/26',
   regarding: 'Surat Penawaran Harga Bahan Bakar Minyak Bio Diesel',
@@ -94,7 +94,7 @@ const letterFooter = reactive<MarketingOLFooterState>({
     signature: undefined
   },
   companyInformation: {
-    address: 'Jl. D. I. Panjaitan No. 25, Samarinda',
+    address: '',
     phoneNumber: '0541-2832313',
     email: 'cs@map.co.id'
   }
@@ -209,6 +209,7 @@ definePageMeta({ layout: 'marketing' })
     <template #letterFooter>
       <MarketingOLFooterForm
         v-model="letterFooter"
+        v-model:location="letterHeader.location"
         :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
         @submit="onFooterSubmit"

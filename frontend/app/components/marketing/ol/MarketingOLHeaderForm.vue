@@ -17,17 +17,6 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingOLHeaderState>({ required: true })
 
-const regionProvince = ref('')
-const regionCity = ref('')
-
-watch([regionProvince, regionCity], () => {
-  if (regionCity.value) {
-    state.value.location = [regionCity.value, regionProvince.value]
-      .filter(Boolean)
-      .join(', ')
-  }
-})
-
 function previous() {
   emit('previous')
 }
@@ -46,21 +35,9 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLHeaderState>) {
     @submit="onSubmit"
   >
     <UPageCard variant="soft">
-      <div class="flex w-full gap-4">
-        <div class="w-full">
-          <p class="text-sm font-medium text-muted mb-1.5">
-            Lokasi <span class="text-red-500">*</span>
-          </p>
-          <WilayahLocationPicker
-            v-model:province="regionProvince"
-            v-model:city="regionCity"
-          />
-        </div>
-
-        <UFormField name="date" label="Tanggal Dibuat" required>
-          <UInput v-model="state.date" type="date" autocomplete="off" />
-        </UFormField>
-      </div>
+      <UFormField name="date" label="Tanggal Dibuat" required>
+        <UInput v-model="state.date" type="date" autocomplete="off" />
+      </UFormField>
 
       <USeparator />
 

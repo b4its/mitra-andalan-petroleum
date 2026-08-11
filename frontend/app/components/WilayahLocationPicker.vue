@@ -68,7 +68,7 @@ watch(
 </script>
 
 <template>
-  <div class="flex w-full gap-4">
+  <div class="flex flex-col w-full gap-4">
     <UFormField label="Provinsi" class="w-full">
       <USelectMenu
         v-model="province"
@@ -77,6 +77,8 @@ watch(
         :disabled="provincesLoading || provincesError"
         searchable
         placeholder="Pilih Provinsi"
+        :ui="{ content: 'min-w-fit' }"
+        class="w-full"
       />
       <p v-if="provincesError" class="text-xs text-red-500 mt-1">
         Gagal memuat data provinsi.
@@ -91,6 +93,8 @@ watch(
         :disabled="!selectedProvince || regenciesLoading || regenciesError"
         searchable
         placeholder="Pilih Kota/Kabupaten"
+        :ui="{ content: 'min-w-fit' }"
+        class="w-full"
       />
       <p v-if="regenciesError" class="text-xs text-red-500 mt-1">
         Gagal memuat data kota/kabupaten.
