@@ -7,7 +7,17 @@ import type {
   AccountingJournal,
   AccountingSummary,
   AccountingTrialBalance,
-  AccountingTrialBalanceRow
+  AccountingTrialBalanceRow,
+  BalanceSheetResponse,
+  DailyCashResponse,
+  DailyCashRow,
+  CashflowResponse,
+  CashflowItem,
+  CostRecapResponse,
+  MonitoringResponse,
+  MonitoringRow,
+  BankInterestResponse,
+  BankInterestRow
 } from '~/types/accounting'
 import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
 import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
@@ -21,24 +31,62 @@ const { toCSV, toExcel, toPDF } = useExport()
 const { data, pending, refresh } = await useAsyncData(
   'admin-accounting',
   async () => {
-    const [summary, journalResult, trial, accounts] = await Promise.all([
+    const [
+      summary,
+      journalResult,
+      trial,
+      accounts,
+      balanceSheet,
+      cashflow,
+      costRecap,
+      monitoring,
+      dailyCash,
+      bankInterest
+    ] = await Promise.all([
       get<AccountingSummary>('/accounting/summary'),
       get<{ items: AccountingJournal[] }>('/accounting/journal', {
         page: 1,
-        page_size: 100
+        page_size: 500
       }),
       get<AccountingTrialBalance>('/accounting/trial-balance'),
-      get<AccountingAccount[]>('/accounting/accounts')
+      get<AccountingAccount[]>('/accounting/accounts', {
+        include_inactive: true
+      }),
+      get<BalanceSheetResponse>('/accounting/balance-sheet'),
+      get<CashflowResponse>('/accounting/cashflow'),
+      get<CostRecapResponse>('/accounting/cost-recap'),
+      get<MonitoringResponse>('/accounting/monitoring', {
+        year: new Date().getFullYear()
+      }),
+      get<DailyCashResponse>('/accounting/daily-cash'),
+      get<BankInterestResponse>('/accounting/bank-interest')
     ])
     return {
       summary,
       journals: journalResult?.items || [],
       trial,
-      accounts
+      accounts,
+      balanceSheet,
+      cashflow,
+      costRecap,
+      monitoring,
+      dailyCash,
+      bankInterest
     }
   },
   {
-    default: () => ({ summary: null, journals: [], trial: null, accounts: [] }),
+    default: () => ({
+      summary: null,
+      journals: [],
+      trial: null,
+      accounts: [],
+      balanceSheet: null,
+      cashflow: null,
+      costRecap: null,
+      monitoring: null,
+      dailyCash: null,
+      bankInterest: null
+    }),
     lazy: true,
     server: false
   }
@@ -135,6 +183,265 @@ const accountDistColors = computed(() => {
   for (const acc of list) map.set(acc.type, (map.get(acc.type) || 0) + 1)
   return [...map.keys()].map(k => typeColors[k] ?? 'rgba(100,116,139,0.8)')
 })
+
+// ── Neraca ───────────────────────────────────────────────────
+const isBalanced = computed(() => {
+  const n = data.value?.balanceSheet
+  if (!n) return true
+  return Math.abs(n.total_assets - (n.total_liabilities + n.total_equity)) < 1
+})
+
+// ── Kas Harian ───────────────────────────────────────────────
+const dailyCashColumns: TableColumn<DailyCashRow>[] = [
+  {
+    accessorKey: 'entry_date',
+    header: 'Tanggal',
+    cell: ({ row }) => formatDate(row.getValue('entry_date'))
+  },
+  {
+    accessorKey: 'description',
+    header: 'Deskripsi',
+    cell: ({ row }) => {
+      const desc = row.getValue('description') as string
+      return h('span', { class: 'truncate block max-w-72' }, desc)
+    }
+  },
+  {
+    accessorKey: 'account_code',
+    header: 'Akun',
+    cell: ({ row }) =>
+      `${row.original.account_code} · ${row.original.account_name}`
+  },
+  {
+    accessorKey: 'debit',
+    header: 'Debit (Masuk)',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => {
+      const val = Number(row.getValue('debit'))
+      return val > 0
+        ? h('span', { class: 'text-success font-medium' }, formatCurrency(val))
+        : '-'
+    }
+  },
+  {
+    accessorKey: 'credit',
+    header: 'Kredit (Keluar)',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => {
+      const val = Number(row.getValue('credit'))
+      return val > 0
+        ? h('span', { class: 'text-error font-medium' }, formatCurrency(val))
+        : '-'
+    }
+  },
+  {
+    accessorKey: 'balance',
+    header: 'Saldo',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'font-semibold' },
+        formatCurrency(Number(row.getValue('balance')))
+      )
+  }
+]
+
+// ── Rekap Cashflow ───────────────────────────────────────────
+const cashflowColumns: TableColumn<CashflowItem>[] = [
+  {
+    accessorKey: 'description',
+    header: 'Deskripsi',
+    cell: ({ row }) => {
+      const desc = row.getValue('description') as string
+      return h('span', { class: 'truncate block max-w-96' }, desc)
+    }
+  },
+  {
+    accessorKey: 'category',
+    header: 'Kategori',
+    cell: ({ row }) =>
+      h('span', { class: 'text-xs text-muted' }, row.getValue('category'))
+  },
+  {
+    accessorKey: 'amount',
+    header: 'Jumlah',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => {
+      const amount = Number(row.getValue('amount'))
+      const color = amount >= 0 ? 'text-success' : 'text-error'
+      return h(
+        'span',
+        { class: `font-semibold ${color}` },
+        formatCurrency(amount)
+      )
+    }
+  }
+]
+
+// ── Rekap Biaya ──────────────────────────────────────────────
+const expandedGroups = ref<Set<string>>(new Set())
+function toggleGroup(code: string) {
+  if (expandedGroups.value.has(code)) {
+    expandedGroups.value.delete(code)
+  } else {
+    expandedGroups.value.add(code)
+  }
+}
+
+// ── Rekap Monitoring ─────────────────────────────────────────
+const monitoringColumns: TableColumn<MonitoringRow>[] = [
+  {
+    accessorKey: 'bulan',
+    header: 'Bulan',
+    cell: ({ row }) =>
+      h('span', { class: 'font-medium' }, row.getValue('bulan'))
+  },
+  {
+    accessorKey: 'invoice',
+    header: 'Invoice',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => formatCurrency(row.getValue('invoice'))
+  },
+  {
+    accessorKey: 'modal_elnusa',
+    header: 'Modal Elnusa',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => formatCurrency(row.getValue('modal_elnusa'))
+  },
+  {
+    accessorKey: 'oat',
+    header: 'OAT',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => formatCurrency(row.getValue('oat'))
+  },
+  {
+    accessorKey: 'gross_margin',
+    header: 'Gross Margin',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => {
+      const val = Number(row.getValue('gross_margin'))
+      return h(
+        'span',
+        {
+          class: val >= 0
+            ? 'text-success font-semibold'
+            : 'text-error font-semibold'
+        },
+        formatCurrency(val)
+      )
+    }
+  },
+  {
+    accessorKey: 'penghasilan',
+    header: 'Penghasilan',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'font-semibold text-success' },
+        formatCurrency(row.getValue('penghasilan'))
+      )
+  },
+  {
+    accessorKey: 'operasional',
+    header: 'Operasional',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'text-error' },
+        formatCurrency(row.getValue('operasional'))
+      )
+  },
+  {
+    accessorKey: 'fee_manajemen',
+    header: 'Fee Manajemen',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) => formatCurrency(row.getValue('fee_manajemen'))
+  }
+]
+
+// ── Rekap Bunga Bank ─────────────────────────────────────────
+const bankInterestColumns: TableColumn<BankInterestRow>[] = [
+  {
+    accessorKey: 'entry_date',
+    header: 'Tanggal',
+    cell: ({ row }) => formatDate(row.getValue('entry_date'))
+  },
+  {
+    accessorKey: 'description',
+    header: 'Deskripsi',
+    cell: ({ row }) => {
+      const desc = row.getValue('description') as string
+      return h('span', { class: 'truncate block max-w-72' }, desc)
+    }
+  },
+  {
+    accessorKey: 'amount',
+    header: 'Pokok Pinjaman',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'font-medium' },
+        formatCurrency(Number(row.getValue('amount')))
+      )
+  },
+  {
+    accessorKey: 'interest_rate',
+    header: 'Bunga (%)',
+    meta: { class: { th: 'text-center', td: 'text-center' } },
+    cell: ({ row }) => `${row.getValue('interest_rate')}%`
+  },
+  {
+    accessorKey: 'days',
+    header: 'Hari',
+    meta: { class: { th: 'text-center', td: 'text-center' } },
+    cell: ({ row }) => row.getValue('days')
+  },
+  {
+    accessorKey: 'interest_amount',
+    header: 'Jumlah Bunga',
+    meta: { class: { th: 'text-right', td: 'text-right' } },
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'font-semibold text-warning' },
+        formatCurrency(Number(row.getValue('interest_amount')))
+      )
+  }
+]
+
+// ── Chart of Accounts ────────────────────────────────────────
+const accountColumns: TableColumn<AccountingAccount>[] = [
+  { accessorKey: 'code', header: 'Kode' },
+  { accessorKey: 'name', header: 'Nama Akun' },
+  {
+    accessorKey: 'type',
+    header: 'Tipe',
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'text-xs text-muted' },
+        typeLabels[String(row.getValue('type'))] ?? row.getValue('type')
+      )
+  },
+  {
+    accessorKey: 'is_active',
+    header: 'Status',
+    cell: ({ row }) =>
+      h(
+        'span',
+        {
+          class: row.getValue('is_active')
+            ? 'text-xs text-success'
+            : 'text-xs text-muted'
+        },
+        row.getValue('is_active') ? 'Aktif' : 'Nonaktif'
+      )
+  }
+]
 
 // ── Tabel Jurnal: search + pagination ────────────────────────
 const journalSearch = ref('')
@@ -593,6 +900,389 @@ const exportItems = (
                 }}</span>
               </div>
             </div>
+          </UCard>
+
+          <!-- Neraca (Balance Sheet) -->
+          <UCard v-if="data?.balanceSheet">
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-medium">
+                  Neraca (Balance Sheet)
+                </p>
+                <p
+                  v-if="data.balanceSheet"
+                  class="text-xs font-semibold"
+                  :class="isBalanced ? 'text-success' : 'text-error'"
+                >
+                  {{ isBalanced ? 'Balance' : 'Tidak Balance' }}
+                </p>
+              </div>
+            </template>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <!-- Aset -->
+              <div class="rounded-lg border border-default p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="font-semibold text-info">Aset</span>
+                  <span class="font-bold text-lg">{{
+                    formatCurrency(data.balanceSheet.assets.total)
+                  }}</span>
+                </div>
+                <div class="flex flex-col divide-y divide-default">
+                  <div
+                    v-for="acc in data.balanceSheet.assets.accounts"
+                    :key="acc.account_id"
+                    class="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span class="text-muted">{{ acc.account_code }} - {{ acc.account_name }}</span>
+                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                  </div>
+                  <p
+                    v-if="!data.balanceSheet.assets.accounts.length"
+                    class="py-4 text-center text-sm text-muted"
+                  >
+                    Belum ada data aset
+                  </p>
+                </div>
+              </div>
+
+              <!-- Kewajiban -->
+              <div class="rounded-lg border border-default p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="font-semibold text-warning">Kewajiban</span>
+                  <span class="font-bold text-lg">{{
+                    formatCurrency(data.balanceSheet.liabilities.total)
+                  }}</span>
+                </div>
+                <div class="flex flex-col divide-y divide-default">
+                  <div
+                    v-for="acc in data.balanceSheet.liabilities.accounts"
+                    :key="acc.account_id"
+                    class="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span class="text-muted">{{ acc.account_code }} - {{ acc.account_name }}</span>
+                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                  </div>
+                  <p
+                    v-if="!data.balanceSheet.liabilities.accounts.length"
+                    class="py-4 text-center text-sm text-muted"
+                  >
+                    Belum ada data kewajiban
+                  </p>
+                </div>
+              </div>
+
+              <!-- Ekuitas -->
+              <div class="rounded-lg border border-default p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="font-semibold text-primary">Ekuitas</span>
+                  <span class="font-bold text-lg">{{
+                    formatCurrency(data.balanceSheet.equity.total)
+                  }}</span>
+                </div>
+                <div class="flex flex-col divide-y divide-default">
+                  <div
+                    v-for="acc in data.balanceSheet.equity.accounts"
+                    :key="acc.account_id"
+                    class="flex items-center justify-between py-2 text-sm"
+                  >
+                    <span class="text-muted">{{ acc.account_code }} - {{ acc.account_name }}</span>
+                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                  </div>
+                  <p
+                    v-if="!data.balanceSheet.equity.accounts.length"
+                    class="py-4 text-center text-sm text-muted"
+                  >
+                    Belum ada data ekuitas
+                  </p>
+                </div>
+              </div>
+            </div>
+          </UCard>
+
+          <!-- Kas Harian -->
+          <UCard v-if="data?.dailyCash">
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-medium">
+                  Kas Harian
+                </p>
+                <p class="text-xs text-muted">
+                  Mutasi kas/bank dengan saldo berjalan
+                </p>
+              </div>
+            </template>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Saldo Awal</p>
+                <p class="text-xl font-bold">
+                  {{ formatCurrency(data.dailyCash.opening_balance) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Masuk</p>
+                <p class="text-xl font-bold text-success">
+                  {{ formatCurrency(data.dailyCash.total_debit) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Keluar</p>
+                <p class="text-xl font-bold text-error">
+                  {{ formatCurrency(data.dailyCash.total_credit) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Saldo Akhir</p>
+                <p class="text-xl font-bold">
+                  {{ formatCurrency(data.dailyCash.closing_balance) }}
+                </p>
+              </div>
+            </div>
+
+            <UTable :data="data.dailyCash.rows.slice(0, 10)" :columns="dailyCashColumns" />
+            <p
+              v-if="!data.dailyCash.rows.length"
+              class="py-4 text-center text-sm text-muted"
+            >
+              Belum ada mutasi kas
+            </p>
+          </UCard>
+
+          <!-- Rekap Cashflow -->
+          <UCard v-if="data?.cashflow">
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-medium">
+                  Rekap Arus Kas (Cashflow)
+                </p>
+                <p class="text-xs text-muted">
+                  Operasi, investasi, dan pendanaan
+                </p>
+              </div>
+            </template>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Saldo Awal</p>
+                <p class="text-xl font-bold">
+                  {{ formatCurrency(data.cashflow.opening_balance) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Arus Kas Bersih</p>
+                <p
+                  class="text-xl font-bold"
+                  :class="data.cashflow.net_cashflow >= 0 ? 'text-success' : 'text-error'"
+                >
+                  {{ formatCurrency(data.cashflow.net_cashflow) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Saldo Akhir</p>
+                <p class="text-xl font-bold">
+                  {{ formatCurrency(data.cashflow.closing_balance) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Arus Kas Operasi</p>
+                <p
+                  class="text-xl font-bold"
+                  :class="data.cashflow.operating.total >= 0 ? 'text-success' : 'text-error'"
+                >
+                  {{ formatCurrency(data.cashflow.operating.total) }}
+                </p>
+              </div>
+            </div>
+
+            <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+              Arus Kas Operasi
+            </p>
+            <UTable :data="data.cashflow.operating.items" :columns="cashflowColumns" />
+            <p
+              v-if="!data.cashflow.operating.items.length"
+              class="py-4 text-center text-sm text-muted"
+            >
+              Belum ada data arus kas operasi
+            </p>
+          </UCard>
+
+          <!-- Rekap Biaya -->
+          <UCard v-if="data?.costRecap">
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-medium">
+                  Rekap Biaya
+                </p>
+                <p class="text-sm font-bold text-error">
+                  {{ formatCurrency(data.costRecap.total_cost) }}
+                </p>
+              </div>
+            </template>
+
+            <div class="flex flex-col gap-3">
+              <div
+                v-for="group in data.costRecap.groups"
+                :key="group.account_code"
+                class="rounded-lg border border-default"
+              >
+                <button
+                  class="flex items-center justify-between w-full text-left px-4 py-3"
+                  @click="toggleGroup(group.account_code)"
+                >
+                  <div class="flex items-center gap-2">
+                    <UIcon
+                      :name="expandedGroups.has(group.account_code)
+                        ? 'i-lucide-chevron-down'
+                        : 'i-lucide-chevron-right'"
+                      class="size-4 text-muted"
+                    />
+                    <span class="font-medium">{{ group.account_code }} · {{ group.account_name }}</span>
+                  </div>
+                  <span class="font-bold text-error">{{ formatCurrency(group.total) }}</span>
+                </button>
+
+                <div
+                  v-if="expandedGroups.has(group.account_code)"
+                  class="flex flex-col divide-y divide-default border-t border-default"
+                >
+                  <div
+                    v-for="item in group.items"
+                    :key="item.id"
+                    class="flex items-center justify-between py-2 px-4 text-sm"
+                  >
+                    <div class="min-w-0">
+                      <p class="truncate max-w-96">{{ item.description }}</p>
+                      <p class="text-xs text-muted">
+                        {{ formatDate(item.entry_date) }}
+                        <span v-if="item.reference">· {{ item.reference }}</span>
+                      </p>
+                    </div>
+                    <span class="font-medium shrink-0">{{ formatCurrency(item.amount) }}</span>
+                  </div>
+                </div>
+                <p
+                  v-else
+                  class="text-sm text-muted px-4 py-2 border-t border-default"
+                >
+                  {{ group.items.length }} transaksi — klik untuk detail
+                </p>
+              </div>
+
+              <p
+                v-if="!data.costRecap.groups.length"
+                class="py-4 text-center text-sm text-muted"
+              >
+                Belum ada data biaya
+              </p>
+            </div>
+          </UCard>
+
+          <!-- Rekap Monitoring -->
+          <UCard v-if="data?.monitoring">
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-medium">
+                  Rekap Monitoring ({{ new Date().getFullYear() }})
+                </p>
+                <p class="text-xs text-muted">
+                  Pendapatan, biaya, dan margin per bulan
+                </p>
+              </div>
+            </template>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Penghasilan</p>
+                <p class="text-xl font-bold text-success">
+                  {{ formatCurrency(data.monitoring.total_penghasilan) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Operasional</p>
+                <p class="text-xl font-bold text-error">
+                  {{ formatCurrency(data.monitoring.total_operasional) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Gross Margin</p>
+                <p class="text-xl font-bold">
+                  {{ formatCurrency(data.monitoring.total_gross_margin) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total OAT</p>
+                <p class="text-xl font-bold">
+                  {{ formatCurrency(data.monitoring.total_oat) }}
+                </p>
+              </div>
+            </div>
+
+            <UTable :data="data.monitoring.rows" :columns="monitoringColumns" />
+            <p
+              v-if="!data.monitoring.rows.length"
+              class="py-4 text-center text-sm text-muted"
+            >
+              Belum ada data monitoring
+            </p>
+          </UCard>
+
+          <!-- Rekap Bunga Bank -->
+          <UCard v-if="data?.bankInterest">
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-medium">
+                  Rekap Bunga Bank
+                </p>
+                <p class="text-xs text-muted">
+                  Pinjaman dan kalkulasi bunga
+                </p>
+              </div>
+            </template>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Pokok Pinjaman</p>
+                <p class="text-xl font-bold">
+                  {{ formatCurrency(data.bankInterest.total_principal) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Bunga</p>
+                <p class="text-xl font-bold text-warning">
+                  {{ formatCurrency(data.bankInterest.total_interest) }}
+                </p>
+              </div>
+              <div class="rounded-lg border border-default p-3">
+                <p class="text-sm text-muted">Total Pembayaran</p>
+                <p class="text-xl font-bold text-success">
+                  {{ formatCurrency(data.bankInterest.total_paid) }}
+                </p>
+              </div>
+            </div>
+
+            <UTable :data="data.bankInterest.rows.slice(0, 10)" :columns="bankInterestColumns" />
+            <p
+              v-if="!data.bankInterest.rows.length"
+              class="py-4 text-center text-sm text-muted"
+            >
+              Belum ada data bunga bank
+            </p>
+          </UCard>
+
+          <!-- Chart of Accounts -->
+          <UCard v-if="data?.accounts?.length">
+            <template #header>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-medium">
+                  Chart of Accounts
+                </p>
+                <p class="text-xs text-muted">
+                  {{ (data.accounts || []).length }} akun
+                </p>
+              </div>
+            </template>
+            <UTable :data="data.accounts" :columns="accountColumns" />
           </UCard>
         </template>
       </div>
