@@ -12,6 +12,22 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingOLFooterState>({ required: true })
 
+const regionProvince = ref('')
+const regionCity = ref('')
+const baseStreet = ref(state.value.companyInformation.address)
+
+watch([regionProvince, regionCity], () => {
+  if (regionCity.value) {
+    state.value.companyInformation.address = [
+      baseStreet.value,
+      regionCity.value,
+      regionProvince.value
+    ]
+      .filter(Boolean)
+      .join(', ')
+  }
+})
+
 function previous() {
   emit('previous')
 }
@@ -76,6 +92,11 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
           autocomplete="off"
         />
       </UFormField>
+
+      <WilayahLocationPicker
+        v-model:province="regionProvince"
+        v-model:city="regionCity"
+      />
 
       <div class="flex w-full gap-4">
         <UFormField name="phoneNumber" label="Nomor Telepon" required>

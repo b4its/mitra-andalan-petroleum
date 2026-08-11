@@ -16,6 +16,22 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingPOCompanyState>({ required: true })
 
+const regionProvince = ref('')
+const regionCity = ref('')
+const baseStreet = ref(state.value.companyInformation.address)
+
+watch([regionProvince, regionCity], () => {
+  if (regionCity.value) {
+    state.value.companyInformation.address = [
+      baseStreet.value,
+      regionCity.value,
+      regionProvince.value
+    ]
+      .filter(Boolean)
+      .join(', ')
+  }
+})
+
 function previous() {
   emit('previous')
 }
@@ -51,6 +67,11 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCompanyState>) {
           autocomplete="off"
         />
       </UFormField>
+
+      <WilayahLocationPicker
+        v-model:province="regionProvince"
+        v-model:city="regionCity"
+      />
 
       <UFormField name="npwp" label="NPWP" required>
         <UInput

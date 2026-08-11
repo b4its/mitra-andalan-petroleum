@@ -18,6 +18,22 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingPOAssociateState>({ required: true })
 
+const regionProvince = ref('')
+const regionCity = ref('')
+const baseStreet = ref(state.value.receiver.address || '')
+
+watch([regionProvince, regionCity], () => {
+  if (regionCity.value) {
+    state.value.receiver.address = [
+      baseStreet.value,
+      regionCity.value,
+      regionProvince.value
+    ]
+      .filter(Boolean)
+      .join(', ')
+  }
+})
+
 function previous() {
   emit('previous')
 }
@@ -87,6 +103,11 @@ watch(
           autocomplete="off"
         />
       </UFormField>
+
+      <WilayahLocationPicker
+        v-model:province="regionProvince"
+        v-model:city="regionCity"
+      />
 
       <UFormField name="npwp" label="NPWP">
         <UInput v-model="state.receiver.npwp" type="text" autocomplete="off" />
