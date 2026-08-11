@@ -16,7 +16,7 @@ const { data: upload, pending, error } = await useAsyncData(
 watch(upload, (value) => {
   if (!import.meta.client || !value) return
   if (fileKind(value) === 'spreadsheet') loadExcel()
-  else if (fileKind(value) === 'word') loadWord()
+  else if (fileKind(value) === 'word') loadWordPdf()
 })
 
 const EXT = /\.([a-z0-9]+)$/i
@@ -88,35 +88,21 @@ function selectSheet(name: string) {
   })
 }
 
-const wordEl = ref<HTMLElement | null>(null)
-const wordPending = ref(false)
-const wordFailed = ref(false)
+const wordPdfUrl = ref('')
+const wordPdfPending = ref(false)
 
-async function loadWord() {
+async function loadWordPdf() {
   if (!upload.value || fileKind(upload.value) !== 'word') return
-  // docx-preview hanya mendukung .docx (bukan .doc biner lama)
-  if (extOf(upload.value.original_filename) !== 'docx') {
-    wordFailed.value = true
-    return
-  }
-  wordPending.value = true
-  wordFailed.value = false
+  wordPdfPending.value = true
   try {
-    const blob = await $fetch<Blob>(upload.value.url, { responseType: 'blob' })
-    const { renderAsync } = await import('docx-preview')
-    await nextTick()
-    if (!wordEl.value) return
-    wordEl.value.innerHTML = ''
-    await renderAsync(blob, wordEl.value, undefined, {
-      className: 'docx',
-      inWrapper: true,
-      ignoreWidth: true,
-      ignoreHeight: true
+    const pdfBlob = await $fetch<Blob>(`/api/v1/uploads/${upload.value.id}/pdf`, {
+      responseType: 'blob'
     })
+    wordPdfUrl.value = URL.createObjectURL(pdfBlob)
   } catch {
-    wordFailed.value = true
+    wordPdfUrl.value = ''
   } finally {
-    wordPending.value = false
+    wordPdfPending.value = false
   }
 }
 
@@ -269,26 +255,26 @@ async function downloadFile() {
           </div>
         </template>
 
-        <!-- Preview Word (.docx) -->
+        <!-- Preview Word (.docx) — dikonversi ke PDF via LibreOffice -->
         <template v-else-if="fileKind(upload) === 'word'">
           <div
-            v-if="wordPending"
+            v-if="wordPdfPending"
             class="flex h-64 items-center justify-center rounded-lg border border-default bg-elevated"
           >
             <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
           </div>
 
+          <iframe
+            v-else-if="wordPdfUrl"
+            :src="wordPdfUrl"
+            class="h-[75dvh] w-full rounded-lg border border-default bg-elevated"
+          />
+
           <UEmpty
-            v-else-if="wordFailed"
+            v-else
             icon="i-lucide-eye-off"
             title="Preview tidak tersedia"
             description="File dokumen ini tidak dapat ditampilkan di browser. Gunakan tombol Download untuk mengunduhnya."
-          />
-
-          <div
-            v-show="!wordPending && !wordFailed"
-            ref="wordEl"
-            class="mx-auto max-w-full overflow-auto rounded-lg border border-default bg-elevated p-4"
           />
         </template>
 
