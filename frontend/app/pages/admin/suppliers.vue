@@ -130,6 +130,36 @@ const formState = reactive({
   email: ''
 })
 
+const baseStreet = ref('')
+
+watch(
+  () => formState.address,
+  (value) => {
+    const suffix = [formState.city, formState.province]
+      .filter(Boolean)
+      .join(', ')
+    if (suffix && value && value.endsWith(suffix)) {
+      baseStreet.value = value
+        .slice(0, value.length - suffix.length)
+        .replace(/[, ]+$/, '')
+    } else {
+      baseStreet.value = value
+    }
+  }
+)
+
+watch([() => formState.province, () => formState.city], () => {
+  if (formState.city) {
+    formState.address = [
+      baseStreet.value,
+      formState.city,
+      formState.province
+    ]
+      .filter(Boolean)
+      .join(', ')
+  }
+})
+
 const saving = ref(false)
 
 // ── Helpers ───────────────────────────────────────────────────
