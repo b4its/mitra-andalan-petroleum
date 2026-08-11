@@ -16,7 +16,6 @@ const { data: upload, pending, error } = await useAsyncData(
 watch(upload, (value) => {
   if (!import.meta.client || !value) return
   if (fileKind(value) === 'spreadsheet') loadExcel()
-  else if (fileKind(value) === 'word') loadWordPdf()
 }, { immediate: true })
 
 const EXT = /\.([a-z0-9]+)$/i
@@ -88,16 +87,11 @@ function selectSheet(name: string) {
   })
 }
 
-const wordPdfUrl = ref('')
-const wordPdfPending = ref(false)
-
-async function loadWordPdf() {
-  if (!upload.value || fileKind(upload.value) !== 'word') return
-  wordPdfPending.value = true
-  // Set URL langsung ke API endpoint — iframe akan fetch PDF-nya sendiri
-  wordPdfUrl.value = `/api/v1/uploads/${upload.value.id}/pdf`
-  wordPdfPending.value = false
-}
+const wordPdfUrl = computed(() => {
+  if (!upload.value || fileKind(upload.value) !== 'word') return ''
+  // URL langsung ke API endpoint — iframe akan fetch PDF-nya sendiri
+  return `/api/v1/uploads/${upload.value.id}/pdf`
+})
 
 function fileIcon(u: ResUploads | null | undefined): string {
   switch (fileKind(u as ResUploads)) {
@@ -250,15 +244,8 @@ async function downloadFile() {
 
         <!-- Preview Word (.docx) — dikonversi ke PDF via LibreOffice -->
         <template v-else-if="fileKind(upload) === 'word'">
-          <div
-            v-if="wordPdfPending"
-            class="flex h-64 items-center justify-center rounded-lg border border-default bg-elevated"
-          >
-            <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
-          </div>
-
           <iframe
-            v-else-if="wordPdfUrl"
+            v-if="wordPdfUrl"
             :src="wordPdfUrl"
             class="h-[75dvh] w-full rounded-lg border border-default bg-elevated"
           />
