@@ -12,6 +12,38 @@ const emit = defineEmits<{
 
 const state = defineModel<OperationsDOTransportState>({ required: true })
 
+const regionProvince = ref('')
+const regionCity = ref('')
+const baseStreet = ref('')
+
+watch(
+  () => state.value.transportAddress,
+  (value) => {
+    const suffix = [regionCity.value, regionProvince.value]
+      .filter(Boolean)
+      .join(', ')
+    if (suffix && value && value.endsWith(suffix)) {
+      baseStreet.value = value
+        .slice(0, value.length - suffix.length)
+        .replace(/[, ]+$/, '')
+    } else {
+      baseStreet.value = value
+    }
+  }
+)
+
+watch([regionProvince, regionCity], () => {
+  if (regionCity.value) {
+    state.value.transportAddress = [
+      baseStreet.value,
+      regionCity.value,
+      regionProvince.value
+    ]
+      .filter(Boolean)
+      .join(', ')
+  }
+})
+
 function previous() {
   emit('previous')
 }
@@ -53,13 +85,18 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOTransportState>) {
       </div>
 
       <UFormField name="transportAddress" label="Alamat" required>
-        <UInput
+        <UTextarea
           v-model="state.transportAddress"
-          type="text"
           autocomplete="off"
-          placeholder="Samarinda"
+          :rows="3"
+          class="w-full"
         />
       </UFormField>
+
+      <WilayahLocationPicker
+        v-model:province="regionProvince"
+        v-model:city="regionCity"
+      />
 
       <USeparator />
 
