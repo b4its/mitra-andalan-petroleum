@@ -67,6 +67,15 @@ async def lifespan(app: FastAPI):
                     await conn.execute(text(f"ALTER TABLE `{table}` ADD COLUMN {col}"))
                 except Exception:
                     pass
+        # Buat relasi customer_id nullable agar dokumen tetap bisa dibuat
+        # meskipun customer belum terdaftar (mencegah error insert).
+        for table in ["offering_letters", "delivery_orders", "invoices"]:
+            try:
+                await conn.execute(text(
+                    f"ALTER TABLE `{table}` MODIFY COLUMN `customer_id` VARCHAR(36) NULL"
+                ))
+            except Exception:
+                pass
         # Kolom role untuk notification (target role)
         try:
             await conn.execute(text(

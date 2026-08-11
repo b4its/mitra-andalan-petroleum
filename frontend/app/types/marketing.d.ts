@@ -176,8 +176,8 @@ export interface OfferingLetterPost {
 export interface OfferingLetters {
   id: string
   offering_letter_number: string
-  customer_id: string
-  customer_name: CustomerName
+  customer_id: string | null
+  customer_name: CustomerName | null
   location: Location
   date: Date | string
   regarding: Regarding

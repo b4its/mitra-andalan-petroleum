@@ -8,7 +8,7 @@ class OfferingLetter(BaseModel):
     __tablename__ = "offering_letters"
 
     offering_letter_number: Mapped[str] = mapped_column(String(50))
-    customer_id: Mapped[str] = mapped_column(ForeignKey("customers.id"))
+    customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), nullable=True)
     location: Mapped[str] = mapped_column(String(100), nullable=True)
     date: Mapped[str] = mapped_column(String(20), nullable=True)
     regarding: Mapped[str] = mapped_column(String(200), nullable=True)

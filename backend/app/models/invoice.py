@@ -8,7 +8,7 @@ class Invoice(BaseModel):
     __tablename__ = "invoices"
 
     invoice_number: Mapped[str] = mapped_column(String(50))
-    customer_id: Mapped[str] = mapped_column(ForeignKey("customers.id"))
+    customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), nullable=True)
     terms_day: Mapped[int] = mapped_column(Integer, default=30)
     grand_total: Mapped[float] = mapped_column(Float, default=0)
     invoice_status: Mapped[str] = mapped_column(String(20), default="unpaid")

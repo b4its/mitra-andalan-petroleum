@@ -10,7 +10,7 @@ class DeliveryOrder(BaseModel):
     __tablename__ = "delivery_orders"
 
     do_number: Mapped[str] = mapped_column(String(50))
-    customer_id: Mapped[str] = mapped_column(ForeignKey("customers.id"))
+    customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), nullable=True)
     po_number: Mapped[str] = mapped_column(String(50), nullable=True)
     transport_name: Mapped[str] = mapped_column(String(100), nullable=True)
     fuel_total: Mapped[float] = mapped_column(Float, default=0)

@@ -63,7 +63,7 @@ async def list_offering_letters(
 
     stmt = (
         select(OfferingLetter, Customer.name.label("customer_name"))
-        .join(Customer, OfferingLetter.customer_id == Customer.id)
+        .outerjoin(Customer, OfferingLetter.customer_id == Customer.id)
     )
     if search:
         stmt = stmt.where(or_(
@@ -89,7 +89,7 @@ async def list_offering_letters(
 async def get_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     stmt = (
         select(OfferingLetter, Customer.name.label("customer_name"))
-        .join(Customer, OfferingLetter.customer_id == Customer.id)
+        .outerjoin(Customer, OfferingLetter.customer_id == Customer.id)
         .where(OfferingLetter.id == id)
     )
     result = await db.execute(stmt)
@@ -108,17 +108,19 @@ async def get_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     description="Membuat surat penawaran baru. Field `details` bisa diisi dengan form data dari frontend (supplyPoint, fuelPrices, personInCharge, dll).",
 )
 async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = Depends(get_db)):
-    customer = await db.execute(select(Customer).where(Customer.id == body.customer_id))
-    c = customer.scalar_one_or_none()
-    if not c:
-        raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
+    customer_name = ""
+    if body.customer_id:
+        customer = await db.execute(select(Customer).where(Customer.id == body.customer_id))
+        c = customer.scalar_one_or_none()
+        if not c:
+            raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
+        customer_name = c.name
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
     ol = OfferingLetter(**data)
     db.add(ol)
     await db.flush()
     await db.refresh(ol)
-    customer_name = c.name
     await create_document_notification(
         db,
         title="Surat Penawaran Baru Dibuat",

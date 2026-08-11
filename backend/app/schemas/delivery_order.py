@@ -9,7 +9,7 @@ class DeliveryOrderResponse(BaseModel):
 
     id: str
     do_number: str
-    customer_id: str
+    customer_id: str | None = None
     customer_name: str = ""
     po_number: str | None = None
     transport_name: str | None = None
@@ -35,7 +35,7 @@ class DeliveryOrderResponse(BaseModel):
 
 class DeliveryOrderCreate(BaseModel):
     do_number: str
-    customer_id: str
+    customer_id: str | None = None
     po_number: str | None = None
     transport_name: str | None = None
     fuel_total: float = 0
