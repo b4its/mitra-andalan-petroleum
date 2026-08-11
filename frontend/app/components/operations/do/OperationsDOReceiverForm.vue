@@ -63,7 +63,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOReceiverState>) {
 
       <USeparator />
 
-      <p>Informasi Penerima BBM + HP</p>
+      <p>Informasi Penerima</p>
 
       <div class="flex w-full gap-4">
         <UFormField name="receiverInformation.name" label="Nama Penerima" required>
