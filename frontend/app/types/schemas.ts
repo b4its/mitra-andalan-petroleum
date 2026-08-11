@@ -44,7 +44,7 @@ export const operationsDOSchema = z.object({
 export type OperationsDOState = z.infer<typeof operationsDOSchema>
 
 export const marketingOLHeaderSchema = z.object({
-  location: z.string().min(2),
+  location: z.string().min(2).or(z.literal('')),
   date: z.iso.date(),
   offeringLetterNumber: z.string(),
   regarding: z.string(),
