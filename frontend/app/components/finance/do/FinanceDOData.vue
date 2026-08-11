@@ -287,30 +287,6 @@ const columns: TableColumn<FinanceDoRow>[] = [
           >
             Surat
           </UButton>
-          <!-- Rilis Dana: belum dirilis -->
-          <UButton
-            v-if="!row.original.statusRilisDana"
-            size="xs"
-            color="success"
-            variant="soft"
-            icon="i-lucide-circle-dollar-sign"
-            @click="openRilisDana(row.original)"
-          >
-            Rilis Dana
-          </UButton>
-          <!-- Lunasi Ongkir: muncul setelah siap dikirim (ready_order=true) dan belum lunas -->
-          <UButton
-            v-if="
-              row.original.statusReadyOrder && !row.original.statusLunasOngkir
-            "
-            size="xs"
-            color="warning"
-            variant="soft"
-            icon="i-lucide-truck"
-            @click="openLunasOngkir(row.original)"
-          >
-            Lunasi Ongkir
-          </UButton>
         </div>
       </template>
     </UTable>
