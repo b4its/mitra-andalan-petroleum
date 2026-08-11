@@ -367,7 +367,7 @@ const loadPdf = async () => {
               ],
               [
                 {
-                  text: 'HARGA PRODUK',
+                  text: 'HARGA JUAL',
                   style: {
                     bold: true
                   }
