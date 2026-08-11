@@ -117,8 +117,7 @@ const { data: DoData, pending, refresh } = await useAsyncData(
   async () => {
     const params: Record<string, string | number | boolean> = {
       page: 1,
-      page_size: 50,
-      status_rilis_dana: true
+      page_size: 50
     }
     if (debouncedSearch.value) params.search = debouncedSearch.value
     const res = await get<{ items: DeliveryOrderItem[] }>('/delivery-orders', params)
@@ -563,6 +562,16 @@ const columns: TableColumn<DoRow>[] = [
   { accessorKey: 'deliveryOrderNumber', header: 'Nomor DO' },
   { accessorKey: 'customerName', header: 'Customer' },
   { accessorKey: 'purchaseOrderNumber', header: 'Nomor PO' },
+  {
+    accessorKey: 'statusRilisDana',
+    header: 'Rilis Dana',
+    cell: ({ row }) =>
+      statusBadge(
+        row.original.statusRilisDana,
+        'Rilis',
+        row.original.rilisDanaAt
+      )
+  },
   {
     accessorKey: 'detailsLengkap',
     header: 'Surat',
