@@ -9,7 +9,7 @@ class InvoiceResponse(BaseModel):
 
     id: str
     invoice_number: str
-    customer_id: str
+    customer_id: str | None = None
     customer_name: str = ""
     terms_day: int = 30
     grand_total: float = 0
@@ -22,7 +22,7 @@ class InvoiceResponse(BaseModel):
 
 class InvoiceCreate(BaseModel):
     invoice_number: str
-    customer_id: str
+    customer_id: str | None = None
     terms_day: int = 30
     grand_total: float = 0
     invoice_status: str = "unpaid"

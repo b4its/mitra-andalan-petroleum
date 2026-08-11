@@ -9,8 +9,8 @@ class OfferingLetterResponse(BaseModel):
 
     id: str
     offering_letter_number: str
-    customer_id: str
-    customer_name: str = ""
+    customer_id: str | None = None
+    customer_name: str | None = None
     location: str | None = None
     date: str | None = None
     regarding: str | None = None
@@ -26,7 +26,7 @@ class OfferingLetterResponse(BaseModel):
 
 class OfferingLetterCreate(BaseModel):
     offering_letter_number: str
-    customer_id: str
+    customer_id: str | None = None
     location: str | None = None
     date: str | None = None
     regarding: str | None = None
