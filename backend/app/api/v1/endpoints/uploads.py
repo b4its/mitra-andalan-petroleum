@@ -1,8 +1,11 @@
 import uuid
 from pathlib import Path
 import re
+import subprocess
+import tempfile
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -211,3 +214,62 @@ async def delete_upload(id: str, db: AsyncSession = Depends(get_db)):
     await db.delete(upload)
     await db.flush()
     return MessageResponse(message="Deleted", code=200)
+
+
+@router.get(
+    "/uploads/{id}/pdf",
+    summary="Convert DOCX to PDF",
+    description="Konversi file .docx ke PDF menggunakan LibreOffice untuk preview di browser.",
+)
+async def convert_docx_to_pdf(id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Upload).where(Upload.id == id))
+    upload = result.scalar_one_or_none()
+    if not upload:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    ext = Path(upload.original_filename).suffix.lower()
+    if ext not in (".doc", ".docx"):
+        raise HTTPException(status_code=400, detail="Hanya file .doc dan .docx yang dapat dikonversi")
+
+    src_path = MEDIA_DIR / upload.folder / upload.stored_filename
+    if not src_path.exists():
+        raise HTTPException(status_code=404, detail="File sumber tidak ditemukan di disk")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_src = Path(tmpdir) / upload.stored_filename
+        tmp_src.write_bytes(src_path.read_bytes())
+
+        try:
+            subprocess.run(
+                [
+                    "libreoffice",
+                    "--headless",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    tmpdir,
+                    str(tmp_src),
+                ],
+                check=True,
+                capture_output=True,
+                timeout=120,
+            )
+        except subprocess.CalledProcessError as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Gagal konversi ke PDF: {e.stderr.decode(errors='replace') or e.stdout.decode(errors='replace') or str(e)}"
+            )
+
+        pdf_name = f"{Path(upload.stored_filename).stem}.pdf"
+        pdf_path = Path(tmpdir) / pdf_name
+
+        if not pdf_path.exists():
+            raise HTTPException(status_code=500, detail="File PDF hasil konversi tidak ditemukan")
+
+        pdf_bytes = pdf_path.read_bytes()
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{Path(upload.original_filename).stem}.pdf"'},
+    )
