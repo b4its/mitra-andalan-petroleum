@@ -4,7 +4,16 @@ import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
 import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
 import type { ChartClickPayload } from '~/components/admin/AdminChartDetailModal.vue'
 import type { AdminActivity, AdminBreakdown, AdminDrilldownMetric, AdminStats } from '~/types/admin'
-import type { AccountingSummary, AccountingJournal } from '~/types/accounting'
+import type {
+  AccountingSummary,
+  AccountingJournal,
+  BalanceSheetResponse,
+  CashflowResponse,
+  CostRecapResponse,
+  MonitoringResponse,
+  DailyCashResponse,
+  BankInterestResponse
+} from '~/types/accounting'
 import type { Range } from '~/types'
 
 definePageMeta({ layout: 'admin' })
@@ -89,6 +98,28 @@ const { data: accounting } = await useAsyncData(
   () => get<AccountingSummary>('/accounting/summary'),
   { default: () => null, server: false }
 )
+
+const { data: accountingDetails } = await useAsyncData(
+  'admin-accounting-details',
+  () =>
+    Promise.all([
+      get<BalanceSheetResponse>('/accounting/balance-sheet'),
+      get<CashflowResponse>('/accounting/cashflow'),
+      get<CostRecapResponse>('/accounting/cost-recap'),
+      get<MonitoringResponse>('/accounting/monitoring', {
+        year: new Date().getFullYear()
+      }),
+      get<DailyCashResponse>('/accounting/daily-cash'),
+      get<BankInterestResponse>('/accounting/bank-interest')
+    ]),
+  { default: () => [], server: false }
+)
+
+const accountingDetail = computed(() => {
+  const [balanceSheet, cashflow, costRecap, monitoring, dailyCash, bankInterest] =
+    accountingDetails.value || []
+  return { balanceSheet, cashflow, costRecap, monitoring, dailyCash, bankInterest }
+})
 
 const totalDebit = (journal: AccountingJournal) =>
   journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0)
@@ -305,6 +336,125 @@ const accountingCountCards = computed(() => [
     icon: 'i-lucide-banknote-arrow-up'
   }
 ])
+
+// ── Grafik akuntansi (neraca, cashflow, dll) ─────────────────
+const balanceSheetChart = computed(() => {
+  const n = accountingDetail.value.balanceSheet
+  if (!n) return null
+  return {
+    labels: ['Aset', 'Kewajiban', 'Ekuitas'],
+    datasets: [
+      {
+        label: 'Nilai',
+        data: [n.total_assets, n.total_liabilities, n.total_equity],
+        backgroundColor: [
+          'rgba(59,130,246,0.8)',
+          'rgba(245,158,11,0.8)',
+          'rgba(16,185,129,0.8)'
+        ]
+      }
+    ]
+  }
+})
+
+const cashflowChart = computed(() => {
+  const c = accountingDetail.value.cashflow
+  if (!c) return null
+  return {
+    labels: ['Operasi', 'Investasi', 'Pendanaan'],
+    datasets: [
+      {
+        label: 'Arus Kas',
+        data: [c.operating.total, c.investing.total, c.financing.total],
+        backgroundColor: [
+          c.operating.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)',
+          c.investing.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)',
+          c.financing.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)'
+        ]
+      }
+    ]
+  }
+})
+
+const dailyCashChart = computed(() => {
+  const d = accountingDetail.value.dailyCash
+  if (!d) return null
+  return {
+    labels: ['Saldo Awal', 'Total Masuk', 'Total Keluar', 'Saldo Akhir'],
+    datasets: [
+      {
+        label: 'Nominal',
+        data: [d.opening_balance, d.total_debit, d.total_credit, d.closing_balance],
+        backgroundColor: [
+          'rgba(100,116,139,0.8)',
+          'rgba(16,185,129,0.8)',
+          'rgba(239,68,68,0.8)',
+          'rgba(59,130,246,0.8)'
+        ]
+      }
+    ]
+  }
+})
+
+const costRecapChart = computed(() => {
+  const groups = accountingDetail.value.costRecap?.groups || []
+  if (!groups.length) return null
+  const top = [...groups].sort((a, b) => b.total - a.total).slice(0, 10)
+  return {
+    labels: top.map(g => `${g.account_code} · ${g.account_name}`),
+    datasets: [
+      {
+        label: 'Total Biaya',
+        data: top.map(g => g.total),
+        backgroundColor: 'rgba(239,68,68,0.8)'
+      }
+    ]
+  }
+})
+
+const monitoringChart = computed(() => {
+  const rows = accountingDetail.value.monitoring?.rows || []
+  if (!rows.length) return null
+  return {
+    labels: rows.map(r => r.bulan),
+    datasets: [
+      {
+        label: 'Penghasilan',
+        data: rows.map(r => r.penghasilan),
+        backgroundColor: 'rgba(16,185,129,0.8)'
+      },
+      {
+        label: 'Operasional',
+        data: rows.map(r => r.operasional),
+        backgroundColor: 'rgba(239,68,68,0.8)'
+      },
+      {
+        label: 'Gross Margin',
+        data: rows.map(r => r.gross_margin),
+        backgroundColor: 'rgba(59,130,246,0.8)'
+      }
+    ]
+  }
+})
+
+const bankInterestChart = computed(() => {
+  const b = accountingDetail.value.bankInterest
+  if (!b) return null
+  return {
+    labels: ['Pokok Pinjaman', 'Total Bunga', 'Total Pembayaran'],
+    datasets: [
+      {
+        label: 'Nominal',
+        data: [b.total_principal, b.total_interest, b.total_paid],
+        backgroundColor: [
+          'rgba(59,130,246,0.8)',
+          'rgba(245,158,11,0.8)',
+          'rgba(16,185,129,0.8)'
+        ]
+      }
+    ]
+  }
+})
 
 // ── Notifikasi tabel + search + pagination ─────────────────────
 const notifSearch = ref('')
@@ -644,6 +794,74 @@ const activityColumns: TableColumn<AdminActivity>[] = [
                 <p class="text-xs text-muted mt-1">
                   {{ c.title }}
                 </p>
+              </UCard>
+            </div>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+              <UCard v-if="balanceSheetChart">
+                <template #header>
+                  <p class="font-medium">Neraca (Balance Sheet)</p>
+                </template>
+                <AdminBarChart
+                  :labels="balanceSheetChart.labels"
+                  :datasets="balanceSheetChart.datasets"
+                  :height="200"
+                />
+              </UCard>
+
+              <UCard v-if="cashflowChart">
+                <template #header>
+                  <p class="font-medium">Rekap Arus Kas</p>
+                </template>
+                <AdminBarChart
+                  :labels="cashflowChart.labels"
+                  :datasets="cashflowChart.datasets"
+                  :height="200"
+                />
+              </UCard>
+
+              <UCard v-if="dailyCashChart">
+                <template #header>
+                  <p class="font-medium">Kas Harian</p>
+                </template>
+                <AdminBarChart
+                  :labels="dailyCashChart.labels"
+                  :datasets="dailyCashChart.datasets"
+                  :height="200"
+                />
+              </UCard>
+
+              <UCard v-if="costRecapChart">
+                <template #header>
+                  <p class="font-medium">Rekap Biaya per Akun</p>
+                </template>
+                <AdminBarChart
+                  :labels="costRecapChart.labels"
+                  :datasets="costRecapChart.datasets"
+                  :height="200"
+                />
+              </UCard>
+
+              <UCard v-if="monitoringChart" class="lg:col-span-2">
+                <template #header>
+                  <p class="font-medium">Monitoring per Bulan ({{ new Date().getFullYear() }})</p>
+                </template>
+                <AdminBarChart
+                  :labels="monitoringChart.labels"
+                  :datasets="monitoringChart.datasets"
+                  :height="220"
+                />
+              </UCard>
+
+              <UCard v-if="bankInterestChart">
+                <template #header>
+                  <p class="font-medium">Rekap Bunga Bank</p>
+                </template>
+                <AdminBarChart
+                  :labels="bankInterestChart.labels"
+                  :datasets="bankInterestChart.datasets"
+                  :height="200"
+                />
               </UCard>
             </div>
 
