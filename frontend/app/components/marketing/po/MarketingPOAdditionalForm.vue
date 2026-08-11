@@ -78,8 +78,9 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
       <UFormField name="loadingDate" label="Loading Date">
         <UInput
           v-model="state.delivery.loadingDate"
-          type="text"
+          type="date"
           autocomplete="off"
+          class="w-full"
         />
       </UFormField>
 
