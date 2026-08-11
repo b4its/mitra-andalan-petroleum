@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResUploads } from '~/types'
+import type { WorkBook } from 'xlsx'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,13 +13,87 @@ const { data: upload, pending, error } = await useAsyncData(
   () => get<ResUploads>(`/uploads/${id}`)
 )
 
-function fileIcon(mimeType: string): string {
-  if (mimeType.startsWith('image/')) return 'i-lucide-image'
-  if (mimeType === 'application/pdf') return 'i-lucide-file-text'
-  if (mimeType.includes('spreadsheet') || mimeType.includes('excel'))
-    return 'i-lucide-table'
-  if (mimeType.includes('word')) return 'i-lucide-file-type'
-  return 'i-lucide-paperclip'
+watch(upload, (value) => {
+  if (import.meta.client && value && fileKind(value) === 'spreadsheet') loadExcel()
+})
+
+const EXT = /\.([a-z0-9]+)$/i
+
+function extOf(name: string): string {
+  return (EXT.exec(name) || [])[1]?.toLowerCase() || ''
+}
+
+type FileKind = 'image' | 'pdf' | 'spreadsheet' | 'word' | 'other'
+
+function fileKind(u: ResUploads): FileKind {
+  const mime = u.mime_type
+  const ext = extOf(u.original_filename)
+  if (mime.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext))
+    return 'image'
+  if (mime === 'application/pdf' || ext === 'pdf') return 'pdf'
+  if (
+    mime.includes('spreadsheet') || mime.includes('excel') || mime === 'text/csv'
+    || ['xls', 'xlsx', 'csv'].includes(ext)
+  )
+    return 'spreadsheet'
+  if (mime.includes('word') || ['doc', 'docx'].includes(ext)) return 'word'
+  return 'other'
+}
+
+type XlsxModule = typeof import('xlsx')
+const xlsxRef = shallowRef<XlsxModule | null>(null)
+const workbookRef = shallowRef<WorkBook | null>(null)
+
+const sheets = shallowRef<string[]>([])
+const sheetHtml = shallowRef('')
+const activeSheet = ref('')
+const sheetPending = ref(false)
+const sheetFailed = ref(false)
+
+async function loadExcel() {
+  if (!upload.value || fileKind(upload.value) !== 'spreadsheet') return
+  sheetPending.value = true
+  sheetFailed.value = false
+  try {
+    const buffer = await $fetch<ArrayBuffer>(upload.value.url, {
+      responseType: 'arrayBuffer'
+    })
+    const xlsx = await import('xlsx')
+    xlsxRef.value = xlsx
+    const workbook = xlsx.read(buffer, { type: 'array' })
+    workbookRef.value = workbook
+    sheets.value = workbook.SheetNames
+    activeSheet.value = workbook.SheetNames[0] || ''
+    if (activeSheet.value)
+      sheetHtml.value = xlsx.utils.sheet_to_html(
+        workbook.Sheets[activeSheet.value],
+        { header: '' }
+      )
+  } catch {
+    sheetFailed.value = true
+  } finally {
+    sheetPending.value = false
+  }
+}
+
+function selectSheet(name: string) {
+  const xlsx = xlsxRef.value
+  const workbook = workbookRef.value
+  if (!xlsx || !workbook || !workbook.Sheets[name]) return
+  activeSheet.value = name
+  sheetHtml.value = xlsx.utils.sheet_to_html(workbook.Sheets[name], {
+    header: ''
+  })
+}
+
+function fileIcon(u: ResUploads | null | undefined): string {
+  switch (fileKind(u as ResUploads)) {
+    case 'image': return 'i-lucide-image'
+    case 'pdf': return 'i-lucide-file-text'
+    case 'spreadsheet': return 'i-lucide-table'
+    case 'word': return 'i-lucide-file-type'
+    default: return 'i-lucide-paperclip'
+  }
 }
 
 function fmtSize(bytes: number): string {
@@ -62,7 +137,7 @@ async function downloadFile() {
         />
         <div class="flex min-w-0 flex-1 items-center gap-2.5">
           <UIcon
-            :name="fileIcon(upload?.mime_type || '')"
+            :name="fileIcon(upload)"
             class="size-5 shrink-0 text-primary"
           />
           <div class="min-w-0">
@@ -103,7 +178,7 @@ async function downloadFile() {
       <template v-else-if="upload">
         <!-- Preview gambar -->
         <img
-          v-if="upload.mime_type.startsWith('image/')"
+          v-if="fileKind(upload) === 'image'"
           :src="fileUrl(upload.url)"
           :alt="upload.original_filename"
           class="mx-auto max-h-[75dvh] rounded-lg border border-default bg-elevated object-contain"
@@ -111,10 +186,54 @@ async function downloadFile() {
 
         <!-- Preview PDF -->
         <iframe
-          v-else-if="upload.mime_type === 'application/pdf'"
+          v-else-if="fileKind(upload) === 'pdf'"
           :src="fileUrl(upload.url)"
           class="h-[75dvh] w-full rounded-lg border border-default bg-elevated"
         />
+
+        <!-- Preview Excel / CSV -->
+        <template v-else-if="fileKind(upload) === 'spreadsheet'">
+          <div
+            v-if="sheets.length > 1"
+            class="mb-3 flex flex-wrap items-center gap-1.5"
+          >
+            <UButton
+              v-for="name in sheets"
+              :key="name"
+              :label="name"
+              size="xs"
+              color="neutral"
+              :variant="activeSheet === name ? 'solid' : 'ghost'"
+              @click="selectSheet(name)"
+            />
+          </div>
+
+          <div
+            v-if="sheetPending"
+            class="flex h-64 items-center justify-center rounded-lg border border-default bg-elevated"
+          >
+            <UIcon name="i-lucide-loader-circle" class="size-6 animate-spin" />
+          </div>
+
+          <UEmpty
+            v-else-if="sheetFailed"
+            icon="i-lucide-eye-off"
+            title="Preview tidak tersedia"
+            description="File Excel tidak dapat dibaca. Gunakan tombol Download untuk mengunduhnya."
+          />
+
+          <div
+            v-else-if="sheetHtml"
+            class="max-h-[75dvh] overflow-auto rounded-lg border border-default bg-elevated p-2"
+          >
+            <!-- eslint-disable vue/no-v-html -- SheetJS escapes cell content, safe -->
+            <div
+              class="text-xs text-muted"
+              v-html="sheetHtml"
+            />
+            <!-- eslint-enable vue/no-v-html -->
+          </div>
+        </template>
 
         <!-- Tipe tidak bisa di-preview -->
         <UEmpty

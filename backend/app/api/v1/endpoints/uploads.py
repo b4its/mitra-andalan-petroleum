@@ -18,6 +18,23 @@ MAX_FILE_SIZE = 50 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".pdf", ".doc", ".docx", ".xls", ".xlsx"}
 DOCUMENT_TYPES = {"ol", "po", "do", "invoice"}
 
+# Fallback karena mimetypes.guess_type di container tanpa file mime.types
+# mengembalikan None untuk beberapa ekstensi (mis. .xlsx, .docx).
+FALLBACK_MIME = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".bmp": "image/bmp",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".xls": "application/vnd.ms-excel",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+}
+
 
 def _ensure_dir(path: Path):
     path.mkdir(parents=True, exist_ok=True)
@@ -54,7 +71,7 @@ async def _process_single_file(file: UploadFile, folder: str, document_type: str
     _ensure_dir(target_dir)
 
     import mimetypes
-    mime_type = mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
+    mime_type = mimetypes.guess_type(file.filename or "")[0] or FALLBACK_MIME.get(ext, "application/octet-stream")
     unique_name = f"{uuid.uuid4().hex}{ext}"
     file_path = target_dir / unique_name
 
