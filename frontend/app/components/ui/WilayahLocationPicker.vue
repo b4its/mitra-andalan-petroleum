@@ -22,7 +22,7 @@ const regencyCache = new Map<string, Region[]>()
 onMounted(async () => {
   try {
     const res = await $fetch<RegionResponse>(
-      'https://wilayah.id/api/provinces.json'
+      '/wilayah/provinces.json'
     )
     provinces.value = res.data || []
   } catch {
@@ -53,7 +53,7 @@ watch(
     regenciesError.value = false
     try {
       const res = await $fetch<RegionResponse>(
-        `https://wilayah.id/api/regencies/${code}.json`
+        `/wilayah/regencies/${code}.json`
       )
       regencies.value = res.data || []
       regencyCache.set(code, regencies.value)
