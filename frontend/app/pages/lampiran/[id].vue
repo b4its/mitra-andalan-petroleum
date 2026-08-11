@@ -17,7 +17,7 @@ watch(upload, (value) => {
   if (!import.meta.client || !value) return
   if (fileKind(value) === 'spreadsheet') loadExcel()
   else if (fileKind(value) === 'word') loadWordPdf()
-})
+}, { immediate: true })
 
 const EXT = /\.([a-z0-9]+)$/i
 
@@ -94,16 +94,9 @@ const wordPdfPending = ref(false)
 async function loadWordPdf() {
   if (!upload.value || fileKind(upload.value) !== 'word') return
   wordPdfPending.value = true
-  try {
-    const pdfBlob = await $fetch<Blob>(`/api/v1/uploads/${upload.value.id}/pdf`, {
-      responseType: 'blob'
-    })
-    wordPdfUrl.value = URL.createObjectURL(pdfBlob)
-  } catch {
-    wordPdfUrl.value = ''
-  } finally {
-    wordPdfPending.value = false
-  }
+  // Set URL langsung ke API endpoint — iframe akan fetch PDF-nya sendiri
+  wordPdfUrl.value = `/api/v1/uploads/${upload.value.id}/pdf`
+  wordPdfPending.value = false
 }
 
 function fileIcon(u: ResUploads | null | undefined): string {
