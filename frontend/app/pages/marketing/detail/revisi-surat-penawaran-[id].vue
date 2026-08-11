@@ -84,6 +84,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
     accountName: offeringLetter.value?.details.paymentAddress.accountName || "",
   },
   fuelPrices: {
+    hppPrice: offeringLetter.value?.details.fuelPrices.hppPrice || 0,
     logisticInformation:
       offeringLetter.value?.details.fuelPrices.logisticInformation || "",
     productName: offeringLetter.value?.details.fuelPrices.productName || "",
