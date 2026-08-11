@@ -805,7 +805,7 @@ const loadPdf = async () => {
                   bold: true
                 },
                 {
-                  text: 'Penerima (Nama + Ttd + Stempel)',
+                  text: 'Penerima',
                   alignment: 'center',
                   bold: true
                 },
