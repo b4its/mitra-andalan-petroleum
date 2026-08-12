@@ -468,15 +468,17 @@ def test_monitoring_row_structure(client: TestClient):
 
 
 def test_monitoring_no_data_year(client: TestClient):
-    """Monitoring tahun tanpa data mengembalikan rows kosong."""
+    """Monitoring periode tanpa data mengembalikan rows kosong."""
     cash = _create_account(client, "9-6304", "Kas Test MON3", "asset").json()
     revenue = _create_account(client, "9-6305", "Pendapatan Test MON3", "revenue").json()
     _create_journal(client, cash["id"], revenue["id"], 100000)
 
-    response = client.get("/api/v1/accounting/monitoring?year=2025")
+    response = client.get("/api/v1/accounting/monitoring?date_from=2020-01-01&date_to=2020-12-31")
     assert response.status_code == 200
     data = response.json()
-    assert len(data["rows"]) == 0
+    # Menampilkan 12 bulan (semua 0)
+    assert len(data["rows"]) == 12
+    assert data["total_penghasilan"] == 0
 
 
 # ── Kas Harian (Daily Cash) ────────────────────────────────────

@@ -894,10 +894,14 @@ async def get_cost_recap(
     description="Rekap monitoring pendapatan, biaya, dan margin per bulan.",
 )
 async def get_monitoring(
-    year: int | None = Query(default=None),
+    date_from: date | None = Query(default=None, description="Awal periode (default: 1 Januari tahun berjalan)"),
+    date_to: date | None = Query(default=None, description="Akhir periode (default: 31 Desember tahun berjalan)"),
     db: AsyncSession = Depends(get_db),
 ):
-    the_year = year or date.today().year
+    today = date.today()
+    start_date = date_from or date(today.year, 1, 1)
+    end_date = date_to or date(today.year, 12, 31)
+
     bulan_names = [
         "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
         "Juli", "Agustus", "September", "Oktober", "November", "Desember",
@@ -906,19 +910,21 @@ async def get_monitoring(
     rows = []
     totals = {"invoice": 0, "modal": 0, "oat": 0, "gm": 0, "penghasilan": 0, "operasional": 0, "fee": 0}
 
-    for bulan in range(1, 13):
-        start = date(the_year, bulan, 1)
-        if bulan == 12:
-            end = date(the_year + 1, 1, 1)
-        else:
-            end = date(the_year, bulan + 1, 1)
+    # Iterasi per bulan dalam rentang
+    current = date(start_date.year, start_date.month, 1)
+    while current <= end_date:
+        bulan = current.month
+        month_end = date(current.year if bulan < 12 else current.year + 1, bulan + 1 if bulan < 12 else 1, 1)
+        month_start = current
+        actual_start = max(month_start, start_date)
+        actual_end = min(month_end, date(end_date.year + 1, 1, 1))
 
         # Pendapatan (revenue credit)
         rev_stmt = (
             select(func.coalesce(func.sum(JournalLine.credit), 0.0))
             .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
             .join(Account, JournalLine.account_id == Account.id)
-            .where(Account.type == "revenue", JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+            .where(Account.type == "revenue", JournalEntry.entry_date >= actual_start, JournalEntry.entry_date < actual_end)
         )
         penghasilan = round((await db.execute(rev_stmt)).scalar() or 0, 2)
 
@@ -927,7 +933,7 @@ async def get_monitoring(
             select(func.coalesce(func.sum(JournalLine.debit), 0.0))
             .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
             .join(Account, JournalLine.account_id == Account.id)
-            .where(Account.type == "expense", JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+            .where(Account.type == "expense", JournalEntry.entry_date >= actual_start, JournalEntry.entry_date < actual_end)
         )
         operasional = round((await db.execute(exp_stmt)).scalar() or 0, 2)
 
@@ -938,7 +944,7 @@ async def get_monitoring(
             .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
             .join(Account, JournalLine.account_id == Account.id)
             .where(Account.type == "revenue", JournalLine.credit > 0,
-                   JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+                   JournalEntry.entry_date >= actual_start, JournalEntry.entry_date < actual_end)
         )
         invoice_count = (await db.execute(inv_count_stmt)).scalar() or 0
 
@@ -951,7 +957,7 @@ async def get_monitoring(
             .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
             .join(Account, JournalLine.account_id == Account.id)
             .where(Account.code == "4-1100",
-                   JournalEntry.entry_date >= start, JournalEntry.entry_date < end)
+                   JournalEntry.entry_date >= actual_start, JournalEntry.entry_date < actual_end)
         )
         oat = round((await db.execute(oat_stmt)).scalar() or 0, 2)
 
@@ -959,6 +965,27 @@ async def get_monitoring(
         modal_elnusa = round(penghasilan * 0.6, 2)
 
         gross_margin = round(penghasilan - operasional, 2)
+
+        rows.append(MonitoringRow(
+            bulan=bulan_names[bulan],
+            invoice=invoice_count,
+            modal_elnusa=modal_elnusa,
+            oat=oat,
+            gross_margin=gross_margin,
+            penghasilan=penghasilan,
+            operasional=operasional,
+            fee_manajemen=fee_manajemen,
+        ))
+        totals["invoice"] += invoice_count
+        totals["modal"] += modal_elnusa
+        totals["oat"] += oat
+        totals["gm"] += gross_margin
+        totals["penghasilan"] += penghasilan
+        totals["operasional"] += operasional
+        totals["fee"] += fee_manajemen
+
+        # Next month
+        current = month_end
 
         if penghasilan > 0 or operasional > 0:
             rows.append(MonitoringRow(
