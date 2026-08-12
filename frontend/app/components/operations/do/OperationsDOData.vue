@@ -2,7 +2,6 @@
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { ResUploads } from '~/types'
 
 interface DeliveryOrderItem {
   id: string
@@ -107,7 +106,7 @@ const table = useTemplateRef('table')
 const columnPinning = ref({ right: ['actions'] })
 
 const toast = useToast()
-const { get, put, post, postFile } = useApi()
+const { get, put, post } = useApi()
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
@@ -169,8 +168,6 @@ const lengkapiCompany = ref<{
 async function openEdit(row: DoRow) {
   editLoading.value = true
   lengkapiTarget.value = row
-  lengkapiForm.receiver_sign_file = null
-  lengkapiForm.driver_sign_file = null
   try {
     // Fetch detail DO untuk pre-fill form dengan data yang sudah ada
     const detail = await get<DeliveryOrderDetail>(`/delivery-orders/${row.id}`)
@@ -243,8 +240,6 @@ async function openEdit(row: DoRow) {
 
 function openLengkapi(row: DoRow) {
   lengkapiTarget.value = row
-  lengkapiForm.receiver_sign_file = null
-  lengkapiForm.driver_sign_file = null
   lengkapiForm.do_number = row.deliveryOrderNumber || ''
   lengkapiForm.transport_name = row.transportName || ''
   lengkapiForm.do_date = new Date().toISOString().split('T')[0] || ''
@@ -296,10 +291,7 @@ const lengkapiForm = reactive({
   company_coordinator: '',
   distribution_admin: '',
   receiver_sign: '',
-  driver_sign: '',
-  // File upload signatures
-  receiver_sign_file: null as File | null,
-  driver_sign_file: null as File | null
+  driver_sign: ''
 })
 
 const { user } = useAuth()
@@ -320,29 +312,7 @@ async function submitLengkapi() {
   }
   lengkapiSaving.value = true
   try {
-    // ── Upload file signatures jika ada ────────────────────────
-    let receiverSignUrl = ''
-    let driverSignUrl = ''
     const doId = lengkapiTarget.value.id
-
-    if (lengkapiForm.receiver_sign_file) {
-      const uploadRes = await postFile<ResUploads[]>('/upload', {
-        files: [lengkapiForm.receiver_sign_file],
-        folder: 'do',
-        document_type: 'do',
-        document_id: doId
-      })
-      if (uploadRes?.length) receiverSignUrl = uploadRes[0]?.url || ''
-    }
-    if (lengkapiForm.driver_sign_file) {
-      const uploadRes = await postFile<ResUploads[]>('/upload', {
-        files: [lengkapiForm.driver_sign_file],
-        folder: 'do',
-        document_type: 'do',
-        document_id: doId
-      })
-      if (uploadRes?.length) driverSignUrl = uploadRes[0]?.url || ''
-    }
 
     // ── Simpan data DO ─────────────────────────────────────────
     const details = {
@@ -390,10 +360,10 @@ async function submitLengkapi() {
         endKm: lengkapiForm.end_km || '',
         sgMeter: lengkapiForm.sg_meter || '',
         timeInformation: {
-          departureTime: lengkapiForm.departure_time || '',
-          arrivalTime: lengkapiForm.arrival_time || '',
-          depotArrivalTime: lengkapiForm.depot_arrival_time || '',
-          unloadingTime: lengkapiForm.unloading_time || ''
+          departureTime: lengkapiForm.departure_time || null,
+          arrivalTime: lengkapiForm.arrival_time || null,
+          depotArrivalTime: lengkapiForm.depot_arrival_time || null,
+          unloadingTime: lengkapiForm.unloading_time || null
         },
         transportNumber: lengkapiForm.transport_number || '',
         transportType: lengkapiForm.transport_type || ''
@@ -412,9 +382,7 @@ async function submitLengkapi() {
       distributionAdmin:
         lengkapiForm.distribution_admin || user.value?.name || '',
       receiver: lengkapiForm.receiver_sign || '',
-      receiver_sign_url: receiverSignUrl,
-      driver: lengkapiForm.driver_sign || '',
-      driver_sign_url: driverSignUrl
+      driver: lengkapiForm.driver_sign || ''
     }
 
     await put(`/delivery-orders/${doId}`, {
@@ -1190,46 +1158,12 @@ const columns: TableColumn<DoRow>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1">Tanda Tangan Penerima</label>
-              <UFileUpload
-                v-model="lengkapiForm.receiver_sign_file"
-                label="Upload Tanda Tangan"
-                description="Format .png/.jpg, max 50MB"
-                accept="image/*"
-              />
-              <span
-                v-if="
-                  lengkapiForm.receiver_sign && !lengkapiForm.receiver_sign_file
-                "
-                class="text-[10px] text-muted"
-              >
-                {{ lengkapiForm.receiver_sign }}
-              </span>
-            </div>
-            <div>
               <label class="block text-xs text-muted mb-1">Nama Driver/Officer</label>
               <UInput
                 v-model="lengkapiForm.driver_sign"
                 placeholder="Nama driver"
                 size="sm"
               />
-            </div>
-            <div>
-              <label class="block text-xs text-muted mb-1">Tanda Tangan Driver</label>
-              <UFileUpload
-                v-model="lengkapiForm.driver_sign_file"
-                label="Upload Tanda Tangan"
-                description="Format .png/.jpg, max 50MB"
-                accept="image/*"
-              />
-              <span
-                v-if="
-                  lengkapiForm.driver_sign && !lengkapiForm.driver_sign_file
-                "
-                class="text-[10px] text-muted"
-              >
-                {{ lengkapiForm.driver_sign }}
-              </span>
             </div>
           </div>
         </div>

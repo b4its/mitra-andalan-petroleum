@@ -56,10 +56,6 @@ const missingFields = computed(() => {
     ['KM awal', data.transportInformation?.startKm],
     ['KM akhir', data.transportInformation?.endKm],
     ['SG meter', data.transportInformation?.sgMeter],
-    ['Jam berangkat', data.transportInformation?.timeInformation?.departureTime],
-    ['Jam tiba', data.transportInformation?.timeInformation?.arrivalTime],
-    ['Jam tiba di depo', data.transportInformation?.timeInformation?.depotArrivalTime],
-    ['Jam mulai pembongkaran', data.transportInformation?.timeInformation?.unloadingTime],
     ['T2 depo', data.t2Depot],
     ['T2 bongkar', data.t2Unloading],
     ['Kepekaan index', data.indexSensitivity],
@@ -67,8 +63,7 @@ const missingFields = computed(() => {
     ['Koordinator MAP', data.companyCoordinator],
     ['Admin distribusi', data.distributionAdmin],
     ['Penerima', data.receiver],
-    ['Driver/Officer', data.driver],
-    ['Catatan', data.notes]
+    ['Driver/Officer', data.driver]
   ]
 
   return required.filter(([, value]) => !isFilled(value)).map(([label]) => label)
@@ -631,7 +626,7 @@ const loadPdf = async () => {
                   bold: true
                 },
                 {
-                  text: `${surat.transportInformation.sgMeter}`
+                  text: `${surat.transportInformation.sgMeter || ''}`
                 },
                 {
                   text: 'Temperatur',

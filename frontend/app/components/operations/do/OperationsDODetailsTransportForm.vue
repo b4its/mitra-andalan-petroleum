@@ -193,7 +193,6 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           class="w-full"
           name="transportInformation.timeInformation.departureTime"
           label="Jam Berangkat"
-          required
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.departureTime)"
@@ -207,7 +206,6 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           class="w-full"
           name="transportInformation.timeInformation.arrivalTime"
           label="Jam Tiba"
-          required
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.arrivalTime)"
@@ -223,7 +221,6 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           class="w-full"
           name="transportInformation.timeInformation.unloadingTime"
           label="Jam Mulai Pembongkaran"
-          required
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.unloadingTime)"
@@ -237,7 +234,6 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
           class="w-full"
           name="transportInformation.timeInformation.depotArrivalTime"
           label="Jam Tiba di Depo"
-          required
         >
           <UInputTime
             :model-value="toTime(state.transportInformation.timeInformation.depotArrivalTime)"
