@@ -4,6 +4,7 @@ import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { MarketingOfferingLetterOverview } from '~/types'
 import type { OfferingLetters } from '~/types/marketing'
+import type { OfferingLetterPurchaseOrdersResponse } from '~/types/marketing'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
@@ -128,6 +129,58 @@ function openDetail(id: string) {
   detailId.value = id
   detailOpen.value = true
 }
+
+// ── Delivery Order terkait purchase order ─────────────────────
+
+const doModalOpen = ref(false)
+const doModalOLId = ref<string | null>(null)
+const doLoading = ref(false)
+const relatedData = ref<OfferingLetterPurchaseOrdersResponse>({ items: [] })
+
+const doStatusBadge = (status: string) => {
+  const color = {
+    created: 'info' as const,
+    document_returned: 'warning' as const,
+    completed: 'success' as const
+  }[status] ?? 'neutral'
+  const label = {
+    created: 'Dibuat',
+    document_returned: 'Dokumen Dikembalikan',
+    completed: 'Selesai'
+  }[status] ?? status
+  return h(UBadge, { variant: 'soft', color }, () => label)
+}
+
+const poStatusBadge = (status: string) => {
+  const color = {
+    created: 'info' as const,
+    under_revision: 'warning' as const,
+    po_received: 'success' as const
+  }[status] ?? 'neutral'
+  const label = {
+    created: 'Dibuat',
+    under_revision: 'Dalam Revisi',
+    po_received: 'Purchase Order Diterima'
+  }[status] ?? status
+  return h(UBadge, { variant: 'soft', color }, () => label)
+}
+
+async function openDeliveryOrders(id: string) {
+  doModalOLId.value = id
+  relatedData.value = { items: [] }
+  doModalOpen.value = true
+  doLoading.value = true
+  try {
+    const res = await get<OfferingLetterPurchaseOrdersResponse>(
+      `/offering-letters/${id}/purchase-orders`
+    )
+    relatedData.value = res
+  } catch {
+    relatedData.value = { items: [] }
+  } finally {
+    doLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -190,6 +243,15 @@ function openDetail(id: string) {
             Selengkapnya
           </UButton>
           <UButton
+            icon="i-lucide-truck"
+            size="sm"
+            color="neutral"
+            variant="soft"
+            @click="openDeliveryOrders(row.original.id)"
+          >
+            Delivery Order
+          </UButton>
+          <UButton
             :to="`/marketing/detail/surat-penawaran-${row.original.id}`"
             variant="solid"
             size="sm"
@@ -224,4 +286,88 @@ function openDetail(id: string) {
   </section>
 
   <RecordDetailModal :id="detailId" v-model:open="detailOpen" type="ol" />
+
+  <UModal v-model:open="doModalOpen" :ui="{ content: 'max-w-4xl' }">
+    <template #title>
+      <h3 class="font-semibold">
+        Delivery Order Terkait Purchase Order
+      </h3>
+    </template>
+
+    <template #body>
+      <div v-if="doLoading" class="space-y-3">
+        <USkeleton v-for="i in 3" :key="i" class="h-20 rounded-lg" />
+      </div>
+      <div v-else-if="relatedData.items.length === 0" class="py-8 text-center text-sm text-neutral-500">
+        Belum ada purchase order atau delivery order terkait surat penawaran ini.
+      </div>
+      <div v-else class="flex flex-col gap-4">
+        <div
+          v-for="po in relatedData.items"
+          :key="po.id"
+          class="rounded-lg border border-default p-4"
+        >
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            <p class="text-sm font-semibold">
+              Purchase Order: {{ po.po_number }}
+            </p>
+            <component :is="poStatusBadge(po.status)" />
+            <span v-if="po.date" class="text-xs text-neutral-500 dark:text-neutral-400">
+              Tanggal: {{ formatDate(po.date) }}
+            </span>
+            <span class="text-xs text-neutral-500 dark:text-neutral-400">
+              Total: {{ formatCurrency(po.total) }}
+            </span>
+          </div>
+
+          <UTable
+            :data="po.delivery_orders"
+            :columns="[
+              {
+                accessorKey: 'do_number',
+                header: 'Nomor Delivery Order',
+                cell: ({ row }) => `${row.getValue('do_number')}`
+              },
+              {
+                accessorKey: 'transport_name',
+                header: 'Transportir',
+                cell: ({ row }) => row.getValue('transport_name') || '-'
+              },
+              {
+                accessorKey: 'fuel_total',
+                header: 'Volume BBM',
+                cell: ({ row }) => `${formatNumber(row.getValue('fuel_total'))} L`
+              },
+              {
+                accessorKey: 'status',
+                header: 'Status',
+                cell: ({ row }) => doStatusBadge(row.getValue('status') as string)
+              }
+            ]"
+            :ui="{
+              base: 'table-fixed border-separate border-spacing-0',
+              thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+              tbody: '[&>tr]:last:[&>td]:border-b-0',
+              th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+              td: 'border-b border-default'
+            }"
+          />
+          <p
+            v-if="po.delivery_orders.length === 0"
+            class="py-3 text-center text-sm text-neutral-500"
+          >
+            Belum ada delivery order untuk purchase order ini
+          </p>
+        </div>
+      </div>
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end">
+        <UButton color="neutral" variant="ghost" @click="doModalOpen = false">
+          Tutup
+        </UButton>
+      </div>
+    </template>
+  </UModal>
 </template>

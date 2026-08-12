@@ -234,6 +234,43 @@ export interface PurchaseOrdersDetails {
   updated_at: Date
 }
 
+// ── Purchase order & delivery order terkait offering letter ──
+export interface RelatedDeliveryOrder {
+  id: string
+  do_number: string
+  customer_id: string | null
+  customer_name: string
+  id_purchase_order: string | null
+  po_number: string | null
+  transport_name: string | null
+  fuel_total: number
+  status: string
+  details: Record<string, unknown> | null
+}
+
+export interface RelatedPurchaseOrder {
+  id: string
+  po_number: string
+  type: string
+  customer_id: string | null
+  supplier_id: string | null
+  customer_name: string
+  supplier_name: string
+  date: string | null
+  total: number
+  status: string
+  details: Record<string, unknown> | null
+  created_by: string | null
+  id_offering_letters: string | null
+  created_at: string | null
+  updated_at: string | null
+  delivery_orders: RelatedDeliveryOrder[]
+}
+
+export interface OfferingLetterPurchaseOrdersResponse {
+  items: RelatedPurchaseOrder[]
+}
+
 export type CustomerName
   = | 'CV. Maju Jaya Abadi'
     | 'PT. Bina Karya Sentosa'
