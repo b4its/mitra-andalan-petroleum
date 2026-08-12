@@ -101,6 +101,7 @@ interface RelatedDO {
   id: string
   do_number: string
   po_number?: string | null
+  id_purchase_order?: string | null
 }
 
 interface InvoiceDetails {
@@ -150,6 +151,16 @@ const { data: doRelatedPo, pending: doRelatedPoPending } = await useAsyncData(
   () => `record-do-po-${props.type}-${props.id}`,
   async () => {
     if (!props.id || props.type !== 'do' || !data.value) return null
+    const doRecord = data.value as RecordDetail & {
+      id_purchase_order?: string | null
+    }
+    if (doRecord.id_purchase_order) {
+      try {
+        return await get<RelatedPO>(`/purchase-orders/${doRecord.id_purchase_order}`)
+      } catch {
+        // fallback ke pencarian po_number
+      }
+    }
     const poNumber = (data.value as RecordDetail).po_number
     if (!poNumber) return null
     const res = await get<{ items: RelatedPO[] }>('/purchase-orders', {
@@ -250,15 +261,24 @@ const { data: invoiceRelatedUploads, pending: invoiceRelatedUploadsPending } = a
       })
       push(doUps)
 
-      // Uploads PO terkait DO
-      if (!doItem.po_number) continue
-      const res = await get<{ items: RelatedPO[] }>('/purchase-orders', {
-        type: 'customer',
-        search: doItem.po_number,
-        page: 1,
-        page_size: 5
-      })
-      const po = (res.items || []).find(p => p.po_number === doItem.po_number)
+      // Uploads PO terkait DO (prioritaskan id_purchase_order)
+      let po: RelatedPO | null = null
+      if (doItem.id_purchase_order) {
+        try {
+          po = await get<RelatedPO>(`/purchase-orders/${doItem.id_purchase_order}`)
+        } catch {
+          po = null
+        }
+      }
+      if (!po && doItem.po_number) {
+        const res = await get<{ items: RelatedPO[] }>('/purchase-orders', {
+          type: 'customer',
+          search: doItem.po_number,
+          page: 1,
+          page_size: 5
+        })
+        po = (res.items || []).find(p => p.po_number === doItem.po_number) || null
+      }
       if (!po) continue
 
       const poUps = await get<RecordUpload[]>('/uploads', {

@@ -31,6 +31,20 @@ def test_create_po_customer(client: TestClient, seeded_db):
     assert response.status_code == 201
 
 
+def test_create_po_customer_does_not_create_do(client: TestClient, seeded_db):
+    """PO customer cukup sampai PO saja — tidak membuat DO otomatis."""
+    list_resp = client.get("/api/v1/customers")
+    cust_id = list_resp.json()[0]["id"]
+    before = client.get("/api/v1/delivery-orders?page=1&page_size=100").json()["total"]
+    response = client.post("/api/v1/purchase-orders", json={
+        "po_number": "NO/DO/PO/001", "type": "customer",
+        "customer_id": cust_id, "total": 50000000
+    })
+    assert response.status_code == 201
+    after = client.get("/api/v1/delivery-orders?page=1&page_size=100").json()["total"]
+    assert after == before
+
+
 def test_create_po_supplier(client: TestClient, seeded_db):
     list_resp = client.get("/api/v1/suppliers")
     supp_id = list_resp.json()[0]["id"]

@@ -30,6 +30,22 @@ def test_create_delivery_order(client: TestClient, seeded_db):
     assert response.json()["status"] == "created"
 
 
+def test_create_delivery_order_with_purchase_order(client: TestClient, seeded_db):
+    """DO dibuat dari PO: data customer/fuel_total otomatis diambil dari PO parent."""
+    list_resp = client.get("/api/v1/purchase-orders?type=customer&page=1&page_size=10")
+    po = list_resp.json()["items"][0]
+    response = client.post("/api/v1/delivery-orders", json={
+        "do_number": "DO/FROM/PO/001",
+        "id_purchase_order": po["id"]
+    })
+    assert response.status_code == 201
+    body = response.json()
+    assert body["id_purchase_order"] == po["id"]
+    assert body["po_number"] == po["po_number"]
+    assert body["customer_id"] == po["customer_id"]
+    assert body["fuel_total"] == po["total"]
+
+
 def test_create_do_missing_number(client: TestClient, seeded_db):
     list_resp = client.get("/api/v1/customers")
     cust_id = list_resp.json()[0]["id"]

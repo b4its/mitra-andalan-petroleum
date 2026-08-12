@@ -406,12 +406,15 @@ async def _seed_delivery_orders(db: AsyncSession):
         db.add(do)
     await db.flush()
 
-    # Hubungkan beberapa DO ke PO
+    # Hubungkan DO ke PO (satu PO dapat memiliki banyak DO)
     pos = (await db.execute(select(PurchaseOrder).where(PurchaseOrder.type == "customer"))).scalars().all()
     dos = (await db.execute(select(DeliveryOrder))).scalars().all()
-    if dos and pos:
-        for i in range(min(len(pos), 3)):
-            pos[i].id_delivery_order = dos[i].id
+    po_by_number = {p.po_number: p for p in pos}
+    if dos:
+        for do in dos:
+            po = po_by_number.get(do.po_number)
+            if po:
+                do.id_purchase_order = po.id
     await db.flush()
 
 

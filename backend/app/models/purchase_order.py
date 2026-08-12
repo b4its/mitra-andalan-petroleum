@@ -19,7 +19,6 @@ class PurchaseOrder(BaseModel):
 
     # ── Relasi ke dokumen terkait ─────────────────────────────────
     id_offering_letters: Mapped[str | None] = mapped_column(Text, nullable=True, comment="JSON array: ID offering letter terkait")
-    id_delivery_order: Mapped[str | None] = mapped_column(String(36), nullable=True, comment="ID delivery order yang dibuat otomatis dari PO ini")
 
     uploads: Mapped[list["Upload"]] = relationship(
         "Upload",

@@ -20,45 +20,33 @@ const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
 const selectedDoId = ref('')
+const selectedPoId = ref('')
 const editingDoId = computed(
   () =>
     (typeof route.query.do_id === 'string' ? route.query.do_id : '')
     || selectedDoId.value
 )
 
-const { data: linkedDeliveryOrders, pending: pendingLinked } = await useAsyncData(
-  'delivery-orders-from-po-customer',
+const { data: purchaseOrderList, pending: pendingLinked } = await useAsyncData(
+  'purchase-orders-customer-for-do',
   async () => {
-    const [posRes, dosRes] = await Promise.all([
-      get<{ items: PurchaseOrdersSupplier[] }>('/purchase-orders', {
+    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
+      '/purchase-orders',
+      {
         page: 1,
         page_size: 100,
         type: 'customer'
-      }),
-      get<{ items: DeliveryOrdersDetails[] }>('/delivery-orders', {
-        page: 1,
-        page_size: 100
-      })
-    ])
-    const poByNumber = new Map(
-      (posRes.items || []).map(po => [po.po_number, po] as const)
+      }
     )
-    return (dosRes.items || [])
-      .filter(do_ => poByNumber.has(do_.po_number))
-      .map((do_) => {
-        const po = poByNumber.get(do_.po_number)!
-        return {
-          id: do_.id,
-          doNumber: do_.do_number,
-          purchaseOrderNumber: do_.po_number,
-          customerName: po.customer_name || do_.customer_name || '',
-          customerId: po.customer_id || do_.customer_id || '',
-          fuelTotalQty: po.total ?? do_.fuel_total ?? 0,
-          dateCreated: po.created_at?.toString() ?? '',
-          dateChanged: po.updated_at?.toString() ?? '',
-          status: do_.status
-        }
-      })
+    return (res.items || []).map(po => ({
+      id: po.id,
+      purchaseOrderNumber: po.po_number,
+      customerName: po.customer_name || '',
+      customerId: po.customer_id || '',
+      fuelTotalQty: po.total ?? 0,
+      dateCreated: po.created_at?.toString() ?? '',
+      dateChanged: po.updated_at?.toString() ?? ''
+    }))
   },
   { default: () => [], server: false }
 )
@@ -185,14 +173,17 @@ function hydrateFormFromExistingDeliveryOrder(
 
   const details = value.details || {}
   const existingPo = details.doInformation?.poCustomerNumber
+  const poNumber = existingPo?.purchaseOrderNumber ?? value.po_number
+  const poFromList = purchaseOrderList.value.find(
+    po => po.purchaseOrderNumber === poNumber
+  )
   Object.assign(doHeader.companyInformation, details.companyInformation || {})
   Object.assign(doHeader.doInformation, {
     ...(details.doInformation || {}),
     poCustomerNumber: {
       ...(existingPo || {}),
-      id: value.id,
-      doNumber: value.do_number,
-      purchaseOrderNumber: existingPo?.purchaseOrderNumber ?? value.po_number,
+      id: value.id_purchase_order || poFromList?.id || existingPo?.id,
+      purchaseOrderNumber: poNumber,
       customerName: existingPo?.customerName ?? value.customer_name,
       customerId: existingPo?.customerId ?? value.customer_id,
       fuelTotalQty: existingPo?.fuelTotalQty ?? value.fuel_total
@@ -282,10 +273,7 @@ watch(
       doDetailsTransport.productInformation.qty = value.fuelTotalQty || 0
       doAdditional.fuelReceived = value.fuelTotalQty || 0
       if (value.id) {
-        selectedDoId.value = value.id
-      }
-      if (value.doNumber) {
-        doHeader.doInformation.doNumber = value.doNumber
+        selectedPoId.value = value.id
       }
     }
   }
@@ -310,6 +298,7 @@ async function onFormSubmit() {
       customer_id: doData.customerId,
       date: doData.doInformation.doDateCreated,
       fuel_total: doData.total,
+      id_purchase_order: doData.doInformation.poCustomerNumber.id || '',
       po_number:
         doData.doInformation.poCustomerNumber.purchaseOrderNumber || '',
       status: 'created',
@@ -343,12 +332,11 @@ async function onFormSubmit() {
 }
 
 const purchaseOrders = computed(() =>
-  linkedDeliveryOrders.value.map((entry) => {
+  purchaseOrderList.value.map((entry) => {
     return {
-      label: entry.doNumber,
+      label: entry.purchaseOrderNumber,
       value: {
         id: entry.id,
-        doNumber: entry.doNumber,
         purchaseOrderNumber: entry.purchaseOrderNumber,
         customerName: entry.customerName,
         customerId: entry.customerId,
