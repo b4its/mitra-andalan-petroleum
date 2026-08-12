@@ -18,7 +18,10 @@ interface Supplier {
   province: string | null
   city: string | null
   phone: string | null
+  phone2: string | null
   email: string | null
+  bank_name: string | null
+  bank_account: string | null
 }
 
 // ── Data fetch ────────────────────────────────────────────────
@@ -47,9 +50,12 @@ const filtered = computed(() => {
       || (s.npwp ?? '').toLowerCase().includes(q)
       || (s.email ?? '').toLowerCase().includes(q)
       || (s.phone ?? '').toLowerCase().includes(q)
+      || (s.phone2 ?? '').toLowerCase().includes(q)
       || (s.address ?? '').toLowerCase().includes(q)
       || (s.province ?? '').toLowerCase().includes(q)
       || (s.city ?? '').toLowerCase().includes(q)
+      || (s.bank_name ?? '').toLowerCase().includes(q)
+      || (s.bank_account ?? '').toLowerCase().includes(q)
   )
 })
 
@@ -79,6 +85,15 @@ const columns: TableColumn<Supplier>[] = [
     accessorKey: 'phone',
     header: 'Telepon',
     cell: ({ row }) => row.getValue('phone') || '-'
+  },
+  {
+    accessorKey: 'bank_name',
+    header: 'Bank',
+    cell: ({ row }) => {
+      const bank = row.getValue('bank_name') as string
+      const acc = (row.original as Supplier).bank_account as string
+      return bank || acc ? `${bank || '-'}${bank && acc ? ' · ' : ''}${acc || ''}` : '-'
+    }
   },
   {
     accessorKey: 'province',
@@ -115,7 +130,10 @@ const schema = z.object({
   province: z.string().optional(),
   city: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email('Email tidak valid').optional().or(z.literal(''))
+  phone2: z.string().optional(),
+  email: z.string().email('Email tidak valid').optional().or(z.literal('')),
+  bank_name: z.string().optional(),
+  bank_account: z.string().optional()
 })
 
 type Schema = z.output<typeof schema>
@@ -127,7 +145,10 @@ const formState = reactive({
   province: '',
   city: '',
   phone: '',
-  email: ''
+  phone2: '',
+  email: '',
+  bank_name: '',
+  bank_account: ''
 })
 
 const baseStreet = ref('')
@@ -172,7 +193,10 @@ function openAdd() {
   formState.province = ''
   formState.city = ''
   formState.phone = ''
+  formState.phone2 = ''
   formState.email = ''
+  formState.bank_name = ''
+  formState.bank_account = ''
   modalOpen.value = true
 }
 
@@ -191,7 +215,10 @@ function openEdit(supplier: Supplier) {
   formState.province = supplier.province ?? ''
   formState.city = supplier.city ?? ''
   formState.phone = supplier.phone ?? ''
+  formState.phone2 = supplier.phone2 ?? ''
   formState.email = supplier.email ?? ''
+  formState.bank_name = supplier.bank_name ?? ''
+  formState.bank_account = supplier.bank_account ?? ''
   modalOpen.value = true
 }
 
@@ -213,7 +240,10 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
       province: event.data.province || null,
       city: event.data.city || null,
       phone: event.data.phone || null,
-      email: event.data.email || null
+      phone2: event.data.phone2 || null,
+      email: event.data.email || null,
+      bank_name: event.data.bank_name || null,
+      bank_account: event.data.bank_account || null
     }
     await post<Supplier, typeof payload>('/suppliers', payload)
     toast.add({
@@ -252,7 +282,10 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
       province: event.data.province || null,
       city: event.data.city || null,
       phone: event.data.phone || null,
-      email: event.data.email || null
+      phone2: event.data.phone2 || null,
+      email: event.data.email || null,
+      bank_name: event.data.bank_name || null,
+      bank_account: event.data.bank_account || null
     }
     await put<Supplier, typeof payload>(
       `/suppliers/${selectedSupplier.value.id}`,
@@ -453,6 +486,30 @@ const modalTitle = computed(() => {
           </div>
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Telepon 2 (PIC)
+            </p>
+            <p class="font-medium">
+              {{ selectedSupplier.phone2 || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Bank
+            </p>
+            <p class="font-medium">
+              {{ selectedSupplier.bank_name || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              No. Rekening
+            </p>
+            <p class="font-medium">
+              {{ selectedSupplier.bank_account || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Provinsi
             </p>
             <p class="font-medium">
@@ -528,6 +585,33 @@ const modalTitle = computed(() => {
             autocomplete="off"
           />
         </UFormField>
+        <UFormField name="phone2" label="Telepon 2 (PIC / Penanggung Jawab)">
+          <UInput
+            v-model="formState.phone2"
+            placeholder="08xxxxxxxxxx"
+            autocomplete="off"
+          />
+        </UFormField>
+
+        <div class="rounded-lg border border-default p-3 space-y-4">
+          <p class="text-sm font-semibold">
+            Informasi Pembayaran
+          </p>
+          <UFormField name="bank_name" label="Nama Bank">
+            <UInput
+              v-model="formState.bank_name"
+              placeholder="Contoh: BANK BCA"
+              autocomplete="off"
+            />
+          </UFormField>
+          <UFormField name="bank_account" label="No. Rekening">
+            <UInput
+              v-model="formState.bank_account"
+              placeholder="Contoh: 8801234567"
+              autocomplete="off"
+            />
+          </UFormField>
+        </div>
 
         <div class="rounded-lg border border-default p-3 space-y-4">
           <p class="text-sm font-semibold">

@@ -78,7 +78,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
     || 'Dibongkar dari truk tangki ke tangki timbun customer',
   volumeUnit: offeringLetter.value?.details.volumeUnit || 'LITER',
   volumeTolerance: offeringLetter.value?.details.volumeTolerance || 0.005,
-  paymentTerm: offeringLetter.value?.details.paymentTerm || 30,
+  paymentTerm: offeringLetter.value?.details.paymentTerm || '30 Hari',
   latePenalty: offeringLetter.value?.details.latePenalty || 0.01,
   servicePattern: offeringLetter.value?.details.servicePattern
     || 'Pengiriman truk tangki ke lokasi customer',
@@ -109,13 +109,15 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
     sellingPrice: {
       ppkb: offeringLetter.value?.details.fuelPrices.sellingPrice.ppkb || 0,
       oat: offeringLetter.value?.details.fuelPrices.sellingPrice.oat || 0,
-      ppn: offeringLetter.value?.details.fuelPrices.sellingPrice.ppn || 0
+      ppn: offeringLetter.value?.details.fuelPrices.sellingPrice.ppn || 0,
+      pph: offeringLetter.value?.details.fuelPrices.sellingPrice.pph || 0
     },
     percentageNum: {
       oat: offeringLetter.value?.details.fuelPrices.percentageNum.oat || 0.01,
       ppkb: offeringLetter.value?.details.fuelPrices.percentageNum.ppkb
         || 0.005,
-      ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0.11
+      ppn: offeringLetter.value?.details.fuelPrices.percentageNum.ppn || 0.11,
+      pph: offeringLetter.value?.details.fuelPrices.percentageNum.pph || 0
     }
   },
   informasiTambahan:
@@ -125,7 +127,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
 
 const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline:
-    offeringLetter.value?.details.purchaseOrderDeadline || 14,
+    offeringLetter.value?.details.purchaseOrderDeadline || '1 - 14',
   offeror: {
     name: offeringLetter.value?.details.offeror.name || 'Budi Santoso',
     signature: undefined

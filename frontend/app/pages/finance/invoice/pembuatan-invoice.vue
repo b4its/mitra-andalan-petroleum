@@ -29,7 +29,8 @@ const { data: poCustomer } = await useAsyncData(
       fuelTotalQty: purchaseOrder.total,
       dateCreated: purchaseOrder.created_at.toString(),
       dateChanged: purchaseOrder.updated_at.toString(),
-      status: purchaseOrder.status
+      status: purchaseOrder.status,
+      products: (purchaseOrder.details as any)?.products || []
     }))
   },
   { default: () => [] }
@@ -90,8 +91,7 @@ const financeDetails = reactive<FinanceInvoiceDetailsState>({
   customerPurchaseInformation: {
     deliveryOrderNumberData: [],
     customerPurchaseOrderNumber: {}, // needs to be dropdown like do data
-    taxInvoiceNumber: '',
-    salesOrderNumber: undefined
+    taxInvoiceNumber: ''
   }
 })
 const financeProducts = reactive<FinanceInvoiceProductsState>({
@@ -140,7 +140,8 @@ const purchaseOrders = ref(
         customerId: po.customerId,
         dateCreated: po.dateCreated,
         dateChanged: po.dateChanged,
-        fuelTotalQty: po.fuelTotalQty
+        fuelTotalQty: po.fuelTotalQty,
+        products: po.products
       },
       customerName: po.customerName
     }
@@ -220,8 +221,19 @@ watch(
   (value) => {
     if (value) {
       console.log(value)
-      // financeProducts.products[0].price = value.fuelTotalPrice;
-      financeProducts.products[0]!.qty = value.fuelTotalQty ?? 0
+      // Konek otomatis daftar produk dari PO ke Invoice
+      const poProducts = (value as any)?.products || []
+      if (Array.isArray(poProducts) && poProducts.length > 0) {
+        financeProducts.products = poProducts.map((p: any) => ({
+          name: p.name || '',
+          qty: p.qty ?? 1,
+          unit: p.unit || '',
+          price: p.price ?? 0,
+          totalPrice: p.totalPrice ?? (p.qty ?? 0) * (p.price ?? 0)
+        }))
+      } else {
+        financeProducts.products[0]!.qty = value.fuelTotalQty ?? 0
+      }
     }
   }
 )

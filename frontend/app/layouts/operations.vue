@@ -38,6 +38,14 @@ const links = computed<NavigationMenuItem[][]>(() => {
       }
     },
     {
+      label: 'Surat PO Transportir',
+      icon: 'i-lucide-file-text',
+      to: '/operations/po-transportir',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
       label: 'Rekap Data Delivery Order',
       icon: 'i-lucide-square-chart-gantt',
       to: '/operations/rekap',

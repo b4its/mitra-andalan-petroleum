@@ -82,7 +82,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
         <UFileUpload
           v-model="state.poDocument"
           label="Upload File Purchase Order"
-          description="Format file .pdf dengan max 50MB"
+          description="Format PDF, gambar (.jpg, .png), Word (.doc, .docx), Excel (.xls, .xlsx) — max 50MB"
         />
       </UFormField>
 

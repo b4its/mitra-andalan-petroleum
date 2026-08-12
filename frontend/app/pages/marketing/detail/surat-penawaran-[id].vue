@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import angkaTerbilang from '@develoka/angka-terbilang-js'
 import logoImage from '~/assets/images/map-logo.jpeg'
 import type { ResUploads } from '~/types'
 import type { Customer, OfferingLetterPost } from '~/types/marketing'
@@ -31,6 +30,8 @@ const { data: customerDetail, pending: pendingCustomer } = await useAsyncData(
 
 const details = offeringLetter.value?.details
 
+const { user } = useAuth()
+
 const { data: signature } = await useAsyncData(
   'signature',
   async () => {
@@ -42,20 +43,52 @@ const { data: signature } = await useAsyncData(
   { default: () => '' }
 )
 
-const { user } = useAuth()
+// Tanda tangan user aplikasi (barcode otomatis muncul saat login)
+const { data: userSignature } = await useAsyncData(
+  'user-signature-barcode',
+  async () => {
+    if (!user.value?.id) return ''
+    const res = await get<ResUploads[]>(
+      `/uploads?document_type=profile&document_id=${user.value.id}`
+    )
+    return res[0]?.url || ''
+  },
+  { default: () => '', server: false }
+)
 
 const baseWithPpkb = computed(() => {
   if (!details) return 0
   return details.fuelPrices.basePrice + details.fuelPrices.sellingPrice.ppkb
 })
 
+const pphAmount = computed(() => {
+  if (!details) return 0
+  return details.fuelPrices.sellingPrice.pph || 0
+})
+
+// Barcode tanda tangan: kode dari nama penandatangan (offeror)
+const signatureBarcode = ref<string>('')
+
+async function buildSignatureBarcode() {
+  const name = details?.offeror?.name || user.value?.name || ''
+  const dataUrl = generateBarcodeDataUrl(name)
+  if (dataUrl) {
+    signatureBarcode.value = dataUrl
+    return
+  }
+  // Fallback: kalau barcode gagal, pakai gambar tanda tangan terupload
+  const fallback = userSignature.value || signature.value
+  if (fallback) {
+    signatureBarcode.value = await toBase64(fallback).catch(() => '')
+  }
+}
+
 const loadPdf = async () => {
   const pdfMake = usePDFMake()
   if (!pdfMake) return
 
-  let signatureImage = ''
-  if (signature.value) {
-    signatureImage = await toBase64(signature.value).catch(() => '')
+  if (!signatureBarcode.value) {
+    await buildSignatureBarcode()
   }
 
   pdfLink.value = await pdfMake
@@ -245,7 +278,7 @@ const loadPdf = async () => {
                   text: ':'
                 },
                 {
-                  text: `${details?.paymentTerm} ${details?.paymentTerm || 0 > 1 ? 'Days' : 'Day'} after delivery`
+                  text: `${details?.paymentTerm}`
                 }
               ],
               [
@@ -259,7 +292,7 @@ const loadPdf = async () => {
                   text: ':'
                 },
                 {
-                  text: `${formatPercent(details?.latePenalty || 0)}`
+                  text: `${formatPercent(details?.latePenalty || 0)} per bulan`
                 }
               ],
               [
@@ -446,6 +479,28 @@ const loadPdf = async () => {
                   }
                 }
               ],
+              ...(pphAmount.value > 0
+                ? ([
+                    {
+                      text: 'PPH',
+                      style: {
+                        bold: true
+                      }
+                    },
+                    {
+                      text: 'PPH (final)',
+                      style: {
+                        alignment: 'center'
+                      }
+                    },
+                    {
+                      text: formatCurrency(pphAmount.value),
+                      style: {
+                        alignment: 'center'
+                      }
+                    }
+                  ] as any[])
+                : []),
               [
                 {
                   text: 'TOTAL',
@@ -511,12 +566,12 @@ const loadPdf = async () => {
         ),
         {
           text: [
-            'Mohon Purchase Order dapat dikirimkan minimal ',
+            'Mohon Purchase Order dapat dikirimkan pada periode ',
             {
-              text: `${details?.purchaseOrderDeadline || 0} (${angkaTerbilang(details?.purchaseOrderDeadline || 0)}) hari `,
+              text: `${details?.purchaseOrderDeadline || '1 - 14'} `,
               bold: true
             },
-            'sebelum pengaliran/muat dari terminal.'
+            'hari sebelum pengaliran/muat dari terminal.'
           ],
           marginTop: 15
         },
@@ -526,20 +581,20 @@ const loadPdf = async () => {
         {
           text: 'Hormat Kami,',
           marginTop: 15,
-          marginBottom: signature.value ? 5 : 30
+          marginBottom: signatureBarcode.value ? 5 : 30
         },
-        ...(signatureImage
+        ...(signatureBarcode.value
           ? [
               {
-                image: signatureImage,
-                width: 75
+                image: signatureBarcode.value,
+                width: 110
               }
             ]
           : []),
         {
           text: `(${details?.offeror.name})`,
           bold: true,
-          marginTop: signature.value ? 5 : 30
+          marginTop: signatureBarcode.value ? 5 : 30
         },
         {
           layout: {

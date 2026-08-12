@@ -86,7 +86,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
             v-model="state.doInformation.doNumber"
             type="text"
             autocomplete="off"
-            placeholder="1086/DO/MAP/V/2026"
+            placeholder="001/DO/2026/VIII/12"
           />
         </UFormField>
 
@@ -105,7 +105,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
             v-model="state.doInformation.poCustomerNumber"
             type="text"
             autocomplete="off"
-            placeholder="1086/DO/MAP/V/2026"
+            placeholder="001/DO/2026/VIII/12"
           />
         </UFormField> -->
 
@@ -137,7 +137,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
             v-model="state.doInformation.soNumber"
             type="text"
             autocomplete="off"
-            placeholder="1086/DO/MAP/V/2026"
+            placeholder="001/DO/2026/VIII/12"
           />
         </UFormField>
       </div>

@@ -13,4 +13,7 @@ class Supplier(BaseModel):
     province: Mapped[str] = mapped_column(String(100), nullable=True)
     city: Mapped[str] = mapped_column(String(100), nullable=True)
     phone: Mapped[str] = mapped_column(String(30), nullable=True)
+    phone2: Mapped[str] = mapped_column(String(30), nullable=True, comment="Nomor telepon 2 supplier / PIC")
     email: Mapped[str] = mapped_column(String(100), nullable=True)
+    bank_name: Mapped[str] = mapped_column(String(100), nullable=True, comment="Nama bank supplier")
+    bank_account: Mapped[str] = mapped_column(String(50), nullable=True, comment="Nomor rekening supplier")

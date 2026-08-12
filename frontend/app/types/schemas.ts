@@ -60,12 +60,12 @@ export const marketingOLDetailsSchema = z.object({
   unloadingProcedure: z.string(),
   volumeUnit: z.string(),
   volumeTolerance: z.number().min(0),
-  paymentTerm: z.number().min(1),
+  paymentTerm: z.string().min(1, 'Wajib diisi'),
   latePenalty: z.number().min(0.01),
   servicePattern: z.string(),
   personInCharge: z.object({
     name: z.string(),
-    phoneNumber: z.string().length(11, 'Phone Number')
+    phoneNumber: z.string().min(1, 'Nomor telepon wajib diisi')
   }),
   paymentAddress: z.object({
     bankName: z.string(),
@@ -81,12 +81,14 @@ export const marketingOLDetailsSchema = z.object({
     sellingPrice: z.object({
       ppkb: z.number(),
       oat: z.number().nullable(),
-      ppn: z.number()
+      ppn: z.number(),
+      pph: z.number().nullable().optional()
     }),
     percentageNum: z.object({
       ppkb: z.number(),
       oat: z.number(),
-      ppn: z.number()
+      ppn: z.number(),
+      pph: z.number().optional()
     })
   }),
   informasiTambahan: z.array(z.string()).optional()
@@ -95,7 +97,7 @@ export const marketingOLDetailsSchema = z.object({
 export type MarketingOLDetailsState = z.infer<typeof marketingOLDetailsSchema>
 
 export const marketingOLFooterSchema = z.object({
-  purchaseOrderDeadline: z.number(),
+  purchaseOrderDeadline: z.string().min(1, 'Wajib diisi'),
   offeror: z.object({
     name: z.string(),
     signature: z.file().optional()
@@ -155,7 +157,10 @@ export const marketingPODetailsSchema = z.object({
         qty: z.number().min(1, 'Min 1'),
         unit: z.string().min(1, 'Wajib diisi'),
         price: z.number().min(0, 'Min 0'),
-        totalPrice: z.number()
+        totalPrice: z.number(),
+        ppkb: z.number().optional(),
+        pph: z.number().optional(),
+        ppn: z.number().optional()
       })
     )
     .min(1, 'Tambahkan minimal 1 produk'),
@@ -303,8 +308,7 @@ export const financeInvoiceDetailsSchema = z.object({
   customerPurchaseInformation: z.object({
     deliveryOrderNumberData: z.array(z.string()),
     customerPurchaseOrderNumber: z.object(),
-    taxInvoiceNumber: z.string(),
-    salesOrderNumber: z.string().optional()
+    taxInvoiceNumber: z.string()
   })
 })
 export const financeInvoiceProductsSchema = z.object({

@@ -271,7 +271,7 @@ const loadPdf = async () => {
             }
           },
           table: {
-            widths: ['*', '*', '*', '*'],
+            widths: ['*', '*', '*'],
             body: [
               [
                 {
@@ -288,12 +288,6 @@ const loadPdf = async () => {
                 },
                 {
                   text: 'No. Delivery Order',
-                  bold: true,
-                  alignment: 'center',
-                  border: [true, false, true, true]
-                },
-                {
-                  text: 'Customer Purchase Order No',
                   bold: true,
                   alignment: 'center',
                   border: [true, false, true, true]
@@ -316,14 +310,15 @@ const loadPdf = async () => {
 
                   verticalAlignment: 'middle',
                   alignment: 'center'
-                },
-                {
-                  text: `${details.customerPurchaseInformation.customerPurchaseOrderNumber.purchaseOrderNumber}`,
-                  verticalAlignment: 'middle',
-                  alignment: 'center'
                 }
               ],
               [
+                {
+                  text: 'Customer Purchase Order No',
+                  bold: true,
+                  alignment: 'center',
+                  border: [true, false, true, true]
+                },
                 {
                   text: 'Terms',
                   bold: true,
@@ -333,19 +328,14 @@ const loadPdf = async () => {
                   text: 'Due Date',
                   bold: true,
                   alignment: 'center'
-                },
-                {
-                  text: 'Tax No (Faktur Pajak)',
-                  bold: true,
-                  alignment: 'center'
-                },
-                {
-                  text: 'Sales Order No',
-                  bold: true,
-                  alignment: 'center'
                 }
               ],
               [
+                {
+                  text: `${details.customerPurchaseInformation.customerPurchaseOrderNumber.purchaseOrderNumber}`,
+                  verticalAlignment: 'middle',
+                  alignment: 'center'
+                },
                 {
                   text: `${details.invoiceInformation.terms} ${details.invoiceInformation.terms === 1 ? 'Day' : 'Days'} After Delivery`,
                   verticalAlignment: 'middle',
@@ -355,18 +345,26 @@ const loadPdf = async () => {
                   text: formatDate(details.invoiceInformation.invoiceDueDate),
                   verticalAlignment: 'middle',
                   alignment: 'center'
+                }
+              ],
+              [
+                {
+                  text: 'Tax No (Faktur Pajak)',
+                  bold: true,
+                  alignment: 'center'
                 },
+                {},
+                {}
+              ],
+              [
                 {
                   text: `${details.customerPurchaseInformation.taxInvoiceNumber}`,
-
                   verticalAlignment: 'middle',
-                  alignment: 'center'
+                  alignment: 'center',
+                  colSpan: 3
                 },
-                {
-                  text: `${details.customerPurchaseInformation.salesOrderNumber || ''}`,
-                  verticalAlignment: 'middle',
-                  alignment: 'center'
-                }
+                {},
+                {}
               ]
             ]
           }

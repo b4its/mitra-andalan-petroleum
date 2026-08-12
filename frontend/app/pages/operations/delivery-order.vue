@@ -79,10 +79,38 @@ const doHeader = reactive<OperationsDOHeaderState>({
     phoneNumber: '(0541) 123456'
   },
   doInformation: {
-    doNumber: '005/DO/MAP/VIII/26',
+    doNumber: '',
     doDateCreated: `${new Date().toISOString().split('T')[0]}`,
     poCustomerNumber: {},
-    soNumber: 'SO/088/MAP/VIII/26'
+    soNumber: ''
+  }
+})
+
+// ── Nomor DO otomatis: {urutan}/DO/{tahun}/{romawi-bulan}/{tanggal} ──
+const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
+
+async function generateDoNumber() {
+  try {
+    const res = await get<{ total: number }>('/delivery-orders', {
+      page: 1,
+      page_size: 1
+    })
+    const seq = (res.total || 0) + 1
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = romanMonths[now.getMonth()]
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${String(seq).padStart(3, '0')}/DO/${year}/${month}/${day}`
+  } catch {
+    return ''
+  }
+}
+
+onMounted(async () => {
+  // Saat membuat DO baru (bukan edit), isi nomor DO otomatis
+  if (!editingDoId.value && !doHeader.doInformation.doNumber) {
+    const number = await generateDoNumber()
+    if (number) doHeader.doInformation.doNumber = number
   }
 })
 const doReceiver = reactive<OperationsDOReceiverState>({

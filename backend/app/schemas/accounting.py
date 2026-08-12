@@ -148,6 +148,10 @@ class LedgerResponse(BaseModel):
     rows: list[LedgerRow] = []
 
 
+class LedgerListResponse(BaseModel):
+    items: list[LedgerResponse] = []
+
+
 class TrialBalanceRow(BaseModel):
     account_id: str
     account_code: str

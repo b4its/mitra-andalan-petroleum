@@ -55,12 +55,12 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
   unloadingProcedure: 'Dibongkar dari truk tangki ke tangki timbun customer',
   volumeUnit: 'LITER',
   volumeTolerance: 0.005,
-  paymentTerm: 30,
+  paymentTerm: '30 Hari',
   latePenalty: 0.01,
   servicePattern: 'Pengiriman truk tangki ke lokasi customer',
   personInCharge: {
     name: user.value?.name || 'Pengguna',
-    phoneNumber: '08123456789'
+    phoneNumber: ''
   },
   paymentAddress: {
     bankName: 'BCA - Samarinda',
@@ -76,19 +76,21 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
     sellingPrice: {
       ppkb: 0,
       oat: 0,
-      ppn: 0
+      ppn: 0,
+      pph: 0
     },
     percentageNum: {
       oat: 0.01,
       ppkb: 0.005,
-      ppn: 0.11
+      ppn: 0.11,
+      pph: 0
     }
   },
   informasiTambahan: ['Harga dapat berubah mengikuti harga keekonomian Pertamina']
 })
 
 const letterFooter = reactive<MarketingOLFooterState>({
-  purchaseOrderDeadline: 14,
+  purchaseOrderDeadline: '1 - 14',
   offeror: {
     name: user.value?.name || 'Pengguna',
     signature: undefined

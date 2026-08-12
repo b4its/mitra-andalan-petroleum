@@ -13,6 +13,34 @@ const emit = defineEmits<{
 const state = defineModel<MarketingOLFooterState>({ required: true })
 const location = defineModel<string>('location', { default: '' })
 
+const deadlineOptions = [
+  { label: '1 - 14', value: '1 - 14' },
+  { label: '15 - 28', value: '15 - 28' },
+  { label: '15 - 29', value: '15 - 29' },
+  { label: '15 - 30', value: '15 - 30' },
+  { label: '15 - 31', value: '15 - 31' },
+  { label: 'Custom...', value: '__custom__' }
+]
+
+const deadlineCustom = ref(
+  state.value.purchaseOrderDeadline
+  && !deadlineOptions.some(o => o.value === state.value.purchaseOrderDeadline)
+    ? state.value.purchaseOrderDeadline
+    : ''
+)
+
+watch(
+  () => state.value.purchaseOrderDeadline,
+  (value) => {
+    if (value === '__custom__') {
+      deadlineCustom.value = ''
+      state.value.purchaseOrderDeadline = ''
+    } else if (!deadlineOptions.some(o => o.value === value)) {
+      deadlineCustom.value = value || ''
+    }
+  }
+)
+
 const regionProvince = ref('')
 const regionCity = ref('')
 const baseStreet = ref('')
@@ -67,21 +95,28 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
       <UFormField
         name="purchaseOrderDeadline"
         label="Tenggat Purchase Order"
+        description="Pilih periode atau gunakan Custom untuk range bebas"
         required
       >
-        <UInputNumber
+        <USelect
           v-model="state.purchaseOrderDeadline"
-          :ui="{
-            root: 'w-full'
-          }"
-          orientation="vertical"
-          :step="1"
-          locale="id-ID"
-          :format-options="{
-            style: 'unit',
-            unit: 'day',
-            unitDisplay: 'long'
-          }"
+          :items="deadlineOptions"
+          value-key="value"
+          placeholder="Pilih periode tenggat"
+        />
+      </UFormField>
+
+      <UFormField
+        v-if="state.purchaseOrderDeadline === '__custom__'"
+        name="purchaseOrderDeadlineCustom"
+        label="Range Custom (hari)"
+        required
+      >
+        <UInput
+          v-model="deadlineCustom"
+          type="text"
+          placeholder="Contoh: 5 - 20 atau 30"
+          @update:model-value="(v: string) => (state.purchaseOrderDeadline = v)"
         />
       </UFormField>
 

@@ -92,9 +92,9 @@ async def _seed_users(db: AsyncSession):
 
 async def _seed_customers(db: AsyncSession):
     customers = [
-        Customer(name="PT. Bina Karya Sentosa", npwp="01.234.567.8-901.000", address="Jl. Jenderal Sudirman No. 45, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-1234567", email="bina@karya-sentosa.com"),
-        Customer(name="CV. Maju Jaya Abadi", npwp="02.345.678.9-012.000", address="Jl. Pahlawan No. 88, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-2345678", email="maju.jaya@abadi.co.id"),
-        Customer(name="PT. Sumber Rejeki Mandiri", npwp="03.456.789.0-123.000", address="Jl. Empat Lima No. 12, Tenggarong", province="Kalimantan Timur", city="Tenggarong", phone="0541-3456789", email="sumber.rejeki@gmail.com"),
+        Customer(name="PT. Bina Karya Sentosa", npwp="01.234.567.8-901.000", address="Jl. Jenderal Sudirman No. 45, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-1234567", phone2="081234567001", email="bina@karya-sentosa.com"),
+        Customer(name="CV. Maju Jaya Abadi", npwp="02.345.678.9-012.000", address="Jl. Pahlawan No. 88, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-2345678", phone2="081234567002", email="maju.jaya@abadi.co.id"),
+        Customer(name="PT. Sumber Rejeki Mandiri", npwp="03.456.789.0-123.000", address="Jl. Empat Lima No. 12, Tenggarong", province="Kalimantan Timur", city="Tenggarong", phone="0541-3456789", phone2="081234567003", email="sumber.rejeki@gmail.com"),
     ]
     for c in customers:
         db.add(c)
@@ -105,8 +105,8 @@ async def _seed_customers(db: AsyncSession):
 
 async def _seed_suppliers(db: AsyncSession):
     suppliers = [
-        Supplier(name="PT. Supplier Logistik Mandiri", npwp="021234567890123", address="Jl. Industri No. 7, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="021-5678910", email="logistik@mandiri.co.id"),
-        Supplier(name="CV. Bahan Bakar Utama", npwp="032345678901234", address="Jl. Minyak No. 33, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-1234567", email="bbu@bahanbakar.com"),
+        Supplier(name="PT. Supplier Logistik Mandiri", npwp="021234567890123", address="Jl. Industri No. 7, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="021-5678910", phone2="081234567890", email="logistik@mandiri.co.id", bank_name="BANK BCA", bank_account="8801234567"),
+        Supplier(name="CV. Bahan Bakar Utama", npwp="032345678901234", address="Jl. Minyak No. 33, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-1234567", phone2="081298765432", email="bbu@bahanbakar.com", bank_name="BANK BRI", bank_account="002345678901"),
     ]
     for s in suppliers:
         db.add(s)
@@ -128,7 +128,7 @@ def _ol_details(ol_number: str, customer_name: str, address: str, fuel_price: fl
         "unloadingProcedure": "Menggunakan selang muat milik armada",
         "volumeUnit": "Liter observed",
         "volumeTolerance": 0.025,
-        "paymentTerm": 7,
+        "paymentTerm": "7 Hari",
         "latePenalty": 0.02,
         "servicePattern": "Setiap hari kerja (Senin-Sabtu)",
         "personInCharge": {"name": "Nico", "phoneNumber": "08123456789"},
@@ -143,10 +143,10 @@ def _ol_details(ol_number: str, customer_name: str, address: str, fuel_price: fl
             "hppPrice": 15000,
             "basePrice": 17950,
             "totalPrice": fuel_price,
-            "sellingPrice": {"ppkb": 0, "oat": transport_price, "ppn": 0.11 * fuel_price},
-            "percentageNum": {"oat": 0, "ppkb": 0.1, "ppn": 0.11}
+            "sellingPrice": {"ppkb": 0, "oat": transport_price, "ppn": 0.11 * fuel_price, "pph": 0},
+            "percentageNum": {"oat": 0, "ppkb": 0.1, "ppn": 0.11, "pph": 0}
         },
-        "purchaseOrderDeadline": 30,
+        "purchaseOrderDeadline": "1 - 14",
         "offeror": {"name": "Nico"},
         "companyInformation": {
             "address": "Jl. Belatuk Samarinda, Indonesia",
@@ -368,7 +368,7 @@ async def _seed_purchase_orders(db: AsyncSession):
         supplier = suppliers[i % len(suppliers)]
         po_number = f"PO-SUP/2025/VI/{100 + i}"
         products = [
-            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 5625, "totalPrice": 45000000}
+            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 5625, "totalPrice": 45000000, "ppkb": 450000, "pph": 0.5, "ppn": 4950000}
         ]
         po = PurchaseOrder(
             po_number=po_number,

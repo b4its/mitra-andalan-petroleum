@@ -30,11 +30,19 @@ const calculatePpnPercent = computed(() => {
   )
 })
 
+const calculatePphPercent = computed(() => {
+  return (
+    state.value.fuelPrices.basePrice
+    * (state.value.fuelPrices.percentageNum.pph || 0)
+  )
+})
+
 const totalFuelPrices = computed(() => {
   return (
     calculatePpkbPercent.value
     + calculateOatPercent.value
     + calculatePpnPercent.value
+    + calculatePphPercent.value
     + state.value.fuelPrices.basePrice
   )
 })
@@ -44,12 +52,14 @@ watch(
     calculatePpkbPercent,
     calculateOatPercent,
     calculatePpnPercent,
+    calculatePphPercent,
     totalFuelPrices
   ],
-  ([ppkb, oat, ppn, total]) => {
+  ([ppkb, oat, ppn, pph, total]) => {
     state.value.fuelPrices.sellingPrice.ppkb = ppkb
     state.value.fuelPrices.sellingPrice.oat = oat
     state.value.fuelPrices.sellingPrice.ppn = ppn
+    state.value.fuelPrices.sellingPrice.pph = pph
     state.value.fuelPrices.totalPrice = total
   },
   { immediate: true }
@@ -145,25 +155,27 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
 
       <USeparator />
 
-      <UFormField name="paymentTerm" label="Term Pembayaran" required>
-        <UInputNumber
+      <UFormField
+        name="paymentTerm"
+        label="Term Pembayaran"
+        description="Satuan hari (contoh: 30 Hari) atau custom (CBD, CAD, dll)"
+        required
+      >
+        <UInput
           v-model="state.paymentTerm"
-          :ui="{
-            root: 'w-full'
-          }"
-          orientation="vertical"
-          :step="1"
-          locale="id-ID"
-          :format-options="{
-            style: 'unit',
-            unit: 'week',
-            unitDisplay: 'long'
-          }"
+          type="text"
+          autocomplete="off"
+          placeholder="30 Hari / CBD / CAD"
         />
       </UFormField>
 
       <div class="flex w-full gap-4">
-        <UFormField name="latePenalty" label="Penalty Keterlambatan" required>
+        <UFormField
+          name="latePenalty"
+          label="Penalty Keterlambatan"
+          description="Per bulan (contoh: 2% = 2% per bulan dari nilai transaksi)"
+          required
+        >
           <UInputNumber
             v-model="state.latePenalty"
             :ui="{
@@ -345,6 +357,25 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
         />
       </UFormField>
 
+      <UFormField
+        name="percentagePph"
+        label="Persentase PPH"
+        description="Kosongkan (0) jika tidak ada PPH — kalkulasi tetap seperti biasa"
+      >
+        <UInputNumber
+          v-model="state.fuelPrices.percentageNum.pph"
+          :ui="{
+            root: 'w-full'
+          }"
+          orientation="vertical"
+          :step="0.001"
+          :format-options="{
+            style: 'percent',
+            minimumFractionDigits: 1
+          }"
+        />
+      </UFormField>
+
       <USeparator />
 
       <div class="flex w-full gap-4">
@@ -396,6 +427,24 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
             root: 'w-full'
           }"
           :model-value="calculatePpnPercent"
+          :increment="false"
+          :decrement="false"
+          :format-options="{
+            style: 'currency',
+            currency: 'IDR',
+            currencyDisplay: 'narrowSymbol',
+            currencySign: 'standard'
+          }"
+          disabled
+        />
+      </UFormField>
+
+      <UFormField name="pph" label="PPH" description="Kosong jika tidak ada PPH">
+        <UInputNumber
+          :ui="{
+            root: 'w-full'
+          }"
+          :model-value="calculatePphPercent"
           :increment="false"
           :decrement="false"
           :format-options="{

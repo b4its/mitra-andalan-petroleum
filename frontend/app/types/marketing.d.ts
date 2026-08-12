@@ -76,6 +76,9 @@ export interface Product {
   unit: string
   price: number
   totalPrice: number
+  ppkb?: number
+  pph?: number
+  ppn?: number
 }
 
 export interface SelectedOfferingLetter {
@@ -107,13 +110,13 @@ export interface OfferingLetterDetails {
   unloadingProcedure: string
   volumeUnit: string
   volumeTolerance: number
-  paymentTerm: number
+  paymentTerm: string
   latePenalty: number
   servicePattern: string
   personInCharge: PersonInCharge
   paymentAddress: PaymentAddress
   fuelPrices: FuelPrices
-  purchaseOrderDeadline: number
+  purchaseOrderDeadline: string
   offeror: Offeror
   companyInformation: OfferingLetterCompanyInformation
   informasiTambahan?: string[]
@@ -135,11 +138,13 @@ export interface FuelPrices {
     ppkb: number
     oat: number | null
     ppn: number
+    pph?: number | null
   }
   percentageNum: {
     ppkb: number
     oat: number
     ppn: number
+    pph?: number
   }
 }
 
