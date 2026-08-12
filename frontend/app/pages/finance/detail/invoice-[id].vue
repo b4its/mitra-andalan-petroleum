@@ -20,6 +20,20 @@ const { data: invoiceDetails } = await useAsyncData(
   },
 );
 const details: InvoiceDetailsData = invoiceDetails.value?.details;
+const letterIds = ref(
+  details.customerPurchaseInformation.deliveryOrderNumberData,
+);
+
+const formattedLetterIds = computed(() => {
+  if (!letterIds.value?.length) return "";
+
+  if (letterIds.value.length === 1) return letterIds.value[0];
+
+  const suffix = letterIds.value[0].substring(letterIds.value[0].indexOf("/"));
+  const numbers = letterIds.value.map((id) => id.split("/")[0]);
+
+  return numbers.join(",") + suffix;
+});
 
 const tableBodyDetails = [];
 
@@ -298,7 +312,7 @@ const loadPdf = async () => {
                 },
                 {
                   // map into string like this
-                  text: `${details.customerPurchaseInformation.deliveryOrderNumberData.join(", ")}`,
+                  text: `${formattedLetterIds.value}`,
 
                   verticalAlignment: "middle",
                   alignment: "center",
