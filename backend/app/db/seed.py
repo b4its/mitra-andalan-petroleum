@@ -100,11 +100,11 @@ async def _seed_suppliers(db: AsyncSession):
 
 # ── Detail JSON helpers ────────────────────────────────────────
 
-def _ol_details(customer_name: str, address: str, fuel_price: float, transport_price: float) -> str:
+def _ol_details(ol_number: str, customer_name: str, address: str, fuel_price: float, transport_price: float) -> str:
     return json.dumps({
         "location": "Samarinda",
         "date": "2025-06-01",
-        "offeringLetterNumber": "001/MAP/VI-01/25",
+        "offeringLetterNumber": ol_number,
         "regarding": "Penawaran Harga BBM Solar Industri",
         "receiver": customer_name,
         "supplyPoint": "Tanki Timbun Pelabuhan Samarinda",
@@ -156,13 +156,18 @@ def _po_details(main_company: dict, receiver: dict, po_number: str, products: li
         "products": products,
         "totalProductsPrice": sum(p["totalPrice"] for p in products),
         "termAndCondition": "Pembayaran dilakukan 7 hari setelah invoice diterbitkan",
-        "delivery": {"loadingTerminal": "Pelabuhan Samarinda", "loadingDate": "2025-06-05", "picOperationMap": "Baits"},
+        "delivery": {
+            "loadingTerminal": "Pelabuhan Samarinda",
+            "loadingDate": "2025-06-05",
+            "picOperationMap": "Baits",
+            "distance": 120
+        },
         "forwarder": {"trucking": "Armada sendiri"},
         "signed": {"createdBy": "Nico", "approvedBy": "Admin"}
     })
 
 
-def _do_details(customer_name: str, customer_address: str, po_number: str, transport_name: str, driver_name: str, fuel_total: float) -> str:
+def _do_details(customer_name: str, customer_address: str, po_customer_number: dict, transport_name: str, driver_name: str, fuel_total: float) -> str:
     return json.dumps({
         "companyInformation": {
             "name": "PT. MITRA ANDALAN PETROLEUM",
@@ -173,11 +178,11 @@ def _do_details(customer_name: str, customer_address: str, po_number: str, trans
         "doInformation": {
             "doNumber": "001/DO/MAP/VI/2025",
             "doDateCreated": "2025-06-02",
-            "poCustomerNumber": po_number,
+            "poCustomerNumber": po_customer_number,
             "soNumber": "SO/001/VI/2025"
         },
         "customerName": customer_name,
-        "customerId": "",
+        "customerId": po_customer_number.get("customerId") or "",
         "customerAddress": customer_address,
         "receiverInformation": {"name": customer_name, "phoneNumber": "08123456789"},
         "receiverDateReceived": "2025-06-02",
@@ -202,14 +207,18 @@ def _do_details(customer_name: str, customer_address: str, po_number: str, trans
             "endKm": 12680,
             "sgMeter": 0.845,
             "timeInformation": {
-                "departureTime": "2025-06-02T08:00",
-                "arrivalTime": "2025-06-02T10:30",
-                "unloadingTime": "2025-06-02T11:00",
-                "depotArrivalTime": "2025-06-02T14:00"
+                "departureTime": "08:00",
+                "arrivalTime": "10:30",
+                "unloadingTime": "11:00",
+                "depotArrivalTime": "14:00"
             }
         },
         "total": fuel_total,
-        "notes": [{"note": "Barang diterima dalam kondisi baik"}],
+        "notes": [
+            {"note": "Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan"},
+            {"note": "Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami"},
+            {"note": "Lainnya :"}
+        ],
         "t2Depot": 28.5,
         "t2Unloading": 29.0,
         "indexSensitivity": 0.05,
@@ -221,7 +230,7 @@ def _do_details(customer_name: str, customer_address: str, po_number: str, trans
     })
 
 
-def _invoice_details(customer_name: str, customer_address: str, invoice_number: str, products: list, grand_total: float) -> str:
+def _invoice_details(customer_name: str, customer_address: str, invoice_number: str, products: list, grand_total: float, po_customer_number: dict, do_numbers: list) -> str:
     return json.dumps({
         "companyInformation": {
             "name": "PT. MITRA ANDALAN PETROLEUM",
@@ -239,8 +248,8 @@ def _invoice_details(customer_name: str, customer_address: str, invoice_number: 
             "invoiceDueDate": "2025-07-10"
         },
         "customerPurchaseInformation": {
-            "deliveryOrderNumberData": ["001/DO/MAP/VI/2025"],
-            "customerPurchaseOrderNumber": "",
+            "deliveryOrderNumberData": do_numbers,
+            "customerPurchaseOrderNumber": po_customer_number,
             "taxInvoiceNumber": "010.000-25.00000001",
             "salesOrderNumber": "SO/001/VI/2025"
         },
@@ -275,16 +284,16 @@ async def _seed_offering_letters(db: AsyncSession):
     customers = (await db.execute(select(Customer))).scalars().all()
     marketing_users = (await db.execute(select(User).where(User.role == "marketing"))).scalars().all()
     creator = marketing_users[0] if marketing_users else None
-    ol_numbers = ["001/OL/VI/2025", "002/OL/VI/2025", "003/OL/VI/2025", "004/OL/VI/2025"]
-    statuses = ["created", "under_revision", "po_received", "do_completed"]
+    statuses = ["created", "under_revision", "po_received"]
 
     for i in range(15):
         customer = customers[i % len(customers)]
+        ol_number = f"{i + 1:03d}/OL/VI/2025"
         fuel_price = 50000000 + (i * 1000000)
         transport_price = 2500000 + (i * 100000)
         status = statuses[i % len(statuses)]
         ol = OfferingLetter(
-            offering_letter_number=ol_numbers[i % len(ol_numbers)],
+            offering_letter_number=ol_number,
             customer_id=customer.id,
             location="Samarinda",
             date="2025-06-01",
@@ -294,7 +303,7 @@ async def _seed_offering_letters(db: AsyncSession):
             transport_price=transport_price,
             status=status,
             created_by=creator.id if creator else None,
-            details=_ol_details(customer.name, customer.address or "", fuel_price, transport_price),
+            details=_ol_details(ol_number, customer.name, customer.address or "", fuel_price, transport_price),
         )
         db.add(ol)
     await db.flush()
@@ -376,45 +385,48 @@ async def _seed_purchase_orders(db: AsyncSession):
 
 async def _seed_delivery_orders(db: AsyncSession):
     customers = (await db.execute(select(Customer))).scalars().all()
+    pos = (await db.execute(
+        select(PurchaseOrder).where(PurchaseOrder.type == "customer")
+    )).scalars().all()
     ops_users = (await db.execute(select(User).where(User.role == "operations"))).scalars().all()
     creator = ops_users[0] if ops_users else None
-    do_numbers = ["001/DO/VI/2025", "002/DO/VI/2025", "003/DO/VI/2025", "004/DO/VI/2025"]
-    po_numbers = ["PO/2025/VI/100", "PO/2025/VI/101", "PO/2025/VI/102"]
+    customer_by_id = {c.id: c for c in customers}
     transports = ["PT. Transport Logistik", "CV. Angkutan Cepat", "PT. Distribusi Mandiri"]
     drivers = ["Supriyanto", "Hendra", "Agus", "Bambang"]
     statuses = ["created", "document_returned"]
 
     for i in range(15):
-        customer = customers[i % len(customers)]
+        po = pos[i % len(pos)]
+        customer = customer_by_id.get(po.customer_id) or customers[i % len(customers)]
         fuel_total = 8000 + (i * 500)
         transport_name = transports[i % len(transports)]
         status = statuses[i % 2]
+        do_number = f"{i + 1:03d}/DO/MAP/VI/2025"
+        po_customer_number = {
+            "id": po.id,
+            "purchaseOrderNumber": po.po_number,
+            "customerName": customer.name,
+            "customerId": customer.id,
+            "dateCreated": po.date,
+            "dateChanged": po.date,
+            "fuelTotalQty": fuel_total
+        }
         do = DeliveryOrder(
-            do_number=do_numbers[i % len(do_numbers)],
-            customer_id=customer.id,
-            po_number=po_numbers[i % len(po_numbers)],
+            do_number=do_number,
+            customer_id=po.customer_id,
+            id_purchase_order=po.id,
+            po_number=po.po_number,
             transport_name=transport_name,
             fuel_total=fuel_total,
             status=status,
             created_by=creator.id if creator else None,
             details=_do_details(
                 customer.name, customer.address or "",
-                po_numbers[i % len(po_numbers)],
+                po_customer_number,
                 transport_name, drivers[i % len(drivers)], fuel_total,
             ),
         )
         db.add(do)
-    await db.flush()
-
-    # Hubungkan DO ke PO (satu PO dapat memiliki banyak DO)
-    pos = (await db.execute(select(PurchaseOrder).where(PurchaseOrder.type == "customer"))).scalars().all()
-    dos = (await db.execute(select(DeliveryOrder))).scalars().all()
-    po_by_number = {p.po_number: p for p in pos}
-    if dos:
-        for do in dos:
-            po = po_by_number.get(do.po_number)
-            if po:
-                do.id_purchase_order = po.id
     await db.flush()
 
 
@@ -422,24 +434,42 @@ async def _seed_delivery_orders(db: AsyncSession):
 
 async def _seed_invoices(db: AsyncSession):
     customers = (await db.execute(select(Customer))).scalars().all()
-    inv_numbers = ["INV/2025/VI/001", "INV/2025/VI/002", "INV/2025/VI/003", "INV/2025/VI/004", "INV/2025/VI/005"]
+    pos = (await db.execute(
+        select(PurchaseOrder).where(PurchaseOrder.type == "customer")
+    )).scalars().all()
+    customer_by_id = {c.id: c for c in customers}
     statuses = ["unpaid", "paid", "overdue"]
     deadlines = ["on_time", "overdue", "due_soon"]
+    do_numbers = [f"{i + 1:03d}/DO/MAP/VI/2025" for i in range(3)]
 
     for i in range(15):
-        customer = customers[i % len(customers)]
+        po = pos[i % len(pos)]
+        customer = customer_by_id.get(po.customer_id) or customers[i % len(customers)]
         grand_total = 50000000 + (i * 2500000)
         products = [
             {"qty": 8000, "unit": "Liter", "name": "Solar Industri (B35)", "price": 6250, "totalPrice": 50000000}
         ]
+        po_customer_number = {
+            "id": po.id,
+            "purchaseOrderNumber": po.po_number,
+            "customerName": customer.name,
+            "customerId": customer.id,
+            "dateCreated": po.date,
+            "dateChanged": po.date,
+            "fuelTotalQty": 8000
+        }
         inv = Invoice(
-            invoice_number=inv_numbers[i % len(inv_numbers)],
-            customer_id=customer.id,
+            invoice_number=f"INV/2025/VI/{i + 1:03d}",
+            customer_id=po.customer_id,
             terms_day=30,
             grand_total=grand_total,
             invoice_status=statuses[i % 3],
             deadline_status=deadlines[i % 3],
-            details=_invoice_details(customer.name, customer.address or "", inv_numbers[i % len(inv_numbers)], products, grand_total),
+            details=_invoice_details(
+                customer.name, customer.address or "",
+                f"INV/2025/VI/{i + 1:03d}",
+                products, grand_total, po_customer_number, do_numbers,
+            ),
         )
         db.add(inv)
     await db.flush()
@@ -457,7 +487,7 @@ async def _seed_notifications(db: AsyncSession):
     notifications = [
         Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Bina Karya Sentosa telah masuk.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
         Notification(title="Invoice Jatuh Tempo", message="Invoice INV/2025/VI/001 akan jatuh tempo dalam 3 hari.", type="warning", sender_id=finance_user.id if finance_user else None, to="/finance/invoice/data-invoice-customer", is_read=True),
-        Notification(title="DO Selesai", message="Delivery Order 001/DO/VI/2025 telah selesai diproses.", type="success", sender_id=ops_user.id if ops_user else None, to="/operations", is_read=True),
+        Notification(title="DO Selesai", message="Delivery Order 001/DO/MAP/VI/2025 telah selesai diproses.", type="success", sender_id=ops_user.id if ops_user else None, to="/operations", is_read=True),
         Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2025 memerlukan revisi.", type="error", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
         Notification(title="Penawaran Baru", message="Surat penawaran 003/OL/VI/2025 berhasil dibuat oleh tim marketing.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=False),
         Notification(title="PO Supplier Dibuat", message="Purchase Order ke PT. Supplier Logistik Mandiri berhasil dibuat.", type="success", sender_id=marketing_user.id if marketing_user else None, to="/marketing/supplier", is_read=False),
