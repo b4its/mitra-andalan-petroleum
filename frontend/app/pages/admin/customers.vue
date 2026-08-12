@@ -18,6 +18,7 @@ interface Customer {
   province: string | null
   city: string | null
   phone: string | null
+  phone2: string | null
   email: string | null
 }
 
@@ -47,6 +48,7 @@ const filtered = computed(() => {
       || (c.npwp ?? '').toLowerCase().includes(q)
       || (c.email ?? '').toLowerCase().includes(q)
       || (c.phone ?? '').toLowerCase().includes(q)
+      || (c.phone2 ?? '').toLowerCase().includes(q)
       || (c.address ?? '').toLowerCase().includes(q)
       || (c.province ?? '').toLowerCase().includes(q)
       || (c.city ?? '').toLowerCase().includes(q)
@@ -79,6 +81,11 @@ const columns: TableColumn<Customer>[] = [
     accessorKey: 'phone',
     header: 'Telepon',
     cell: ({ row }) => row.getValue('phone') || '-'
+  },
+  {
+    accessorKey: 'phone2',
+    header: 'Telepon 2 (PIC)',
+    cell: ({ row }) => row.getValue('phone2') || '-'
   },
   {
     accessorKey: 'province',
@@ -115,6 +122,7 @@ const schema = z.object({
   province: z.string().optional(),
   city: z.string().optional(),
   phone: z.string().optional(),
+  phone2: z.string().optional(),
   email: z.string().email('Email tidak valid').optional().or(z.literal(''))
 })
 
@@ -127,6 +135,7 @@ const formState = reactive({
   province: '',
   city: '',
   phone: '',
+  phone2: '',
   email: ''
 })
 
@@ -172,6 +181,7 @@ function openAdd() {
   formState.province = ''
   formState.city = ''
   formState.phone = ''
+  formState.phone2 = ''
   formState.email = ''
   modalOpen.value = true
 }
@@ -191,6 +201,7 @@ function openEdit(customer: Customer) {
   formState.province = customer.province ?? ''
   formState.city = customer.city ?? ''
   formState.phone = customer.phone ?? ''
+  formState.phone2 = customer.phone2 ?? ''
   formState.email = customer.email ?? ''
   modalOpen.value = true
 }
@@ -213,6 +224,7 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
       province: event.data.province || null,
       city: event.data.city || null,
       phone: event.data.phone || null,
+      phone2: event.data.phone2 || null,
       email: event.data.email || null
     }
     await post<Customer, typeof payload>('/customers', payload)
@@ -252,6 +264,7 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
       province: event.data.province || null,
       city: event.data.city || null,
       phone: event.data.phone || null,
+      phone2: event.data.phone2 || null,
       email: event.data.email || null
     }
     await put<Customer, typeof payload>(
@@ -453,6 +466,14 @@ const modalTitle = computed(() => {
           </div>
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Telepon 2 (PIC)
+            </p>
+            <p class="font-medium">
+              {{ selectedCustomer.phone2 || "-" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Provinsi
             </p>
             <p class="font-medium">
@@ -524,6 +545,13 @@ const modalTitle = computed(() => {
         <UFormField name="phone" label="Telepon">
           <UInput
             v-model="formState.phone"
+            placeholder="08xxxxxxxxxx"
+            autocomplete="off"
+          />
+        </UFormField>
+        <UFormField name="phone2" label="Telepon 2 (PIC / Penanggung Jawab)">
+          <UInput
+            v-model="formState.phone2"
             placeholder="08xxxxxxxxxx"
             autocomplete="off"
           />

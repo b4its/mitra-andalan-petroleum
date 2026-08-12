@@ -14,3 +14,4 @@ class Customer(BaseModel):
     city: Mapped[str] = mapped_column(String(100), nullable=True)
     phone: Mapped[str] = mapped_column(String(30), nullable=True)
     email: Mapped[str] = mapped_column(String(100), nullable=True)
+    phone2: Mapped[str] = mapped_column(String(30), nullable=True, comment="Nomor telepon PIC / penanggung jawab")

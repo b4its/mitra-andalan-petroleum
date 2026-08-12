@@ -151,14 +151,6 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
             autocomplete="off"
           />
         </UFormField>
-
-        <UFormField name="salesOrderNumber" label="Sales Order No" required>
-          <UInput
-            v-model="state.customerPurchaseInformation.salesOrderNumber"
-            type="text"
-            autocomplete="off"
-          />
-        </UFormField>
       </div>
 
       <UFormField

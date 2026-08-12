@@ -19,7 +19,7 @@ router = APIRouter()
 MEDIA_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent / "media"
 MAX_FILE_SIZE = 50 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg", ".pdf", ".doc", ".docx", ".xls", ".xlsx"}
-DOCUMENT_TYPES = {"ol", "po", "do", "invoice"}
+DOCUMENT_TYPES = {"ol", "po", "do", "invoice", "profile"}
 
 # Fallback karena mimetypes.guess_type di container tanpa file mime.types
 # mengembalikan None untuk beberapa ekstensi (mis. .xlsx, .docx).

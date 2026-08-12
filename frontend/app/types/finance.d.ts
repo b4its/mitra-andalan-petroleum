@@ -36,7 +36,7 @@ export interface CustomerPurchaseInformation {
   deliveryOrderNumberData: string[]
   customerPurchaseOrderNumber: CustomerPurchaseOrderNumber
   taxInvoiceNumber: string
-  salesOrderNumber: string
+  salesOrderNumber?: string
 }
 
 export interface CustomerPurchaseOrderNumber {

@@ -12,3 +12,4 @@ class User(BaseModel):
     password: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20))
     demo_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    signature: Mapped[str | None] = mapped_column(String(255), nullable=True, comment="URL upload tanda tangan user")

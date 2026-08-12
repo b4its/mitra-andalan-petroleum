@@ -18,12 +18,13 @@ const props = withDefaults(
 
 const show = ref(false)
 const auth = useAuth()
-const { put } = useApi()
+const { get, put, postFile } = useApi()
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Too short'),
   email: z.email('Email tidak valid'),
-  password: z.string().optional()
+  password: z.string().optional(),
+  signature: z.instanceof(File).optional()
 })
 
 type ProfileSchema = z.output<typeof profileSchema>
@@ -31,8 +32,21 @@ type ProfileSchema = z.output<typeof profileSchema>
 const profile = reactive<Partial<ProfileSchema>>({
   name: '',
   email: '',
-  password: ''
+  password: '',
+  signature: undefined
 })
+
+const { data: userSignature } = await useAsyncData(
+  `profile-signature-${auth.user.value?.id ?? 'anon'}`,
+  async () => {
+    if (!auth.user.value?.id) return ''
+    const res = await get<{ url: string }[]>(
+      `/uploads?document_type=profile&document_id=${auth.user.value.id}`
+    )
+    return res[0]?.url || ''
+  },
+  { default: () => '', server: false }
+)
 
 watch(
   () => auth.user.value,
@@ -40,6 +54,7 @@ watch(
     profile.name = currentUser?.name ?? ''
     profile.email = currentUser?.email ?? ''
     profile.password = ''
+    profile.signature = undefined
   },
   { immediate: true }
 )
@@ -63,6 +78,19 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
     }
     if (event.data.password) {
       body.password = event.data.password
+    }
+
+    // Upload tanda tangan user (otomatis menjadi barcode di dokumen marketing)
+    if (event.data.signature) {
+      const resUpload = await postFile<{ url: string }[]>('/upload', {
+        files: [event.data.signature],
+        folder: 'profiles',
+        document_type: 'profile',
+        document_id: userId
+      })
+      if (resUpload[0]?.url) {
+        body.signature = resUpload[0].url
+      }
     }
 
     const updated = await put<any, typeof body>(`/profiles/${userId}`, body)
@@ -152,6 +180,30 @@ function toggleShow() {
                 />
               </template>
             </UInput>
+          </UFormField>
+
+          <USeparator />
+
+          <UFormField name="signature" label="Tanda Tangan">
+            <UFileUpload
+              v-model="profile.signature"
+              label="Upload File Tanda Tangan"
+              description="Format gambar (.png, .jpg) — otomatis dijadikan barcode di dokumen marketing"
+              accept="image/png,image/jpeg,image/jpg"
+            />
+            <div
+              v-if="userSignature && !profile.signature"
+              class="mt-2 flex items-center gap-2 rounded-lg bg-elevated/50 p-2"
+            >
+              <img
+                :src="userSignature"
+                alt="Tanda tangan saat ini"
+                class="h-10 w-auto object-contain"
+              />
+              <span class="text-xs text-muted">
+                Tanda tangan terpasang saat ini
+              </span>
+            </div>
           </UFormField>
 
           <UButton

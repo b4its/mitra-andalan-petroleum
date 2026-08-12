@@ -13,6 +13,8 @@ const toast = useToast()
 const loading = ref(false)
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
+const dateFrom = ref('')
+const dateTo = ref('')
 
 const { toCSV, toExcel, toPDF } = useExport()
 
@@ -48,13 +50,15 @@ const { data: journals, refresh, pending: pendingJournals } = await useAsyncData
   async () => {
     const params: Record<string, string | number> = { page: 1, page_size: 50 }
     if (debouncedSearch.value) params.search = debouncedSearch.value
+    if (dateFrom.value) params.date_from = dateFrom.value
+    if (dateTo.value) params.date_to = dateTo.value
     const res = await get<{ items: AccountingJournal[] }>(
       '/accounting/journal',
       params
     )
     return res.items
   },
-  { default: () => [], watch: [debouncedSearch], server: false }
+  { default: () => [], watch: [debouncedSearch, dateFrom, dateTo], server: false }
 )
 
 const { data: accounts, pending: pendingAccounts } = await useAsyncData(
@@ -275,6 +279,19 @@ definePageMeta({ layout: 'accounting' })
                 placeholder="Cari nomor atau deskripsi..."
                 class="w-64"
               />
+              <UFormField label="Dari Tanggal">
+                <UInput v-model="dateFrom" type="date" />
+              </UFormField>
+              <UFormField label="Sampai Tanggal">
+                <UInput v-model="dateTo" type="date" />
+              </UFormField>
+              <UButton
+                icon="i-lucide-search"
+                :loading="pendingJournals"
+                @click="() => refresh()"
+              >
+                Tampilkan
+              </UButton>
               <UDropdownMenu
                 :items="[
                   { type: 'label', label: 'Ekspor Data' },

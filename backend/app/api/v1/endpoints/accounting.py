@@ -17,6 +17,7 @@ from app.schemas.accounting import (
     JournalEntryUpdate,
     JournalLineResponse,
     LedgerResponse,
+    LedgerListResponse,
     LedgerRow,
     TrialBalanceResponse,
     TrialBalanceRow,
@@ -354,23 +355,11 @@ async def _account_balance(db: AsyncSession, account_id: str) -> float:
     return round((credit or 0) - (debit or 0), 2)
 
 
-@router.get(
-    "/accounting/ledger",
-    response_model=LedgerResponse,
-    summary="Buku besar",
-    description="Riwayat mutasi per akun dengan saldo berjalan (running balance).",
-)
-async def get_ledger(
-    account_id: str = Query(...),
-    date_from: date | None = Query(default=None),
-    date_to: date | None = Query(default=None),
-    db: AsyncSession = Depends(get_db),
-):
-    account = (await db.execute(select(Account).where(Account.id == account_id))).scalar_one_or_none()
-    if not account:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    conditions = [JournalLine.account_id == account_id]
+async def _ledger_for_account(
+    db: AsyncSession, account: Account,
+    date_from: date | None, date_to: date | None,
+) -> LedgerResponse:
+    conditions = [JournalLine.account_id == account.id]
     if date_from:
         conditions.append(JournalEntry.entry_date >= date_from)
     if date_to:
@@ -388,7 +377,7 @@ async def get_ledger(
     # Saldo awal: mutasi sebelum date_from (kalau ada filter)
     opening_balance = 0.0
     if date_from:
-        pre_conditions = [JournalLine.account_id == account_id, JournalEntry.entry_date < date_from]
+        pre_conditions = [JournalLine.account_id == account.id, JournalEntry.entry_date < date_from]
         pre = await db.execute(
             select(
                 func.coalesce(func.sum(JournalLine.debit), 0.0),
@@ -431,6 +420,44 @@ async def get_ledger(
         closing_balance=balance,
         rows=ledger_rows,
     )
+
+
+@router.get(
+    "/accounting/ledger",
+    response_model=LedgerResponse,
+    summary="Buku besar",
+    description="Riwayat mutasi per akun dengan saldo berjalan (running balance).",
+)
+async def get_ledger(
+    account_id: str = Query(...),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    account = (await db.execute(select(Account).where(Account.id == account_id))).scalar_one_or_none()
+    if not account:
+        raise HTTPException(status_code=404, detail="Not found")
+    return await _ledger_for_account(db, account, date_from, date_to)
+
+
+@router.get(
+    "/accounting/ledger-all",
+    response_model=LedgerListResponse,
+    summary="Buku besar semua akun",
+    description="Buku besar untuk SELURUH akun sekaligus (saldo awal, mutasi, saldo akhir) dalam satu respons. Filter dengan range tanggal.",
+)
+async def get_ledger_all(
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    accounts = (await db.execute(select(Account).order_by(Account.code))).scalars().all()
+    items = []
+    for account in accounts:
+        ledger = await _ledger_for_account(db, account, date_from, date_to)
+        if ledger.opening_balance != 0 or ledger.closing_balance != 0 or ledger.rows:
+            items.append(ledger)
+    return LedgerListResponse(items=items)
 
 
 # ── Neraca Saldo (Trial Balance) ───────────────────────────────

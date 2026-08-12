@@ -11,6 +11,7 @@ class CustomerResponse(BaseModel):
     province: str | None = None
     city: str | None = None
     phone: str | None = None
+    phone2: str | None = None
     email: str | None = None
 
 
@@ -21,6 +22,7 @@ class CustomerCreate(BaseModel):
     province: str | None = None
     city: str | None = None
     phone: str | None = None
+    phone2: str | None = None
     email: str | None = None
 
 
@@ -31,4 +33,5 @@ class CustomerUpdate(BaseModel):
     province: str | None = None
     city: str | None = None
     phone: str | None = None
+    phone2: str | None = None
     email: str | None = None

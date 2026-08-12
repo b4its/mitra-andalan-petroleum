@@ -1,75 +1,108 @@
 <script setup lang="ts">
 import { h } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { ExportColumn } from '~/composables/useExport'
-import type {
-  AccountingAccount,
-  AccountingLedger,
-  AccountingLedgerRow
-} from '~/types/accounting'
+import type { AccountingLedger, AccountingLedgerRow } from '~/types/accounting'
 
 const { get } = useApi()
 
-const { toCSV, toExcel, toPDF } = useExport()
-
-const exportColumns: ExportColumn<AccountingLedgerRow>[] = [
-  { header: 'Tanggal', accessor: (row: AccountingLedgerRow) => formatDate(row.entry_date) },
-  { header: 'Nomor Jurnal', accessor: (row: AccountingLedgerRow) => row.entry_number },
-  { header: 'Deskripsi', accessor: (row: AccountingLedgerRow) => row.description },
-  { header: 'Debit', accessor: (row: AccountingLedgerRow) => row.debit },
-  { header: 'Kredit', accessor: (row: AccountingLedgerRow) => row.credit },
-  { header: 'Saldo', accessor: (row: AccountingLedgerRow) => row.balance }
-]
-
-function onExport(format: 'excel' | 'pdf' | 'csv') {
-  if (!ledger.value) return
-  const account = ledger.value
-  const filename = `buku-besar-${account.account_code}-${new Date().toISOString().slice(0, 10)}`
-  const totals = [
-    { label: 'Saldo Awal', value: account.opening_balance },
-    { label: 'Saldo Akhir', value: account.closing_balance }
-  ]
-  if (format === 'excel') toExcel(filename, 'Buku Besar', exportColumns, account.rows)
-  else if (format === 'pdf') toPDF(filename, `Buku Besar — ${account.account_code} · ${account.account_name}`, exportColumns, account.rows, { totals })
-  else toCSV(filename, exportColumns, account.rows)
-}
-
-const { data: accounts, pending: pendingAccounts } = await useAsyncData(
-  'accounting-accounts-ledger',
-  () => get<AccountingAccount[]>('/accounting/accounts'),
-  { default: () => [], server: false }
-)
-
-const accountItems = computed(() =>
-  accounts.value.map(account => ({
-    label: `${account.code} · ${account.name}`,
-    value: account.id
-  }))
-)
-
-const accountId = ref<string | undefined>(undefined)
 const dateFrom = ref('')
 const dateTo = ref('')
 
-const { data: ledger, refresh, status } = await useAsyncData(
-  'accounting-ledger',
+const { data: ledgers, refresh, pending } = await useAsyncData(
+  'accounting-ledger-all',
   async () => {
-    if (!accountId.value) return null
-    const params: Record<string, string | number> = {
-      account_id: accountId.value
-    }
+    const params: Record<string, string | number> = {}
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
-    return get<AccountingLedger>('/accounting/ledger', params)
+    const res = await get<{ items: AccountingLedger[] }>(
+      '/accounting/ledger-all',
+      params
+    )
+    return res.items || []
   },
-  { default: () => null, watch: [accountId], server: false }
+  { default: () => [], server: false }
 )
 
 async function onSearch() {
   await refresh()
 }
 
-const columns: TableColumn<AccountingLedgerRow>[] = [
+const expandedAccount = ref<string | null>(null)
+
+function toggleExpand(accountId: string) {
+  expandedAccount.value = expandedAccount.value === accountId ? null : accountId
+}
+
+const totalOpening = computed(() =>
+  ledgers.value.reduce((sum, item) => sum + (item.opening_balance || 0), 0)
+)
+const totalClosing = computed(() =>
+  ledgers.value.reduce((sum, item) => sum + (item.closing_balance || 0), 0)
+)
+
+const columns: TableColumn<AccountingLedger>[] = [
+  {
+    id: 'expand',
+    header: '',
+    cell: ({ row }) =>
+      h(
+        'button',
+        {
+          class: 'p-1',
+          onClick: () => toggleExpand(row.original.account_id)
+        },
+        h('span', expandedAccount.value === row.original.account_id ? '▾' : '▸')
+      )
+  },
+  {
+    accessorKey: 'account_code',
+    header: 'Kode Akun',
+    cell: ({ row }) => `${row.getValue('account_code')}`
+  },
+  {
+    accessorKey: 'account_name',
+    header: 'Nama Akun',
+    cell: ({ row }) => `${row.getValue('account_name')}`
+  },
+  {
+    accessorKey: 'account_type',
+    header: 'Tipe',
+    cell: ({ row }) => {
+      const typeMap: Record<string, string> = {
+        asset: 'Aset',
+        liability: 'Kewajiban',
+        equity: 'Ekuitas',
+        revenue: 'Pendapatan',
+        expense: 'Beban'
+      }
+      return typeMap[row.getValue('account_type') as string] ?? row.getValue('account_type')
+    }
+  },
+  {
+    accessorKey: 'opening_balance',
+    header: 'Saldo Awal',
+    meta: {
+      class: { th: 'text-right', td: 'text-right' }
+    },
+    cell: ({ row }) => formatCurrency(Number(row.getValue('opening_balance')) || 0)
+  },
+  {
+    accessorKey: 'closing_balance',
+    header: 'Saldo Akhir',
+    meta: {
+      class: { th: 'text-right', td: 'text-right' }
+    },
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'font-semibold' },
+        formatCurrency(Number(row.getValue('closing_balance')) || 0)
+      )
+  },
+  { id: 'actions', header: 'Aksi' }
+]
+
+const detailColumns: TableColumn<AccountingLedgerRow>[] = [
   {
     accessorKey: 'entry_date',
     header: 'Tanggal',
@@ -85,11 +118,7 @@ const columns: TableColumn<AccountingLedgerRow>[] = [
     header: 'Deskripsi',
     cell: ({ row }) => {
       const desc = row.getValue('description') as string
-      return h(
-        'span',
-        { class: 'truncate block max-w-72' },
-        desc
-      )
+      return h('span', { class: 'truncate block max-w-72' }, desc)
     }
   },
   {
@@ -129,27 +158,6 @@ const columns: TableColumn<AccountingLedgerRow>[] = [
   }
 ]
 
-const summaryCards = computed(() => {
-  const data = ledger.value
-  return [
-    {
-      title: 'Saldo Awal',
-      value: formatCurrency(data?.opening_balance ?? 0),
-      color: 'neutral' as const
-    },
-    {
-      title: 'Saldo Akhir',
-      value: formatCurrency(data?.closing_balance ?? 0),
-      color: 'primary' as const
-    },
-    {
-      title: 'Jumlah Mutasi',
-      value: `${data?.rows.length ?? 0} transaksi`,
-      color: 'info' as const
-    }
-  ]
-})
-
 definePageMeta({ layout: 'accounting' })
 </script>
 
@@ -166,7 +174,7 @@ definePageMeta({ layout: 'accounting' })
               Buku Besar
             </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
-              Riwayat mutasi per akun dengan saldo berjalan
+              Seluruh akun beserta mutasi dan saldonya (mirip neraca)
             </p>
           </div>
         </template>
@@ -177,30 +185,7 @@ definePageMeta({ layout: 'accounting' })
       <div class="p-4 lg:p-6">
         <section class="flex flex-col lg:gap-4">
           <UCard>
-            <div v-if="pendingAccounts" class="flex flex-wrap items-end gap-3">
-              <div class="space-y-2">
-                <USkeleton class="h-4 w-16 rounded" />
-                <USkeleton class="h-10 w-72 rounded-lg" />
-              </div>
-              <div class="space-y-2">
-                <USkeleton class="h-4 w-24 rounded" />
-                <USkeleton class="h-10 w-40 rounded-lg" />
-              </div>
-              <div class="space-y-2">
-                <USkeleton class="h-4 w-24 rounded" />
-                <USkeleton class="h-10 w-40 rounded-lg" />
-              </div>
-              <USkeleton class="h-10 w-32 rounded-lg" />
-            </div>
-            <div v-else class="flex flex-wrap items-end gap-3">
-              <UFormField label="Akun" class="w-72">
-                <USelect
-                  v-model="accountId"
-                  :items="accountItems"
-                  value-key="value"
-                  placeholder="Pilih akun"
-                />
-              </UFormField>
+            <div class="flex flex-wrap items-end gap-3">
               <UFormField label="Dari Tanggal">
                 <UInput v-model="dateFrom" type="date" />
               </UFormField>
@@ -209,47 +194,40 @@ definePageMeta({ layout: 'accounting' })
               </UFormField>
               <UButton
                 icon="i-lucide-search"
-                :disabled="!accountId"
+                :loading="pending"
                 @click="onSearch"
               >
                 Tampilkan
               </UButton>
-              <UDropdownMenu
-                :items="[
-                  { type: 'label', label: 'Ekspor Data' },
-                  { type: 'separator' },
-                  { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !ledger, onSelect: () => onExport('excel') },
-                  { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !ledger, onSelect: () => onExport('pdf') },
-                  { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !ledger, onSelect: () => onExport('csv') }
-                ]"
-              >
-                <UButton
-                  icon="i-lucide-download"
-                  color="neutral"
-                  variant="soft"
-                  :disabled="!ledger"
-                >
-                  Export
-                </UButton>
-              </UDropdownMenu>
             </div>
           </UCard>
 
-          <template v-if="ledger">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <UCard v-for="card in summaryCards" :key="card.title">
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                  {{ card.title }}
-                </p>
-                <p class="mt-1 text-xl font-bold">
-                  {{ card.value }}
-                </p>
-              </UCard>
-            </div>
-
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <UCard>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                Total Saldo Awal
+              </p>
+              <p class="mt-1 text-xl font-bold">
+                {{ formatCurrency(totalOpening) }}
+              </p>
+            </UCard>
+            <UCard>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                Total Saldo Akhir
+              </p>
+              <p class="mt-1 text-xl font-bold">
+                {{ formatCurrency(totalClosing) }}
+              </p>
+            </UCard>
+          </div>
+
+          <UCard>
+            <div v-if="pending" class="space-y-3">
+              <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+            </div>
+            <template v-else>
               <UTable
-                :data="ledger.rows"
+                :data="ledgers"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0',
@@ -258,24 +236,59 @@ definePageMeta({ layout: 'accounting' })
                   th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
                   td: 'border-b border-default'
                 }"
-              />
+              >
+                <template #actions-cell="{ row }">
+                  <UButton
+                    size="sm"
+                    color="neutral"
+                    variant="ghost"
+                    :icon="expandedAccount === row.original.account_id ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                    @click="toggleExpand(row.original.account_id)"
+                  >
+                    Detail
+                  </UButton>
+                </template>
+              </UTable>
               <p
-                v-if="ledger.rows.length === 0"
+                v-if="ledgers.length === 0"
                 class="py-6 text-center text-sm text-neutral-500"
               >
-                Belum ada mutasi untuk akun ini
+                Belum ada mutasi pada rentang tanggal ini
               </p>
-            </UCard>
-          </template>
 
-          <UAlert
-            v-else-if="status !== 'pending'"
-            title="Pilih Akun"
-            description="Pilih akun di atas untuk melihat buku besarnya."
-            icon="i-lucide-info"
-            color="info"
-            variant="soft"
-          />
+              <!-- Detail mutasi per akun yang diekspansi -->
+              <div
+                v-for="item in ledgers"
+                :key="item.account_id"
+                v-show="expandedAccount === item.account_id"
+                class="mt-4 border-t border-default pt-4"
+              >
+                <p class="mb-2 text-sm font-semibold">
+                  {{ item.account_code }} · {{ item.account_name }}
+                  <span class="text-neutral-500 dark:text-neutral-400">
+                    (Saldo Awal: {{ formatCurrency(item.opening_balance) }} → Saldo Akhir: {{ formatCurrency(item.closing_balance) }})
+                  </span>
+                </p>
+                <UTable
+                  :data="item.rows"
+                  :columns="detailColumns"
+                  :ui="{
+                    base: 'table-fixed border-separate border-spacing-0',
+                    thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
+                    tbody: '[&>tr]:last:[&>td]:border-b-0',
+                    th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
+                    td: 'border-b border-default'
+                  }"
+                />
+                <p
+                  v-if="item.rows.length === 0"
+                  class="py-3 text-center text-sm text-neutral-500"
+                >
+                  Tidak ada mutasi untuk akun ini pada rentang tanggal tersebut
+                </p>
+              </div>
+            </template>
+          </UCard>
         </section>
       </div>
     </template>

@@ -28,6 +28,19 @@ const details: Details = purchaseOrderDetails.value?.details as Details
 const products: Product[] = details.products || []
 const paymentAddress: PaymentAddress = details.paymentAddress || {}
 
+// Barcode tanda tangan (Created By / Approved By)
+const createdByBarcode = ref<string>('')
+const approvedByBarcode = ref<string>('')
+
+function buildSignatures() {
+  if (details?.signed?.createdBy) {
+    createdByBarcode.value = generateBarcodeDataUrl(details.signed.createdBy)
+  }
+  if (details?.signed?.approvedBy) {
+    approvedByBarcode.value = generateBarcodeDataUrl(details.signed.approvedBy)
+  }
+}
+
 // 2. Initialize the table body array with the Header row
 const tableBodyDetails: TableCell[][] = [
   [
@@ -82,7 +95,10 @@ for (let i = 0; i < 8; i++) {
         border: [true, false, true, true]
       },
       {
-        text: product.name || '',
+        text: product.name || ''
+          + (product.ppkb || product.pph || product.ppn
+            ? `\nPPKB: ${formatCurrency(product.ppkb || 0)} | PPH: ${formatPercent(product.pph || 0)} | PPN: ${formatCurrency(product.ppn || 0)}`
+            : ''),
         alignment: 'left',
         border: [true, false, true, true]
       },
@@ -424,10 +440,13 @@ const loadPdf = async () => {
                 {
                   text: [
                     {
-                      text: 'Created By\n\n\n\n\n\n\n'
+                      text: 'Created By\n\n\n\n'
                     },
+                    ...(createdByBarcode.value
+                      ? [{ image: createdByBarcode.value, width: 90 }]
+                      : []),
                     {
-                      text: `${details.signed.createdBy || ''}`
+                      text: `\n(${details.signed.createdBy || ''})`
                     }
                   ],
                   border: [true, false, false, true]
@@ -435,10 +454,13 @@ const loadPdf = async () => {
                 {
                   text: [
                     {
-                      text: 'Approved By\n\n\n\n\n\n\n'
+                      text: 'Approved By\n\n\n\n'
                     },
+                    ...(approvedByBarcode.value
+                      ? [{ image: approvedByBarcode.value, width: 90 }]
+                      : []),
                     {
-                      text: `${details.signed.approvedBy || ''}`
+                      text: `\n(${details.signed.approvedBy || ''})`
                     }
                   ],
                   border: [false, false, true, true]
@@ -457,6 +479,7 @@ const loadPdf = async () => {
 }
 
 onMounted(() => {
+  buildSignatures()
   loadPdf()
 })
 </script>

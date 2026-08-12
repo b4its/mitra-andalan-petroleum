@@ -11,7 +11,10 @@ class SupplierResponse(BaseModel):
     province: str | None = None
     city: str | None = None
     phone: str | None = None
+    phone2: str | None = None
     email: str | None = None
+    bank_name: str | None = None
+    bank_account: str | None = None
 
 
 class SupplierCreate(BaseModel):
@@ -21,7 +24,10 @@ class SupplierCreate(BaseModel):
     province: str | None = None
     city: str | None = None
     phone: str | None = None
+    phone2: str | None = None
     email: str | None = None
+    bank_name: str | None = None
+    bank_account: str | None = None
 
 
 class SupplierUpdate(BaseModel):
@@ -31,4 +37,7 @@ class SupplierUpdate(BaseModel):
     province: str | None = None
     city: str | None = None
     phone: str | None = None
+    phone2: str | None = None
     email: str | None = None
+    bank_name: str | None = None
+    bank_account: str | None = None

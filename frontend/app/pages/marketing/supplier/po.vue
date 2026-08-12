@@ -137,7 +137,10 @@ const letterOfferDetails = reactive<MarketingPODetailsState>({
       qty: 10000,
       unit: 'LITER',
       price: 17950,
-      totalPrice: 179500000
+      totalPrice: 179500000,
+      ppkb: 0,
+      pph: 0,
+      ppn: 0
     }
   ],
   totalProductsPrice: 179500000
@@ -282,6 +285,7 @@ definePageMeta({ layout: 'marketing' })
         v-model="letterOfferDetails"
         :offering-letters="offeringLetters"
         :has-previous="stepper?.hasPrev"
+        is-supplier
         @previous="previousNavigation"
         @submit="onFormSubmitToNext"
       />

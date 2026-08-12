@@ -8,6 +8,7 @@ import {
 defineProps<{
   hasPrevious: boolean | undefined
   offeringLetters: any
+  isSupplier?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -17,7 +18,7 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingPODetailsState>({ required: true })
 function emptyProduct() {
-  return { name: '', qty: 1, unit: '', price: 0, totalPrice: 0 }
+  return { name: '', qty: 1, unit: '', price: 0, totalPrice: 0, ppkb: 0, pph: 0, ppn: 0 }
 }
 
 const products = computed(() => state.value.products)
@@ -250,6 +251,59 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
               disabled
             />
           </UFormField>
+
+          <template v-if="isSupplier">
+            <UFormField
+              :name="`products.${index}.ppkb`"
+              label="PPKB"
+              class="w-full"
+            >
+              <UInputNumber
+                v-model="product.ppkb"
+                locale="id-ID"
+                :format-options="{
+                  style: 'currency',
+                  currency: 'IDR',
+                  currencyDisplay: 'narrowSymbol'
+                }"
+                :step="1"
+                :min="0"
+              />
+            </UFormField>
+
+            <UFormField
+              :name="`products.${index}.pph`"
+              label="PPH (%)"
+              class="w-full"
+            >
+              <UInputNumber
+                v-model="product.pph"
+                :min="0"
+                :step="0.01"
+                :format-options="{
+                  style: 'percent'
+                }"
+              />
+            </UFormField>
+
+            <UFormField
+              :name="`products.${index}.ppn`"
+              label="PPN"
+              class="w-full"
+            >
+              <UInputNumber
+                v-model="product.ppn"
+                locale="id-ID"
+                :format-options="{
+                  style: 'currency',
+                  currency: 'IDR',
+                  currencyDisplay: 'narrowSymbol'
+                }"
+                :step="1"
+                :min="0"
+              />
+            </UFormField>
+          </template>
 
           <UButton
             icon="i-lucide-trash-2"
