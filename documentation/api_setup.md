@@ -20,6 +20,7 @@ Interactive docs: [Swagger UI](http://localhost:8000/docs) | [ReDoc](http://loca
 - [Invoices](#invoices)
 - [Sales](#sales)
 - [Notifications](#notifications)
+- [Accounting](#accounting)
 - [Uploads](#uploads)
 - [Skenario Upload per Dokumen](#skenario-upload-per-dokumen)
 - [Stats](#stats)
@@ -96,6 +97,7 @@ curl -X GET http://localhost:8000/api/v1/customers
     "name": "PT Bintang Jaya",
     "address": "Jl. A. Yani No. 10",
     "phone": "08123456789",
+    "phone2": "08129876543",
     "email": "bintang@example.com"
   }
 ]
@@ -113,6 +115,7 @@ curl -X GET http://localhost:8000/api/v1/customers/uuid-customer-1
   "name": "PT Bintang Jaya",
   "address": "Jl. A. Yani No. 10",
   "phone": "08123456789",
+  "phone2": "08129876543",
   "email": "bintang@example.com"
 }
 ```
@@ -126,6 +129,7 @@ curl -X POST http://localhost:8000/api/v1/customers \
     "name": "PT Maju Mundur",
     "address": "Jl. Sudirman No. 5",
     "phone": "08765432100",
+    "phone2": "081234567001",
     "email": "maju@example.com"
   }'
 ```
@@ -136,6 +140,7 @@ curl -X POST http://localhost:8000/api/v1/customers \
   "name": "PT Maju Mundur",
   "address": "Jl. Sudirman No. 5",
   "phone": "08765432100",
+  "phone2": "081234567001",
   "email": "maju@example.com"
 }
 ```
@@ -146,7 +151,8 @@ curl -X POST http://localhost:8000/api/v1/customers \
 curl -X PUT http://localhost:8000/api/v1/customers/uuid-customer-baru \
   -H "Content-Type: application/json" \
   -d '{
-    "phone": "08111111111"
+    "phone": "08111111111",
+    "phone2": "081234567002"
   }'
 ```
 
@@ -156,6 +162,7 @@ curl -X PUT http://localhost:8000/api/v1/customers/uuid-customer-baru \
   "name": "PT Maju Mundur",
   "address": "Jl. Sudirman No. 5",
   "phone": "08111111111",
+  "phone2": "081234567002",
   "email": "maju@example.com"
 }
 ```
@@ -190,7 +197,10 @@ curl -X GET http://localhost:8000/api/v1/suppliers
     "name": "PT Solar Indo",
     "address": "Jl. Pelabuhan No. 1",
     "phone": "08111122233",
-    "email": "solar@example.com"
+    "phone2": "08129876543",
+    "email": "solar@example.com",
+    "bank_name": "BANK BCA",
+    "bank_account": "8801234567"
   }
 ]
 ```
@@ -207,7 +217,10 @@ curl -X GET http://localhost:8000/api/v1/suppliers/uuid-supplier-1
   "name": "PT Solar Indo",
   "address": "Jl. Pelabuhan No. 1",
   "phone": "08111122233",
-  "email": "solar@example.com"
+  "phone2": "08129876543",
+  "email": "solar@example.com",
+  "bank_name": "BANK BCA",
+  "bank_account": "8801234567"
 }
 ```
 
@@ -220,7 +233,10 @@ curl -X POST http://localhost:8000/api/v1/suppliers \
     "name": "PT Bahan Bakar Nusantara",
     "address": "Jl. Industri Raya No. 8",
     "phone": "08222233344",
-    "email": "bbn@example.com"
+    "phone2": "081234567003",
+    "email": "bbn@example.com",
+    "bank_name": "BANK BRI",
+    "bank_account": "002345678901"
   }'
 ```
 
@@ -230,7 +246,10 @@ curl -X POST http://localhost:8000/api/v1/suppliers \
   "name": "PT Bahan Bakar Nusantara",
   "address": "Jl. Industri Raya No. 8",
   "phone": "08222233344",
-  "email": "bbn@example.com"
+  "phone2": "081234567003",
+  "email": "bbn@example.com",
+  "bank_name": "BANK BRI",
+  "bank_account": "002345678901"
 }
 ```
 
@@ -240,7 +259,8 @@ curl -X POST http://localhost:8000/api/v1/suppliers \
 curl -X PUT http://localhost:8000/api/v1/suppliers/uuid-supplier-baru \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "update@example.com"
+    "email": "update@example.com",
+    "bank_account": "002345678902"
   }'
 ```
 
@@ -250,7 +270,10 @@ curl -X PUT http://localhost:8000/api/v1/suppliers/uuid-supplier-baru \
   "name": "PT Bahan Bakar Nusantara",
   "address": "Jl. Industri Raya No. 8",
   "phone": "08222233344",
-  "email": "update@example.com"
+  "phone2": "081234567003",
+  "email": "update@example.com",
+  "bank_name": "BANK BRI",
+  "bank_account": "002345678902"
 }
 ```
 
@@ -283,7 +306,9 @@ curl -X GET http://localhost:8000/api/v1/profiles
     "id": "uuid-user-1",
     "name": "Admin",
     "email": "admin@email.com",
-    "role": "admin"
+    "role": "admin",
+    "signature": "/media/profiles/xxxx.png",
+    "signature_caption": "Admin"
   }
 ]
 ```
@@ -299,7 +324,9 @@ curl -X GET http://localhost:8000/api/v1/profiles/uuid-user-1
   "id": "uuid-user-1",
   "name": "Admin",
   "email": "admin@email.com",
-  "role": "admin"
+  "role": "admin",
+  "signature": "/media/profiles/xxxx.png",
+  "signature_caption": "Admin"
 }
 ```
 
@@ -312,7 +339,9 @@ curl -X POST http://localhost:8000/api/v1/profiles \
     "name": "Staff Baru",
     "email": "staff@email.com",
     "password": "staff123",
-    "role": "staff"
+    "role": "staff",
+    "signature": "/media/profiles/xxxx.png",
+    "signature_caption": "Staff Baru - Marketing"
   }'
 ```
 
@@ -321,7 +350,9 @@ curl -X POST http://localhost:8000/api/v1/profiles \
   "id": "uuid-user-baru",
   "name": "Staff Baru",
   "email": "staff@email.com",
-  "role": "staff"
+  "role": "staff",
+  "signature": "/media/profiles/xxxx.png",
+  "signature_caption": "Staff Baru - Marketing"
 }
 ```
 
@@ -332,7 +363,9 @@ curl -X PUT http://localhost:8000/api/v1/profiles/uuid-user-baru \
   -H "Content-Type: application/json" \
   -d '{
     "role": "marketing",
-    "password": "newpass123"
+    "password": "newpass123",
+    "signature": "/media/profiles/xxxx.png",
+    "signature_caption": "Staff Baru - Marketing"
   }'
 ```
 
@@ -341,7 +374,9 @@ curl -X PUT http://localhost:8000/api/v1/profiles/uuid-user-baru \
   "id": "uuid-user-baru",
   "name": "Staff Baru",
   "email": "staff@email.com",
-  "role": "marketing"
+  "role": "marketing",
+  "signature": "/media/profiles/xxxx.png",
+  "signature_caption": "Staff Baru - Marketing"
 }
 ```
 
@@ -563,6 +598,40 @@ curl -X DELETE http://localhost:8000/api/v1/offering-letters/uuid-ol-baru
 {
   "message": "Deleted",
   "code": 200
+}
+```
+
+### GET /offering-letters/{id}/purchase-orders — PO & Delivery Order terkait OL
+
+Mengembalikan purchase order yang terhubung ke surat penawaran (via
+`id_offering_letters`) beserta **delivery order** terkait tiap PO (via
+`id_purchase_order`). Dipakai di rekap customer untuk menampilkan DO dari PO.
+
+```bash
+curl http://localhost:8000/api/v1/offering-letters/uuid-ol-1/purchase-orders
+```
+
+```json
+{
+  "items": [
+    {
+      "id": "uuid-po-1",
+      "po_number": "PO/2025/VI/100",
+      "type": "customer",
+      "customer_name": "PT Bintang Jaya",
+      "status": "po_received",
+      "total": 50000000,
+      "delivery_orders": [
+        {
+          "id": "uuid-do-1",
+          "do_number": "001/DO/MAP/VI/2025",
+          "transport_name": "PT Transport Logistik",
+          "fuel_total": 8000,
+          "status": "created"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -1364,6 +1433,70 @@ curl -X DELETE http://localhost:8000/api/v1/notifications/uuid-notif-baru
 
 ---
 
+## Accounting
+
+### GET /accounting/ledger-all — Buku besar seluruh akun
+
+Buku besar untuk **seluruh akun sekaligus** (mirip neraca) — saldo awal,
+mutasi, dan saldo akhir per akun. Bisa difilter dengan range tanggal.
+
+Query params: `?date_from=2026-06-01&date_to=2026-07-31`
+
+```bash
+curl "http://localhost:8000/api/v1/accounting/ledger-all?date_from=2026-06-01&date_to=2026-07-31"
+```
+
+```json
+{
+  "items": [
+    {
+      "account_id": "uuid-akun-1",
+      "account_code": "1-1000",
+      "account_name": "Kas Besar",
+      "account_type": "asset",
+      "opening_balance": 0,
+      "closing_balance": 50500000,
+      "rows": [
+        {
+          "id": "uuid-line-1",
+          "entry_number": "JRM-202606-0001",
+          "entry_date": "2026-06-05",
+          "description": "Penjualan BBM tunai ke PT. Bina Karya Sentosa",
+          "account_code": "1-1000",
+          "account_name": "Kas Besar",
+          "debit": 50000000,
+          "credit": 0,
+          "balance": 50000000
+        }
+      ]
+    }
+  ]
+}
+```
+
+### GET /accounting/ledger — Buku besar satu akun
+
+`?account_id=...&date_from=...&date_to=...` — mengembalikan satu objek
+`LedgerResponse` (bukan list) untuk akun tertentu.
+
+### Endpoint lain (ringkas)
+
+| Endpoint | Keterangan |
+| --- | --- |
+| `GET /accounting/accounts` | Daftar akun (chart of accounts) |
+| `POST /accounting/accounts` | Tambah akun |
+| `GET /accounting/journal` | Jurnal umum (filter `search`, `date_from`, `date_to`) |
+| `POST /accounting/journal` | Buat jurnal (pemasukan/pengeluaran = baris debit/kredit) |
+| `GET /accounting/income` | Pemasukan (kredit pada akun pendapatan), filter `date_from`/`date_to` |
+| `GET /accounting/expenses` | Pengeluaran (debit pada akun beban), filter `date_from`/`date_to` |
+| `GET /accounting/trial-balance` | Neraca saldo seluruh akun |
+| `GET /accounting/balance-sheet` | Neraca |
+| `GET /accounting/cashflow` | Rekap cashflow |
+| `GET /accounting/cost-recap` | Rekap biaya |
+| `GET /accounting/daily-cash` | Kas harian |
+
+---
+
 ## Uploads
 
 Upload file signature, dokumen, atau lampiran lainnya. Setiap upload memiliki record di database dan bisa dikaitkan ke dokumen induk melalui `document_type` + `document_id`.
@@ -1377,8 +1510,8 @@ Request: `multipart/form-data`
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `files` | File[] | Ya | Satu atau banyak file (max 50MB per file) |
-| `folder` | String | Tidak | Subfolder tujuan (`signatures`, `documents`, `returned`, `general`) |
-| `document_type` | String | Tidak | Tipe dokumen induk: `ol`, `po`, `do`, `invoice` |
+| `folder` | String | Tidak | Subfolder tujuan (`signatures`, `documents`, `returned`, `profiles`, `general`) |
+| `document_type` | String | Tidak | Tipe dokumen induk: `ol`, `po`, `do`, `invoice`, `profile` |
 | `document_id` | String | Tidak | UUID dokumen induk (wajib jika `document_type` diisi) |
 
 Format file yang diizinkan: JPG, JPEG, PNG, GIF, BMP, WebP, SVG, PDF, DOC, DOCX, XLS, XLSX.

@@ -76,13 +76,16 @@ NUXT_PUBLIC_SITE_URL=
 ## Seed Data
 
 Database otomatis terisi data awal saat pertama kali backend dijalankan
-(lihat `backend/app/db/seed.py`):
+(lihat `backend/app/db/seed.py` dan `backend/app/db/migrate.py`):
 
-- 5 user (admin, marketing, finance, operations, accounting)
-- 3 customer, 2 supplier
-- 15 offering letters, 10 purchase orders
+- 5 user (admin, marketing, finance, operations, accounting) — dengan caption tanda tangan
+- 3 customer (termasuk telepon PIC), 2 supplier (termasuk bank & no. rekening)
+- 15 offering letters (PPH, term pembayaran, tenggat PO), 10 purchase orders (PO supplier berisi PPKB/PPH/PPN)
 - 15 delivery orders, 15 invoices
 - 5 sales, 8 notifications, akun + jurnal akuntansi
+
+Sebelum seed, migrasi skema dijalankan otomatis (`python -m app.db.migrate`)
+agar kolom baru (signature, bank_account, phone2, dll.) tersedia.
 
 Panduan lengkap menjalankan seeder (fresh install, reseed database yang sudah
 terisi, dan verifikasi) ada di [seeding.md](seeding.md).
