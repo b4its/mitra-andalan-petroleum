@@ -112,12 +112,16 @@ def _to_response(do, customer_name):
     "/delivery-orders",
     response_model=PaginatedResponse[DeliveryOrderResponse],
     summary="List delivery orders",
-    description="Daftar delivery order. Filter `status_rilis_dana=true` untuk Operations.",
+    description="Daftar delivery order. Filter `status_rilis_dana=true` untuk Operations. Filter `purchase_order_id` untuk riwayat DO dari satu PO.",
 )
 async def list_delivery_orders(
     page: int = 1, page_size: int = 20,
     search: str | None = Query(default=None),
     status_rilis_dana: bool | None = Query(default=None),
+    purchase_order_id: str | None = Query(
+        default=None,
+        description="Filter DO yang berparent ke purchase order ini",
+    ),
     db: AsyncSession = Depends(get_db)
 ):
     base = select(DeliveryOrder)
@@ -128,6 +132,8 @@ async def list_delivery_orders(
             DeliveryOrder.status.ilike(f"%{search}%"),
             DeliveryOrder.po_number.ilike(f"%{search}%"),
         ))
+    if purchase_order_id:
+        base = base.where(DeliveryOrder.id_purchase_order == purchase_order_id)
     if status_rilis_dana is not None:
         if status_rilis_dana:
             base = base.where(

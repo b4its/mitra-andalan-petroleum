@@ -64,6 +64,24 @@ def test_create_do_negative_fuel(client: TestClient, seeded_db):
     assert response.status_code in (201, 422)
 
 
+def test_list_do_filter_by_purchase_order(client: TestClient, seeded_db):
+    """Filter DO berdasarkan id_purchase_order (riwayat DO dari satu PO)."""
+    po_list = client.get("/api/v1/purchase-orders?type=customer&page=1&page_size=10")
+    po = po_list.json()["items"][0]
+    do_resp = client.post("/api/v1/delivery-orders", json={
+        "do_number": "DO/FILTER/PO/001", "id_purchase_order": po["id"]
+    })
+    assert do_resp.status_code == 201
+    response = client.get(
+        f"/api/v1/delivery-orders?purchase_order_id={po['id']}&page=1&page_size=100"
+    )
+    assert response.status_code == 200
+    items = response.json()["items"]
+    assert items
+    for do_ in items:
+        assert do_["id_purchase_order"] == po["id"]
+
+
 def test_update_do(client: TestClient, seeded_db):
     list_resp = client.get("/api/v1/delivery-orders?page=1&page_size=10")
     do_id = list_resp.json()["items"][0]["id"]

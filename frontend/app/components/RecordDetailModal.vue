@@ -94,6 +94,13 @@ const { data: uploads, pending: uploadsPending } = await useAsyncData(
 interface RelatedPO {
   id: string
   po_number: string
+  type?: string
+  customer_name?: string
+  supplier_name?: string
+  date?: string
+  total?: number
+  status?: string
+  created_at?: string
   id_offering_letters?: string | null
 }
 
@@ -102,6 +109,28 @@ interface RelatedDO {
   do_number: string
   po_number?: string | null
   id_purchase_order?: string | null
+}
+
+interface RelatedDODetail {
+  id: string
+  do_number: string
+  customer_id: string | null
+  customer_name: string
+  id_purchase_order: string | null
+  po_number: string | null
+  transport_name: string | null
+  fuel_total: number
+  status: string
+  status_rilis_dana: boolean
+  rilis_dana_at: string | null
+  status_ready_order: boolean
+  ready_order_at: string | null
+  status_selesai_dikirim: boolean
+  selesai_dikirim_at: string | null
+  status_lunas_ongkir: boolean
+  lunas_ongkir_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 interface InvoiceDetails {
@@ -172,6 +201,23 @@ const { data: doRelatedPo, pending: doRelatedPoPending } = await useAsyncData(
     return (res.items || []).find(po => po.po_number === poNumber) || null
   },
   { watch: [() => props.id, () => props.type, () => data.value], default: null }
+)
+
+// ── Fetch riwayat DO yang bereferensi ke PO (parent) ──────────
+const { data: poRelatedDos, pending: poRelatedDosPending } = await useAsyncData(
+  () => `record-po-dos-${props.type}-${props.id}`,
+  async () => {
+    if (!props.id || props.type !== 'po' || !data.value) return []
+    const poId = (data.value as RecordDetail).id
+    if (!poId) return []
+    const res = await get<{ items: RelatedDODetail[] }>('/delivery-orders', {
+      purchase_order_id: poId,
+      page: 1,
+      page_size: 100
+    })
+    return res.items || []
+  },
+  { watch: [() => props.id, () => props.type, () => data.value], default: () => [] }
 )
 
 // ── Fetch uploads PO + OL terkait delivery order ───────────────
@@ -630,6 +676,120 @@ async function downloadFile(upload: RecordUpload) {
               </p>
             </div>
           </div>
+
+          <!-- ── Riwayat Delivery Order (parent PO) ── -->
+          <div class="border-t border-default pt-3">
+            <div class="flex items-center justify-between mb-3">
+              <p
+                class="text-xs font-semibold text-muted uppercase tracking-wide"
+              >
+                Riwayat Delivery Order dari PO ini
+              </p>
+              <UBadge variant="subtle" color="primary">
+                {{ poRelatedDos?.length || 0 }} DO
+              </UBadge>
+            </div>
+
+            <!-- Loading -->
+            <div v-if="poRelatedDosPending" class="space-y-2">
+              <USkeleton v-for="i in 2" :key="i" class="h-16 rounded-lg" />
+            </div>
+
+            <!-- Kosong -->
+            <p v-else-if="!poRelatedDos?.length" class="text-sm text-dimmed">
+              Belum ada Delivery Order yang dibuat dari Purchase Order ini.
+            </p>
+
+            <!-- Daftar DO -->
+            <div v-else class="flex flex-col gap-3">
+              <div
+                v-for="doItem in poRelatedDos"
+                :key="doItem.id"
+                class="rounded-lg border border-default p-3 space-y-2"
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  <UIcon name="i-lucide-truck" class="size-4 text-primary shrink-0" />
+                  <p class="font-semibold">
+                    {{ fmt(doItem.do_number) }}
+                  </p>
+                  <UBadge
+                    :color="doStatusColor[doItem.status] ?? 'neutral'"
+                    variant="subtle"
+                    class="ml-auto"
+                  >
+                    {{ doStatusLabel[doItem.status] ?? doItem.status }}
+                  </UBadge>
+                </div>
+
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                  <div>
+                    <p class="text-muted">Customer</p>
+                    <p class="font-medium truncate">{{ fmt(doItem.customer_name) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-muted">Volume BBM</p>
+                    <p class="font-medium">{{ formatNumber(doItem.fuel_total ?? 0) }} L</p>
+                  </div>
+                  <div>
+                    <p class="text-muted">Transportir</p>
+                    <p class="font-medium truncate">{{ fmt(doItem.transport_name) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-muted">Dibuat</p>
+                    <p class="font-medium">{{ fmtDateTime(doItem.created_at) }}</p>
+                  </div>
+                </div>
+
+                <!-- Alur pengiriman -->
+                <div class="flex flex-wrap gap-x-4 gap-y-1.5 pt-1.5 border-t border-default text-xs">
+                  <span class="flex items-center gap-1">
+                    <UIcon
+                      name="i-lucide-circle-dollar-sign"
+                      class="size-3.5"
+                      :class="doItem.status_rilis_dana ? 'text-success' : 'text-muted'"
+                    />
+                    Rilis Dana:
+                    <span class="font-medium">
+                      {{ doItem.status_rilis_dana ? 'Sudah' : 'Belum' }}
+                    </span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <UIcon
+                      name="i-lucide-package"
+                      class="size-3.5"
+                      :class="doItem.status_ready_order ? 'text-info' : 'text-muted'"
+                    />
+                    Siap Kirim:
+                    <span class="font-medium">
+                      {{ doItem.status_ready_order ? 'Siap' : '-' }}
+                    </span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <UIcon
+                      name="i-lucide-check-circle"
+                      class="size-3.5"
+                      :class="doItem.status_selesai_dikirim ? 'text-success' : 'text-muted'"
+                    />
+                    Selesai Dikirim:
+                    <span class="font-medium">
+                      {{ doItem.status_selesai_dikirim ? 'Selesai' : '-' }}
+                    </span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <UIcon
+                      name="i-lucide-truck"
+                      class="size-3.5"
+                      :class="doItem.status_lunas_ongkir ? 'text-success' : 'text-muted'"
+                    />
+                    Lunas Ongkir:
+                    <span class="font-medium">
+                      {{ doItem.status_lunas_ongkir ? 'Lunas' : '-' }}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- ── Delivery Order ── -->
@@ -709,6 +869,77 @@ async function downloadFile(upload: RecordUpload) {
               <p class="font-mono text-xs text-muted truncate">
                 {{ data.id }}
               </p>
+            </div>
+          </div>
+
+          <!-- ── Informasi Purchase Order (parent) ── -->
+          <div class="border-t border-default pt-3">
+            <div class="flex items-center justify-between mb-3">
+              <p
+                class="text-xs font-semibold text-muted uppercase tracking-wide"
+              >
+                Purchase Order (Parent)
+              </p>
+              <UBadge variant="subtle" color="info">Parent</UBadge>
+            </div>
+
+            <!-- Loading -->
+            <div v-if="doRelatedPoPending" class="space-y-2">
+              <USkeleton v-for="i in 2" :key="i" class="h-12 rounded-lg" />
+            </div>
+
+            <!-- Tidak ada PO -->
+            <p v-else-if="!doRelatedPo" class="text-sm text-dimmed">
+              Tidak ada Purchase Order terkait Delivery Order ini.
+            </p>
+
+            <!-- Detail PO -->
+            <div
+              v-else
+              class="rounded-lg border border-default p-3 space-y-3"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <UIcon name="i-lucide-shopping-cart" class="size-4 text-primary shrink-0" />
+                <p class="font-semibold">
+                  {{ fmt(doRelatedPo.po_number) }}
+                </p>
+                <UBadge
+                  :color="doRelatedPo.type === 'customer' ? 'info' : 'warning'"
+                  variant="subtle"
+                  class="ml-auto capitalize"
+                >
+                  {{ doRelatedPo.type }}
+                </UBadge>
+              </div>
+
+              <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                <div>
+                  <p class="text-muted">Customer</p>
+                  <p class="font-medium truncate">{{ fmt(doRelatedPo.customer_name) }}</p>
+                </div>
+                <div>
+                  <p class="text-muted">Supplier</p>
+                  <p class="font-medium truncate">{{ fmt(doRelatedPo.supplier_name) }}</p>
+                </div>
+                <div>
+                  <p class="text-muted">Tanggal PO</p>
+                  <p class="font-medium">{{ fmt(doRelatedPo.date) }}</p>
+                </div>
+                <div>
+                  <p class="text-muted">Total PO</p>
+                  <p class="font-medium text-primary">
+                    {{ fmtCurrency(doRelatedPo.total) }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-muted">Status</p>
+                  <p class="font-medium capitalize">{{ fmt(doRelatedPo.status) }}</p>
+                </div>
+                <div>
+                  <p class="text-muted">Dibuat</p>
+                  <p class="font-medium">{{ fmtDateTime(doRelatedPo.created_at) }}</p>
+                </div>
+              </div>
             </div>
           </div>
 
