@@ -151,27 +151,6 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
         </UFormField>
       </div>
 
-      <UFormField
-        name="offeringLetter"
-        label="Nomor Surat Purchase Order Customer"
-        required
-      >
-        <USelectMenu
-          v-model="state.selectedOfferingLetter"
-          :items="offeringLetters"
-          placeholder="Pilih Surat Purchase Order Customer"
-          value-key="value"
-          :ui="{ content: 'min-w-fit' }"
-          class="w-full"
-        >
-          <template #item-label="{ item }">
-            {{ item.label }}
-
-            <span class="text-muted text-xs"> ({{ item.olNumber }}) </span>
-          </template>
-        </USelectMenu>
-      </UFormField>
-
       <USeparator />
 
       <div class="space-y-3">

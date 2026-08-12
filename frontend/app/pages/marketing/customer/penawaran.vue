@@ -55,7 +55,9 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
   unloadingProcedure: 'Dibongkar dari truk tangki ke tangki timbun customer',
   volumeUnit: 'LITER',
   volumeTolerance: 0.005,
-  paymentTerm: '30 Hari',
+  paymentMethod: 'kredit',
+  cashMethod: undefined,
+  paymentTerm: '1 - 14',
   latePenalty: 0.01,
   servicePattern: 'Pengiriman truk tangki ke lokasi customer',
   personInCharge: {

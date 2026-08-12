@@ -156,16 +156,57 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
       <USeparator />
 
       <UFormField
-        name="paymentTerm"
-        label="Term Pembayaran"
-        description="Satuan hari (contoh: 30 Hari) atau custom (CBD, CAD, dll)"
+        name="paymentMethod"
+        label="Metode Pembayaran"
         required
       >
-        <UInput
+        <USelect
+          v-model="state.paymentMethod"
+          :items="[
+            { label: 'Cash', value: 'cash' },
+            { label: 'Kredit', value: 'kredit' }
+          ]"
+          value-key="value"
+          placeholder="Pilih metode pembayaran"
+          class="w-full"
+        />
+      </UFormField>
+
+      <UFormField
+        v-if="state.paymentMethod === 'cash'"
+        name="cashMethod"
+        label="Jenis Cash"
+        required
+      >
+        <USelect
+          v-model="state.cashMethod"
+          :items="[
+            { label: 'Cash Before Delivery', value: 'cash_before_delivery' },
+            { label: 'Cash After Delivery', value: 'cash_after_delivery' }
+          ]"
+          value-key="value"
+          placeholder="Pilih jenis cash"
+          class="w-full"
+        />
+      </UFormField>
+
+      <UFormField
+        name="paymentTerm"
+        :label="state.paymentMethod === 'cash' ? 'Term Pembayaran (Cash)' : 'Term Pembayaran (Kredit)'"
+        required
+      >
+        <USelect
           v-model="state.paymentTerm"
-          type="text"
-          autocomplete="off"
-          placeholder="30 Hari / CBD / CAD"
+          :items="[
+            { label: '1 - 14', value: '1 - 14' },
+            { label: '15 - 28', value: '15 - 28' },
+            { label: '15 - 29', value: '15 - 29' },
+            { label: '15 - 30', value: '15 - 30' },
+            { label: '15 - 31', value: '15 - 31' }
+          ]"
+          value-key="value"
+          placeholder="Pilih periode tenggat pembayaran"
+          class="w-full"
         />
       </UFormField>
 

@@ -60,6 +60,8 @@ export const marketingOLDetailsSchema = z.object({
   unloadingProcedure: z.string(),
   volumeUnit: z.string(),
   volumeTolerance: z.number().min(0),
+  paymentMethod: z.enum(['cash', 'kredit']),
+  cashMethod: z.enum(['cash_before_delivery', 'cash_after_delivery']).optional(),
   paymentTerm: z.string().min(1, 'Wajib diisi'),
   latePenalty: z.number().min(0.01),
   servicePattern: z.string(),

@@ -110,6 +110,8 @@ export interface OfferingLetterDetails {
   unloadingProcedure: string
   volumeUnit: string
   volumeTolerance: number
+  paymentMethod?: string
+  cashMethod?: string
   paymentTerm: string
   latePenalty: number
   servicePattern: string

@@ -78,7 +78,9 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
     || 'Dibongkar dari truk tangki ke tangki timbun customer',
   volumeUnit: offeringLetter.value?.details.volumeUnit || 'LITER',
   volumeTolerance: offeringLetter.value?.details.volumeTolerance || 0.005,
-  paymentTerm: offeringLetter.value?.details.paymentTerm || '30 Hari',
+  paymentMethod: (offeringLetter.value?.details.paymentMethod as 'cash' | 'kredit') || 'kredit',
+  cashMethod: (offeringLetter.value?.details.cashMethod as 'cash_before_delivery' | 'cash_after_delivery' | undefined) || undefined,
+  paymentTerm: offeringLetter.value?.details.paymentTerm || '1 - 14',
   latePenalty: offeringLetter.value?.details.latePenalty || 0.01,
   servicePattern: offeringLetter.value?.details.servicePattern
     || 'Pengiriman truk tangki ke lokasi customer',
