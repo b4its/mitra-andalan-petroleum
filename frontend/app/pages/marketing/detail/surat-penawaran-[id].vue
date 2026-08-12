@@ -101,6 +101,18 @@ const signatureBlock = computed(() => {
   ] as any[]
 })
 
+const paymentMethodLabel = computed(() => {
+  if (!details) return ''
+  const method = details.paymentMethod
+  const cashMethod = details.cashMethod
+  const term = details.paymentTerm || ''
+  if (method === 'cash') {
+    const cashLabel = cashMethod === 'cash_before_delivery' ? 'Cash Before Delivery' : 'Cash After Delivery'
+    return `${cashLabel} — ${term}`
+  }
+  return `Kredit — ${term}`
+})
+
 const baseWithPpkb = computed(() => {
   if (!details) return 0
   return details.fuelPrices.basePrice + details.fuelPrices.sellingPrice.ppkb
@@ -317,13 +329,13 @@ const loadPdf = async () => {
                   text: '7.'
                 },
                 {
-                  text: 'Term Pembayaran'
+                  text: 'Metode & Term Pembayaran'
                 },
                 {
                   text: ':'
                 },
                 {
-                  text: `${details?.paymentTerm}`
+                  text: `${paymentMethodLabel.value}`
                 }
               ],
               [
