@@ -3,6 +3,7 @@ export interface DeliveryOrdersDetails {
   do_number: string
   customer_id: string
   customer_name: string
+  id_purchase_order: string
   po_number: string
   transport_name: string
   fuel_total: number
@@ -65,6 +66,16 @@ export interface PoCustomerNumber {
   fuelTotalQty: number
 }
 
+export interface PoCustomerNumber {
+  id: string
+  purchaseOrderNumber: string
+  customerName: string
+  customerId: string
+  dateCreated: Date
+  dateChanged: Date
+  fuelTotalQty: number
+}
+
 export interface DriverInformation {
   name: string
   phoneNumber: string
@@ -106,6 +117,7 @@ export interface TransportInformation {
 export interface DeliveryOrderPost {
   do_number: string
   customer_id: string
+  id_purchase_order: string
   po_number: string
   transport_name: string | null
   date: string | null

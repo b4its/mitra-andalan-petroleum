@@ -43,16 +43,23 @@ async def _get_customer_name(db, customer_id):
     return c_obj.name if c_obj else ""
 
 
-async def _sync_offering_letters(db: AsyncSession, po_number: str | None, do_id: str) -> None:
-    if not po_number:
-        return
-    po_result = await db.execute(
-        select(PurchaseOrder).where(
-            PurchaseOrder.type == "customer",
-            PurchaseOrder.po_number == po_number,
-        ).limit(1)
-    )
-    po = po_result.scalar_one_or_none()
+async def _sync_offering_letters(
+    db: AsyncSession, po_id: str | None, po_number: str | None, do_id: str
+) -> None:
+    po = None
+    if po_id:
+        po_result = await db.execute(
+            select(PurchaseOrder).where(PurchaseOrder.id == po_id)
+        )
+        po = po_result.scalar_one_or_none()
+    if po is None and po_number:
+        po_result = await db.execute(
+            select(PurchaseOrder).where(
+                PurchaseOrder.type == "customer",
+                PurchaseOrder.po_number == po_number,
+            ).limit(1)
+        )
+        po = po_result.scalar_one_or_none()
     if not po:
         return
     try:
@@ -84,6 +91,7 @@ def _to_response(do, customer_name):
     return DeliveryOrderResponse(
         id=do.id, do_number=do.do_number,
         customer_id=do.customer_id, customer_name=customer_name,
+        id_purchase_order=do.id_purchase_order,
         po_number=do.po_number, transport_name=do.transport_name,
         fuel_total=do.fuel_total, status=do.status,
         details=_details_from_str(do.details),
@@ -164,16 +172,34 @@ async def get_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     response_model=DeliveryOrderResponse,
     status_code=201,
     summary="Buat delivery order",
+    description="Membuat DO baru. Jika id_purchase_order diberikan, data PO (po_number, customer, fuel_total) otomatis diambil dari PO.",
 )
 async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = Depends(get_db)):
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
+
+    # ── Resolusi PO parent ──────────────────────────────────────
+    po = None
+    if data.get("id_purchase_order"):
+        po_result = await db.execute(
+            select(PurchaseOrder).where(PurchaseOrder.id == data["id_purchase_order"])
+        )
+        po = po_result.scalar_one_or_none()
+        if not po:
+            raise HTTPException(status_code=400, detail="Purchase order tidak ditemukan")
+        data["id_purchase_order"] = po.id
+        data["po_number"] = data.get("po_number") or po.po_number
+        if not data.get("customer_id"):
+            data["customer_id"] = po.customer_id
+        if not data.get("fuel_total"):
+            data["fuel_total"] = po.total or 0
+
     do = DeliveryOrder(**data)
     db.add(do)
     await db.flush()
     await db.refresh(do)
     cn = await _get_customer_name(db, do.customer_id)
-    await _sync_offering_letters(db, do.po_number, do.id)
+    await _sync_offering_letters(db, do.id_purchase_order, do.po_number, do.id)
     await create_document_notification(
         db,
         title="Delivery Order Baru Dibuat",
@@ -199,10 +225,17 @@ async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSes
         if key == "details":
             val = _details_to_str(val)
         setattr(do, key, val)
+    if do.id_purchase_order:
+        po_result = await db.execute(
+            select(PurchaseOrder).where(PurchaseOrder.id == do.id_purchase_order)
+        )
+        po = po_result.scalar_one_or_none()
+        if po and not do.po_number:
+            do.po_number = po.po_number
     await db.flush()
     await db.refresh(do)
     cn = await _get_customer_name(db, do.customer_id)
-    await _sync_offering_letters(db, do.po_number, do.id)
+    await _sync_offering_letters(db, do.id_purchase_order, do.po_number, do.id)
     return _to_response(do, cn)
 
 

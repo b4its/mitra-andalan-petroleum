@@ -94,22 +94,37 @@ async def lifespan(app: FastAPI):
             "`status_selesai_dikirim` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika pengiriman sudah selesai'",
             "`lunas_ongkir_at` DATETIME NULL COMMENT 'Waktu pelunasan ongkir (WITA)'",
             "`status_lunas_ongkir` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'True jika ongkir sudah dilunasi'",
+            "`id_purchase_order` VARCHAR(36) NULL COMMENT 'ID purchase order (parent). Satu PO dapat memiliki banyak DO'",
         ]
         for col in do_new_cols:
             try:
                 await conn.execute(text(f"ALTER TABLE `delivery_orders` ADD COLUMN {col}"))
             except Exception:
                 pass
-        # Kolom baru purchase_orders: relasi ke OL dan DO
+        # Kolom baru purchase_orders: relasi ke OL
         po_new_cols = [
             "`id_offering_letters` TEXT NULL COMMENT 'JSON array: ID offering letter terkait'",
-            "`id_delivery_order` VARCHAR(36) NULL COMMENT 'ID delivery order yang dibuat otomatis'",
         ]
         for col in po_new_cols:
             try:
                 await conn.execute(text(f"ALTER TABLE `purchase_orders` ADD COLUMN {col}"))
             except Exception:
                 pass
+        # Backfill: hubungkan DO lama (DO-DRAFT atau tanpa id_purchase_order)
+        # ke PO parent berdasarkan po_number. Satu PO dapat memiliki banyak DO.
+        try:
+            await conn.execute(text(
+                """
+                UPDATE delivery_orders do
+                JOIN purchase_orders po
+                  ON po.po_number = do.po_number
+                SET do.id_purchase_order = po.id
+                WHERE do.id_purchase_order IS NULL
+                  AND do.po_number IS NOT NULL
+                """
+            ))
+        except Exception:
+            pass
         await conn.run_sync(Base.metadata.create_all)
     async with async_session_factory() as session:
         from app.db.seed import seed_database
