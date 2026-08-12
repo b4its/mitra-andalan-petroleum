@@ -98,6 +98,21 @@ async def run_migrations():
             ))
         except Exception:
             pass
+        # Kolom rilis dana untuk purchase_orders (sedot dari model delivery_orders)
+        try:
+            await conn.execute(text(
+                "ALTER TABLE `purchase_orders` ADD COLUMN `rilis_dana_at` DATETIME NULL "
+                "COMMENT 'Waktu rilis dana (WITA)'"
+            ))
+        except Exception:
+            pass
+        try:
+            await conn.execute(text(
+                "ALTER TABLE `purchase_orders` ADD COLUMN `status_rilis_dana` TINYINT(1) NOT NULL DEFAULT 0 "
+                "COMMENT 'True jika dana sudah dirilis'"
+            ))
+        except Exception:
+            pass
         # Buat relasi customer_id nullable agar dokumen tetap bisa dibuat
         # meskipun customer belum terdaftar (mencegah error insert).
         for table in ["offering_letters", "delivery_orders", "invoices"]:
