@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import angkaTerbilang from '@develoka/angka-terbilang-js'
 import logoImage from '~/assets/images/map-logo.jpeg'
+import type { ResUploads } from '~/types'
 import type { Customer, OfferingLetterPost } from '~/types/marketing'
 
 const pdfLink = ref<string | null>(null)
@@ -30,6 +31,17 @@ const { data: customerDetail, pending: pendingCustomer } = await useAsyncData(
 
 const details = offeringLetter.value?.details
 
+const { data: signature } = await useAsyncData(
+  'signature',
+  async () => {
+    const res = await get<ResUploads[]>(
+      `/uploads?document_type=ol&document_id=${details?.offeringLetterNumber}`
+    )
+    return res[0]?.url || ''
+  },
+  { default: () => '' }
+)
+
 const { user } = useAuth()
 
 const baseWithPpkb = computed(() => {
@@ -40,6 +52,11 @@ const baseWithPpkb = computed(() => {
 const loadPdf = async () => {
   const pdfMake = usePDFMake()
   if (!pdfMake) return
+
+  let signatureImage = ''
+  if (signature.value) {
+    signatureImage = await toBase64(signature.value).catch(() => '')
+  }
 
   pdfLink.value = await pdfMake
     .createPdf({
@@ -509,18 +526,20 @@ const loadPdf = async () => {
         {
           text: 'Hormat Kami,',
           marginTop: 15,
-          marginBottom: 25
+          marginBottom: signature.value ? 5 : 30
         },
-        // {
-        //   text: "Placeholder Signature MAP",
-        //   italics: true,
-        //   marginTop: 25,
-        //   marginBottom: 25,
-        // },
+        ...(signatureImage
+          ? [
+              {
+                image: signatureImage,
+                width: 75
+              }
+            ]
+          : []),
         {
           text: `(${details?.offeror.name})`,
           bold: true,
-          marginTop: 25
+          marginTop: signature.value ? 5 : 30
         },
         {
           layout: {
