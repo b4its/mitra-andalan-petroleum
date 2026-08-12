@@ -7,6 +7,8 @@ import type { AccountingIncomeExpenseRow } from '~/types/accounting'
 const { get } = useApi()
 const { toCSV, toExcel, toPDF } = useExport()
 
+const entryModalOpen = ref(false)
+
 const dateFrom = ref('')
 const dateTo = ref('')
 
@@ -147,6 +149,13 @@ definePageMeta({ layout: 'accounting' })
                   Export
                 </UButton>
               </UDropdownMenu>
+              <UButton
+                icon="i-lucide-plus"
+                color="primary"
+                @click="entryModalOpen = true"
+              >
+                Tambah Pengeluaran
+              </UButton>
             </div>
           </UCard>
 
@@ -197,6 +206,12 @@ definePageMeta({ layout: 'accounting' })
             </UCard>
           </template>
         </section>
+
+        <AccountingEntryModal
+          v-model:open="entryModalOpen"
+          mode="expense"
+          @saved="() => refresh()"
+        />
       </div>
     </template>
   </UDashboardPanel>

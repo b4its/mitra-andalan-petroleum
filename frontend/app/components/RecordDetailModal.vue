@@ -892,9 +892,9 @@ async function downloadFile(upload: RecordUpload) {
               <p
                 class="text-xs font-semibold text-muted uppercase tracking-wide"
               >
-                Purchase Order (Parent)
+                Purchase Order
               </p>
-              <UBadge variant="subtle" color="info">Parent</UBadge>
+
             </div>
 
             <!-- Loading -->

@@ -79,7 +79,7 @@ uvicorn app.main:app --reload --port 8000
 | Invoice | 15 | status `unpaid`, `paid`, `overdue` |
 | Notifikasi | 8 | info/warning/success/error ke berbagai role |
 | Sales | 5 | status `paid`, `failed`, `refunded` |
-| Accounting | 1 set | 21 akun (aset/kewajiban/ekuitas/pendapatan/beban) + 6 jurnal umum posted |
+| Accounting | 1 set | 21 akun (aset/kewajiban/ekuitas/pendapatan/beban) + 10 jurnal umum posted (termasuk pemasukan & pengeluaran) |
 
 ## Verifikasi hasil seed
 
