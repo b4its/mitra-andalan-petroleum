@@ -1,4 +1,8 @@
+import argparse
+import asyncio
+import gc
 import json
+import sys
 from datetime import date, datetime, timedelta
 
 from passlib.hash import bcrypt
@@ -26,14 +30,24 @@ _CLEAR_ORDER = [
 ]
 
 
-async def seed_database(db: AsyncSession):
-    # Jangan hapus data yang sudah ada: seed hanya untuk database yang masih kosong.
-    # Tanpa guard ini, setiap restart backend akan memanggil _clear_all() yang
-    # menghapus SEMUA data termasuk `uploads` (record lampiran), sehingga file yang
-    # sudah di-upload user hilang dari sistem meski file-nya masih ada di disk.
-    existing = (await db.execute(select(User))).scalars().all()
-    if existing:
-        return
+async def seed_database(db: AsyncSession, force: bool = False):
+    """Isi database dengan data contoh.
+
+    Tanpa `force` (dipakai saat startup backend): hanya berjalan jika database
+    masih kosong (tabel `users`). Jangan pernah menghapus data yang sudah ada —
+    tanpa guard ini, setiap restart backend akan menghapus SEMUA data termasuk
+    `uploads` (record lampiran), sehingga file yang sudah di-upload user hilang
+    dari sistem meski file-nya masih ada di disk.
+
+    Dengan `force=True` (CLI `python -m app.db.seed --force`): hapus dulu
+    SEMUA data (FK-safe) lalu isi ulang dari nol.
+    """
+    if not force:
+        existing = (await db.execute(select(User))).scalars().all()
+        if existing:
+            print("[seed] Dilewati: database sudah berisi data.")
+            print("[seed] Gunakan `python -m app.db.seed --force` (atau `make reseed`) untuk mengisi ulang dari nol.")
+            return
 
     await _clear_all(db)
     await _seed_users(db)
@@ -47,6 +61,7 @@ async def seed_database(db: AsyncSession):
     await _seed_sales(db)
     await _seed_accounting(db)
     await db.commit()
+    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi).")
 
 
 async def _clear_all(db: AsyncSession):
@@ -597,3 +612,131 @@ async def _seed_accounting(db: AsyncSession):
                 credit=credit,
             ))
     await db.flush()
+
+
+# ── Verifikasi pola hasil seed (CLI --check) ───────────────────
+
+async def _check_seed(db: AsyncSession) -> bool:
+    """Periksa jumlah data dan pola relasi antar dokumen hasil seed."""
+    async def count(model) -> int:
+        return len((await db.execute(select(model))).scalars().all())
+
+    all_ok = True
+
+    print("[seed] Jumlah data:")
+    for name, actual, expected in [
+        ("users", await count(User), 5),
+        ("customers", await count(Customer), 3),
+        ("suppliers", await count(Supplier), 2),
+        ("offering_letters", await count(OfferingLetter), 15),
+        ("purchase_orders", await count(PurchaseOrder), 10),
+        ("delivery_orders", await count(DeliveryOrder), 15),
+        ("invoices", await count(Invoice), 15),
+        ("accounts", await count(Account), 21),
+        ("journal_entries", await count(JournalEntry), 6),
+    ]:
+        ok = actual == expected
+        all_ok = all_ok and ok
+        print(f"  [{'OK' if ok else 'FAIL'}] {name}: {actual} (diharapkan {expected})")
+
+    print("[seed] Pola relasi dokumen:")
+    dos = (await db.execute(select(DeliveryOrder))).scalars().all()
+    pos = {p.id: p for p in (await db.execute(select(PurchaseOrder))).scalars().all()}
+    po_numbers = {p.po_number for p in pos.values()}
+    ols = (await db.execute(select(OfferingLetter))).scalars().all()
+    ol_ids = {o.id for o in ols}
+
+    for do in dos:
+        if do.po_number not in po_numbers:
+            print(f"  [FAIL] DO {do.do_number}: po_number '{do.po_number}' tidak cocok dengan PO mana pun")
+            all_ok = False
+        if do.id_purchase_order and do.id_purchase_order not in pos:
+            print(f"  [FAIL] DO {do.do_number}: id_purchase_order tidak merujuk PO yang valid")
+            all_ok = False
+    print(f"  [{'OK' if all_ok else 'FAIL'}] delivery_orders -> purchase_orders ({len(dos)} DO terhubung ke PO)")
+
+    pois = (await db.execute(select(PurchaseOrder))).scalars().all()
+    po_linked = 0
+    for po in pois:
+        if not po.id_offering_letters:
+            continue  # link ke OL tidak wajib (seeder hanya menghubungkan sebagian PO)
+        po_linked += 1
+        try:
+            linked = json.loads(po.id_offering_letters)
+        except (TypeError, json.JSONDecodeError):
+            print(f"  [FAIL] PO {po.po_number}: id_offering_letters bukan JSON valid")
+            all_ok = False
+            continue
+        if linked and not set(linked).issubset(ol_ids):
+            print(f"  [FAIL] PO {po.po_number}: merujuk offering letter yang tidak ada")
+            all_ok = False
+    print(f"  [{'OK' if all_ok else 'FAIL'}] purchase_orders -> offering_letters ({po_linked} PO terhubung ke OL)")
+
+    import re
+    format_ok = True
+    for do in dos:
+        if not re.fullmatch(r"\d{3}/DO/MAP/VI/2025", do.do_number or ""):
+            print(f"  [FAIL] DO {do.do_number}: format nomor tidak sesuai pola 001/DO/MAP/VI/2025")
+            format_ok = False
+    for ol in ols:
+        if not re.fullmatch(r"\d{3}/OL/VI/2025", ol.offering_letter_number or ""):
+            print(f"  [FAIL] OL {ol.offering_letter_number}: format nomor tidak sesuai pola 001/OL/VI/2025")
+            format_ok = False
+    for po in pois:
+        if not re.fullmatch(r"(PO|PO-SUP)/2025/VI/\d{3}", po.po_number or ""):
+            print(f"  [FAIL] PO {po.po_number}: format nomor tidak sesuai pola PO/2025/VI/100")
+            format_ok = False
+    invs = (await db.execute(select(Invoice))).scalars().all()
+    for inv in invs:
+        if not re.fullmatch(r"INV/2025/VI/\d{3}", inv.invoice_number or ""):
+            print(f"  [FAIL] INV {inv.invoice_number}: format nomor tidak sesuai pola INV/2025/VI/001")
+            format_ok = False
+    all_ok = all_ok and format_ok
+    print(f"  [{'OK' if format_ok else 'FAIL'}] format nomor dokumen (OL/PO/DO/INV)")
+
+    return all_ok
+
+
+async def _cli() -> int:
+    parser = argparse.ArgumentParser(
+        prog="python -m app.db.seed",
+        description="Seeder database Mitra Andalan Petroleum (backend/app/db/seed.py).",
+    )
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Hapus dulu SEMUA data (FK-safe) lalu isi ulang dari nol (reseed)."
+    )
+    parser.add_argument(
+        "--check", action="store_true",
+        help="Periksa hasil seed: jumlah data per tabel dan pola relasi antar dokumen."
+    )
+    args = parser.parse_args()
+
+    from app.db.session import engine, async_session_factory
+
+    session = async_session_factory()
+    try:
+        if args.check:
+            print(f"[seed] Mode: verifikasi ({'setelah reseed' if args.force else 'data saat ini'})")
+            ok = await _check_seed(session)
+            print("[seed] SEMUA POLA VALID" if ok else "[seed] ADA POLA TIDAK VALID")
+            return 0 if ok else 1
+        print("[seed] Mode: reseed --force" if args.force else "[seed] Mode: seed (database kosong saja)")
+        await seed_database(session, force=args.force)
+        print("[seed] Selesai.")
+        return 0
+    finally:
+        await session.close()
+        await engine.dispose()
+
+
+if __name__ == "__main__":
+    # Tutup session + engine di dalam loop yang masih hidup agar tidak ada
+    # `Exception ignored ... Event loop is closed` saat interpreter keluar.
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        code = loop.run_until_complete(_cli())
+    finally:
+        loop.close()
+    sys.exit(code)

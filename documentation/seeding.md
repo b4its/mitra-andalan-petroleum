@@ -6,21 +6,65 @@ Seeder adalah script yang mengisi database dengan **data contoh (data demo)**:
 user, customer, supplier, offering letter, purchase order, delivery order,
 invoice, notifikasi, penjualan, dan data akuntansi (bagan akun + jurnal umum).
 
-Lokasi: `backend/app/db/seed.py`
+Lokasi: `backend/app/db/seed.py` — dijalankan lewat `python -m app.db.seed`.
 
 ## Kapan seeder berjalan?
 
-Seeder berjalan **otomatis setiap kali backend (FastAPI) dimulai** melalui
-lifespan di `backend/app/main.py` (`seed_database`).
+1. **Otomatis saat backend start** — `docker-compose.yml` service `backend`
+   menjalankan `python -m app.db.seed` sebelum uvicorn. Artinya setiap
+   `docker compose --profile full up -d --build` = **build + seed menyatu**.
+   Fungsi `seed_database` di lifespan (`backend/app/main.py`) tetap ada sebagai
+   cadangan.
+2. **Manual** — lewat `make seed` / `make reseed` / `make seed-check`
+   (lihat di bawah), atau `python -m app.db.seed [--force] [--check]` langsung
+   di folder `backend`.
 
-Namun ada **guard penting** (`backend/app/db/seed.py:29-36`):
+### Guard anti-hapus (penting)
 
-> Seeder **hanya mengisi database yang masih kosong** (tabel `users` kosong).
-> Jika sudah ada user di database, seeder dilewati — data yang ada **tidak
-> pernah dihapus** oleh seeder.
+Seeder **hanya mengisi database yang masih kosong** (tabel `users` kosong).
+Jika sudah ada user, seeder dilewati dan mencetak pesan di log:
 
-Jadi restart backend berulang kali aman: tidak menghapus data yang sudah ada
-(termasuk record lampiran/upload).
+```
+[seed] Dilewati: database sudah berisi data.
+[seed] Gunakan `python -m app.db.seed --force` (atau `make reseed`) untuk mengisi ulang dari nol.
+```
+
+Guard ini sengaja dibuat agar data yang sudah ada (termasuk record lampiran/
+upload) **tidak pernah dihapus** oleh seeder otomatis. Untuk mengisi ulang
+dari nol, jalankan `make reseed` secara eksplisit.
+
+## Perintah (Docker)
+
+| Perintah | Fungsi |
+| --- | --- |
+| `make build` | Build ulang service + seed menyatu setelah `up` |
+| `make seed` | Isi data contoh (aman: hanya jika database kosong) |
+| `make reseed` | Hapus SEMUA data lalu isi ulang dari nol (setara `--force`) |
+| `make seed-check` | Periksa jumlah data & pola relasi hasil seed |
+| `make up` / `make down` / `make logs` / `make ps` | Kelola service |
+
+Setara dengan tanpa make (Docker):
+
+```bash
+docker compose --profile full up -d --build   # build + seed menyatu
+docker exec mandalan-backend python -m app.db.seed         # seed
+docker exec mandalan-backend python -m app.db.seed --force # reseed
+docker exec mandalan-backend python -m app.db.seed --check # check
+```
+
+## Perintah (manual, tanpa Docker)
+
+```bash
+cd mandalan/backend
+cp .env.example .env      # sesuaikan DATABASE_URL
+python3.12 -m venv env && source env/bin/activate
+pip install -r requirements.txt
+
+python -m app.db.seed             # seed (hanya database kosong)
+python -m app.db.seed --force     # reseed dari nol (hapus semua data dulu)
+python -m app.db.seed --check     # verifikasi hasil seed
+uvicorn app.main:app --reload --port 8000
+```
 
 ## Data yang di-seed
 
@@ -37,93 +81,30 @@ Jadi restart backend berulang kali aman: tidak menghapus data yang sudah ada
 | Sales | 5 | status `paid`, `failed`, `refunded` |
 | Accounting | 1 set | 21 akun (aset/kewajiban/ekuitas/pendapatan/beban) + 6 jurnal umum posted |
 
-## Menjalankan seeder (database kosong / pertama kali)
-
-### Dengan Docker (recommended)
-
-```bash
-cd mandalan
-docker compose --profile full up -d --build backend
-```
-
-Seeder otomatis terisi saat backend pertama kali dimulai (tabel dibuat oleh
-`create_all` dulu, lalu di-seed). Cek log:
-
-```bash
-docker compose logs backend | grep -i seed
-```
-
-### Manual (backend tanpa Docker)
-
-```bash
-cd mandalan/backend
-cp .env.example .env      # sesuaikan DATABASE_URL
-python3.12 -m venv env && source env/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-
-Seeder berjalan otomatis di awal saat uvicorn pertama kali menyala.
-
-## Menjalankan ulang (reseed database yang sudah terisi)
-
-Karena seeder hanya jalan di database kosong, untuk **menjalankan ulang**
-database harus dikosongkan dulu — lalu restart backend.
-
-> ⚠️ **Peringatan**: menghapus data mengakibatkan record upload (lampiran,
-> signature, foto) ikut hilang dari sistem (file di disk tidak terhapus.
-> Lakukan hanya di lingkungan dev/demo.
-
-### Opsi A — hapus database lalu buat ulang (paling sederhana, Docker)
-
-```bash
-cd mandalan
-docker compose exec mandalan-db mysql -uroot -proot \
-  -e "DROP DATABASE mandalan; CREATE DATABASE mandalan"
-docker compose up -d --build backend   # tabel dibuat ulang + seed otomatis
-```
-
-### Opsi B — hapus isi tabel secara FK-safe (tanpa drop database)
-
-Urutan hapus mengikuti `_CLEAR_ORDER` di `backend/app/db/seed.py:22-26`
-(child dulu, parent belakangan):
-
-```bash
-docker compose exec mandalan-db mysql -uroot -proot mandalan \
-  -e "SET FOREIGN_KEY_CHECKS=0;
-      DELETE FROM journal_lines; DELETE FROM journal_entries;
-      DELETE FROM notifications; DELETE FROM invoices;
-      DELETE FROM delivery_orders; DELETE FROM purchase_orders;
-      DELETE FROM offering_letters; DELETE FROM sales;
-      DELETE FROM accounts; DELETE FROM suppliers;
-      DELETE FROM customers; DELETE FROM users;
-      SET FOREIGN_KEY_CHECKS=1;"
-docker compose restart backend   # seed otomatis terisi
-```
-
-> Catatan: tabel `uploads` sengaja **tidak** dikosongkan di opsi B agar
-> lampiran tidak hilang. Seeder menghapus record upload hanya saat mengisi
-> database yang benar-benar kosong (lihat guard di atas).
-
-### Manual (tanpa Docker)
-
-```sql
--- via klien MySQL apa pun, sesuai DATABASE_URL lokal
-SET FOREIGN_KEY_CHECKS=0;
-DELETE FROM journal_lines; DELETE FROM journal_entries;
-DELETE FROM notifications; DELETE FROM invoices;
-DELETE FROM delivery_orders; DELETE FROM purchase_orders;
-DELETE FROM offering_letters; DELETE FROM sales;
-DELETE FROM accounts; DELETE FROM suppliers;
-DELETE FROM customers; DELETE FROM users;
-SET FOREIGN_KEY_CHECKS=1;
-```
-
-Lalu restart uvicorn agar seeder berjalan.
-
 ## Verifikasi hasil seed
 
-### Cek jumlah data per tabel
+### Otomatis (`make seed-check`)
+
+```bash
+make seed-check
+```
+
+Mengecek jumlah data per tabel dan pola relasi dokumen:
+
+```
+[seed] Jumlah data:
+  [OK] users: 5 (diharapkan 5)
+  [OK] customers: 3 (diharapkan 3)
+  ...
+[seed] Pola relasi dokumen:
+  [OK] delivery_orders -> purchase_orders (15 DO terhubung ke PO)
+  ...
+[seed] SEMUA POLA VALID
+```
+
+Keluar dengan exit code 0 jika semua valid, 1 jika ada yang tidak valid.
+
+### Manual via SQL
 
 ```bash
 docker compose exec mandalan-db mysql -uroot -proot mandalan \
@@ -148,9 +129,39 @@ Hasil yang diharapkan: `5 / 3 / 2 / 15 / 10 / 15 / 15`.
    (Delivery Order + detail + cetak), Finance (Invoice), dan Accounting —
    semua terisi data contoh.
 
+## Menjalankan ulang (reseed) — alternatif manual
+
+`make reseed` (atau `python -m app.db.seed --force`) adalah cara yang
+disarankan: menghapus semua data sesuai urutan FK-safe lalu mengisi ulang.
+
+> ⚠️ **Peringatan**: reseed menghapus semua record upload (lampiran, signature,
+> foto) dari sistem (file di disk tidak terhapus). Lakukan hanya di lingkungan
+> dev/demo.
+
+Bila ingin menghapus secara manual tanpa make (misalnya hanya tabel tertentu):
+
+```bash
+docker compose exec mandalan-db mysql -uroot -proot mandalan \
+  -e "SET FOREIGN_KEY_CHECKS=0;
+      DELETE FROM journal_lines; DELETE FROM journal_entries;
+      DELETE FROM notifications; DELETE FROM invoices;
+      DELETE FROM delivery_orders; DELETE FROM purchase_orders;
+      DELETE FROM offering_letters; DELETE FROM sales;
+      DELETE FROM accounts; DELETE FROM suppliers;
+      DELETE FROM customers; DELETE FROM users;
+      SET FOREIGN_KEY_CHECKS=1;"
+docker compose restart backend   # seed otomatis terisi saat backend start
+```
+
+> Catatan: tabel `uploads` sengaja tidak dikosongkan di contoh di atas agar
+> lampiran tidak hilang. Urutan hapus mengikuti `_CLEAR_ORDER` di
+> `backend/app/db/seed.py` (child dulu, parent belakangan).
+
 ## Referensi
 
 - `backend/app/db/seed.py` — script seeder (satu-satunya sumber kebenaran).
-- `backend/app/main.py` — pemanggilan otomatis `seed_database` saat startup.
+- `backend/app/main.py` — pemanggilan cadangan `seed_database` saat startup.
+- `docker-compose.yml` — service `backend` menjalankan seed sebelum uvicorn.
+- `Makefile` — target `build`/`seed`/`reseed`/`seed-check`.
 - `documentation/setup.md` — cara menjalankan sistem secara keseluruhan.
 - `documentation/demo-login.md` — detail akun demo & endpoint `/profiles/demo`.
