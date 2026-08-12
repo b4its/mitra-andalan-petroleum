@@ -174,7 +174,7 @@ async function confirmRilisDana() {
     await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {})
     toast.add({
       title: 'Berhasil',
-      description: 'Dana telah dirilis. DO tersedia di Operations.',
+      description: 'Dana telah dirilis. Delivery Order tersedia di Operations.',
       color: 'success'
     })
     rilisDanaOpen.value = false
@@ -269,9 +269,9 @@ async function confirmDelete() {
 const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
 const columns: TableColumn<DeliveryOrderRow>[] = [
-  { accessorKey: 'do_number', header: 'Nomor DO' },
+  { accessorKey: 'do_number', header: 'Nomor Delivery Order' },
   { accessorKey: 'customer_name', header: 'Customer' },
-  { accessorKey: 'po_number', header: 'Nomor PO' },
+  { accessorKey: 'po_number', header: 'Nomor Purchase Order' },
   { accessorKey: 'transport_name', header: 'Transportir' },
   {
     accessorKey: 'fuel_total',
@@ -360,7 +360,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
           <UInput
             v-model="search"
             icon="i-lucide-search"
-            placeholder="Cari nomor DO, customer, PO, atau transportir..."
+            placeholder="Cari nomor Delivery Order, customer, Purchase Order, atau transportir..."
             class="w-72"
           />
         </div>
@@ -487,7 +487,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
     </template>
     <template #body>
       <div class="space-y-4">
-        <UFormField label="Nomor DO" required>
+        <UFormField label="Nomor Delivery Order" required>
           <UInput v-model="form.do_number" placeholder="Contoh: DO-001" />
         </UFormField>
         <UFormField label="Customer" required>
@@ -500,7 +500,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
           <USkeleton v-else class="h-10 w-full rounded-lg" />
         </UFormField>
         <div class="grid grid-cols-2 gap-3">
-          <UFormField label="Nomor PO">
+          <UFormField label="Nomor Purchase Order">
             <UInput v-model="form.po_number" placeholder="Contoh: PO-001" />
           </UFormField>
           <UFormField label="Transportir">
@@ -592,7 +592,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
         }}</span>?
       </p>
       <p class="mt-2 text-xs text-dimmed">
-        Setelah dirilis, DO akan muncul di halaman Operations dan tim dapat
+        Setelah dirilis, Delivery Order akan muncul di halaman Operations dan tim dapat
         menyiapkan pengantaran.
       </p>
     </template>

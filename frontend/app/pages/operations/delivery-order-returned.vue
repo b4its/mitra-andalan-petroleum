@@ -9,7 +9,7 @@ const uploading = ref(false)
 
 const items: StepperItem[] = [
   {
-    title: 'Upload Surat DO',
+    title: 'Upload Surat Delivery Order',
     slot: 'doReturned',
     icon: 'i-lucide-receipt-text'
   }
@@ -27,7 +27,7 @@ async function onDoSubmit() {
     : doReturned.doDocument
 
   if (!doReturned.deliveryOrderNumber || !file) {
-    toast.add({ title: 'Validasi', description: 'Pilih nomor DO dan file yang akan diupload.', color: 'warning' })
+    toast.add({ title: 'Validasi', description: 'Pilih nomor Delivery Order dan file yang akan diupload.', color: 'warning' })
     return
   }
 
@@ -43,7 +43,7 @@ async function onDoSubmit() {
     doReturned.deliveryOrderNumber = ''
     doReturned.doDocument = undefined
   } catch (error: any) {
-    toast.add({ title: 'Error', description: error.message || 'Gagal upload file Delivery Order.', color: 'error' })
+    toast.add({ title: 'Gagal', description: error.message || 'Gagal upload file Delivery Order.', color: 'error' })
   } finally {
     uploading.value = false
   }

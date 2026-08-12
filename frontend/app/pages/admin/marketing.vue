@@ -132,7 +132,7 @@ watch([search, statusFilter], () => {
 const statusLabel: Record<string, string> = {
   created: 'Dibuat',
   under_revision: 'Dalam Revisi',
-  po_received: 'PO Customer Diterima'
+  po_received: 'Purchase Order Customer Diterima'
 }
 const statusColor: Record<string, string> = {
   created: 'info',
@@ -141,10 +141,10 @@ const statusColor: Record<string, string> = {
 }
 
 const statusOptions = [
-  { label: 'All Status', value: 'all' },
+  { label: 'Semua Status', value: 'all' },
   { label: 'Dibuat', value: 'created' },
   { label: 'Dalam Revisi', value: 'under_revision' },
-  { label: 'PO Customer Diterima', value: 'po_received' }
+  { label: 'Purchase Order Customer Diterima', value: 'po_received' }
 ]
 
 const columns: TableColumn<ApiOfferingLetter>[] = [
@@ -248,7 +248,7 @@ function openDetail(id: string) {
               <template #header>
                 <div class="flex items-center justify-between">
                   <p class="font-medium">
-                    Tren SP & PO per Periode
+                    Tren Surat Penawaran & Purchase Order per Periode
                   </p>
                   <p class="text-xs text-muted">
                     Klik bar untuk detail
@@ -282,7 +282,7 @@ function openDetail(id: string) {
               <template #header>
                 <div class="flex items-center justify-between">
                   <p class="font-medium">
-                    Distribusi Status SP
+                    Distribusi Status Surat Penawaran
                   </p>
                   <p class="text-xs text-muted">
                     Klik segment untuk detail
@@ -317,7 +317,7 @@ function openDetail(id: string) {
                   <UInput
                     v-model="search"
                     icon="i-lucide-search"
-                    placeholder="Cari nomor SP, customer, status..."
+                    placeholder="Cari nomor Surat Penawaran, customer, status..."
                     size="sm"
                     class="w-64"
                   />

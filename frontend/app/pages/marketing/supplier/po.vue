@@ -232,7 +232,7 @@ async function onFormSubmit() {
 
     // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
   } catch (e: any) {
-    toast.add({ title: 'Error', description: e.message, color: 'error' })
+    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
   } finally {
     loading.value = false
   }

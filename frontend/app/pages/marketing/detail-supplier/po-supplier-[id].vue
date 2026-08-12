@@ -294,7 +294,7 @@ const loadPdf = async () => {
                 {},
                 {},
                 {
-                  text: `PO Date : ${details.po.date}`,
+                  text: `Purchase Order Date : ${details.po.date}`,
                   bold: true,
                   border: [true, false, true, true]
                 }
@@ -306,7 +306,7 @@ const loadPdf = async () => {
                 {},
                 {},
                 {
-                  text: `PO Number : \n${details.po.number}`,
+                  text: `Purchase Order Number : \n${details.po.number}`,
                   bold: true,
                   border: [true, false, true, true]
                 }

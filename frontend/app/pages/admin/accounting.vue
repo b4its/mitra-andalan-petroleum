@@ -286,7 +286,7 @@ const monitoringChart = computed(() => {
         backgroundColor: 'rgba(239,68,68,0.8)'
       },
       {
-        label: 'Gross Margin',
+        label: 'Margin Kotor',
         data: rows.map(r => r.gross_margin),
         backgroundColor: 'rgba(59,130,246,0.8)'
       }
@@ -440,7 +440,7 @@ const monitoringColumns: TableColumn<MonitoringRow>[] = [
   },
   {
     accessorKey: 'gross_margin',
-    header: 'Gross Margin',
+    header: 'Margin Kotor',
     meta: { class: { th: 'text-right', td: 'text-right' } },
     cell: ({ row }) => {
       const val = Number(row.getValue('gross_margin'))
@@ -536,7 +536,7 @@ const bankInterestColumns: TableColumn<BankInterestRow>[] = [
   }
 ]
 
-// ── Chart of Accounts ────────────────────────────────────────
+// ── Bagan Akun ────────────────────────────────────────
 const accountColumns: TableColumn<AccountingAccount>[] = [
   { accessorKey: 'code', header: 'Kode' },
   { accessorKey: 'name', header: 'Nama Akun' },
@@ -607,8 +607,8 @@ watch([journalSearch, journalStatusFilter], () => {
 const journalStatusOptions = [
   { label: 'Semua Status', value: 'all' },
   { label: 'Posted', value: 'posted' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Void', value: 'void' }
+  { label: 'Draf', value: 'draft' },
+  { label: 'Dibatalkan', value: 'void' }
 ]
 
 // ── Tabel Neraca Saldo ──────────────────────────────────────
@@ -767,20 +767,20 @@ const trialColumns: TableColumn<AccountingTrialBalanceRow>[] = [
 const exportItems = (
   onSelect: (format: 'excel' | 'pdf' | 'csv') => void
 ): DropdownMenuItem[] => [
-  { type: 'label', label: 'Export Data' },
+  { type: 'label', label: 'Ekspor Data' },
   { type: 'separator' },
   {
-    label: 'Export to Excel',
+    label: 'Ekspor ke Excel',
     icon: 'i-lucide-file-spreadsheet',
     onSelect: () => onSelect('excel')
   },
   {
-    label: 'Export to PDF',
+    label: 'Ekspor ke PDF',
     icon: 'i-lucide-file-text',
     onSelect: () => onSelect('pdf')
   },
   {
-    label: 'Export to CSV',
+    label: 'Ekspor ke CSV',
     icon: 'i-lucide-file-down',
     onSelect: () => onSelect('csv')
   }
@@ -837,7 +837,7 @@ const exportItems = (
               <template #title>
                 {{ card.title }}
               </template>
-              <p class="text-2xl font-semibold tabular-nums">
+              <p class="text-lg font-bold tabular-nums">
                 {{ formatCurrency(card.value) }}
               </p>
               <p class="text-xs text-muted mt-1">
@@ -1372,7 +1372,7 @@ const exportItems = (
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Gross Margin</p>
+                <p class="text-sm text-muted">Total Margin Kotor</p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.monitoring.total_gross_margin) }}
                 </p>
@@ -1461,12 +1461,12 @@ const exportItems = (
             </p>
           </UCard>
 
-          <!-- Chart of Accounts -->
+          <!-- Bagan Akun -->
           <UCard v-if="data?.accounts?.length">
             <template #header>
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <p class="font-medium">
-                  Chart of Accounts
+                  Bagan Akun
                 </p>
                 <p class="text-xs text-muted">
                   {{ (data.accounts || []).length }} akun

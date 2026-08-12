@@ -225,7 +225,7 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
     refresh()
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal menambahkan supplier.',
       color: 'error'
     })
@@ -267,7 +267,7 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
     refresh()
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal memperbarui supplier.',
       color: 'error'
     })
@@ -297,7 +297,7 @@ async function confirmDelete() {
     refresh()
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal menghapus supplier.',
       color: 'error'
     })
@@ -371,7 +371,7 @@ const modalTitle = computed(() => {
                   size="xs"
                   color="primary"
                   variant="ghost"
-                  aria-label="Edit supplier"
+                  aria-label="Ubah supplier"
                   @click="openEdit(row.original)"
                 />
                 <UButton

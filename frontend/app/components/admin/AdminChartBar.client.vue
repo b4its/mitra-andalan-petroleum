@@ -15,8 +15,8 @@ const categories = ['offering_letters', 'purchase_orders', 'delivery_orders', 'i
 const colors = ['var(--ui-primary)', 'var(--ui-info)', 'var(--ui-warning)', 'var(--ui-success)']
 const labels: Record<string, string> = {
   offering_letters: 'Surat Penawaran',
-  purchase_orders: 'PO',
-  delivery_orders: 'DO',
+  purchase_orders: 'Purchase Order',
+  delivery_orders: 'Delivery Order',
   invoices: 'Invoice'
 }
 

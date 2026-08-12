@@ -54,7 +54,7 @@ watch(search, () => {
   page.value = 1
 })
 
-// ── Role badge ────────────────────────────────────────────────
+// ── Peran badge ────────────────────────────────────────────────
 const roleColor: Record<
   string,
   'neutral' | 'info' | 'warning' | 'success' | 'error' | 'primary'
@@ -72,7 +72,7 @@ const columns: TableColumn<User>[] = [
   { accessorKey: 'email', header: 'Email' },
   {
     accessorKey: 'role',
-    header: 'Role',
+    header: 'Peran',
     cell: ({ row }) => {
       const r = row.getValue('role') as string
       return h(
@@ -171,7 +171,7 @@ async function onSubmitAdd(event: FormSubmitEvent<AddSchema>) {
     refresh()
   } catch (err) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err instanceof Error ? err.message : 'Gagal menambahkan pengguna.',
       color: 'error'
     })
@@ -201,7 +201,7 @@ async function onSubmitEdit(event: FormSubmitEvent<EditSchema>) {
     refresh()
   } catch (err) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err instanceof Error ? err.message : 'Gagal memperbarui pengguna.',
       color: 'error'
     })
@@ -243,7 +243,7 @@ async function confirmDelete() {
     refresh()
   } catch (err) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err instanceof Error ? err.message : 'Gagal menghapus pengguna.',
       color: 'error'
     })
@@ -319,7 +319,7 @@ const showPassword = ref(false)
                   size="xs"
                   color="primary"
                   variant="ghost"
-                  aria-label="Edit pengguna"
+                  aria-label="Ubah pengguna"
                   @click="openEdit(row.original)"
                 />
                 <UButton
@@ -385,7 +385,7 @@ const showPassword = ref(false)
           </div>
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
-              Role
+              Peran
             </p>
             <UBadge
               :color="roleColor[selectedUser.role] ?? 'neutral'"
@@ -449,7 +449,7 @@ const showPassword = ref(false)
             </template>
           </UInput>
         </UFormField>
-        <UFormField name="role" label="Role" required>
+        <UFormField name="role" label="Peran" required>
           <USelect
             v-model="formState.role"
             :items="ROLES.map((r) => ({ label: r, value: r }))"
@@ -500,7 +500,7 @@ const showPassword = ref(false)
             </template>
           </UInput>
         </UFormField>
-        <UFormField name="role" label="Role" required>
+        <UFormField name="role" label="Peran" required>
           <USelect
             v-model="formState.role"
             :items="ROLES.map((r) => ({ label: r, value: r }))"

@@ -263,14 +263,14 @@ async function onFormSubmit() {
     })
 
     toast.add({
-      title: 'Success',
+      title: 'Berhasil',
       icon: 'i-lucide-check-circle',
       description: 'Invoice berhasil dibuat',
       color: 'success'
     })
   } catch (e: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: e.message,
       icon: 'i-lucide-alert-triangle',
       color: 'error'

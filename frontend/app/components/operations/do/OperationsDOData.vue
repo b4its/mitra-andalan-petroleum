@@ -93,6 +93,11 @@ interface DeliveryOrderDetailData {
   receiver?: string
   driver?: string
   total?: number
+  t2Depot?: number
+  t2Unloading?: number
+  indexSensitivity?: number
+  fuelReceived?: number
+  notes?: Array<{ note?: string }>
 }
 
 interface DeliveryOrderDetail {
@@ -151,7 +156,7 @@ const { data: DoData, pending, refresh } = await useAsyncData(
   { default: () => [], watch: [debouncedSearch] }
 )
 
-// ── Modal Lengkapi Data DO ────────────────────────────────────
+// ── Modal Lengkapi Data Delivery Order ────────────────────────────────────
 const lengkapiOpen = ref(false)
 const lengkapiTarget = ref<DoRow | null>(null)
 const lengkapiSaving = ref(false)
@@ -225,12 +230,19 @@ async function openEdit(row: DoRow) {
       = d.distributionAdmin || user.value?.name || ''
     lengkapiForm.receiver_sign = d.receiver || ''
     lengkapiForm.driver_sign = d.driver || ''
+    lengkapiForm.t2_depot = d.t2Depot ?? 0
+    lengkapiForm.t2_unloading = d.t2Unloading ?? 0
+    lengkapiForm.index_sensitivity = d.indexSensitivity ?? 0
+    lengkapiForm.fuel_received = d.fuelReceived ?? d.productInformation?.qty ?? 0
+    lengkapiForm.notes = d.notes?.length
+      ? d.notes.map(n => ({ note: n.note || '' }))
+      : defaultLengkapiNotes()
 
     lengkapiOpen.value = true
   } catch {
     toast.add({
-      title: 'Error',
-      description: 'Gagal memuat data DO.',
+      title: 'Gagal',
+      description: 'Gagal memuat data Delivery Order.',
       color: 'error'
     })
   } finally {
@@ -249,6 +261,11 @@ function openLengkapi(row: DoRow) {
   lengkapiForm.product_name = ''
   lengkapiForm.fuel_qty = 0
   lengkapiForm.distribution_admin = user.value?.name || ''
+  lengkapiForm.t2_depot = 0
+  lengkapiForm.t2_unloading = 0
+  lengkapiForm.index_sensitivity = 0
+  lengkapiForm.fuel_received = 0
+  lengkapiForm.notes = defaultLengkapiNotes()
   lengkapiOpen.value = true
 }
 
@@ -291,8 +308,34 @@ const lengkapiForm = reactive({
   company_coordinator: '',
   distribution_admin: '',
   receiver_sign: '',
-  driver_sign: ''
+  driver_sign: '',
+  // Catatan pengiriman & tambahan
+  t2_depot: 0,
+  t2_unloading: 0,
+  index_sensitivity: 0,
+  fuel_received: 0,
+  notes: [] as Array<{ note: string }>
 })
+
+function defaultLengkapiNotes() {
+  return [
+    {
+      note: 'Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan'
+    },
+    {
+      note: 'Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami'
+    },
+    { note: 'Lainnya :' }
+  ]
+}
+
+function addLengkapiNote() {
+  lengkapiForm.notes.push({ note: '' })
+}
+
+function removeLengkapiNote(index: number) {
+  lengkapiForm.notes.splice(index, 1)
+}
 
 const { user } = useAuth()
 
@@ -305,7 +348,7 @@ async function submitLengkapi() {
   ) {
     toast.add({
       title: 'Validasi',
-      description: 'Nomor DO, Transportir, dan Volume wajib diisi.',
+      description: 'Nomor Delivery Order, Transportir, dan Volume wajib diisi.',
       color: 'warning'
     })
     return
@@ -368,16 +411,11 @@ async function submitLengkapi() {
         transportNumber: lengkapiForm.transport_number || '',
         transportType: lengkapiForm.transport_type || ''
       },
-      notes: [
-        {
-          note: 'Sebelum BBM diserahterimakan, mohon periksa terlebih dahulu surat tera, jarum tera, segel, kualitas, SGMeter, kuantitas, kadar air, flow meter yang digunakan'
-        },
-        {
-          note: 'Setelah pembongkaran, BBM industri yang sudah diterima dengan baik dan ditanda tangani kedua belah pihak, tidak dapat dikembalikan dan BBM tersebut sudah tidak menjadi tanggung jawab kami'
-        },
-        { note: 'Lainnya :' }
-      ],
-      fuelReceived: lengkapiForm.fuel_qty,
+      notes: lengkapiForm.notes.length ? lengkapiForm.notes : defaultLengkapiNotes(),
+      fuelReceived: lengkapiForm.fuel_received || lengkapiForm.fuel_qty,
+      t2Depot: lengkapiForm.t2_depot,
+      t2Unloading: lengkapiForm.t2_unloading,
+      indexSensitivity: lengkapiForm.index_sensitivity,
       companyCoordinator: lengkapiForm.company_coordinator || '',
       distributionAdmin:
         lengkapiForm.distribution_admin || user.value?.name || '',
@@ -394,14 +432,14 @@ async function submitLengkapi() {
 
     toast.add({
       title: 'Berhasil',
-      description: 'Data DO berhasil dilengkapi. Surat siap dirender.',
+      description: 'Data Delivery Order berhasil dilengkapi. Surat siap dirender.',
       color: 'success'
     })
     lengkapiOpen.value = false
     refresh()
   } catch (err) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err instanceof Error ? err.message : 'Terjadi kesalahan',
       color: 'error'
     })
@@ -498,7 +536,7 @@ async function updateDoStatus(doId: string) {
   } catch {
     toast.add({
       title: 'Gagal',
-      description: 'Gagal memperbarui status DO.',
+      description: 'Gagal memperbarui status Delivery Order.',
       color: 'error'
     })
   } finally {
@@ -535,9 +573,9 @@ function statusBadge(done: boolean, label: string, at?: string | null) {
 }
 
 const columns: TableColumn<DoRow>[] = [
-  { accessorKey: 'deliveryOrderNumber', header: 'Nomor DO' },
+  { accessorKey: 'deliveryOrderNumber', header: 'Nomor Delivery Order' },
   { accessorKey: 'customerName', header: 'Customer' },
-  { accessorKey: 'purchaseOrderNumber', header: 'Nomor PO' },
+  { accessorKey: 'purchaseOrderNumber', header: 'Nomor Purchase Order' },
   {
     accessorKey: 'statusRilisDana',
     header: 'Rilis Dana',
@@ -586,7 +624,7 @@ const columns: TableColumn<DoRow>[] = [
   },
   {
     accessorKey: 'status',
-    header: 'Status DO',
+    header: 'Status Delivery Order',
     cell: ({ row }) => {
       const s = row.getValue('status') as string
       const colorMap: Record<string, 'info' | 'success' | 'warning'> = {
@@ -596,7 +634,7 @@ const columns: TableColumn<DoRow>[] = [
       }
       const labelMap: Record<string, string> = {
         created: 'Dibuat',
-        draft: 'Draft',
+        draft: 'Draf',
         document_returned: 'Dokumen Kembali'
       }
       return h(
@@ -616,7 +654,7 @@ const columns: TableColumn<DoRow>[] = [
       <UInput
         v-model="search"
         icon="i-lucide-search"
-        placeholder="Cari nomor DO, PO, atau transportir..."
+        placeholder="Cari nomor Delivery Order, Purchase Order, atau transportir..."
         class="w-72"
       />
     </div>
@@ -693,7 +731,7 @@ const columns: TableColumn<DoRow>[] = [
             :disabled="!row.original.detailsLengkap"
             :title="
               !row.original.detailsLengkap
-                ? 'Lengkapi data DO terlebih dahulu'
+                ? 'Lengkapi data Delivery Order terlebih dahulu'
                 : ''
             "
             @click="openReadyOrder(row.original)"
@@ -829,14 +867,14 @@ const columns: TableColumn<DoRow>[] = [
 
   <RecordDetailModal :id="detailId" v-model:open="detailOpen" type="do" />
 
-  <!-- ── Modal Edit / Lengkapi Data DO ── -->
+  <!-- ── Modal Edit / Lengkapi Data Delivery Order ── -->
   <UModal v-model:open="lengkapiOpen" :ui="{ content: 'max-w-2xl' }">
     <template #title>
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-clipboard-pen" class="size-4 text-primary" />
         {{
           lengkapiTarget?.detailsLengkap
-            ? "Edit Data Delivery Order"
+            ? "Ubah Data Delivery Order"
             : "Lengkapi Data Delivery Order"
         }}
       </div>
@@ -848,10 +886,10 @@ const columns: TableColumn<DoRow>[] = [
         class="mb-4 rounded-lg bg-warning/10 border border-warning/30 px-4 py-3 text-sm"
       >
         <p class="font-medium text-warning">
-          Data DO belum lengkap untuk dicetak.
+          Data Delivery Order belum lengkap untuk dicetak.
         </p>
         <p class="text-xs mt-1 text-muted">
-          Isi data berikut sesuai surat DO yang akan dicetak.
+          Isi data berikut sesuai surat Delivery Order yang akan dicetak.
         </p>
       </div>
 
@@ -865,7 +903,7 @@ const columns: TableColumn<DoRow>[] = [
           </p>
           <div class="grid grid-cols-3 gap-3">
             <div>
-              <label class="block text-xs text-muted mb-1">Nomor DO <span class="text-error">*</span></label>
+              <label class="block text-xs text-muted mb-1">Nomor Delivery Order <span class="text-error">*</span></label>
               <UInput
                 v-model="lengkapiForm.do_number"
                 placeholder="0000/DO/MAP/I/0000"
@@ -873,11 +911,11 @@ const columns: TableColumn<DoRow>[] = [
               />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1">Tanggal DO <span class="text-error">*</span></label>
+              <label class="block text-xs text-muted mb-1">Tanggal Delivery Order <span class="text-error">*</span></label>
               <UInput v-model="lengkapiForm.do_date" type="date" size="sm" />
             </div>
             <div>
-              <label class="block text-xs text-muted mb-1">No. SO</label>
+              <label class="block text-xs text-muted mb-1">No. Sales Order</label>
               <UInput
                 v-model="lengkapiForm.so_number"
                 placeholder="Opsional"
@@ -1122,6 +1160,96 @@ const columns: TableColumn<DoRow>[] = [
                 size="sm"
               />
             </div>
+          </div>
+        </div>
+
+        <!-- Catatan Pengiriman -->
+        <div>
+          <p
+            class="text-xs font-semibold text-muted uppercase tracking-wide mb-2"
+          >
+            Catatan Pengiriman
+          </p>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-muted mb-1">T2 Depo</label>
+              <UInputNumber
+                v-model="lengkapiForm.t2_depot"
+                :min="0"
+                placeholder="125.1"
+                size="sm"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">T2 Bongkar</label>
+              <UInputNumber
+                v-model="lengkapiForm.t2_unloading"
+                :min="0"
+                placeholder="125.1"
+                size="sm"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">Kepekaan Index (buku tera mobil)</label>
+              <UInputNumber
+                v-model="lengkapiForm.index_sensitivity"
+                :min="0"
+                size="sm"
+                class="w-full"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-muted mb-1">BBM Diterima</label>
+              <UInputNumber
+                v-model="lengkapiForm.fuel_received"
+                :min="0"
+                placeholder="5000"
+                size="sm"
+                class="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Catatan Tambahan -->
+        <div>
+          <p
+            class="text-xs font-semibold text-muted uppercase tracking-wide mb-2"
+          >
+            Catatan Tambahan
+          </p>
+          <div class="space-y-3">
+            <div
+              v-for="(note, index) in lengkapiForm.notes"
+              :key="`lengkapi-note-${index}`"
+              class="flex items-end gap-2"
+            >
+              <UInput
+                v-model="note.note"
+                placeholder="Ketentuan..."
+                size="sm"
+                class="w-full"
+              />
+              <UButton
+                icon="i-lucide-trash-2"
+                color="error"
+                variant="ghost"
+                size="sm"
+                :disabled="lengkapiForm.notes.length === 1"
+                @click="removeLengkapiNote(index)"
+              />
+            </div>
+
+            <UButton
+              icon="i-lucide-plus"
+              color="neutral"
+              variant="subtle"
+              size="sm"
+              label="Tambah Catatan"
+              @click="addLengkapiNote"
+            />
           </div>
         </div>
 

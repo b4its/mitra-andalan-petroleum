@@ -22,7 +22,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
   ],
   [
     {
-      label: 'Profile',
+      label: 'Profil',
       icon: 'i-lucide-user',
       onSelect: () => {
         router.push(`/${user.value?.role}/profile`)

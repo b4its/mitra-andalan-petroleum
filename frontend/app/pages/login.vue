@@ -23,8 +23,8 @@ const { data: accounts } = await useAsyncData<Account[]>(
 )
 
 const schema = z.object({
-  email: z.email('Invalid email'),
-  password: z.string().min(6, 'Must be at least 6 characters')
+  email: z.email('Email tidak valid'),
+  password: z.string().min(6, 'Minimal 6 karakter')
 })
 
 type Schema = z.output<typeof schema>
@@ -34,14 +34,14 @@ const fields: AuthFormField[] = [
     name: 'email',
     type: 'email',
     label: 'Email',
-    placeholder: 'Enter your email',
+    placeholder: 'Masukkan email',
     required: true
   },
   {
     name: 'password',
     type: 'password',
-    label: 'Password',
-    placeholder: 'Enter your password',
+    label: 'Kata Sandi',
+    placeholder: 'Masukkan kata sandi',
     required: true
   }
 ]
@@ -92,7 +92,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     toast.add({
       title: 'Berhasil Masuk',
       icon: 'i-lucide-check-circle',
-      description: `Welcome, ${result.name}! (${result.role})`,
+      description: `Selamat datang, ${result.name}! (${result.role})`,
       color: 'success'
     })
 
@@ -100,7 +100,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   } catch (err: any) {
     toast.add({
       title: 'Login Gagal',
-      description: err.message || 'Invalid email or password.',
+      description: err.message || 'Email atau kata sandi salah.',
       color: 'error'
     })
   } finally {
@@ -113,13 +113,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   <UPageCard class="max-w-md mx-auto mt-48">
     <UAuthForm
       ref="authFormRef"
-      title="Sign In MAP"
+      title="Masuk MAP"
       description="Login dengan akun Anda"
       icon="i-lucide-log-in"
       :schema="schema"
       :fields="fields"
       :loading="loading"
-      :submit="{ label: 'Sign in' }"
+      :submit="{ label: 'Masuk' }"
       @submit="onSubmit"
     />
 

@@ -78,10 +78,10 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
 
       <USeparator />
 
-      <p>Informasi Surat DO</p>
+      <p>Informasi Surat Delivery Order</p>
 
       <div class="flex w-full gap-4">
-        <UFormField name="doNumber" label="Nomor DO" required>
+        <UFormField name="doNumber" label="Nomor Delivery Order" required>
           <UInput
             v-model="state.doInformation.doNumber"
             type="text"
@@ -90,7 +90,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
           />
         </UFormField>
 
-        <UFormField name="doDateCreated" label="Tanggal DO" required>
+        <UFormField name="doDateCreated" label="Tanggal Delivery Order" required>
           <UInput
             v-model="state.doInformation.doDateCreated"
             type="date"
@@ -100,7 +100,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
       </div>
 
       <div class="flex w-full gap-4">
-        <!-- <UFormField name="poCustomerNumber" label="Nomor PO Customer" required>
+        <!-- <UFormField name="poCustomerNumber" label="Nomor Purchase Order Customer" required>
           <UInput
             v-model="state.doInformation.poCustomerNumber"
             type="text"
@@ -111,13 +111,13 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
 
         <UFormField
           name="poCustomerNumber"
-          label="Nomor Surat PO Customer"
+          label="Nomor Surat Purchase Order Customer"
           required
         >
           <USelectMenu
             v-model="state.doInformation.poCustomerNumber"
             :items="purchaseOrders"
-            placeholder="Pilih Surat PO"
+            placeholder="Pilih Surat Purchase Order"
             value-key="value"
             :ui="{ content: 'min-w-fit' }"
             class="w-full"

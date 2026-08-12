@@ -66,7 +66,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
     <UPageCard variant="soft">
       <UFormField
         name="purchaseOrderDeadline"
-        label="Tenggat Purchase Order (PO)"
+        label="Tenggat Purchase Order"
         required
       >
         <UInputNumber

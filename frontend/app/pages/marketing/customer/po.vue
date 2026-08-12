@@ -11,7 +11,7 @@ const { user } = useAuth()
 
 const items: StepperItem[] = [
   {
-    title: 'Upload PO Customer',
+    title: 'Upload Purchase Order Customer',
     slot: 'poCustomer',
     icon: 'i-lucide-receipt-text'
   }
@@ -147,7 +147,7 @@ async function onPoCustomerSubmit() {
         }).catch(() => undefined)
       }
     }
-    toast.add({ title: 'Error', description: e.message, color: 'error' })
+    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
   }
 }
 

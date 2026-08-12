@@ -45,7 +45,7 @@ const { data: PoData, pending } = await useAsyncData(
 const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
   {
     accessorKey: 'offeringLetterNumber',
-    header: 'Nomor PO',
+    header: 'Nomor Purchase Order',
     cell: ({ row }) => `${row.getValue('offeringLetterNumber')}`
   },
   {
@@ -91,7 +91,7 @@ function openDetail(id: string) {
       <UInput
         v-model="search"
         icon="i-lucide-search"
-        placeholder="Cari nomor PO atau supplier..."
+        placeholder="Cari nomor Purchase Order atau supplier..."
         class="w-64"
       />
     </div>

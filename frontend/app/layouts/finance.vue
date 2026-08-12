@@ -30,7 +30,7 @@ const links = computed<NavigationMenuItem[][]>(() => {
       }
     },
     {
-      label: 'Data DO',
+      label: 'Data Delivery Order',
       icon: 'i-lucide-truck',
       to: '/finance/do',
       onSelect: () => {

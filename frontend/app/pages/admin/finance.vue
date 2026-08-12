@@ -236,7 +236,7 @@ const deadlineStatusOptions = [
   { label: 'Terlewat', value: 'overdue' }
 ]
 const doFlowOptions = [
-  { label: 'Semua Alur DO', value: 'all' },
+  { label: 'Semua Alur Delivery Order', value: 'all' },
   { label: 'Belum Rilis Dana', value: 'belum_rilis' },
   { label: 'Menanti Selesai Kirim', value: 'menanti_selesai' },
   { label: 'Menunggu Lunas Ongkir', value: 'menunggu_lunas' },
@@ -265,7 +265,7 @@ const invColumns: TableColumn<AdminInvoiceRow>[] = [
   { accessorKey: 'customer_name', header: 'Customer' },
   {
     accessorKey: 'grand_total',
-    header: 'Grand Total',
+    header: 'Total Keseluruhan',
     cell: ({ row }) => formatCurrency(row.getValue('grand_total') ?? 0)
   },
   {
@@ -302,9 +302,9 @@ const invColumns: TableColumn<AdminInvoiceRow>[] = [
 ]
 
 const doColumns: TableColumn<AdminDeliveryOrderRow>[] = [
-  { accessorKey: 'do_number', header: 'Nomor DO' },
+  { accessorKey: 'do_number', header: 'Nomor Delivery Order' },
   { accessorKey: 'customer_name', header: 'Customer' },
-  { accessorKey: 'po_number', header: 'Nomor PO' },
+  { accessorKey: 'po_number', header: 'Nomor Purchase Order' },
   {
     accessorKey: 'status_rilis_dana',
     header: 'Rilis Dana',
@@ -604,7 +604,7 @@ function openDetail(id: string, type: 'invoice' | 'do') {
                   <UInput
                     v-model="doSearch"
                     icon="i-lucide-search"
-                    placeholder="Cari nomor DO, customer, PO..."
+                    placeholder="Cari nomor Delivery Order, customer, Purchase Order..."
                     size="sm"
                     class="w-64"
                   />
