@@ -8,12 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.models.offering_letter import OfferingLetter
 from app.models.customer import Customer
+from app.models.purchase_order import PurchaseOrder
+from app.models.delivery_order import DeliveryOrder
 from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.offering_letter import (
     OfferingLetterResponse,
     OfferingLetterCreate,
     OfferingLetterUpdate,
+    OfferingLetterPurchaseOrderItem,
+    OfferingLetterPurchaseOrdersResponse,
 )
 from app.utils.notifications import create_document_notification
 
@@ -78,6 +82,89 @@ async def list_offering_letters(
 
     items = [_to_response(ol, cn) for ol, cn in rows]
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
+
+
+@router.get(
+    "/offering-letters/{id}/purchase-orders",
+    response_model=OfferingLetterPurchaseOrdersResponse,
+    summary="Purchase order & delivery order terkait offering letter",
+    description="Menampilkan purchase order yang terhubung ke surat penawaran (via `id_offering_letters`) beserta delivery order terkait tiap purchase order (via `id_purchase_order`).",
+)
+async def get_offering_letter_purchase_orders(
+    id: str, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
+    ol = result.scalar_one_or_none()
+    if not ol:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    pos = (await db.execute(select(PurchaseOrder))).scalars().all()
+    customers_by_id = {}
+    suppliers_by_id = {}
+    if pos:
+        customers_by_id = {
+            c.id: c
+            for c in (await db.execute(select(Customer))).scalars().all()
+        }
+    from app.models.supplier import Supplier
+    if pos:
+        suppliers_by_id = {
+            s.id: s
+            for s in (await db.execute(select(Supplier))).scalars().all()
+        }
+
+    items: list[OfferingLetterPurchaseOrderItem] = []
+    for po in pos:
+        if not po.id_offering_letters:
+            continue
+        try:
+            linked_ids = json.loads(po.id_offering_letters)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        if not linked_ids or id not in [str(x) for x in linked_ids]:
+            continue
+
+        customer = customers_by_id.get(po.customer_id) if po.customer_id else None
+        supplier = suppliers_by_id.get(po.supplier_id) if po.supplier_id else None
+
+        dos = (await db.execute(
+            select(DeliveryOrder).where(DeliveryOrder.id_purchase_order == po.id)
+        )).scalars().all()
+        do_items = []
+        for do in dos:
+            do_customer = customers_by_id.get(do.customer_id) if do.customer_id else None
+            do_items.append({
+                "id": do.id,
+                "do_number": do.do_number,
+                "customer_id": do.customer_id,
+                "customer_name": do_customer.name if do_customer else "",
+                "id_purchase_order": do.id_purchase_order,
+                "po_number": do.po_number,
+                "transport_name": do.transport_name,
+                "fuel_total": do.fuel_total,
+                "status": do.status,
+                "details": json.loads(do.details) if do.details else None,
+            })
+
+        items.append(OfferingLetterPurchaseOrderItem(
+            id=po.id,
+            po_number=po.po_number,
+            type=po.type,
+            customer_id=po.customer_id,
+            supplier_id=po.supplier_id,
+            customer_name=customer.name if customer else "",
+            supplier_name=supplier.name if supplier else "",
+            date=po.date,
+            total=po.total,
+            status=po.status,
+            created_by=po.created_by,
+            created_at=po.created_at,
+            updated_at=po.updated_at,
+            id_offering_letters=po.id_offering_letters,
+            delivery_orders=do_items,
+        ))
+
+    return OfferingLetterPurchaseOrdersResponse(items=items)
 
 
 @router.get(

@@ -3,6 +3,9 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.purchase_order import PurchaseOrderResponse
+from app.schemas.delivery_order import DeliveryOrderResponse
+
 
 class OfferingLetterResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -49,3 +52,13 @@ class OfferingLetterUpdate(BaseModel):
     transport_price: float | None = None
     status: str | None = None
     details: dict[str, Any] | None = None
+
+
+class OfferingLetterPurchaseOrderItem(PurchaseOrderResponse):
+    """Purchase order terkait offering letter beserta delivery order-nya."""
+
+    delivery_orders: list[DeliveryOrderResponse] = []
+
+
+class OfferingLetterPurchaseOrdersResponse(BaseModel):
+    items: list[OfferingLetterPurchaseOrderItem] = []
