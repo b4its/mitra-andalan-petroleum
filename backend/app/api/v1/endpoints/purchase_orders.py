@@ -1,5 +1,6 @@
 import json
 import uuid
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,6 +13,11 @@ from app.models.customer import Customer
 from app.models.supplier import Supplier
 from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
+from app.schemas.purchase_order import (
+    PurchaseOrderResponse,
+    PurchaseOrderCreate,
+    PurchaseOrderUpdate,
+)
 from app.utils.notifications import create_document_notification
 from app.schemas.purchase_order import (
     PurchaseOrderResponse,
@@ -55,6 +61,8 @@ def _to_response(po, customer_name, supplier_name):
         details=_details_from_str(po.details),
         created_by=po.created_by,
         id_offering_letters=po.id_offering_letters,
+        rilis_dana_at=po.rilis_dana_at,
+        status_rilis_dana=po.status_rilis_dana,
         created_at=po.created_at, updated_at=po.updated_at,
     )
 
@@ -162,6 +170,29 @@ async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSes
         if key == "details":
             val = _details_to_str(val)
         setattr(po, key, val)
+    await db.flush()
+    await db.refresh(po)
+    cn, sn = await _resolve_names(db, po)
+    return _to_response(po, cn, sn)
+
+
+@router.post(
+    "/purchase-orders/{id}/rilis-dana",
+    response_model=PurchaseOrderResponse,
+    status_code=200,
+    summary="Rilis dana PO supplier",
+    description="Menandai PO supplier bahwa dana sudah dirilis oleh admin. Setelah dirilis, surat PO supplier dapat dilihat.",
+)
+async def rilis_dana_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
+    po = result.scalar_one_or_none()
+    if not po:
+        raise HTTPException(status_code=404, detail="Not found")
+    if po.type != "supplier":
+        raise HTTPException(status_code=400, detail="Rilis dana hanya untuk PO supplier")
+    now = datetime.now()
+    po.rilis_dana_at = now
+    po.status_rilis_dana = True
     await db.flush()
     await db.refresh(po)
     cn, sn = await _resolve_names(db, po)

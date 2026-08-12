@@ -64,6 +64,14 @@ const links = [
           }
         },
         {
+          label: 'Data PO Supplier',
+          to: '/admin/data-po-supplier',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
           label: 'Halaman Operations',
           icon: 'i-lucide-arrow-up-right',
           to: '/operations',
