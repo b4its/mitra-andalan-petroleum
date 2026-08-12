@@ -97,6 +97,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
       || 'PT. Mitra Andalan Petroleum'
   },
   fuelPrices: {
+    hppPrice: offeringLetter.value?.details.fuelPrices.hppPrice || 0,
     logisticInformation:
       offeringLetter.value?.details.fuelPrices.logisticInformation
       || 'Truk Tangki',

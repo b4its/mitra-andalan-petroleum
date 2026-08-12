@@ -116,8 +116,8 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
         </UFormField> -->
 
         <UFormField
-          name="offeringLetter"
-          label="Nomor Surat Penawaran"
+          name="purchaseOrderCustomer"
+          label="Nomor Purchase Order"
           required
         >
           <USelectMenu
@@ -125,7 +125,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
               state.customerPurchaseInformation.customerPurchaseOrderNumber
             "
             :items="purchaseOrders"
-            placeholder="Pilih Surat Penawaran"
+            placeholder="Pilih Surat PO Customer"
             value-key="value"
             :ui="{ content: 'min-w-fit' }"
             class="w-full"
