@@ -54,9 +54,9 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
     cell: ({ row }) => `${row.getValue('customerName')}`
   },
   {
-    accessorKey: 'fuelTotalQty',
+    accessorKey: 'fuelTotalPrice',
     header: 'Total',
-    cell: ({ row }) => `${formatCurrency(row.getValue('fuelTotalQty'))}`
+    cell: ({ row }) => `${formatCurrency(row.getValue('fuelTotalPrice'))}`
   },
   {
     accessorKey: 'distanceKm',
