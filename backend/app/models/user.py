@@ -13,3 +13,4 @@ class User(BaseModel):
     role: Mapped[str] = mapped_column(String(20))
     demo_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     signature: Mapped[str | None] = mapped_column(String(255), nullable=True, comment="URL upload tanda tangan user")
+    signature_caption: Mapped[str | None] = mapped_column(String(255), nullable=True, comment="Caption tanda tangan (penanda siapa yang menandatangani)")

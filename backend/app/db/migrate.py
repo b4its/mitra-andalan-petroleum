@@ -90,6 +90,14 @@ async def run_migrations():
             ))
         except Exception:
             pass
+        # Caption tanda tangan user (penanda siapa yang menandatangani)
+        try:
+            await conn.execute(text(
+                "ALTER TABLE `users` ADD COLUMN `signature_caption` VARCHAR(255) NULL "
+                "COMMENT 'Caption tanda tangan (penanda siapa yang menandatangani)'"
+            ))
+        except Exception:
+            pass
         # Buat relasi customer_id nullable agar dokumen tetap bisa dibuat
         # meskipun customer belum terdaftar (mencegah error insert).
         for table in ["offering_letters", "delivery_orders", "invoices"]:

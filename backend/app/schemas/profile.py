@@ -8,6 +8,7 @@ class ProfileResponse(BaseModel):
     email: str
     role: str
     signature: str | None = None
+    signature_caption: str | None = None
 
 class ProfileDemoResponse(ProfileResponse):
     password: str
@@ -18,6 +19,7 @@ class ProfileCreate(BaseModel):
     password: str
     role: str = "staff"
     signature: str | None = None
+    signature_caption: str | None = None
 
 class ProfileUpdate(BaseModel):
     name: str | None = None
@@ -25,3 +27,4 @@ class ProfileUpdate(BaseModel):
     password: str | None = None
     role: str | None = None
     signature: str | None = None
+    signature_caption: str | None = None
