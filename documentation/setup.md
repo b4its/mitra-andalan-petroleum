@@ -68,13 +68,17 @@ NUXT_PUBLIC_SITE_URL=
 
 ## Seed Data
 
-Database otomatis terisi data awal saat pertama kali backend dijalankan:
+Database otomatis terisi data awal saat pertama kali backend dijalankan
+(lihat `backend/app/db/seed.py`):
 
 - 5 user (admin, marketing, finance, operations, accounting)
 - 3 customer, 2 supplier
 - 15 offering letters, 10 purchase orders
 - 15 delivery orders, 15 invoices
-- 5 sales, 4 notifications
+- 5 sales, 8 notifications, akun + jurnal akuntansi
+
+Panduan lengkap menjalankan seeder (fresh install, reseed database yang sudah
+terisi, dan verifikasi) ada di [seeding.md](seeding.md).
 
 ## Akun Default
 
