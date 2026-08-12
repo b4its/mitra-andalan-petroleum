@@ -82,7 +82,7 @@ const signatureBlock = computed(() => {
     return [
       {
         image: signatureBarcode.value,
-        width: 110
+        width: 90
       },
       {
         text: `(${signatureCaption.value})`,
