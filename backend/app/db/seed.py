@@ -77,11 +77,11 @@ async def _clear_all(db: AsyncSession):
 
 async def _seed_users(db: AsyncSession):
     users = [
-        User(name="Admin", email="admin@email.com", password=bcrypt.hash("admin123"), demo_password="admin123", role="admin"),
-        User(name="Baits", email="ops@email.com", password=bcrypt.hash("ops123"), demo_password="ops123", role="operations"),
-        User(name="Nico", email="marketing@email.com", password=bcrypt.hash("marketing123"), demo_password="marketing123", role="marketing"),
-        User(name="Alea", email="finance@email.com", password=bcrypt.hash("finance123"), demo_password="finance123", role="finance"),
-        User(name="Rina", email="accounting@email.com", password=bcrypt.hash("accounting123"), demo_password="accounting123", role="accounting"),
+        User(name="Admin", email="admin@email.com", password=bcrypt.hash("admin123"), demo_password="admin123", role="admin", signature_caption="Admin"),
+        User(name="Baits", email="ops@email.com", password=bcrypt.hash("ops123"), demo_password="ops123", role="operations", signature_caption="Baits - Operations"),
+        User(name="Nico", email="marketing@email.com", password=bcrypt.hash("marketing123"), demo_password="marketing123", role="marketing", signature_caption="Nico - Marketing"),
+        User(name="Alea", email="finance@email.com", password=bcrypt.hash("finance123"), demo_password="finance123", role="finance", signature_caption="Alea - Finance"),
+        User(name="Rina", email="accounting@email.com", password=bcrypt.hash("accounting123"), demo_password="accounting123", role="accounting", signature_caption="Rina - Accounting"),
     ]
     for u in users:
         db.add(u)

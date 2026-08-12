@@ -56,6 +56,51 @@ const { data: userSignature } = await useAsyncData(
   { default: () => '', server: false }
 )
 
+// Caption tanda tangan user (penanda siapa yang menandatangani)
+const { data: userProfile } = await useAsyncData(
+  'user-profile-caption',
+  async () => {
+    if (!user.value?.id) return null
+    return get<{ signature_caption?: string | null }>(
+      `/profiles/${user.value.id}`
+    )
+  },
+  { default: () => null, server: false }
+)
+
+const signatureCaption = computed(
+  () =>
+    userProfile.value?.signature_caption
+    || details?.offeror?.name
+    || user.value?.name
+    || ''
+)
+
+// Blok tanda tangan: barcode + caption (penanda siapa), atau nama jika tanpa barcode
+const signatureBlock = computed(() => {
+  if (signatureBarcode.value) {
+    return [
+      {
+        image: signatureBarcode.value,
+        width: 110
+      },
+      {
+        text: `(${signatureCaption.value})`,
+        bold: true,
+        marginTop: 2,
+        alignment: 'center'
+      }
+    ] as any[]
+  }
+  return [
+    {
+      text: `(${details?.offeror.name})`,
+      bold: true,
+      marginTop: 30
+    }
+  ] as any[]
+})
+
 const baseWithPpkb = computed(() => {
   if (!details) return 0
   return details.fuelPrices.basePrice + details.fuelPrices.sellingPrice.ppkb
@@ -583,19 +628,7 @@ const loadPdf = async () => {
           marginTop: 15,
           marginBottom: signatureBarcode.value ? 5 : 30
         },
-        ...(signatureBarcode.value
-          ? [
-              {
-                image: signatureBarcode.value,
-                width: 110
-              }
-            ]
-          : []),
-        {
-          text: `(${details?.offeror.name})`,
-          bold: true,
-          marginTop: signatureBarcode.value ? 5 : 30
-        },
+        ...signatureBlock.value,
         {
           layout: {
             defaultBorder: false,

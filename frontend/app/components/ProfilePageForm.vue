@@ -24,7 +24,8 @@ const profileSchema = z.object({
   name: z.string().min(2, 'Too short'),
   email: z.email('Email tidak valid'),
   password: z.string().optional(),
-  signature: z.instanceof(File).optional()
+  signature: z.instanceof(File).optional(),
+  signature_caption: z.string().optional()
 })
 
 type ProfileSchema = z.output<typeof profileSchema>
@@ -33,7 +34,8 @@ const profile = reactive<Partial<ProfileSchema>>({
   name: '',
   email: '',
   password: '',
-  signature: undefined
+  signature: undefined,
+  signature_caption: ''
 })
 
 const { data: userSignature } = await useAsyncData(
@@ -48,6 +50,18 @@ const { data: userSignature } = await useAsyncData(
   { default: () => '', server: false }
 )
 
+// Caption tanda tangan user saat ini (penanda siapa yang menandatangani)
+const { data: userProfile } = await useAsyncData(
+  `profile-detail-${auth.user.value?.id ?? 'anon'}`,
+  async () => {
+    if (!auth.user.value?.id) return null
+    return get<{ signature_caption?: string | null }>(
+      `/profiles/${auth.user.value.id}`
+    )
+  },
+  { default: () => null, server: false }
+)
+
 watch(
   () => auth.user.value,
   (currentUser) => {
@@ -55,6 +69,7 @@ watch(
     profile.email = currentUser?.email ?? ''
     profile.password = ''
     profile.signature = undefined
+    profile.signature_caption = userProfile.value?.signature_caption ?? ''
   },
   { immediate: true }
 )
@@ -91,6 +106,9 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
       if (resUpload[0]?.url) {
         body.signature = resUpload[0].url
       }
+    }
+    if (event.data.signature_caption) {
+      body.signature_caption = event.data.signature_caption
     }
 
     const updated = await put<any, typeof body>(`/profiles/${userId}`, body)
@@ -204,6 +222,18 @@ function toggleShow() {
                 Tanda tangan terpasang saat ini
               </span>
             </div>
+          </UFormField>
+
+          <UFormField
+            name="signature_caption"
+            label="Caption Tanda Tangan"
+            description="Penanda siapa yang ada di tanda tangan ini (contoh: Nico - Marketing)"
+          >
+            <UInput
+              v-model="profile.signature_caption"
+              placeholder="Contoh: Nico - Marketing"
+              autocomplete="off"
+            />
           </UFormField>
 
           <UButton
