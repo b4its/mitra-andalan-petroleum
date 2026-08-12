@@ -7,14 +7,8 @@ import type { MonitoringResponse, MonitoringRow } from '~/types/accounting'
 const { get } = useApi()
 const { toCSV, toExcel, toPDF } = useExport()
 
-const year = ref(new Date().getFullYear())
-const yearOptions = computed(() => {
-  const years = []
-  for (let y = 2022; y <= 2030; y++) {
-    years.push({ label: String(y), value: y })
-  }
-  return years
-})
+const dateFrom = ref('')
+const dateTo = ref('')
 
 const exportColumns: ExportColumn<MonitoringRow>[] = [
   { header: 'Bulan', accessor: (row: MonitoringRow) => row.bulan },
@@ -29,20 +23,26 @@ const exportColumns: ExportColumn<MonitoringRow>[] = [
 
 function onExport(format: 'excel' | 'pdf' | 'csv') {
   if (!data.value) return
-  const filename = `rekap-monitoring-${year.value}`
+  const rangeLabel = `${dateFrom.value || 'awal'}_${dateTo.value || 'akhir'}`
+  const filename = `rekap-monitoring-${rangeLabel}`
   const totals = [
     { label: 'Total Penghasilan', value: data.value.total_penghasilan },
     { label: 'Total Margin Kotor', value: data.value.total_gross_margin }
   ]
   if (format === 'excel') toExcel(filename, 'Rekap Monitoring', exportColumns, data.value.rows)
-  else if (format === 'pdf') toPDF(filename, `Rekap Monitoring ${year.value}`, exportColumns, data.value.rows, { totals })
+  else if (format === 'pdf') toPDF(filename, `Rekap Monitoring ${dateFrom.value} - ${dateTo.value}`, exportColumns, data.value.rows, { totals })
   else toCSV(filename, exportColumns, data.value.rows)
 }
 
 const { data, pending } = await useAsyncData(
   'accounting-monitoring',
-  () => get<MonitoringResponse>('/accounting/monitoring', { year: year.value }),
-  { default: () => null, watch: [year], server: false }
+  () => {
+    const params: Record<string, string> = {}
+    if (dateFrom.value) params.date_from = dateFrom.value
+    if (dateTo.value) params.date_to = dateTo.value
+    return get<MonitoringResponse>('/accounting/monitoring', params)
+  },
+  { default: () => null, watch: [dateFrom, dateTo], server: false }
 )
 
 const columns: TableColumn<MonitoringRow>[] = [
@@ -126,12 +126,11 @@ definePageMeta({ layout: 'accounting' })
         <section class="flex flex-col lg:gap-4">
           <UCard>
             <div class="flex flex-wrap items-end gap-3">
-              <UFormField label="Tahun">
-                <USelect
-                  v-model="year"
-                  :items="yearOptions"
-                  value-key="value"
-                />
+              <UFormField label="Dari Tanggal">
+                <UInput v-model="dateFrom" type="date" />
+              </UFormField>
+              <UFormField label="Sampai Tanggal">
+                <UInput v-model="dateTo" type="date" />
               </UFormField>
               <UDropdownMenu
                 :items="[
@@ -197,12 +196,12 @@ definePageMeta({ layout: 'accounting' })
               </UCard>
             </div>
 
-            <UCard>
+            <UCard class="overflow-x-auto">
               <UTable
                 :data="data.rows"
                 :columns="columns"
                 :ui="{
-                  base: 'table-fixed border-separate border-spacing-0',
+                  base: 'table-fixed border-separate border-spacing-0 min-w-[800px]',
                   thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
                   tbody: '[&>tr]:last:[&>td]:border-b-0',
                   th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
