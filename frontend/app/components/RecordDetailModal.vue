@@ -919,7 +919,16 @@ async function downloadFile(upload: RecordUpload) {
                 </div>
                 <div>
                   <p class="text-muted">Supplier</p>
-                  <p class="font-medium truncate">{{ fmt(doRelatedPo.supplier_name) }}</p>
+                  <p
+                    class="font-medium truncate"
+                    :class="doRelatedPo.supplier_name ? '' : 'text-muted'"
+                  >
+                    {{
+                      doRelatedPo.supplier_name
+                        ? fmt(doRelatedPo.supplier_name)
+                        : '- (PO Customer, tanpa supplier)'
+                    }}
+                  </p>
                 </div>
                 <div>
                   <p class="text-muted">Tanggal PO</p>

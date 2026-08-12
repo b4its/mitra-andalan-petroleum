@@ -106,7 +106,6 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOAdditionalState>) {
             :name="`note.${index}.name`"
             label="Ketentuan"
             class="w-full"
-            required
           >
             <UInput v-model="note.note" placeholder="Ketentuan 1" />
           </UFormField>
