@@ -17,6 +17,13 @@ cd mandalan
 docker compose --profile full up -d
 ```
 
+Atau sekaligus build ulang + seed data menyatu (target `build` di `Makefile`
+melakukan hal yang sama):
+
+```bash
+make build
+```
+
 Service akan berjalan di:
 
 | Service | Port |
