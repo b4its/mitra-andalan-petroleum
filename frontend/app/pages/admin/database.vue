@@ -26,19 +26,19 @@ function onFileChange(event: Event) {
 const confirmContent = computed(() => {
   if (pendingAction.value === 'export') {
     return {
-      title: 'Export data SQL?',
+      title: 'Ekspor data SQL?',
       description: 'Seluruh data tabel database akan disimpan ke file .sql.',
-      confirmLabel: 'Ya, Export SQL',
+      confirmLabel: 'Ya, Ekspor SQL',
       icon: 'i-lucide-download',
       color: 'primary' as const
     }
   }
   if (pendingAction.value === 'import') {
     return {
-      title: 'Import data SQL?',
+      title: 'Impor data SQL?',
       description:
         'File SQL yang dipilih akan dijalankan dan dapat mengubah data database.',
-      confirmLabel: 'Ya, Import SQL',
+      confirmLabel: 'Ya, Impor SQL',
       icon: 'i-lucide-upload',
       color: 'error' as const
     }
@@ -101,7 +101,7 @@ async function downloadExport() {
     })
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal export data SQL.',
       color: 'error'
     })
@@ -135,7 +135,7 @@ async function importSql() {
     confirmation.value = ''
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal import data SQL.',
       color: 'error'
     })
@@ -162,7 +162,7 @@ async function clearDatabase() {
     clearConfirmation.value = ''
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal membersihkan database.',
       color: 'error'
     })
@@ -199,7 +199,7 @@ async function clearDatabase() {
                 <UIcon name="i-lucide-download" class="size-5 text-success" />
                 <div>
                   <h2 class="font-semibold">
-                    Export Data SQL
+                    Ekspor Data SQL
                   </h2>
                   <p class="text-sm text-muted">
                     Download seluruh data sebagai file `.sql`.

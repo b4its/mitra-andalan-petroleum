@@ -72,7 +72,7 @@ const links = computed<NavigationMenuItem[][]>(() => {
           exact: true
         },
         {
-          label: 'PO Supplier',
+          label: 'Purchase Order Supplier',
           to: '/marketing/supplier/po',
           exact: true,
           onSelect: () => {

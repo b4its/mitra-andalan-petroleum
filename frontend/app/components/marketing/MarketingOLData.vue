@@ -82,8 +82,8 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
       const status = {
         created: 'Penawaran Telah Dibuat',
         under_revision: 'Penawaran Dalam Revisi',
-        po_received: 'PO Diterima',
-        do_completed: 'DO Selesai'
+        po_received: 'Purchase Order Diterima',
+        do_completed: 'Delivery Order Selesai'
       }[row.getValue('status') as string]
 
       return h(
@@ -146,7 +146,7 @@ function openDetail(id: string) {
           { label: 'Semua Status', value: 'all' },
           { label: 'Penawaran Telah Dibuat', value: 'created' },
           { label: 'Penawaran Dalam Revisi', value: 'under_revision' },
-          { label: 'PO Diterima', value: 'po_received' }
+          { label: 'Purchase Order Diterima', value: 'po_received' }
         ]"
         :ui="{
           trailingIcon:

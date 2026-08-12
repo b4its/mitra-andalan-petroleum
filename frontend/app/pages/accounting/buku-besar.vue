@@ -216,11 +216,11 @@ definePageMeta({ layout: 'accounting' })
               </UButton>
               <UDropdownMenu
                 :items="[
-                  { type: 'label', label: 'Export Data' },
+                  { type: 'label', label: 'Ekspor Data' },
                   { type: 'separator' },
-                  { label: 'Export to Excel', icon: 'i-lucide-file-spreadsheet', disabled: !ledger, onSelect: () => onExport('excel') },
-                  { label: 'Export to PDF', icon: 'i-lucide-file-text', disabled: !ledger, onSelect: () => onExport('pdf') },
-                  { label: 'Export to CSV', icon: 'i-lucide-file-down', disabled: !ledger, onSelect: () => onExport('csv') }
+                  { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !ledger, onSelect: () => onExport('excel') },
+                  { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !ledger, onSelect: () => onExport('pdf') },
+                  { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !ledger, onSelect: () => onExport('csv') }
                 ]"
               >
                 <UButton

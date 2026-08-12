@@ -140,7 +140,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     refresh()
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal menyimpan harga.',
       color: 'error'
     })
@@ -156,7 +156,7 @@ async function onDelete(price: Price) {
     refresh()
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal menghapus harga.',
       color: 'error'
     })

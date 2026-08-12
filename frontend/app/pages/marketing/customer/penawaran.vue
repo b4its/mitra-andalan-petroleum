@@ -59,7 +59,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
   latePenalty: 0.01,
   servicePattern: 'Pengiriman truk tangki ke lokasi customer',
   personInCharge: {
-    name: user.value?.name || 'User',
+    name: user.value?.name || 'Pengguna',
     phoneNumber: '08123456789'
   },
   paymentAddress: {
@@ -90,7 +90,7 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
 const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: 14,
   offeror: {
-    name: user.value?.name || 'User',
+    name: user.value?.name || 'Pengguna',
     signature: undefined
   },
   companyInformation: {
@@ -167,7 +167,7 @@ async function onFooterSubmit() {
     if (createdId) {
       await del(`/offering-letters/${createdId}`).catch(() => undefined)
     }
-    toast.add({ title: 'Error', description: e.message, color: 'error' })
+    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
   }
 }
 

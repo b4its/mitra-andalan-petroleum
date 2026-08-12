@@ -219,7 +219,7 @@ const distributionLabels: Record<string, string> = {
   purchase_orders: 'Tipe Purchase Order',
   delivery_orders: 'Status Delivery Order',
   invoice_deadlines: 'Status Tenggat Invoice',
-  users: 'Role User',
+  users: 'Peran Pengguna',
   notifications: 'Tipe Notifikasi',
   uploads: 'Tipe Dokumen Upload'
 }
@@ -429,7 +429,7 @@ const monitoringChart = computed(() => {
         backgroundColor: 'rgba(239,68,68,0.8)'
       },
       {
-        label: 'Gross Margin',
+        label: 'Margin Kotor',
         data: rows.map(r => r.gross_margin),
         backgroundColor: 'rgba(59,130,246,0.8)'
       }
@@ -548,7 +548,7 @@ const activityColumns: TableColumn<AdminActivity>[] = [
       const status = {
         created: 'Penawaran Telah Dibuat',
         under_revision: 'Penawaran Dalam Revisi',
-        po_received: 'PO Diterima'
+        po_received: 'Purchase Order Diterima'
       }[row.getValue('subtitle') as string]
 
       return h(

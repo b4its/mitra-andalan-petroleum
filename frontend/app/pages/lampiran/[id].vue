@@ -225,8 +225,8 @@ async function downloadFile() {
           <UEmpty
             v-else-if="sheetFailed"
             icon="i-lucide-eye-off"
-            title="Preview tidak tersedia"
-            description="File Excel tidak dapat dibaca. Gunakan tombol Download untuk mengunduhnya."
+            title="Pratinjau tidak tersedia"
+            description="File Excel tidak dapat dibaca. Gunakan tombol Unduh untuk mengunduhnya."
           />
 
           <div
@@ -253,8 +253,8 @@ async function downloadFile() {
           <UEmpty
             v-else
             icon="i-lucide-eye-off"
-            title="Preview tidak tersedia"
-            description="File dokumen ini tidak dapat ditampilkan di browser. Gunakan tombol Download untuk mengunduhnya."
+            title="Pratinjau tidak tersedia"
+            description="File dokumen ini tidak dapat ditampilkan di browser. Gunakan tombol Unduh untuk mengunduhnya."
           />
         </template>
 
@@ -262,8 +262,8 @@ async function downloadFile() {
         <UEmpty
           v-else
           icon="i-lucide-eye-off"
-          title="Preview tidak tersedia"
-          description="Tipe file ini tidak dapat ditampilkan di browser. Gunakan tombol Download untuk mengunduhnya."
+          title="Pratinjau tidak tersedia"
+          description="Tipe file ini tidak dapat ditampilkan di browser. Gunakan tombol Unduh untuk mengunduhnya."
         />
       </template>
     </main>

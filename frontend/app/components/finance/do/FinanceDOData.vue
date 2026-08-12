@@ -93,7 +93,7 @@ async function confirmRilisDana() {
     await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {})
     toast.add({
       title: 'Berhasil',
-      description: 'Dana telah dirilis. DO tersedia di Operations.',
+      description: 'Dana telah dirilis. Delivery Order tersedia di Operations.',
       color: 'success'
     })
     rilisDanaOpen.value = false
@@ -176,9 +176,9 @@ function statusBadge(done: boolean, label: string, at?: string | null) {
 const pagination = ref({ pageIndex: 0, pageSize: 7 })
 
 const columns: TableColumn<FinanceDoRow>[] = [
-  { accessorKey: 'deliveryOrderNumber', header: 'Nomor DO' },
+  { accessorKey: 'deliveryOrderNumber', header: 'Nomor Delivery Order' },
   { accessorKey: 'customerName', header: 'Customer' },
-  { accessorKey: 'purchaseOrderNumber', header: 'Nomor PO' },
+  { accessorKey: 'purchaseOrderNumber', header: 'Nomor Purchase Order' },
   {
     accessorKey: 'statusRilisDana',
     header: 'Rilis Dana',
@@ -244,7 +244,7 @@ const columns: TableColumn<FinanceDoRow>[] = [
       <UInput
         v-model="search"
         icon="i-lucide-search"
-        placeholder="Cari nomor DO, PO, atau transportir..."
+        placeholder="Cari nomor Delivery Order, Purchase Order, atau transportir..."
         class="w-72"
       />
     </div>
@@ -319,7 +319,7 @@ const columns: TableColumn<FinanceDoRow>[] = [
         }}</span>?
       </p>
       <p class="mt-2 text-xs text-dimmed">
-        Setelah dirilis, DO akan muncul di halaman Operations dan tim dapat
+        Setelah dirilis, Delivery Order akan muncul di halaman Operations dan tim dapat
         menyiapkan pengantaran.
       </p>
     </template>

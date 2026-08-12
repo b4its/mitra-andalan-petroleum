@@ -511,7 +511,7 @@ const loadPdf = async () => {
         ),
         {
           text: [
-            'Mohon Purchase Order (PO) dapat dikirimkan minimal ',
+            'Mohon Purchase Order dapat dikirimkan minimal ',
             {
               text: `${details?.purchaseOrderDeadline || 0} (${angkaTerbilang(details?.purchaseOrderDeadline || 0)}) hari `,
               bold: true

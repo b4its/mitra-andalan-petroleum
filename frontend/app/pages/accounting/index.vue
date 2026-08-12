@@ -261,7 +261,7 @@ definePageMeta({ layout: 'accounting' })
                   color="neutral"
                   variant="soft"
                 >
-                  Chart of Accounts
+                  Bagan Akun
                 </UButton>
                 <UButton
                   to="/accounting/neraca"

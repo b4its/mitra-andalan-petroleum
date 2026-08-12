@@ -85,7 +85,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
 
         <UFormField
           name="po.number"
-          label="Nomor PO"
+          label="Nomor Purchase Order"
           required
           class="flex-1"
         >
@@ -152,13 +152,13 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
 
       <UFormField
         name="offeringLetter"
-        label="Nomor Surat PO Customer"
+        label="Nomor Surat Purchase Order Customer"
         required
       >
         <USelectMenu
           v-model="state.selectedOfferingLetter"
           :items="offeringLetters"
-          placeholder="Pilih Surat PO Customer"
+          placeholder="Pilih Surat Purchase Order Customer"
           value-key="value"
           :ui="{ content: 'min-w-fit' }"
           class="w-full"

@@ -142,7 +142,7 @@ const columns: TableColumn<any>[] = [
           variant: 'ghost',
           color: 'primary',
           icon: 'i-lucide-eye',
-          label: 'View',
+          label: 'Lihat',
           onClick: () => openDetail(notif)
         }),
         !notif.is_read

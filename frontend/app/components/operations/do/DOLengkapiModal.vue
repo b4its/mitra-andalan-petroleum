@@ -138,14 +138,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     toast.add({
       title: 'Berhasil',
-      description: 'Data DO berhasil dilengkapi. Surat siap dirender.',
+      description: 'Data Delivery Order berhasil dilengkapi. Surat siap dirender.',
       color: 'success'
     })
     emit('update:open', false)
     emit('updated')
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal menyimpan data.',
       color: 'error'
     })
@@ -173,10 +173,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         class="mb-4 rounded-lg bg-warning/10 border border-warning/30 px-4 py-3 text-sm text-warning"
       >
         <p class="font-medium">
-          Data DO belum lengkap untuk dicetak.
+          Data Delivery Order belum lengkap untuk dicetak.
         </p>
         <p class="text-xs mt-1 text-muted">
-          Isi data berikut agar surat DO dapat dirender.
+          Isi data berikut agar surat Delivery Order dapat dirender.
         </p>
       </div>
 
@@ -187,14 +187,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         @submit="onSubmit"
       >
         <div class="grid grid-cols-2 gap-4">
-          <UFormField name="do_number" label="Nomor DO" required>
+          <UFormField name="do_number" label="Nomor Delivery Order" required>
             <UInput
               v-model="form.do_number"
               placeholder="0000/DO/MAP/I/0000"
               class="w-full"
             />
           </UFormField>
-          <UFormField name="do_date" label="Tanggal DO" required>
+          <UFormField name="do_date" label="Tanggal Delivery Order" required>
             <UInput v-model="form.do_date" type="date" class="w-full" />
           </UFormField>
         </div>

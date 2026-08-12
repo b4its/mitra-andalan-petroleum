@@ -161,7 +161,7 @@ watch([search, filterTab, statusFilter], () => {
 // ── Status helpers ────────────────────────────────────────────
 const doStatusLabel: Record<string, string> = {
   created: 'Dibuat',
-  draft: 'Draft',
+  draft: 'Draf',
   document_returned: 'Dokumen Kembali'
 }
 const doStatusColor: Record<string, string> = {
@@ -170,9 +170,9 @@ const doStatusColor: Record<string, string> = {
   document_returned: 'success'
 }
 const doStatusOptions = [
-  { label: 'All Status', value: 'all' },
+  { label: 'Semua Status', value: 'all' },
   { label: 'Dibuat', value: 'created' },
-  { label: 'Draft', value: 'draft' },
+  { label: 'Draf', value: 'draft' },
   { label: 'Dokumen Kembali', value: 'document_returned' }
 ]
 
@@ -194,7 +194,7 @@ function alurBadge(done: boolean, at: string | null) {
 }
 
 const columns: TableColumn<AdminDeliveryOrderRow>[] = [
-  { accessorKey: 'do_number', header: 'Nomor DO' },
+  { accessorKey: 'do_number', header: 'Nomor Delivery Order' },
   { accessorKey: 'customer_name', header: 'Customer' },
   { accessorKey: 'transport_name', header: 'Transportir' },
   {
@@ -231,7 +231,7 @@ const columns: TableColumn<AdminDeliveryOrderRow>[] = [
   },
   {
     accessorKey: 'status',
-    header: 'Status DO',
+    header: 'Status Delivery Order',
     cell: ({ row }) => {
       const s = row.getValue('status') as string
       return h(
@@ -397,7 +397,7 @@ const filterTabs = [
               <template #header>
                 <div class="flex items-center justify-between">
                   <p class="font-medium">
-                    Distribusi Status DO
+                    Distribusi Status Delivery Order
                   </p>
                   <p class="text-xs text-muted">
                     Klik segment untuk detail
@@ -432,7 +432,7 @@ const filterTabs = [
                   <UInput
                     v-model="search"
                     icon="i-lucide-search"
-                    placeholder="Cari nomor DO, customer..."
+                    placeholder="Cari nomor Delivery Order, customer..."
                     size="sm"
                     class="w-64"
                   />

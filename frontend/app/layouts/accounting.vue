@@ -136,7 +136,7 @@ const links = computed<NavigationMenuItem[][]>(() => {
       defaultOpen: true,
       children: [
         {
-          label: 'Chart of Accounts',
+          label: 'Bagan Akun',
           icon: 'i-lucide-list-tree',
           to: '/accounting/akun',
           onSelect: () => {

@@ -11,7 +11,7 @@ const props = withDefaults(
   }>(),
   {
     showToastTitle: true,
-    toastTitle: 'Success',
+    toastTitle: 'Berhasil',
     successDescription: 'Data Akun Anda berhasil diupdate'
   }
 )
@@ -22,7 +22,7 @@ const { put } = useApi()
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Too short'),
-  email: z.email('Invalid email'),
+  email: z.email('Email tidak valid'),
   password: z.string().optional()
 })
 
@@ -85,7 +85,7 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
     })
   } catch (err: any) {
     toast.add({
-      title: 'Error',
+      title: 'Gagal',
       description: err.message || 'Gagal memperbarui profil',
       color: 'error'
     })
@@ -103,7 +103,7 @@ function toggleShow() {
   <UDashboardPanel id="profile">
     <template #header>
       <UDashboardNavbar
-        :title="`Profil User ${auth.user.value?.name ?? 'User'} | ${auth.user.value?.role ?? 'Default'}`"
+        :title="`Profil Pengguna ${auth.user.value?.name ?? 'Pengguna'} | ${auth.user.value?.role ?? 'Bawaan'}`"
         :ui="{ right: 'gap-3', title: 'capitalize' }"
       >
         <template #leading>
@@ -145,7 +145,7 @@ function toggleShow() {
                   variant="link"
                   size="sm"
                   :icon="show ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                  :aria-label="show ? 'Hide password' : 'Show password'"
+                  :aria-label="show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
                   :aria-pressed="show"
                   aria-controls="password"
                   @click="toggleShow"

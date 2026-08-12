@@ -103,7 +103,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
       <div class="flex w-full gap-4">
         <!-- <UFormField
           name="customerPurchaseOrderNumber"
-          label="Customer PO No"
+          label="Customer Purchase Order No"
           required
         >
           <UInput
@@ -125,7 +125,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
               state.customerPurchaseInformation.customerPurchaseOrderNumber
             "
             :items="purchaseOrders"
-            placeholder="Pilih Surat PO Customer"
+            placeholder="Pilih Surat Purchase Order Customer"
             value-key="value"
             :ui="{ content: 'min-w-fit' }"
             class="w-full"
@@ -152,7 +152,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
           />
         </UFormField>
 
-        <UFormField name="salesOrderNumber" label="SO No" required>
+        <UFormField name="salesOrderNumber" label="Sales Order No" required>
           <UInput
             v-model="state.customerPurchaseInformation.salesOrderNumber"
             type="text"
@@ -170,7 +170,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
           v-model="state.customerPurchaseInformation.deliveryOrderNumberData"
           multiple
           value-key="value"
-          placeholder="Select delivery order numbers"
+          placeholder="Pilih nomor Delivery Order"
           :items="deliveryOrderGroups"
           class="w-full"
         />

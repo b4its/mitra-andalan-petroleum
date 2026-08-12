@@ -59,7 +59,7 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
   },
   {
     accessorKey: 'grandTotal',
-    header: 'Grand Total',
+    header: 'Total Keseluruhan',
     cell: ({ row }) => `${formatCurrency(row.getValue('grandTotal'))}`
   },
   {

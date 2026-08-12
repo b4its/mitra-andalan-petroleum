@@ -34,14 +34,14 @@ function isFilled(value: unknown) {
 
 const missingFields = computed(() => {
   const data = details.value
-  if (!data) return ['Data delivery order']
+  if (!data) return ['Data Delivery Order']
 
   const required: Array<[string, unknown]> = [
     ['Nama perusahaan', data.companyInformation?.name],
     ['Alamat perusahaan', data.companyInformation?.address],
-    ['Nomor DO', data.doInformation?.doNumber],
-    ['Tanggal DO', data.doInformation?.doDateCreated],
-    ['Nomor PO Customer', data.doInformation?.poCustomerNumber?.purchaseOrderNumber],
+    ['Nomor Delivery Order', data.doInformation?.doNumber],
+    ['Tanggal Delivery Order', data.doInformation?.doDateCreated],
+    ['Nomor Purchase Order Customer', data.doInformation?.poCustomerNumber?.purchaseOrderNumber],
     ['Nama customer', data.customerName],
     ['Nama penerima', data.receiverInformation?.name],
     ['Nama transportir', data.transportName],
@@ -192,7 +192,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'No. DO MAP',
+                  text: 'No. Delivery Order MAP',
                   bold: true
                 },
                 {
@@ -209,7 +209,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'Tgl. DO',
+                  text: 'Tgl. Delivery Order',
                   bold: true
                 },
                 {
@@ -240,7 +240,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'NO. PO Cust.',
+                  text: 'NO. Purchase Order Cust.',
                   bold: true
                 },
                 {
@@ -257,7 +257,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'No. SO',
+                  text: 'No. Sales Order',
                   bold: true
                 },
                 {
@@ -917,7 +917,7 @@ watch(
             icon="i-lucide-clipboard-pen"
             color="primary"
           >
-            Lengkapi di Form DO
+            Lengkapi di Form Delivery Order
           </UButton>
         </div>
       </div>

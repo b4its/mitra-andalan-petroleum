@@ -67,7 +67,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
         />
       </UFormField>
 
-      <UFormField name="loadingTerminal" label="Loading Terminal">
+      <UFormField name="loadingTerminal" label="Terminal Loading">
         <UInput
           v-model="state.delivery.loadingTerminal"
           type="text"
@@ -75,7 +75,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
         />
       </UFormField>
 
-      <UFormField name="loadingDate" label="Loading Date">
+      <UFormField name="loadingDate" label="Tanggal Loading">
         <UInput
           v-model="state.delivery.loadingDate"
           type="date"

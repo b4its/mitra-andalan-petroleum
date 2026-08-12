@@ -34,6 +34,7 @@ interface RecordDetail {
   lunas_ongkir_at: string | null
   created_at: string
   updated_at: string
+  details?: Record<string, unknown> | null
 }
 
 interface RecordUpload {
@@ -202,6 +203,19 @@ const { data: doRelatedPo, pending: doRelatedPoPending } = await useAsyncData(
   },
   { watch: [() => props.id, () => props.type, () => data.value], default: null }
 )
+
+interface DODetailsShape {
+  t2Depot?: number
+  t2Unloading?: number
+  indexSensitivity?: number
+  fuelReceived?: number
+  notes?: Array<{ note?: string }>
+}
+
+const doDetails = computed<DODetailsShape | null>(() => {
+  const rec = data.value as (RecordDetail & { details?: DODetailsShape }) | null
+  return rec?.details ?? null
+})
 
 // ── Fetch riwayat DO yang bereferensi ke PO (parent) ──────────
 const { data: poRelatedDos, pending: poRelatedDosPending } = await useAsyncData(
@@ -387,7 +401,7 @@ function fmtSize(bytes: number): string {
 const olStatusLabel: Record<string, string> = {
   created: 'Dibuat',
   under_revision: 'Revisi',
-  po_received: 'PO Diterima'
+  po_received: 'Purchase Order Diterima'
 }
 const olStatusColor: Record<string, 'info' | 'warning' | 'success'> = {
   created: 'info',
@@ -486,7 +500,7 @@ async function downloadFile(upload: RecordUpload) {
           <div class="grid grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
-                Nomor SP
+                Nomor Surat Penawaran
               </p>
               <p class="font-semibold">
                 {{ fmt(data.offering_letter_number) }}
@@ -591,7 +605,7 @@ async function downloadFile(upload: RecordUpload) {
           <div class="grid grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
-                Nomor PO
+                Nomor Purchase Order
               </p>
               <p class="font-semibold">
                 {{ fmt(data.po_number) }}
@@ -683,10 +697,10 @@ async function downloadFile(upload: RecordUpload) {
               <p
                 class="text-xs font-semibold text-muted uppercase tracking-wide"
               >
-                Riwayat Delivery Order dari PO ini
+                Riwayat Delivery Order dari Purchase Order ini
               </p>
               <UBadge variant="subtle" color="primary">
-                {{ poRelatedDos?.length || 0 }} DO
+                {{ poRelatedDos?.length || 0 }} Delivery Order
               </UBadge>
             </div>
 
@@ -797,7 +811,7 @@ async function downloadFile(upload: RecordUpload) {
           <div class="grid grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
-                Nomor DO
+                Nomor Delivery Order
               </p>
               <p class="font-semibold">
                 {{ fmt(data.do_number) }}
@@ -824,7 +838,7 @@ async function downloadFile(upload: RecordUpload) {
             </div>
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
-                Nomor PO
+                Nomor Purchase Order
               </p>
               <p class="font-medium">
                 {{ fmt(data.po_number) }}
@@ -926,16 +940,16 @@ async function downloadFile(upload: RecordUpload) {
                     {{
                       doRelatedPo.supplier_name
                         ? fmt(doRelatedPo.supplier_name)
-                        : '- (PO Customer, tanpa supplier)'
+                        : '- (Purchase Order Customer, tanpa supplier)'
                     }}
                   </p>
                 </div>
                 <div>
-                  <p class="text-muted">Tanggal PO</p>
+                  <p class="text-muted">Tanggal Purchase Order</p>
                   <p class="font-medium">{{ fmt(doRelatedPo.date) }}</p>
                 </div>
                 <div>
-                  <p class="text-muted">Total PO</p>
+                  <p class="text-muted">Total Purchase Order</p>
                   <p class="font-medium text-primary">
                     {{ fmtCurrency(doRelatedPo.total) }}
                   </p>
@@ -1062,6 +1076,67 @@ async function downloadFile(upload: RecordUpload) {
                 </p>
               </div>
             </div>
+          </div>
+
+          <!-- Catatan Pengiriman -->
+          <div
+            v-if="
+              doDetails
+              && (doDetails.t2Depot
+                || doDetails.t2Unloading
+                || doDetails.indexSensitivity
+                || doDetails.fuelReceived)
+            "
+            class="border-t border-default pt-3"
+          >
+            <p
+              class="text-xs font-semibold text-muted uppercase tracking-wide mb-3"
+            >
+              Catatan Pengiriman
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-xs text-muted">T2 Depo</p>
+                <p class="font-medium">
+                  {{ doDetails.t2Depot ?? '-' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted">T2 Bongkar</p>
+                <p class="font-medium">
+                  {{ doDetails.t2Unloading ?? '-' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted">Kepekaan Index</p>
+                <p class="font-medium">
+                  {{ doDetails.indexSensitivity ?? '-' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted">BBM Diterima</p>
+                <p class="font-medium">
+                  {{ doDetails.fuelReceived ?? '-' }} L
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Catatan Tambahan -->
+          <div
+            v-if="doDetails?.notes?.length"
+            class="border-t border-default pt-3"
+          >
+            <p
+              class="text-xs font-semibold text-muted uppercase tracking-wide mb-2"
+            >
+              Catatan Tambahan
+            </p>
+            <ul class="space-y-1.5 list-disc pl-4 text-sm">
+              <li v-for="(note, i) in doDetails.notes" :key="i">
+                {{ note.note || '-' }}
+              </li>
+            </ul>
           </div>
         </div>
 

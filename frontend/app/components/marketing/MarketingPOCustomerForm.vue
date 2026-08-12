@@ -68,7 +68,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
           <UInputNumber v-model="state.total" class="w-full" :min="1" />
         </UFormField>
 
-        <UFormField name="poReceivedDate" label="PO Customer Diterima" required>
+        <UFormField name="poReceivedDate" label="Purchase Order Customer Diterima" required>
           <UInput
             v-model="state.poReceivedDate"
             type="date"
@@ -88,7 +88,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOCustomerState>) {
 
       <div class="flex justify-end pt-4">
         <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-          Upload PO Customer
+          Upload Purchase Order Customer
         </UButton>
       </div>
     </UPageCard>

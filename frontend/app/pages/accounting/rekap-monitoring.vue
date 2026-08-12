@@ -21,7 +21,7 @@ const exportColumns: ExportColumn<MonitoringRow>[] = [
   { header: 'Invoice', accessor: (row: MonitoringRow) => row.invoice },
   { header: 'Modal Elnusa', accessor: (row: MonitoringRow) => row.modal_elnusa },
   { header: 'OAT', accessor: (row: MonitoringRow) => row.oat },
-  { header: 'Gross Margin', accessor: (row: MonitoringRow) => row.gross_margin },
+  { header: 'Margin Kotor', accessor: (row: MonitoringRow) => row.gross_margin },
   { header: 'Penghasilan', accessor: (row: MonitoringRow) => row.penghasilan },
   { header: 'Operasional', accessor: (row: MonitoringRow) => row.operasional },
   { header: 'Fee Manajemen', accessor: (row: MonitoringRow) => row.fee_manajemen }
@@ -32,7 +32,7 @@ function onExport(format: 'excel' | 'pdf' | 'csv') {
   const filename = `rekap-monitoring-${year.value}`
   const totals = [
     { label: 'Total Penghasilan', value: data.value.total_penghasilan },
-    { label: 'Total Gross Margin', value: data.value.total_gross_margin }
+    { label: 'Total Margin Kotor', value: data.value.total_gross_margin }
   ]
   if (format === 'excel') toExcel(filename, 'Rekap Monitoring', exportColumns, data.value.rows)
   else if (format === 'pdf') toPDF(filename, `Rekap Monitoring ${year.value}`, exportColumns, data.value.rows, { totals })
@@ -71,7 +71,7 @@ const columns: TableColumn<MonitoringRow>[] = [
   },
   {
     accessorKey: 'gross_margin',
-    header: 'Gross Margin',
+    header: 'Margin Kotor',
     meta: { class: { th: 'text-right', td: 'text-right' } },
     cell: ({ row }) => {
       const val = Number(row.getValue('gross_margin'))
@@ -135,11 +135,11 @@ definePageMeta({ layout: 'accounting' })
               </UFormField>
               <UDropdownMenu
                 :items="[
-                  { type: 'label', label: 'Export Data' },
+                  { type: 'label', label: 'Ekspor Data' },
                   { type: 'separator' },
-                  { label: 'Export to Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
-                  { label: 'Export to PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
-                  { label: 'Export to CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
+                  { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
+                  { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
+                  { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
                 ]"
               >
                 <UButton
@@ -181,7 +181,7 @@ definePageMeta({ layout: 'accounting' })
               </UCard>
               <UCard color="primary" variant="subtle">
                 <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                  Total Gross Margin
+                  Total Margin Kotor
                 </p>
                 <p class="text-2xl font-bold">
                   {{ formatCurrency(data.total_gross_margin) }}
@@ -240,7 +240,7 @@ definePageMeta({ layout: 'accounting' })
                 </div>
                 <div>
                   <p class="text-xs text-muted">
-                    Gross Margin
+                    Margin Kotor
                   </p>
                   <p class="font-bold">
                     {{ formatCurrency(data.total_gross_margin) }}

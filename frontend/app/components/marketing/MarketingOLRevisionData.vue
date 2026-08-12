@@ -80,7 +80,7 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
       const status = {
         created: 'Penawaran Telah Dibuat',
         under_revision: 'Penawaran Dalam Revisi',
-        po_received: 'PO Diterima'
+        po_received: 'Purchase Order Diterima'
       }[row.getValue('status') as string]
       return h(
         UBadge,

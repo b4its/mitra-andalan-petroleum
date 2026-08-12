@@ -142,7 +142,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'No. DO MAP',
+                  text: 'No. Delivery Order MAP',
                   bold: true
                 },
                 {
@@ -159,7 +159,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'Tgl. DO',
+                  text: 'Tgl. Delivery Order',
                   bold: true
                 },
                 {
@@ -190,7 +190,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'NO. PO Cust.',
+                  text: 'NO. Purchase Order Cust.',
                   bold: true
                 },
                 {
@@ -207,7 +207,7 @@ const loadPdf = async () => {
                   border: [true, false, false, false]
                 },
                 {
-                  text: 'No. SO',
+                  text: 'No. Sales Order',
                   bold: true
                 },
                 {

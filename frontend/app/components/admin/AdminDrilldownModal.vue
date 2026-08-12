@@ -177,7 +177,7 @@ const columns = computed((): TableColumn<any>[] => {
       { accessorKey: 'title', header: 'Nama' },
       {
         accessorKey: 'status',
-        header: 'Role',
+        header: 'Peran',
         cell: ({ row }) => statusBadge(row.getValue('status') ?? '', 'user')
       },
       {
@@ -216,17 +216,17 @@ const columns = computed((): TableColumn<any>[] => {
       }
     ]
 
-  // ── PO Customer & PO Supplier ────────────────────────────────
+  // ── Purchase Order Customer & Purchase Order Supplier ────────────────────────────────
   if (key === 'customer_purchase_orders' || key === 'supplier_purchase_orders')
     return [
-      { accessorKey: 'title', header: 'Nomor PO' },
+      { accessorKey: 'title', header: 'Nomor Purchase Order' },
       // {
       //   accessorKey: "subtitle",
       //   header: key === "customer_purchase_orders" ? "Customer" : "Supplier",
       // },
       {
         accessorKey: 'value',
-        header: 'Nilai PO',
+        header: 'Nilai Purchase Order',
         cell: ({ row }) => formatCurrency(row.getValue('value') ?? 0)
       },
       {
@@ -248,7 +248,7 @@ const columns = computed((): TableColumn<any>[] => {
   // ── Delivery Orders & Fuel Volume ────────────────────────────
   if (key === 'delivery_orders' || key === 'fuel_volume')
     return [
-      { accessorKey: 'title', header: 'Nomor DO' },
+      { accessorKey: 'title', header: 'Nomor Delivery Order' },
       // { accessorKey: "subtitle", header: "Transportir" },
       {
         accessorKey: 'value',
@@ -285,7 +285,7 @@ const columns = computed((): TableColumn<any>[] => {
       // { accessorKey: "subtitle", header: "Customer" },
       {
         accessorKey: 'value',
-        header: 'Grand Total',
+        header: 'Total Keseluruhan',
         cell: ({ row }) => formatCurrency(row.getValue('value') ?? 0)
       },
       {
@@ -410,11 +410,11 @@ const searchPlaceholder = computed(() => {
   if (key === 'customers') return 'Cari nama customer...'
   if (key === 'suppliers') return 'Cari nama supplier...'
   if (key === 'users') return 'Cari nama atau role...'
-  if (key === 'offering_letters') return 'Cari nomor SP atau customer...'
+  if (key === 'offering_letters') return 'Cari nomor Surat Penawaran atau customer...'
   if (key === 'customer_purchase_orders' || key === 'supplier_purchase_orders')
-    return 'Cari nomor PO...'
+    return 'Cari nomor Purchase Order...'
   if (key === 'delivery_orders' || key === 'fuel_volume')
-    return 'Cari nomor DO atau transportir...'
+    return 'Cari nomor Delivery Order atau transportir...'
   if (
     [
       'invoice_value',

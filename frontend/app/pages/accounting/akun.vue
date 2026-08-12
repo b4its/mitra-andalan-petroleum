@@ -32,9 +32,9 @@ const exportColumns: ExportColumn<AccountingAccount>[] = [
 function onExport(format: 'excel' | 'pdf' | 'csv') {
   const filename = `chart-of-accounts-${new Date().toISOString().slice(0, 10)}`
   if (format === 'excel')
-    toExcel(filename, 'Chart of Accounts', exportColumns, accounts.value)
+    toExcel(filename, 'Bagan Akun', exportColumns, accounts.value)
   else if (format === 'pdf')
-    toPDF(filename, 'Chart of Accounts', exportColumns, accounts.value, {
+    toPDF(filename, 'Bagan Akun', exportColumns, accounts.value, {
       subtitle: 'Daftar akun untuk jurnal umum'
     })
   else toCSV(filename, exportColumns, accounts.value)
@@ -203,7 +203,7 @@ definePageMeta({ layout: 'accounting' })
         <template #title>
           <div>
             <p class="text-base font-semibold">
-              Chart of Accounts
+              Bagan Akun
             </p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Daftar akun untuk jurnal umum
@@ -229,20 +229,20 @@ definePageMeta({ layout: 'accounting' })
               </UButton>
               <UDropdownMenu
                 :items="[
-                  { type: 'label', label: 'Export Data' },
+                  { type: 'label', label: 'Ekspor Data' },
                   { type: 'separator' },
                   {
-                    label: 'Export to Excel',
+                    label: 'Ekspor ke Excel',
                     icon: 'i-lucide-file-spreadsheet',
                     onSelect: () => onExport('excel')
                   },
                   {
-                    label: 'Export to PDF',
+                    label: 'Ekspor ke PDF',
                     icon: 'i-lucide-file-text',
                     onSelect: () => onExport('pdf')
                   },
                   {
-                    label: 'Export to CSV',
+                    label: 'Ekspor ke CSV',
                     icon: 'i-lucide-file-down',
                     onSelect: () => onExport('csv')
                   }
@@ -292,7 +292,7 @@ definePageMeta({ layout: 'accounting' })
           <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-lg' }">
             <template #title>
               <h3 class="font-semibold">
-                {{ editingId ? "Edit Akun" : "Tambah Akun" }}
+                {{ editingId ? "Ubah Akun" : "Tambah Akun" }}
               </h3>
             </template>
 

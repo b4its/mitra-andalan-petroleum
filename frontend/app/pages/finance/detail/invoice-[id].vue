@@ -287,13 +287,13 @@ const loadPdf = async () => {
                   border: [true, false, true, true]
                 },
                 {
-                  text: 'No. DO',
+                  text: 'No. Delivery Order',
                   bold: true,
                   alignment: 'center',
                   border: [true, false, true, true]
                 },
                 {
-                  text: 'Customer PO No',
+                  text: 'Customer Purchase Order No',
                   bold: true,
                   alignment: 'center',
                   border: [true, false, true, true]
@@ -340,7 +340,7 @@ const loadPdf = async () => {
                   alignment: 'center'
                 },
                 {
-                  text: 'SO No',
+                  text: 'Sales Order No',
                   bold: true,
                   alignment: 'center'
                 }

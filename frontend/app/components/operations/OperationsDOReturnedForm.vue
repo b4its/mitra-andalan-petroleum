@@ -85,7 +85,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOState>) {
 
         <div class="flex justify-end pt-4">
           <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-            Upload DO
+            Upload Delivery Order
           </UButton>
         </div>
       </template>
