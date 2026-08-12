@@ -577,12 +577,15 @@ async def _seed_accounting(db: AsyncSession):
     await db.flush()
 
     kas = accounts["1-1000"]
+    kas_kecil = accounts["1-1010"]
     bank = accounts["1-1100"]
     piutang = accounts["1-1200"]
     pendapatan = accounts["4-1000"]
     ongkir = accounts["4-1100"]
-    beban_transport = accounts["5-1010"]
     beban_operasional = accounts["5-1000"]
+    beban_transport = accounts["5-1010"]
+    beban_gaji = accounts["5-1020"]
+    beban_listrik_air = accounts["5-1030"]
 
     entries = [
         {"entry_number": "JRM-202606-0001", "entry_date": date(2026, 6, 5), "description": "Penjualan BBM tunai ke PT. Bina Karya Sentosa", "reference": "INV/2026/VI/001", "lines": [(kas, None, 50000000, 0), (pendapatan, None, 0, 50000000)]},
@@ -591,6 +594,12 @@ async def _seed_accounting(db: AsyncSession):
         {"entry_number": "JRM-202606-0004", "entry_date": date(2026, 6, 20), "description": "Penerimaan pembayaran piutang dari CV. Maju Jaya Abadi", "reference": "PAY/2026/VI/004", "lines": [(bank, None, 75000000, 0), (piutang, None, 0, 75000000)]},
         {"entry_number": "JRM-202606-0005", "entry_date": date(2026, 6, 25), "description": "Pembayaran beban operasional bulan Juni", "reference": "EXP/2026/VI/005", "lines": [(beban_operasional, None, 8000000, 0), (kas, None, 0, 8000000)]},
         {"entry_number": "JRM-202606-0006", "entry_date": date(2026, 6, 28), "description": "Pendapatan jasa angkut diterima tunai", "reference": "TR/2026/VI/006", "lines": [(kas, None, 5000000, 0), (ongkir, None, 0, 5000000)]},
+        # Pemasukan (mutasi kredit pada akun pendapatan)
+        {"entry_number": "JRM-202606-0007", "entry_date": date(2026, 6, 30), "description": "Pendapatan jasa angkut dibayar tunai oleh CV. Maju Jaya Abadi", "reference": "DO/2026/VI/007", "lines": [(kas, None, 6000000, 0), (ongkir, None, 0, 6000000)]},
+        {"entry_number": "JRM-202607-0001", "entry_date": date(2026, 7, 3), "description": "Penjualan BBM kredit ke PT. Sumber Rejeki Mandiri", "reference": "INV/2026/VII/003", "lines": [(piutang, None, 42000000, 0), (pendapatan, None, 0, 42000000)]},
+        # Pengeluaran (mutasi debit pada akun beban)
+        {"entry_number": "JRM-202606-0008", "entry_date": date(2026, 6, 29), "description": "Pembayaran beban listrik & air bulan Juni", "reference": "UTL/2026/VI/001", "lines": [(beban_listrik_air, None, 1250000, 0), (kas_kecil, None, 0, 1250000)]},
+        {"entry_number": "JRM-202607-0002", "entry_date": date(2026, 7, 5), "description": "Pembayaran gaji karyawan bulan Juni", "reference": "PAY/2026/VII/001", "lines": [(beban_gaji, None, 28000000, 0), (bank, None, 0, 28000000)]},
     ]
 
     for e in entries:
@@ -633,7 +642,7 @@ async def _check_seed(db: AsyncSession) -> bool:
         ("delivery_orders", await count(DeliveryOrder), 15),
         ("invoices", await count(Invoice), 15),
         ("accounts", await count(Account), 21),
-        ("journal_entries", await count(JournalEntry), 6),
+        ("journal_entries", await count(JournalEntry), 10),
     ]:
         ok = actual == expected
         all_ok = all_ok and ok
