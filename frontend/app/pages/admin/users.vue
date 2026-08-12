@@ -8,7 +8,7 @@ definePageMeta({ layout: 'admin' })
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const toast = useToast()
-const { get, post, put } = useApi()
+const { get, post, put, postFile } = useApi()
 
 // ── Tipe lokal ────────────────────────────────────────────────
 interface User {
@@ -16,6 +16,8 @@ interface User {
   name: string
   email: string
   role: string
+  signature?: string | null
+  signature_caption?: string | null
 }
 
 // ── Data fetch ────────────────────────────────────────────────
@@ -108,13 +110,17 @@ const addSchema = z.object({
   name: z.string().min(2, 'Minimal 2 karakter'),
   email: z.email('Email tidak valid'),
   password: z.string().min(6, 'Minimal 6 karakter'),
-  role: z.enum(ROLES)
+  role: z.enum(ROLES),
+  signature_caption: z.string().optional(),
+  signature: z.instanceof(File).optional()
 })
 const editSchema = z.object({
   name: z.string().min(2, 'Minimal 2 karakter'),
   email: z.email('Email tidak valid'),
   password: z.string().optional(),
-  role: z.enum(ROLES)
+  role: z.enum(ROLES),
+  signature_caption: z.string().optional(),
+  signature: z.instanceof(File).optional()
 })
 
 type AddSchema = z.output<typeof addSchema>
@@ -124,7 +130,9 @@ const formState = reactive({
   name: '',
   email: '',
   password: '',
-  role: 'marketing' as (typeof ROLES)[number]
+  role: 'marketing' as (typeof ROLES)[number],
+  signature_caption: '',
+  signature: undefined as File | undefined
 })
 
 const saving = ref(false)
@@ -137,6 +145,8 @@ function openAdd() {
   formState.email = ''
   formState.password = ''
   formState.role = 'marketing'
+  formState.signature_caption = ''
+  formState.signature = undefined
   modalOpen.value = true
 }
 
@@ -153,6 +163,8 @@ function openEdit(user: User) {
   formState.email = user.email
   formState.password = ''
   formState.role = user.role as (typeof ROLES)[number]
+  formState.signature_caption = user.signature_caption || ''
+  formState.signature = undefined
   modalOpen.value = true
 }
 
@@ -161,7 +173,27 @@ async function onSubmitAdd(event: FormSubmitEvent<AddSchema>) {
   if (saving.value) return
   saving.value = true
   try {
-    await post<User, AddSchema>('/profiles', event.data)
+    const body: Record<string, string> = {
+      name: event.data.name,
+      email: event.data.email,
+      password: event.data.password,
+      role: event.data.role
+    }
+    if (event.data.signature_caption) {
+      body.signature_caption = event.data.signature_caption
+    }
+    const created = await post<any, typeof body>('/profiles', body)
+
+    // Upload tanda tangan jika ada
+    if (event.data.signature && created.id) {
+      await postFile('/upload', {
+        files: [event.data.signature],
+        folder: 'profiles',
+        document_type: 'profile',
+        document_id: created.id
+      })
+    }
+
     toast.add({
       title: 'Berhasil',
       description: 'Pengguna baru berhasil ditambahkan.',
@@ -191,7 +223,21 @@ async function onSubmitEdit(event: FormSubmitEvent<EditSchema>) {
       role: event.data.role
     }
     if (event.data.password) body.password = event.data.password
-    await put<User, typeof body>(`/profiles/${selectedUser.value.id}`, body)
+    if (event.data.signature_caption) {
+      body.signature_caption = event.data.signature_caption
+    }
+    await put<any, typeof body>(`/profiles/${selectedUser.value.id}`, body)
+
+    // Upload tanda tangan baru jika ada
+    if (event.data.signature) {
+      await postFile('/upload', {
+        files: [event.data.signature],
+        folder: 'profiles',
+        document_type: 'profile',
+        document_id: selectedUser.value.id
+      })
+    }
+
     toast.add({
       title: 'Berhasil',
       description: 'Data pengguna berhasil diperbarui.',
@@ -403,6 +449,22 @@ const showPassword = ref(false)
               {{ selectedUser.id }}
             </p>
           </div>
+          <div v-if="selectedUser.signature" class="col-span-2">
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Tanda Tangan
+            </p>
+            <img
+              :src="selectedUser.signature"
+              alt="Tanda tangan"
+              class="h-12 w-auto object-contain rounded border"
+            />
+            <p
+              v-if="selectedUser.signature_caption"
+              class="mt-1 text-xs text-muted"
+            >
+              {{ selectedUser.signature_caption }}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -455,6 +517,29 @@ const showPassword = ref(false)
             :items="ROLES.map((r) => ({ label: r, value: r }))"
           />
         </UFormField>
+
+        <USeparator />
+
+        <UFormField name="signature" label="Tanda Tangan">
+          <UFileUpload
+            v-model="formState.signature"
+            label="Upload File Tanda Tangan"
+            description="Format gambar (.png, .jpg) — otomatis dijadikan barcode di dokumen marketing"
+            accept="image/png,image/jpeg,image/jpg"
+          />
+        </UFormField>
+
+        <UFormField
+          name="signature_caption"
+          label="Caption Tanda Tangan"
+          description="Penanda siapa yang ada di tanda tangan ini"
+        >
+          <UInput
+            v-model="formState.signature_caption"
+            placeholder="Contoh: Nico - Marketing"
+            autocomplete="off"
+          />
+        </UFormField>
       </UForm>
 
       <!-- EDIT mode -->
@@ -504,6 +589,40 @@ const showPassword = ref(false)
           <USelect
             v-model="formState.role"
             :items="ROLES.map((r) => ({ label: r, value: r }))"
+          />
+        </UFormField>
+
+        <USeparator />
+
+        <div v-if="selectedUser?.signature && !formState.signature" class="flex items-center gap-2 rounded-lg bg-elevated/50 p-2">
+          <img
+            :src="selectedUser.signature"
+            alt="Tanda tangan saat ini"
+            class="h-10 w-auto object-contain"
+          />
+          <span class="text-xs text-muted">
+            Tanda tangan terpasang saat ini
+          </span>
+        </div>
+
+        <UFormField name="signature" label="Tanda Tangan Baru">
+          <UFileUpload
+            v-model="formState.signature"
+            label="Upload File Tanda Tangan"
+            description="Format gambar (.png, .jpg) — upload baru untuk mengganti"
+            accept="image/png,image/jpeg,image/jpg"
+          />
+        </UFormField>
+
+        <UFormField
+          name="signature_caption"
+          label="Caption Tanda Tangan"
+          description="Penanda siapa yang ada di tanda tangan ini"
+        >
+          <UInput
+            v-model="formState.signature_caption"
+            placeholder="Contoh: Nico - Marketing"
+            autocomplete="off"
           />
         </UFormField>
       </UForm>
