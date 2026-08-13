@@ -7,6 +7,11 @@ import asyncio
 
 from sqlalchemy import text
 
+# PENTING: import semua model agar tabelnya terdaftar di Base.metadata
+# sebelum `create_all` dijalankan. Tanpa ini, database baru tidak dibuat
+# (create_all diam-diam tidak membuat tabel apa pun).
+import app.models  # noqa: F401
+
 from app.core.database import engine, Base
 
 

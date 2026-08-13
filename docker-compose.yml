@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: mandalan-backend
     restart: unless-stopped
-    command: sh -c "python -m app.db.migrate && python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: ["sh", "/app/entrypoint.sh"]
     ports:
       - "8000:8000"
     environment:
@@ -37,6 +37,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
     profiles:
       - core
       - full
@@ -53,7 +59,8 @@ services:
       NUXT_API_PROXY_TARGET: http://backend:8000/api/v1
       NUXT_MEDIA_PROXY_TARGET: http://backend:8000/media
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     profiles:
       - full
 
