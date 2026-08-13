@@ -1,37 +1,46 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent } from "@nuxt/ui";
 import {
   marketingPODetailsSchema,
-  type MarketingPODetailsState
-} from '~/types/schemas'
+  type MarketingPODetailsState,
+} from "~/types/schemas";
 
 defineProps<{
-  hasPrevious: boolean | undefined
-  offeringLetters: any
-  isSupplier?: boolean
-}>()
+  hasPrevious: boolean | undefined;
+  offeringLetters: any;
+  isSupplier?: boolean;
+}>();
 
 const emit = defineEmits<{
-  submit: []
-  previous: []
-}>()
+  submit: [];
+  previous: [];
+}>();
 
-const state = defineModel<MarketingPODetailsState>({ required: true })
+const state = defineModel<MarketingPODetailsState>({ required: true });
 function emptyProduct() {
-  return { name: '', qty: 1, unit: '', price: 0, totalPrice: 0, ppkb: 0, pph: 0, ppn: 0 }
+  return {
+    name: "",
+    qty: 1,
+    unit: "",
+    price: 0,
+    totalPrice: 0,
+    ppkb: 0,
+    pph: 0,
+    ppn: 0,
+  };
 }
 
-const products = computed(() => state.value.products)
+const products = computed(() => state.value.products);
 
 function addItem() {
   if (!state.value.products) {
-    state.value.products = []
+    state.value.products = [];
   }
-  state.value.products.push(emptyProduct())
+  state.value.products.push(emptyProduct());
 }
 
 function removeItem(index: number) {
-  state.value.products.splice(index, 1)
+  state.value.products.splice(index, 1);
 }
 
 // Keep row totalPrice + grand total in sync
@@ -39,22 +48,22 @@ watch(
   () => state.value.products,
   (products) => {
     products?.forEach((p) => {
-      p.totalPrice = (p.qty || 0) * (p.price || 0)
-    })
+      p.totalPrice = (p.qty || 0) * (p.price || 0);
+    });
     state.value.totalProductsPrice = (products || []).reduce(
       (sum, p) => sum + (p.totalPrice || 0),
-      0
-    )
+      0,
+    );
   },
-  { deep: true, immediate: true }
-)
+  { deep: true, immediate: true },
+);
 
 function previous() {
-  emit('previous')
+  emit("previous");
 }
 
 function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
-  emit('submit')
+  emit("submit");
 }
 </script>
 
@@ -131,21 +140,16 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
           />
         </UFormField>
 
-        <UFormField
-          label="VAT"
-          name="vat"
-          class="w-full"
-          required
-        >
+        <UFormField label="VAT" name="vat" class="w-full" required>
           <UInputNumber
             v-model="state.vat"
             :ui="{
-              root: 'w-full'
+              root: 'w-full',
             }"
             orientation="vertical"
             :step="0.01"
             :format-options="{
-              style: 'percent'
+              style: 'percent',
             }"
           />
         </UFormField>
@@ -154,143 +158,145 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
       <USeparator />
 
       <div class="space-y-3">
-        <p class="font-medium">
-          Daftar Produk
-        </p>
+        <p class="font-medium">Daftar Produk</p>
 
         <div
           v-for="(product, index) in products"
           :key="`product-${index}`"
-          class="flex items-end gap-2"
+          class="flex flex-col space-y-6"
         >
-          <UFormField
-            :name="`products.${index}.name`"
-            label="Produk"
-            class="w-full"
-            required
-          >
-            <UInput v-model="product.name" placeholder="Nama produk" />
-          </UFormField>
+          <UCard :ui="{ body: 'flex flex-col gap-3' }" variant="subtle">
+            <div class="flex gap-2">
+              <UFormField
+                :name="`products.${index}.name`"
+                label="Produk"
+                class="w-full"
+                required
+              >
+                <UInput v-model="product.name" placeholder="Nama produk" />
+              </UFormField>
 
-          <UFormField
-            :name="`products.${index}.qty`"
-            label="Qty"
-            class="w-full"
-            required
-          >
-            <UInputNumber v-model="product.qty" :min="1" />
-          </UFormField>
+              <UFormField
+                :name="`products.${index}.qty`"
+                label="Qty"
+                class="w-full"
+                required
+              >
+                <UInputNumber v-model="product.qty" :min="1" />
+              </UFormField>
 
-          <UFormField
-            :name="`products.${index}.unit`"
-            label="Unit"
-            class="w-full"
-            required
-          >
-            <UInput v-model="product.unit" placeholder="pcs" />
-          </UFormField>
+              <UFormField
+                :name="`products.${index}.unit`"
+                label="Unit"
+                class="w-full"
+                required
+              >
+                <UInput v-model="product.unit" placeholder="pcs" />
+              </UFormField>
 
-          <UFormField
-            :name="`products.${index}.price`"
-            label="Harga Unit"
-            class="w-full"
-            required
-          >
-            <UInputNumber
-              v-model="product.price"
-              locale="id-ID"
-              :format-options="{
-                style: 'currency',
-                currency: 'IDR',
-                currencyDisplay: 'narrowSymbol'
-              }"
-              :step="1"
-              :min="0"
-              :increment="false"
-              :decrement="false"
-            />
-          </UFormField>
+              <UFormField
+                :name="`products.${index}.price`"
+                label="Harga Unit"
+                class="w-full"
+                required
+              >
+                <UInputNumber
+                  v-model="product.price"
+                  locale="id-ID"
+                  :format-options="{
+                    style: 'currency',
+                    currency: 'IDR',
+                    currencyDisplay: 'narrowSymbol',
+                  }"
+                  :step="1"
+                  :min="0"
+                  :increment="false"
+                  :decrement="false"
+                />
+              </UFormField>
 
-          <UFormField
-            :name="`products.${index}.totalPrice`"
-            label="Total"
-            class="w-full"
-            required
-          >
-            <UInputNumber
-              v-model="product.totalPrice"
-              locale="id-ID"
-              :format-options="{
-                style: 'currency',
-                currency: 'IDR',
-                currencyDisplay: 'narrowSymbol'
-              }"
-              :decrement="false"
-              :increment="false"
-              disabled
-            />
-          </UFormField>
+              <UFormField
+                :name="`products.${index}.totalPrice`"
+                label="Total"
+                class="w-full"
+                required
+              >
+                <UInputNumber
+                  v-model="product.totalPrice"
+                  locale="id-ID"
+                  :format-options="{
+                    style: 'currency',
+                    currency: 'IDR',
+                    currencyDisplay: 'narrowSymbol',
+                  }"
+                  :decrement="false"
+                  :increment="false"
+                  disabled
+                />
+              </UFormField>
+            </div>
 
-          <template v-if="isSupplier">
-            <UFormField
-              :name="`products.${index}.ppkb`"
-              label="PPKB"
-              class="w-full"
-            >
-              <UInputNumber
-                v-model="product.ppkb"
-                locale="id-ID"
-                :format-options="{
-                  style: 'currency',
-                  currency: 'IDR',
-                  currencyDisplay: 'narrowSymbol'
-                }"
-                :step="1"
-                :min="0"
+            <div class="flex items-end gap-2" v-if="isSupplier">
+              <UFormField
+                :name="`products.${index}.ppkb`"
+                label="PPKB"
+                class="w-full"
+              >
+                <UInputNumber
+                  v-model="product.ppkb"
+                  locale="id-ID"
+                  :format-options="{
+                    style: 'currency',
+                    currency: 'IDR',
+                    currencyDisplay: 'narrowSymbol',
+                  }"
+                  :step="1"
+                  :min="0"
+                />
+              </UFormField>
+
+              <UFormField
+                :name="`products.${index}.pph`"
+                label="PPH (%)"
+                class="w-full"
+              >
+                <UInputNumber
+                  v-model="product.pph"
+                  :min="0"
+                  :step="0.01"
+                  :format-options="{
+                    style: 'percent',
+                  }"
+                />
+              </UFormField>
+
+              <UFormField
+                :name="`products.${index}.ppn`"
+                label="PPN"
+                class="w-full"
+              >
+                <UInputNumber
+                  v-model="product.ppn"
+                  locale="id-ID"
+                  :format-options="{
+                    style: 'currency',
+                    currency: 'IDR',
+                    currencyDisplay: 'narrowSymbol',
+                  }"
+                  :step="1"
+                  :min="0"
+                />
+              </UFormField>
+
+              <UButton
+                icon="i-lucide-trash-2"
+                color="error"
+                variant="ghost"
+                :disabled="state.products.length === 1"
+                @click="removeItem(index)"
               />
-            </UFormField>
-
-            <UFormField
-              :name="`products.${index}.pph`"
-              label="PPH (%)"
-              class="w-full"
-            >
-              <UInputNumber
-                v-model="product.pph"
-                :min="0"
-                :step="0.01"
-                :format-options="{
-                  style: 'percent'
-                }"
-              />
-            </UFormField>
-
-            <UFormField
-              :name="`products.${index}.ppn`"
-              label="PPN"
-              class="w-full"
-            >
-              <UInputNumber
-                v-model="product.ppn"
-                locale="id-ID"
-                :format-options="{
-                  style: 'currency',
-                  currency: 'IDR',
-                  currencyDisplay: 'narrowSymbol'
-                }"
-                :step="1"
-                :min="0"
-              />
-            </UFormField>
-          </template>
-
-          <UButton
-            icon="i-lucide-trash-2"
-            color="error"
-            variant="ghost"
-            :disabled="state.products.length === 1"
-            @click="removeItem(index)"
-          />
+            </div>
+          </UCard>
         </div>
 
         <UButton
