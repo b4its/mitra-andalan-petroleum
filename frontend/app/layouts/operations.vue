@@ -1,62 +1,89 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { NavigationMenuItem } from "@nuxt/ui";
 
-const open = ref(false)
+const open = ref(false);
 
-const { user } = useAuth()
-const isAdmin = computed(() => user.value?.role === 'admin')
+const { user } = useAuth();
+const isAdmin = computed(() => user.value?.role === "admin");
 
 const links = computed<NavigationMenuItem[][]>(() => {
-  const items: NavigationMenuItem[] = []
+  const items: NavigationMenuItem[] = [];
 
   // Jika admin yang sedang mengakses halaman operations, tambah link kembali ke admin
   if (isAdmin.value) {
     items.push({
-      label: 'Kembali ke Admin',
-      icon: 'i-lucide-arrow-left',
-      to: '/admin',
+      label: "Kembali ke Admin",
+      icon: "i-lucide-arrow-left",
+      to: "/admin",
       exact: true,
-      onSelect: () => { open.value = false }
-    })
+      onSelect: () => {
+        open.value = false;
+      },
+    });
   }
 
   items.push(
     {
-      label: 'Beranda',
-      icon: 'i-lucide-house',
-      to: '/operations',
+      label: "Beranda",
+      icon: "i-lucide-house",
+      to: "/operations",
       onSelect: () => {
-        open.value = false
-      }
+        open.value = false;
+      },
     },
     {
-      label: 'Delivery Order',
-      icon: 'i-lucide-truck',
-      to: '/operations/delivery-order',
-      onSelect: () => {
-        open.value = false
-      }
+      label: "Manajemen Delivery Order",
+      icon: "i-lucide-truck",
+      defaultOpen: true,
+      children: [
+        {
+          label: "Pembuatan Delivery Order",
+          to: "/operations/delivery-order",
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: "Upload Delivery Order",
+          to: "/operations/delivery-order-returned",
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: "Data Delivery Order",
+          to: "/operations/rekap",
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+      ],
     },
     {
-      label: 'Surat PO Transportir',
-      icon: 'i-lucide-file-text',
-      to: '/operations/po-transportir',
-      onSelect: () => {
-        open.value = false
-      }
+      label: "Manajemen PO Transportir",
+      icon: "i-lucide-warehouse",
+      defaultOpen: true,
+      children: [
+        {
+          label: "Pembuatan PO Transportir",
+          to: "/operations/po-transportir",
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: "Data PO Transportir",
+          to: "/operations/rekap-po-transportir",
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+      ],
     },
-    {
-      label: 'Rekap Data Delivery Order',
-      icon: 'i-lucide-square-chart-gantt',
-      to: '/operations/rekap',
-      onSelect: () => {
-        open.value = false
-      }
-    }
-  )
+  );
 
-  return [items] satisfies NavigationMenuItem[][]
-})
+  return [items] satisfies NavigationMenuItem[][];
+});
 </script>
 
 <template>
