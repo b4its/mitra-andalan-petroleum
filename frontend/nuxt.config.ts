@@ -16,16 +16,17 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2026-06-30',
 
-  vite: {
+   vite: {
     optimizeDeps: {
       include: [
+        '@internationalized/date',
+        'chart.js',
         'date-fns',
         'maska/vue',
-        'chart.js',
         'pdfmake/build/pdfmake', // CJS
         'pdfmake/build/vfs_fonts', // CJS
+        'vue-chartjs',
         'zod',
-        'vue-chartjs'
       ]
     }
   },
