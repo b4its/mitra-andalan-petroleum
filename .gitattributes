@@ -1,0 +1,14 @@
+# Normalisasi line endings: semua teks pakai LF di repo.
+# Khususnya file .sh wajib LF agar tidak error `set: Illegal option -`
+# ketika di-clone di Windows (core.autocrlf).
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.vue text eol=lf
+*.ts text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.env text eol=lf
+*.example text eol=lf

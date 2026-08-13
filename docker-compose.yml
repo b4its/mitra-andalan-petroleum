@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: mandalan-backend
     restart: unless-stopped
-    command: ["sh", "/app/entrypoint.sh"]
+    command: ["python", "-m", "app.db.boot"]
     ports:
       - "8000:8000"
     environment:
