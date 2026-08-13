@@ -1,7 +1,6 @@
 # Mitra Andalan Petroleum
 
 Sistem manajemen internal untuk perusahaan bahan bakar minyak.
-tes commit
 
 ## Tech Stack
 
