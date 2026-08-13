@@ -2,8 +2,13 @@ import argparse
 import asyncio
 import gc
 import json
+import math
+import struct
 import sys
+import uuid
+import zlib
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 from passlib.hash import bcrypt
 from sqlalchemy import select
@@ -60,8 +65,9 @@ async def seed_database(db: AsyncSession, force: bool = False):
     await _seed_notifications(db)
     await _seed_sales(db)
     await _seed_accounting(db)
+    await _seed_signatures(db)
     await db.commit()
-    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi).")
+    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan).")
 
 
 async def _clear_all(db: AsyncSession):
@@ -371,6 +377,9 @@ async def _seed_purchase_orders(db: AsyncSession):
         products = [
             {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 5625, "totalPrice": 45000000, "ppkb": 450000, "pph": 0.5, "ppn": 4950000}
         ]
+        # Sebagian PO supplier sudah dirilis dana oleh admin (menyesuaikan alur:
+        # marketing buat PO supplier -> admin rilis dana -> baru bisa lihat surat)
+        rilis = i % 2 == 0
         po = PurchaseOrder(
             po_number=po_number,
             type="supplier",
@@ -379,6 +388,8 @@ async def _seed_purchase_orders(db: AsyncSession):
             total=45000000,
             status="created",
             created_by=marketing_user.id if marketing_user else None,
+            rilis_dana_at=datetime(2025, 6, 2, 9, 0, 0) if rilis else None,
+            status_rilis_dana=rilis,
             details=_po_details(main_company, {
                 "id": supplier.id, "name": supplier.name, "npwp": "",
                 "address": supplier.address or "", "contactPerson": supplier.phone or "", "email": supplier.email or ""
@@ -622,6 +633,71 @@ async def _seed_accounting(db: AsyncSession):
                 credit=credit,
             ))
     await db.flush()
+
+
+# ── Tanda tangan user (upload otomatis) ────────────────────────
+
+def _png_chunk(typ: bytes, data: bytes) -> bytes:
+    c = struct.pack(">I", len(data)) + typ + data
+    c += struct.pack(">I", zlib.crc32(typ + data) & 0xFFFFFFFF)
+    return c
+
+
+def _signature_png(name: str) -> bytes:
+    """Buat PNG sederhana (murni Python, tanpa Pillow) berisi coretan tanda tangan."""
+    w, h = 320, 110
+    seed = sum(ord(c) for c in (name or "MAP"))
+    rows = bytearray()
+    for y in range(h):
+        rows.append(0)  # filter none
+        for x in range(w):
+            r, g, b = 255, 255, 255
+            # Coretan seperti tanda tangan: gelombang + garis miring
+            yy = h // 2 + int(math.sin((x + seed) * 0.06) * (h // 4))
+            if abs(y - yy) < 3:
+                r, g, b = 25, 25, 60
+            if 40 < x < w - 40 and abs(y - (h // 2 + 18)) < 2:
+                r, g, b = 25, 25, 60
+            rows.extend((r, g, b))
+    ihdr = struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)
+    return (b"\x89PNG\r\n\x1a\n"
+            + _png_chunk(b"IHDR", ihdr)
+            + _png_chunk(b"IDAT", zlib.compress(bytes(rows), 9))
+            + _png_chunk(b"IEND", b""))
+
+
+async def _seed_signatures(db: AsyncSession):
+    """Generate file tanda tangan (PNG) + record upload untuk tiap user.
+
+    Menyesuaikan alur sistem saat ini: user meng-upload tanda tangan di profil,
+    lalu tanda tangan tampil (QR/barcode) di dokumen marketing.
+    """
+    users = (await db.execute(select(User))).scalars().all()
+    if not users:
+        return
+
+    media_dir = Path(__file__).resolve().parent.parent.parent / "media"
+    profiles_dir = media_dir / "profiles"
+    profiles_dir.mkdir(parents=True, exist_ok=True)
+
+    for user in users:
+        stored = f"{uuid.uuid4().hex}.png"
+        file_path = profiles_dir / stored
+        png_bytes = _signature_png(user.name or "MAP")
+        file_path.write_bytes(png_bytes)
+
+        db.add(Upload(
+            original_filename=f"signature-{user.name}.png",
+            stored_filename=stored,
+            folder="profiles",
+            mime_type="image/png",
+            size=len(png_bytes),
+            url=f"/media/profiles/{stored}",
+            document_type="profile",
+            document_id=user.id,
+        ))
+    await db.flush()
+    print(f"[seed] Tanda tangan {len(users)} user dibuat (folder profiles).")
 
 
 # ── Verifikasi pola hasil seed (CLI --check) ───────────────────
