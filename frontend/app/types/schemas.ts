@@ -391,6 +391,9 @@ export const operationsPOTransportDetailsSchema = z.object({
     ppn: z.number(),
     grandTotal: z.number(),
   }),
+  percentageNum: z.object({
+    ppn: z.number(),
+  }),
 });
 export const operationsPOTransportFooterSchema = z.object({
   loadingInformation: z.string(),

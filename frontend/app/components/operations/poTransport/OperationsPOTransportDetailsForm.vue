@@ -42,6 +42,10 @@ function removeItem(index: number) {
   state.value.products.splice(index, 1);
 }
 
+const calculatePpnPercent = computed(() => {
+  return state.value.priceSummary.subTotal * state.value.percentageNum.ppn;
+});
+
 watch(
   () => state.value.products,
   (products) => {
@@ -57,12 +61,19 @@ watch(
 );
 
 watch(
-  () => [state.value.priceSummary.subTotal],
-  ([subTotal, discount, prePaid]) => {
-    const ppn = Math.round((subTotal || 0) * 0.11);
-    const grandTotal = (subTotal || 0) + ppn - (discount || 0) - (prePaid || 0);
-
+  calculatePpnPercent,
+  (ppn) => {
     state.value.priceSummary.ppn = ppn;
+  },
+  { immediate: true },
+);
+
+watch(
+  () => [state.value.priceSummary.subTotal, state.value.priceSummary.ppn],
+  ([subTotal, ppn]) => {
+    const grandTotal = (subTotal || 0) + (ppn || 0);
+
+    state.value.priceSummary.ppn = ppn || 0;
     state.value.priceSummary.grandTotal = grandTotal;
   },
   { immediate: true },
@@ -195,6 +206,20 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
       </div>
 
       <div class="flex gap-2">
+        <UFormField name="percentagePpn" label="Persentase PPN" required>
+          <UInputNumber
+            v-model="state.percentageNum.ppn"
+            :ui="{
+              root: 'w-full',
+            }"
+            orientation="vertical"
+            :step="0.001"
+            :format-options="{
+              style: 'percent',
+              minimumFractionDigits: 1,
+            }"
+          />
+        </UFormField>
         <UFormField name="pricePpn" label="PPn" class="w-full" required>
           <UInputNumber
             v-model="state.priceSummary.ppn"

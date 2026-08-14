@@ -48,6 +48,9 @@ const poTransportDetails = reactive<OperationsPOTransportDetailsState>({
       totalPrice: 0,
     },
   ],
+  percentageNum: {
+    ppn: 0.11,
+  },
   priceSummary: {
     grandTotal: 0,
     ppn: 0,
