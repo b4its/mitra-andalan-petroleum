@@ -7,9 +7,9 @@ const idLetter = route.params.id;
 const links = [
   [
     {
-      label: "Detail Surat Delivery Order",
-      icon: "i-lucide-truck",
-      to: `/operations/detail/delivery-order-${idLetter}`,
+      label: "Detail PO Transportir",
+      icon: "i-lucide-warehouse",
+      to: `/operations/detail-transport/po-transportir-${idLetter}`,
     },
   ],
 ] satisfies NavigationMenuItem[][];
@@ -18,9 +18,9 @@ definePageMeta({ layout: "operations" });
 </script>
 
 <template>
-  <UDashboardPanel id="delivery-order" :ui="{ body: 'lg:py-12' }">
+  <UDashboardPanel id="po-transport" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Surat Delivery Order ${idLetter}`">
+      <UDashboardNavbar :title="`PO Transportir ${idLetter}`">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

@@ -160,7 +160,7 @@ definePageMeta({ layout: "operations" });
         >
           <template #actions-cell="{ row }">
             <UButton
-              :to="`/operations/detail/po-transportir-${row.original.id}`"
+              :to="`/operations/detail-transport/po-transportir-${row.original.id}`"
               variant="soft"
               size="sm"
               color="primary"
