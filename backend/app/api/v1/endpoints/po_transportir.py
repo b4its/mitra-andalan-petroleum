@@ -52,11 +52,12 @@ def _to_response(po: PoTransportir, customer_name: str = "", po_number: str | No
     "/po-transportir",
     response_model=PaginatedResponse[PoTransportirResponse],
     summary="List PO transportir",
-    description="Menampilkan daftar Purchase Order Transportir dengan pagination.",
+    description="Menampilkan daftar Purchase Order Transportir dengan pagination. PO yang semua item sudah diantar (status completed) disembunyikan kecuali `include_completed=true`.",
 )
 async def list_po_transportir(
     page: int = 1, page_size: int = 20, search: str | None = Query(default=None),
     status: str | None = Query(default=None),
+    include_completed: bool = False,
     db: AsyncSession = Depends(get_db)
 ):
     filters = []
@@ -68,6 +69,8 @@ async def list_po_transportir(
         ))
     if status:
         filters.append(PoTransportir.status == status)
+    if not include_completed:
+        filters.append(PoTransportir.status != "completed")
 
     base = select(PoTransportir)
     if filters:

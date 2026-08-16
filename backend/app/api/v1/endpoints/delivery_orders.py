@@ -356,7 +356,7 @@ async def ready_order(id: str, db: AsyncSession = Depends(get_db)):
     "/delivery-orders/{id}/selesai-dikirim",
     response_model=DeliveryOrderResponse,
     summary="Selesai Dikirim",
-    description="Operations: konfirmasi pengiriman selesai. Finance dapat melunasi ongkir setelah ini.",
+    description="Operations: konfirmasi pengiriman selesai. Item yang diantar ditandai 'delivered' pada PO Transportir; jika semua item diantar, PO Transportir berstatus completed. PO Supplier terkait dicatat end-to-end sampai ke customer.",
 )
 async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
@@ -370,6 +370,76 @@ async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
     now_wita = datetime.now(WITA)
     do.selesai_dikirim_at = now_wita
     do.status_selesai_dikirim = True
+
+    # ── Tandai item yang diantar pada PO Transportir terkait ────
+    pt_updated = False
+    do_details = _details_from_str(do.details) or {}
+    delivered_items = do_details.get("selectedProducts") or []
+    if do.id_po_transportir:
+        pt = await db.get(PoTransportir, do.id_po_transportir)
+        if pt:
+            pt_details = _details_from_str(pt.details) or {}
+            pt_products = pt_details.get("products") or []
+            if isinstance(pt_products, list) and pt_products:
+                # Tandai produk yang cocok (by name) sebagai delivered
+                delivered_names = {
+                    (it.get("name") or "").strip()
+                    for it in delivered_items if isinstance(it, dict)
+                }
+                for prod in pt_products:
+                    if not isinstance(prod, dict):
+                        continue
+                    name = (prod.get("name") or "").strip()
+                    if name and (not delivered_names or name in delivered_names):
+                        prod["delivered"] = True
+                        prod["delivered_at"] = now_wita.strftime("%d/%m/%Y %H:%M")
+                pt_details["products"] = pt_products
+                pt.details = _details_to_str(pt_details)
+                # Jika semua item sudah diantar → status completed
+                all_delivered = all(
+                    isinstance(p, dict) and p.get("delivered")
+                    for p in pt_products if isinstance(p, dict)
+                )
+                if all_delivered and pt.status != "completed":
+                    pt.status = "completed"
+                await db.flush()
+                pt_updated = True
+
+    # ── Catat PO Supplier end-to-end (pesanan diantar sampai customer) ──
+    if pt_updated and do.id_po_transportir:
+        pt = await db.get(PoTransportir, do.id_po_transportir)
+        if pt and pt.id_purchase_order:
+            # PO Customer dari PO Transportir → ambil offering letters terkait
+            po_customer = await db.get(PurchaseOrder, pt.id_purchase_order)
+            if po_customer and po_customer.id_offering_letters:
+                try:
+                    ol_ids = set(json.loads(po_customer.id_offering_letters))
+                except (TypeError, json.JSONDecodeError):
+                    ol_ids = set()
+                if ol_ids:
+                    # Cari PO Supplier yang berbagi offering letter
+                    po_suppliers = (
+                        await db.execute(
+                            select(PurchaseOrder).where(
+                                PurchaseOrder.type == "supplier",
+                                PurchaseOrder.id_offering_letters.is_not(None),
+                            )
+                        )
+                    ).scalars().all()
+                    for spo in po_suppliers:
+                        try:
+                            spo_ol = set(json.loads(spo.id_offering_letters))
+                        except (TypeError, json.JSONDecodeError):
+                            continue
+                        if spo_ol & ol_ids:
+                            spo_details = _details_from_str(spo.details) or {}
+                            spo_details["delivered"] = True
+                            spo_details["delivered_at"] = now_wita.strftime("%d/%m/%Y %H:%M")
+                            spo_details["sampai_customer"] = True
+                            spo_details["sampai_customer_at"] = now_wita.strftime("%d/%m/%Y %H:%M")
+                            spo.details = _details_to_str(spo_details)
+                            await db.flush()
+
     await db.flush()
     await db.refresh(do)
     cn = await _get_customer_name(db, do.customer_id)
