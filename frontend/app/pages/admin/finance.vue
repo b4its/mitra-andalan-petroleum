@@ -90,10 +90,6 @@ const invStats = computed(() => {
 const doFinanceStats = computed(() => {
   const list: AdminDeliveryOrderRow[] = data.value?.doList || []
   return {
-    menantiSiapKirim: list.filter(d => !d.status_ready_order).length,
-    menantiSelesaiKirim: list.filter(
-      d => d.status_ready_order && !d.status_selesai_dikirim
-    ).length,
     menunggakLunas: list.filter(
       d => d.status_selesai_dikirim && !d.status_lunas_ongkir
     ).length,
@@ -175,13 +171,7 @@ const doFiltered = computed(() => {
   const q = doSearch.value.trim().toLowerCase()
   let list: AdminDeliveryOrderRow[] = data.value?.doList || []
 
-  if (doFlowFilter.value === 'menanti_siap')
-    list = list.filter(d => !d.status_ready_order)
-  else if (doFlowFilter.value === 'menanti_selesai')
-    list = list.filter(
-      d => d.status_ready_order && !d.status_selesai_dikirim
-    )
-  else if (doFlowFilter.value === 'menunggu_lunas')
+  if (doFlowFilter.value === 'menunggu_lunas')
     list = list.filter(
       d => d.status_selesai_dikirim && !d.status_lunas_ongkir
     )
@@ -239,8 +229,6 @@ const deadlineStatusOptions = [
 ]
 const doFlowOptions = [
   { label: 'Semua Alur Delivery Order', value: 'all' },
-  { label: 'Menanti Siap Kirim', value: 'menanti_siap' },
-  { label: 'Menanti Selesai Kirim', value: 'menanti_selesai' },
   { label: 'Menunggu Lunas Ongkir', value: 'menunggu_lunas' },
   { label: 'Ongkir Lunas', value: 'lunas' }
 ]
@@ -307,21 +295,6 @@ const doColumns: TableColumn<AdminDeliveryOrderRow>[] = [
   { accessorKey: 'do_number', header: 'Nomor Delivery Order' },
   { accessorKey: 'customer_name', header: 'Customer' },
   { accessorKey: 'po_number', header: 'Nomor Purchase Order' },
-  {
-    accessorKey: 'status_ready_order',
-    header: 'Siap Kirim',
-    cell: ({ row }) =>
-      alurBadge(row.original.status_ready_order, row.original.ready_order_at)
-  },
-  {
-    accessorKey: 'status_selesai_dikirim',
-    header: 'Selesai',
-    cell: ({ row }) =>
-      alurBadge(
-        row.original.status_selesai_dikirim,
-        row.original.selesai_dikirim_at
-      )
-  },
   {
     accessorKey: 'status_lunas_ongkir',
     header: 'Lunas Ongkir',
@@ -406,28 +379,12 @@ function openDetail(id: string, type: 'invoice' | 'do') {
           </div>
 
           <!-- Ringkasan alur DO dari sisi Finance -->
-          <div class="grid gap-3 sm:grid-cols-4">
-            <UCard variant="subtle" class="text-center">
-              <p class="text-xs text-muted mb-1">
-                Menanti Siap Kirim
-              </p>
-              <p class="text-2xl font-bold text-warning">
-                {{ doFinanceStats.menantiSiapKirim }}
-              </p>
-            </UCard>
-            <UCard variant="subtle" class="text-center">
-              <p class="text-xs text-muted mb-1">
-                Menanti Selesai Kirim
-              </p>
-              <p class="text-2xl font-bold text-info">
-                {{ doFinanceStats.menantiSelesaiKirim }}
-              </p>
-            </UCard>
+          <div class="grid gap-3 sm:grid-cols-2">
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">
                 Menunggu Lunas Ongkir
               </p>
-              <p class="text-2xl font-bold text-amber-500">
+              <p class="text-2xl font-bold text-warning">
                 {{ doFinanceStats.menunggakLunas }}
               </p>
             </UCard>

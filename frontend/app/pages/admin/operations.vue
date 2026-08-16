@@ -78,11 +78,7 @@ const doStats = computed(() => {
 const doAlurStats = computed(() => {
   const list: AdminDeliveryOrderRow[] = data.value?.doList || []
   return {
-    perluDisiapkan: list.filter(d => !d.status_ready_order).length,
-    sudahReadyOrder: list.filter(
-      d => d.status_ready_order && !d.status_selesai_dikirim
-    ).length,
-    sudahSelesaiDikirim: list.filter(
+    menungguLunas: list.filter(
       d => d.status_selesai_dikirim && !d.status_lunas_ongkir
     ).length,
     sudahLunasOngkir: list.filter(d => d.status_lunas_ongkir).length
@@ -113,7 +109,7 @@ const page = ref(1)
 const PAGE_SIZE = 7
 
 // Filter tab
-const filterTab = ref<'all' | 'ready' | 'selesai' | 'lunas'>('all')
+const filterTab = ref<'all' | 'lunas'>('all')
 const statusFilter = ref('all')
 
 const filtered = computed(() => {
@@ -121,13 +117,7 @@ const filtered = computed(() => {
   let list: AdminDeliveryOrderRow[] = data.value?.doList || []
 
   // Filter berdasarkan tab status alur
-  if (filterTab.value === 'ready')
-    list = list.filter(d => !d.status_ready_order)
-  else if (filterTab.value === 'selesai')
-    list = list.filter(
-      d => d.status_ready_order && !d.status_selesai_dikirim
-    )
-  else if (filterTab.value === 'lunas')
+  if (filterTab.value === 'lunas')
     list = list.filter(
       d => d.status_selesai_dikirim && !d.status_lunas_ongkir
     )
@@ -198,21 +188,6 @@ const columns: TableColumn<AdminDeliveryOrderRow>[] = [
     cell: ({ row }) => formatNumber(row.getValue('fuel_total') ?? 0)
   },
   {
-    accessorKey: 'status_ready_order',
-    header: 'Siap Kirim',
-    cell: ({ row }) =>
-      alurBadge(row.original.status_ready_order, row.original.ready_order_at)
-  },
-  {
-    accessorKey: 'status_selesai_dikirim',
-    header: 'Selesai',
-    cell: ({ row }) =>
-      alurBadge(
-        row.original.status_selesai_dikirim,
-        row.original.selesai_dikirim_at
-      )
-  },
-  {
     accessorKey: 'status_lunas_ongkir',
     header: 'Lunas Ongkir',
     cell: ({ row }) =>
@@ -242,9 +217,7 @@ function openDetail(id: string) {
 
 const filterTabs = [
   { key: 'all', label: 'Semua' },
-  { key: 'ready', label: 'Perlu Disiapkan' },
-  { key: 'selesai', label: 'Siap Kirim' },
-  { key: 'lunas', label: 'Selesai/Lunas' }
+  { key: 'lunas', label: 'Menunggu Lunas Ongkir' }
 ]
 </script>
 
@@ -307,34 +280,18 @@ const filterTabs = [
           </div>
 
           <!-- Ringkasan Alur DO -->
-          <div class="grid gap-3 sm:grid-cols-4">
+          <div class="grid gap-3 sm:grid-cols-2">
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">
-                Perlu Disiapkan
+                Menunggu Lunas Ongkir
               </p>
               <p class="text-2xl font-bold text-warning">
-                {{ doAlurStats.perluDisiapkan }}
+                {{ doAlurStats.menungguLunas }}
               </p>
             </UCard>
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">
-                Siap Dikirim
-              </p>
-              <p class="text-2xl font-bold text-primary">
-                {{ doAlurStats.sudahReadyOrder }}
-              </p>
-            </UCard>
-            <UCard variant="subtle" class="text-center">
-              <p class="text-xs text-muted mb-1">
-                Selesai Kirim
-              </p>
-              <p class="text-2xl font-bold text-success">
-                {{ doAlurStats.sudahSelesaiDikirim }}
-              </p>
-            </UCard>
-            <UCard variant="subtle" class="text-center">
-              <p class="text-xs text-muted mb-1">
-                Lunas Ongkir
+                Ongkir Lunas
               </p>
               <p class="text-2xl font-bold text-success">
                 {{ doAlurStats.sudahLunasOngkir }}

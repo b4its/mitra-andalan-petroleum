@@ -259,26 +259,6 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
       )
   },
   {
-    accessorKey: 'status_ready_order',
-    header: 'Siap Kirim',
-    cell: ({ row }) =>
-      statusBadge(
-        row.original.status_ready_order,
-        'Siap',
-        row.original.ready_order_at
-      )
-  },
-  {
-    accessorKey: 'status_selesai_dikirim',
-    header: 'Selesai Kirim',
-    cell: ({ row }) =>
-      statusBadge(
-        row.original.status_selesai_dikirim,
-        'Selesai',
-        row.original.selesai_dikirim_at
-      )
-  },
-  {
     accessorKey: 'status_lunas_ongkir',
     header: 'Lunas Ongkir',
     cell: ({ row }) =>
@@ -346,10 +326,10 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
             <template #actions-cell="{ row }">
               <div class="flex flex-col items-center gap-3">
                 <div class="space-x-2">
-                  <!-- Lunasi Ongkir: muncul setelah siap dikirim (ready_order=true) dan belum lunas -->
+                  <!-- Lunasi Ongkir: muncul setelah DO ditandai selesai dikirim (dari Operations) dan belum lunas -->
                   <UButton
                     v-if="
-                      row.original.status_ready_order
+                      row.original.status_selesai_dikirim
                         && !row.original.status_lunas_ongkir
                     "
                     size="xs"

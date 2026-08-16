@@ -387,15 +387,15 @@ async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
     "/delivery-orders/{id}/lunas-ongkir",
     response_model=DeliveryOrderResponse,
     summary="Lunas Ongkir",
-    description="Finance: tandai pelunasan ongkir. Tersedia setelah Operations menandai siap dikirim.",
+    description="Admin/Finance: tandai pelunasan ongkir. Tersedia setelah Operations menandai pengiriman selesai (status_selesai_dikirim).",
 )
 async def lunas_ongkir(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Not found")
-    if not do.status_ready_order:
-        raise HTTPException(status_code=400, detail="Pengantaran belum disiapkan oleh Operations")
+    if not do.status_selesai_dikirim:
+        raise HTTPException(status_code=400, detail="Pengiriman belum ditandai selesai oleh Operations")
     if do.status_lunas_ongkir:
         raise HTTPException(status_code=400, detail="Ongkir sudah dilunasi sebelumnya")
     now_wita = datetime.now(WITA)
