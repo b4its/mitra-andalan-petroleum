@@ -17,17 +17,32 @@ const { get, post } = useApi()
 const toast = useToast()
 const { user } = useAuth()
 
-const { data: supplierList, pending: pendingSuppliers } = await useAsyncData('suppliers', async () => {
-  const res = await get<Customer[]>('/suppliers')
-  return res.map((receiver: Customer) => ({
-    id: receiver.id,
-    name: receiver.name,
-    npwp: receiver.npwp,
-    address: receiver.address,
-    phone: receiver.phone,
-    email: receiver.email
-  }))
-}, { default: () => [] })
+interface SupplierOption {
+  id: string
+  name: string
+  npwp: string | null
+  address: string
+  phone: string
+  email: string
+}
+
+const { data: supplierList, pending: pendingSuppliers } = await useAsyncData<SupplierOption[]>(
+  'suppliers',
+  async () => {
+    const res = await get<Customer[]>('/suppliers')
+    return res.map(
+      (receiver: Customer): SupplierOption => ({
+        id: receiver.id,
+        name: receiver.name,
+        npwp: receiver.npwp,
+        address: receiver.address,
+        phone: receiver.phone,
+        email: receiver.email
+      })
+    )
+  },
+  { default: () => [] }
+)
 
 const { data: OlData, pending: pendingOlData } = await useAsyncData(
   'offering-letters-supplier-po',
@@ -76,7 +91,7 @@ const offeringLetters = computed(() =>
 )
 
 const suppliers = computed(() =>
-  supplierList.value.map((supplier: Customer) => {
+  supplierList.value.map((supplier) => {
     return {
       label: supplier.name,
       value: {

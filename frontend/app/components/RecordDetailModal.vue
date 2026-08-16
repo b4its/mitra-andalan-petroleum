@@ -201,7 +201,7 @@ const { data: doRelatedPo, pending: doRelatedPoPending } = await useAsyncData(
     })
     return (res.items || []).find(po => po.po_number === poNumber) || null
   },
-  { watch: [() => props.id, () => props.type, () => data.value], default: null }
+  { watch: [() => props.id, () => props.type, () => data.value], default: () => null }
 )
 
 interface DODetailsShape {

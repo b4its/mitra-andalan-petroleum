@@ -835,6 +835,30 @@ curl -X DELETE http://localhost:8000/api/v1/purchase-orders/uuid-po-baru
 }
 ```
 
+### POST /purchase-orders/{id}/rilis-dana — Rilis dana PO supplier
+
+Menandai PO supplier bahwa dana sudah dirilis oleh admin. **Hanya untuk
+`type=supplier`**; setelah dirilis (`status_rilis_dana=true`), surat PO
+supplier baru bisa dilihat (halaman Data PO Supplier di admin).
+
+```bash
+curl -X POST http://localhost:8000/api/v1/purchase-orders/uuid-po-supplier/rilis-dana \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+```json
+{
+  "id": "uuid-po-supplier",
+  "po_number": "PO-SUP/2025/VI/100",
+  "type": "supplier",
+  "supplier_name": "PT Solar Indo",
+  "total": 45000000,
+  "status": "created",
+  "rilis_dana_at": "2026-08-12T09:00:00",
+  "status_rilis_dana": true
+}
+```
+
 ---
 
 ## Delivery Orders
@@ -1478,6 +1502,39 @@ curl "http://localhost:8000/api/v1/accounting/ledger-all?date_from=2026-06-01&da
 
 `?account_id=...&date_from=...&date_to=...` — mengembalikan satu objek
 `LedgerResponse` (bukan list) untuk akun tertentu.
+
+### GET /accounting/monitoring — Rekap Monitoring bulanan
+
+Rekap pendapatan, biaya, dan margin per bulan. Filter memakai **range
+tanggal** (`date_from`/`date_to`, default: tahun berjalan).
+
+```bash
+curl "http://localhost:8000/api/v1/accounting/monitoring?date_from=2026-06-01&date_to=2026-07-31"
+```
+
+```json
+{
+  "rows": [
+    {
+      "bulan": "Juni",
+      "invoice": 2,
+      "modal_elnusa": 81600000,
+      "oat": 11000000,
+      "gross_margin": 57000000,
+      "penghasilan": 136000000,
+      "operasional": 79000000,
+      "fee_manajemen": 5440000
+    }
+  ],
+  "total_penghasilan": 136000000,
+  "total_operasional": 79000000,
+  "total_gross_margin": 57000000,
+  "total_oat": 11000000,
+  "total_invoice": 2,
+  "total_modal": 81600000,
+  "total_fee_manajemen": 5440000
+}
+```
 
 ### Endpoint lain (ringkas)
 

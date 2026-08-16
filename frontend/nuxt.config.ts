@@ -16,7 +16,7 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2026-06-30',
 
-   vite: {
+  vite: {
     optimizeDeps: {
       include: [
         '@internationalized/date',
@@ -26,7 +26,7 @@ export default defineNuxtConfig({
         'pdfmake/build/pdfmake', // CJS
         'pdfmake/build/vfs_fonts', // CJS
         'vue-chartjs',
-        'zod',
+        'zod'
       ]
     }
   },

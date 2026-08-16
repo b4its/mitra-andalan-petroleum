@@ -65,11 +65,14 @@ async function loadExcel() {
     workbookRef.value = workbook
     sheets.value = workbook.SheetNames
     activeSheet.value = workbook.SheetNames[0] || ''
-    if (activeSheet.value)
-      sheetHtml.value = xlsx.utils.sheet_to_html(
-        workbook.Sheets[activeSheet.value],
-        { header: '' }
-      )
+    if (activeSheet.value) {
+      const sheet = workbook.Sheets[activeSheet.value]
+      if (sheet) {
+        sheetHtml.value = xlsx.utils.sheet_to_html(sheet, {
+          header: ''
+        })
+      }
+    }
   } catch {
     sheetFailed.value = true
   } finally {

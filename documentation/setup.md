@@ -14,15 +14,22 @@
 
 ```bash
 cd mandalan
-docker compose --profile full up -d
+make doctor        # (opsional) cek make, docker, docker compose plugin
+make build         # build + boot (migrasi & seed otomatis) — cukup sekali, langsung jalan
 ```
 
-Atau sekaligus build ulang + seed data menyatu (target `build` di `Makefile`
-melakukan hal yang sama):
+Setara dengan tanpa make:
 
 ```bash
-make build
+docker compose --profile full up -d --build
 ```
+
+`make build` / `make up` secara otomatis **menunggu backend sehat** sebelum
+seed, sehingga aman dijalankan pertama kali (bahkan di database kosong).
+
+> 💡 Pengembangan memakai **Dev Container** (VS Code): `.devcontainer/`
+> menyediakan image Ubuntu + `make`, Docker-in-Docker, Python 3.12, Node 22 —
+> semua tool yang dibutuhkan sudah termasuk.
 
 Service akan berjalan di:
 
@@ -48,6 +55,8 @@ cp .env.example .env   # edit DATABASE_URL sesuai lokal
 python3.12 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
+python -m app.db.migrate   # (opsional) migrasi skema
+python -m app.db.seed      # (opsional) isi data contoh
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -76,16 +85,19 @@ NUXT_PUBLIC_SITE_URL=
 ## Seed Data
 
 Database otomatis terisi data awal saat pertama kali backend dijalankan
-(lihat `backend/app/db/seed.py` dan `backend/app/db/migrate.py`):
+(lihat `backend/app/db/seed.py`, `backend/app/db/migrate.py`, dan
+`backend/app/db/boot.py`):
 
-- 5 user (admin, marketing, finance, operations, accounting) — dengan caption tanda tangan
+- 5 user (admin, marketing, finance, operations, accounting) — dengan caption & file tanda tangan
 - 3 customer (termasuk telepon PIC), 2 supplier (termasuk bank & no. rekening)
-- 15 offering letters (PPH, term pembayaran, tenggat PO), 10 purchase orders (PO supplier berisi PPKB/PPH/PPN)
+- 15 offering letters (PPH, metode & term pembayaran, tenggat PO), 10 purchase orders (PO supplier berisi PPKB/PPH/PPN, sebagian sudah rilis dana)
 - 15 delivery orders, 15 invoices
 - 5 sales, 8 notifications, akun + jurnal akuntansi
 
-Sebelum seed, migrasi skema dijalankan otomatis (`python -m app.db.migrate`)
-agar kolom baru (signature, bank_account, phone2, dll.) tersedia.
+Alur saat container start: **boot** (`python -m app.db.boot`) menunggu
+database siap → **migrasi skema** (`python -m app.db.migrate`, kolom baru:
+signature, bank_account, phone2, rilis_dana_at, dll.) → **seeder**
+(`python -m app.db.seed`).
 
 Panduan lengkap menjalankan seeder (fresh install, reseed database yang sudah
 terisi, dan verifikasi) ada di [seeding.md](seeding.md).

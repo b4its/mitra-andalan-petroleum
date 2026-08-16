@@ -25,12 +25,14 @@ const letterIds = ref(
 )
 
 const formattedLetterIds = computed(() => {
-  if (!letterIds.value?.length) return ''
+  const ids = letterIds.value
+  if (!ids?.length) return ''
 
-  if (letterIds.value.length === 1) return letterIds.value[0]
+  const first = ids[0]!
+  if (ids.length === 1) return first
 
-  const suffix = letterIds.value[0].substring(letterIds.value[0].indexOf('/'))
-  const numbers = letterIds.value.map((id: string) => id.split('/')[0])
+  const suffix = first.substring(first.indexOf('/'))
+  const numbers = ids.map((id: string) => id.split('/')[0])
 
   return numbers.join(',') + suffix
 })

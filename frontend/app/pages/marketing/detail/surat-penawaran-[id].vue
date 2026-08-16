@@ -164,9 +164,9 @@ const loadPdf = async () => {
           width: 160
         },
         {
-          text: details?.location
-            ? `${details.location.split(',')[0].trim()}, ${formatDateDoc(details?.date || new Date())}`
-            : formatDateDoc(details?.date || new Date()),
+          text: details
+            ? `${details.location.split(',')[0]!.trim()}, ${formatDateDoc(details.date || new Date())}`
+            : formatDateDoc(new Date()),
           alignment: 'right',
           marginTop: 10,
           marginBottom: 15

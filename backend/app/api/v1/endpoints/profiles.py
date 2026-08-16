@@ -20,7 +20,7 @@ router = APIRouter()
     "/profiles",
     response_model=list[ProfileResponse],
     summary="List users",
-    description="Daftar semua user/profile (terbaru di atas).",
+    description="Daftar semua user/profile (terbaru di atas). User memiliki `signature` (URL tanda tangan) dan `signature_caption` (penanda siapa).",
 )
 async def list_profiles(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).order_by(User.created_at.desc()))
@@ -91,7 +91,7 @@ async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)
     "/profiles/{id}",
     response_model=ProfileResponse,
     summary="Update user",
-    description="Update data user/profile.",
+    description="Update data user/profile, termasuk `signature` dan `signature_caption` (caption tanda tangan).",
 )
 async def update_profile(id: str, body: ProfileUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.id == id))

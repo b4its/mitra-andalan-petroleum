@@ -1,90 +1,90 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   operationsPOTransportDetailsSchema,
-  type OperationsPOTransportDetailsState,
-} from "~/types/schemas";
+  type OperationsPOTransportDetailsState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-}>();
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
 const state = defineModel<OperationsPOTransportDetailsState>({
-  required: true,
-});
+  required: true
+})
 
 function emptyProduct() {
   return {
-    name: "",
+    name: '',
     qty: 1,
     ratePrice: 0,
     totalPrice: 0,
-    loadingDate: new Date().toISOString().split("T")[0],
-    unloadingDate: new Date().toISOString().split("T")[0],
-  };
+    loadingDate: new Date().toISOString().split('T')[0],
+    unloadingDate: new Date().toISOString().split('T')[0]
+  }
 }
 
-const products = computed(() => state.value.products);
+const products = computed(() => state.value.products)
 
 function addItem() {
   if (!state.value.products) {
-    state.value.products = [];
+    state.value.products = []
   }
-  state.value.products.push(emptyProduct());
+  state.value.products.push(emptyProduct())
 }
 
 function removeItem(index: number) {
-  state.value.products.splice(index, 1);
+  state.value.products.splice(index, 1)
 }
 
 const calculatePpnPercent = computed(() => {
-  return state.value.priceSummary.subTotal * state.value.percentageNum.ppn;
-});
+  return state.value.priceSummary.subTotal * state.value.percentageNum.ppn
+})
 
 watch(
   () => state.value.products,
   (products) => {
     products?.forEach((p) => {
-      p.totalPrice = (p.qty || 0) * (p.ratePrice || 0);
-    });
+      p.totalPrice = (p.qty || 0) * (p.ratePrice || 0)
+    })
     state.value.priceSummary.subTotal = (products || []).reduce(
       (sum, p) => sum + (p.totalPrice || 0),
-      0,
-    );
+      0
+    )
   },
-  { deep: true, immediate: true },
-);
+  { deep: true, immediate: true }
+)
 
 watch(
   calculatePpnPercent,
   (ppn) => {
-    state.value.priceSummary.ppn = ppn;
+    state.value.priceSummary.ppn = ppn
   },
-  { immediate: true },
-);
+  { immediate: true }
+)
 
 watch(
   () => [state.value.priceSummary.subTotal, state.value.priceSummary.ppn],
   ([subTotal, ppn]) => {
-    const grandTotal = (subTotal || 0) + (ppn || 0);
+    const grandTotal = (subTotal || 0) + (ppn || 0)
 
-    state.value.priceSummary.ppn = ppn || 0;
-    state.value.priceSummary.grandTotal = grandTotal;
+    state.value.priceSummary.ppn = ppn || 0
+    state.value.priceSummary.grandTotal = grandTotal
   },
-  { immediate: true },
-);
+  { immediate: true }
+)
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 
@@ -100,7 +100,9 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
       <p>Informasi PO Transportir</p>
 
       <div class="space-y-3">
-        <p class="font-medium">Daftar Produk</p>
+        <p class="font-medium">
+          Daftar Produk
+        </p>
 
         <div
           v-for="(product, index) in products"
@@ -153,7 +155,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
               :format-options="{
                 style: 'currency',
                 currency: 'IDR',
-                currencyDisplay: 'narrowSymbol',
+                currencyDisplay: 'narrowSymbol'
               }"
               :step="1"
               :min="0"
@@ -174,7 +176,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
               :format-options="{
                 style: 'currency',
                 currency: 'IDR',
-                currencyDisplay: 'narrowSymbol',
+                currencyDisplay: 'narrowSymbol'
               }"
               :decrement="false"
               :increment="false"
@@ -210,17 +212,22 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
           <UInputNumber
             v-model="state.percentageNum.ppn"
             :ui="{
-              root: 'w-full',
+              root: 'w-full'
             }"
             orientation="vertical"
             :step="0.001"
             :format-options="{
               style: 'percent',
-              minimumFractionDigits: 1,
+              minimumFractionDigits: 1
             }"
           />
         </UFormField>
-        <UFormField name="pricePpn" label="PPn" class="w-full" required>
+        <UFormField
+          name="pricePpn"
+          label="PPn"
+          class="w-full"
+          required
+        >
           <UInputNumber
             v-model="state.priceSummary.ppn"
             class="w-full"
@@ -228,7 +235,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
             :format-options="{
               style: 'currency',
               currency: 'IDR',
-              currencyDisplay: 'narrowSymbol',
+              currencyDisplay: 'narrowSymbol'
             }"
             :decrement="false"
             :increment="false"
@@ -249,7 +256,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
             :format-options="{
               style: 'currency',
               currency: 'IDR',
-              currencyDisplay: 'narrowSymbol',
+              currencyDisplay: 'narrowSymbol'
             }"
             :decrement="false"
             :increment="false"

@@ -102,7 +102,7 @@ async def _process_single_file(file: UploadFile, folder: str, document_type: str
     response_model=list[UploadResponse],
     status_code=201,
     summary="Upload file(s)",
-    description="Upload satu atau banyak file (max 50MB per file). Kaitkan ke dokumen dengan `document_type` (ol/po/do/invoice) dan `document_id`.",
+    description="Upload satu atau banyak file (max 50MB per file). Kaitkan ke dokumen dengan `document_type` (ol/po/do/invoice/profile) dan `document_id`. `profile` dipakai untuk tanda tangan user aplikasi.",
 )
 async def upload_files(
     files: list[UploadFile] = File(..., description="Satu atau banyak file"),

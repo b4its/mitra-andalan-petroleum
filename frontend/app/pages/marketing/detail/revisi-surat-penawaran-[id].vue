@@ -11,20 +11,35 @@ import type {
 const toast = useToast()
 const { get, put, postFile } = useApi()
 
-const { data: customerList, pending: pendingCustomers } = await useAsyncData('customers', async () => {
-  const res = await get<Customer[]>('/customers')
-  return res.map((receiver: Customer) => ({
-    id: receiver.id,
-    name: receiver.name,
-    npwp: receiver.npwp,
-    address: receiver.address,
-    phone: receiver.phone,
-    email: receiver.email
-  }))
-}, { default: () => [] })
+interface CustomerOption {
+  id: string
+  name: string
+  npwp: string | null
+  address: string
+  phone: string
+  email: string
+}
+
+const { data: customerList, pending: pendingCustomers } = await useAsyncData<CustomerOption[]>(
+  'customers',
+  async () => {
+    const res = await get<Customer[]>('/customers')
+    return res.map(
+      (receiver: Customer): CustomerOption => ({
+        id: receiver.id,
+        name: receiver.name,
+        npwp: receiver.npwp,
+        address: receiver.address,
+        phone: receiver.phone,
+        email: receiver.email
+      })
+    )
+  },
+  { default: () => [] }
+)
 
 const receivers = computed(() =>
-  customerList.value.map((receiver: Customer) => {
+  customerList.value.map((receiver) => {
     return {
       label: receiver.name,
       value: receiver.id,
@@ -99,7 +114,6 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
       || 'PT. Mitra Andalan Petroleum'
   },
   fuelPrices: {
-    hppPrice: offeringLetter.value?.details.fuelPrices.hppPrice || 0,
     logisticInformation:
       offeringLetter.value?.details.fuelPrices.logisticInformation
       || 'Truk Tangki',

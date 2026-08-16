@@ -36,18 +36,18 @@ async def lifespan(app: FastAPI):
 openapi_tags = [
     {"name": "health", "description": "Cek status server"},
     {"name": "auth", "description": "Login user"},
-    {"name": "customers", "description": "CRUD data customer"},
-    {"name": "suppliers", "description": "CRUD data supplier"},
-    {"name": "profiles", "description": "CRUD user/profile management"},
-    {"name": "offering-letters", "description": "Surat penawaran harga (marketing). Memiliki relasi `uploads` (one-to-many) untuk file signature, dokumen pendukung."},
-    {"name": "purchase-orders", "description": "Purchase order ke customer/supplier. Memiliki relasi `uploads` (one-to-many) untuk dokumen PO, lampiran."},
-    {"name": "delivery-orders", "description": "Delivery order (operational). Memiliki relasi `uploads` (one-to-many) untuk foto bukti, dokumen return."},
-    {"name": "invoices", "description": "Invoice/penagihan (finance). Memiliki relasi `uploads` (one-to-many) untuk lampiran invoice."},
+    {"name": "customers", "description": "CRUD data customer (termasuk `phone2` untuk telepon PIC / penanggung jawab)."},
+    {"name": "suppliers", "description": "CRUD data supplier (termasuk `phone2`, `bank_name`, `bank_account` untuk informasi pembayaran)."},
+    {"name": "profiles", "description": "CRUD user/profile. User punya `signature` (URL upload tanda tangan) dan `signature_caption` (penanda siapa)."},
+    {"name": "offering-letters", "description": "Surat penawaran harga (marketing). Mendukung PPH, metode pembayaran (cash/kredit), term pembayaran, tenggat PO, dan tanda tangan (QR/barcode). Relasi `uploads` (one-to-many) untuk file signature/dokumen."},
+    {"name": "purchase-orders", "description": "Purchase order ke customer/supplier. PO supplier punya alur `rilis dana` oleh admin (`status_rilis_dana` + `rilis_dana_at`) sebelum surat bisa dilihat. Relasi `uploads` (one-to-many)."},
+    {"name": "delivery-orders", "description": "Delivery order (operational) dengan status alur pengiriman (rilis dana, ready order, selesai dikirim, lunas ongkir). Relasi `uploads` (one-to-many) untuk foto bukti/dokumen return."},
+    {"name": "invoices", "description": "Invoice/penagihan (finance). Tanpa sales order number, produk terhubung otomatis dari PO, `Dibuat Oleh` dari user login. Relasi `uploads` (one-to-many)."},
     {"name": "sales", "description": "Data penjualan"},
-    {"name": "notifications", "description": "Notifikasi sistem. Field: `to` (redirect path), `is_read` (status baca)."},
+    {"name": "notifications", "description": "Notifikasi sistem. Field: `to` (redirect path), `is_read` (status baca), `role` (target role)."},
     {"name": "stats", "description": "Statistik untuk dashboard"},
-    {"name": "uploads", "description": "Upload file (signature, dokumen, foto, dll). Multi-file, max 50MB/file. Kaitkan ke parent via `document_type` + `document_id`. Cascade delete otomatis saat parent dihapus."},
-    {"name": "accounting", "description": "Modul akuntansi (finance): chart of accounts, jurnal umum, buku besar, pemasukan, pengeluaran, neraca saldo, dan ringkasan keuangan."},
+    {"name": "uploads", "description": "Upload file (signature, dokumen, foto, dll). Multi-file, max 50MB/file. Kaitkan ke parent via `document_type` (`ol`/`po`/`do`/`invoice`/`profile`) + `document_id`. Cascade delete otomatis saat parent dihapus."},
+    {"name": "accounting", "description": "Modul akuntansi: chart of accounts, jurnal umum, buku besar seluruh akun (`ledger-all`), pemasukan, pengeluaran, neraca saldo, kas harian, rekap monitoring (filter range tanggal), dan ringkasan keuangan."},
     {"name": "admin-database", "description": "Admin database: export dan import data SQL."},
 ]
 
@@ -59,18 +59,23 @@ app = FastAPI(
 Sistem manajemen internal untuk perusahaan bahan bakar minyak.
 
 ## Modul
-- **Marketing** — Offering Letters, Purchase Orders, Stats
-- **Operations** — Delivery Orders, Sales, Stats
-- **Finance** — Invoices, Delivery Orders, Accounting (akun, jurnal, buku besar, pemasukan, pengeluaran), Stats
-- **Admin** — User/Profile Management
+- **Marketing** — Offering Letters (PPH, metode pembayaran, tenggat PO), Purchase Orders, Stats
+- **Operations** — Delivery Orders (nomor DO otomatis), Surat PO Transportir, Stats
+- **Finance** — Invoices, Delivery Orders, Accounting (akun, jurnal, buku besar semua akun, pemasukan, pengeluaran, monitoring), Stats
+- **Admin** — User/Profile Management, Data DO, Data PO Supplier (rilis dana), Database
 
 ## Auth
 Login via `POST /api/v1/auth/login` — dapatkan token untuk autentikasi.
 Belum ada middleware token, semua endpoint publik untuk development.
 
+## Startup (container)
+`python -m app.db.boot` → tunggu database → migrasi skema (`app.db.migrate`) → seeder (`app.db.seed`) → uvicorn.
+
 ## Data Format
 - Dokumen (OL, PO, DO, Invoice) — field `details` JSON untuk data form frontend, dan `uploads` (relasi one-to-many ke file upload)
-- Notifikasi — field `to` (redirect path) dan `is_read` (status baca)
+- PO Supplier — alur rilis dana oleh admin: `status_rilis_dana` (bool) + `rilis_dana_at` (datetime). Sebelum dirilis, surat belum bisa dilihat.
+- User — `signature` (URL upload tanda tangan) + `signature_caption`; tanda tangan tampil sebagai QR/barcode di dokumen marketing.
+- Notifikasi — field `to` (redirect path), `is_read` (status baca), `role` (target role)
 - Upload — support multi-file, max 50MB per file, otomatis cascade delete saat parent dihapus
 """,
     openapi_tags=openapi_tags,

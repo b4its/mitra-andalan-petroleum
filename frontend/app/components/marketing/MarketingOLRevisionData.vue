@@ -14,23 +14,27 @@ const columnPinning = ref({
 
 const { get } = useApi()
 
-const { data: OlData, pending } = await useAsyncData(
+const { data: OlData, pending } = await useAsyncData<
+  MarketingOfferingLetterOverview[]
+>(
   'offering-letters-revision',
   async () => {
     const res = await get<{ items: OfferingLetters[] }>('/offering-letters', {
       page: 1,
       page_size: 50
     })
-    return res.items.map((ol: OfferingLetters) => ({
-      id: ol.id,
-      offeringLetterNumber: ol.offering_letter_number,
-      customerName: ol.customer_name,
-      fuelTotalPrice: ol.fuel_total_price,
-      transportPrice: ol.transport_price,
-      dateCreated: ol.created_at.toString(),
-      dateChanged: ol.updated_at.toString(),
-      status: ol.status
-    }))
+    return res.items.map(
+      (ol: OfferingLetters): MarketingOfferingLetterOverview => ({
+        id: ol.id,
+        offeringLetterNumber: ol.offering_letter_number,
+        customerName: ol.customer_name ?? '',
+        fuelTotalPrice: ol.fuel_total_price,
+        transportPrice: ol.transport_price,
+        dateCreated: ol.created_at.toString(),
+        dateChanged: ol.updated_at.toString(),
+        status: ol.status
+      })
+    )
   },
   {
     default: () => []

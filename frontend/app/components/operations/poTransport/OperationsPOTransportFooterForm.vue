@@ -1,53 +1,52 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from "@nuxt/ui";
+import type { FormSubmitEvent } from '@nuxt/ui'
 import {
   operationsPOTransportFooterSchema,
-  operationsPOTransportHeaderSchema,
-  type OperationsPOTransportFooterState,
-} from "~/types/schemas";
+  type OperationsPOTransportFooterState
+} from '~/types/schemas'
 
 defineProps<{
-  hasPrevious: boolean | undefined;
-}>();
+  hasPrevious: boolean | undefined
+}>()
 
 const emit = defineEmits<{
-  submit: [];
-  previous: [];
-}>();
+  submit: []
+  previous: []
+}>()
 
-const state = defineModel<OperationsPOTransportFooterState>({ required: true });
+const state = defineModel<OperationsPOTransportFooterState>({ required: true })
 
 function emptyContact() {
   return {
-    name: "",
-    phoneNumber: "",
-  };
+    name: '',
+    phoneNumber: ''
+  }
 }
 
 const companyContacts = computed(
-  () => state.value.contactPerson.companyContactPerson,
-);
+  () => state.value.contactPerson.companyContactPerson
+)
 
 const customerContacts = computed(
-  () => state.value.contactPerson.customerContactPerson,
-);
+  () => state.value.contactPerson.customerContactPerson
+)
 
-function addItem(item: "companyContactPerson" | "customerContactPerson") {
+function addItem(item: 'companyContactPerson' | 'customerContactPerson') {
   if (!state.value.contactPerson[item]) {
-    state.value.contactPerson[item] = [];
+    state.value.contactPerson[item] = []
   }
-  state.value.contactPerson[item].push(emptyContact());
+  state.value.contactPerson[item].push(emptyContact())
 }
 
 function removeItem(
-  item: "companyContactPerson" | "customerContactPerson",
-  index: number,
+  item: 'companyContactPerson' | 'customerContactPerson',
+  index: number
 ) {
   if (!state.value.contactPerson[item]) {
-    state.value.contactPerson[item] = [];
+    state.value.contactPerson[item] = []
   }
 
-  state.value.contactPerson[item].splice(index, 1);
+  state.value.contactPerson[item].splice(index, 1)
 }
 
 // function addItem() {
@@ -66,11 +65,11 @@ function removeItem(
 // }
 
 function previous() {
-  emit("previous");
+  emit('previous')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsPOTransportFooterState>) {
-  emit("submit");
+  emit('submit')
 }
 </script>
 

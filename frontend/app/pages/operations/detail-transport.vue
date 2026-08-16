@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
+import type { NavigationMenuItem } from '@nuxt/ui'
 
-const route = useRoute();
-const idLetter = route.params.id;
+const route = useRoute()
+const idLetter = route.params.id
 
 const links = [
   [
     {
-      label: "Detail PO Transportir",
-      icon: "i-lucide-warehouse",
-      to: `/operations/detail-transport/po-transportir-${idLetter}`,
-    },
-  ],
-] satisfies NavigationMenuItem[][];
+      label: 'Detail PO Transportir',
+      icon: 'i-lucide-warehouse',
+      to: `/operations/detail-transport/po-transportir-${idLetter}`
+    }
+  ]
+] satisfies NavigationMenuItem[][]
 
-definePageMeta({ layout: "operations" });
+definePageMeta({ layout: 'operations' })
 </script>
 
 <template>
