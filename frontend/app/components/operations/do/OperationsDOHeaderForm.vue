@@ -6,7 +6,7 @@ import {
 } from '~/types/schemas'
 
 defineProps<{
-  purchaseOrders: {
+  poTransportirs: {
     label: string
     customerName: string
     subtitle: string
@@ -116,16 +116,18 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
 
         <UFormField
           name="poCustomerNumber"
-          label="Nomor Surat Purchase Order Customer"
+          label="Nomor Surat PO Transportir"
           required
         >
           <USelectMenu
             v-model="state.doInformation.poCustomerNumber"
-            :items="purchaseOrders"
-            placeholder="Pilih Surat Purchase Order"
+            :items="poTransportirs"
+            placeholder="Pilih PO Transportir"
             value-key="value"
             :ui="{ content: 'min-w-fit' }"
             class="w-full"
+            searchable
+            searchable-placeholder="Cari nomor PO Transportir..."
           >
             <template #item-label="{ item }">
               {{ item.label }}

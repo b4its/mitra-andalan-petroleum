@@ -139,6 +139,7 @@ const doTransport = reactive<OperationsDOTransportState>({
 const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
   dueDate: '2026-08-11',
   total: 10000,
+  products: [],
   productInformation: {
     name: 'Bio Solar',
     qty: 10000,
@@ -262,6 +263,10 @@ function hydrateFormFromExistingDeliveryOrder(
   Object.assign(doDetailsTransport, {
     dueDate: details.dueDate || undefined,
     total: details.total || value.fuel_total || 0,
+    products:
+      (details as Record<string, unknown>).selectedProducts
+      || (details as Record<string, unknown>).products
+      || [],
     productInformation:
       details.productInformation || doDetailsTransport.productInformation,
     transportInformation:
@@ -331,8 +336,13 @@ watch(
         if (pt.transportName) {
           doTransport.transportName = pt.transportName
         }
-        // Auto-fill produk dari PO Transportir
+        // Auto-fill daftar item (products) dari PO Transportir — semua item tersedia, user pilih mana yang diantar
         const ptProducts = (pt.details as Partial<PoTransportirDetails>).products || []
+        doDetailsTransport.products = ptProducts.map((p: { name?: string, qty?: number }) => ({
+          name: p.name || 'Solar',
+          qty: p.qty || 0,
+          selected: false
+        }))
         if (ptProducts.length > 0) {
           const firstProduct = ptProducts[0]
           doDetailsTransport.total = firstProduct.qty || pt.total || value.fuelTotalQty || 0
@@ -361,18 +371,34 @@ async function onFormSubmit() {
       ...doAdditional,
       ...doFooter
     }
+
+    // Hitung total dari item yang dipilih (banyak item yang diantar)
+    const selectedProducts = (doData.products || []).filter(
+      (p: { selected?: boolean }) => p.selected
+    )
+    const totalSelected = selectedProducts.length
+      ? selectedProducts.reduce(
+          (sum: number, p: { qty?: number }) => sum + (p.qty || 0),
+          0
+        )
+      : (doData.total || 0)
+
     const doPost: DeliveryOrderPost = {
       do_number: doData.doInformation.doNumber,
       customer_id: doData.customerId,
       date: doData.doInformation.doDateCreated,
-      fuel_total: doData.total,
+      fuel_total: totalSelected,
       id_purchase_order: doData.doInformation.poCustomerNumber.id || '',
       id_po_transportir: selectedPoTransportirId.value || null,
       po_number:
         doData.doInformation.poCustomerNumber.purchaseOrderNumber || '',
       status: 'created',
       transport_name: doData.transportName,
-      details: doData
+      details: {
+        ...doData,
+        selectedProducts,
+        total: totalSelected
+      }
     }
 
     const res = editingDoId.value
@@ -478,7 +504,7 @@ definePageMeta({ layout: 'operations' })
         <template #doHeader>
           <OperationsDOHeaderForm
             v-model="doHeader"
-            :purchase-orders="poTransportirItems"
+            :po-transportirs="poTransportirItems"
             :has-previous="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmitToNext"

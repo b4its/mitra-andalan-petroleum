@@ -233,6 +233,16 @@ export const operationsDOTransportSchema = z.object({
 })
 export const operationsDODetailsTransportSchema = z.object({
   dueDate: z.iso.date().optional(),
+  // Banyak item produk yang dipilih untuk diantar (dari PO Transportir)
+  products: z
+    .array(
+      z.object({
+        name: z.string().optional(),
+        qty: z.coerce.number().optional(),
+        selected: z.boolean().optional()
+      })
+    )
+    .optional(),
   productInformation: z.object({
     name: z.string().optional(),
     qty: z.coerce.number().optional(),

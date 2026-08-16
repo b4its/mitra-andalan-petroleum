@@ -33,6 +33,26 @@ const { data: purchaseOrderList } = await useAsyncData(
   { default: () => [], server: false }
 )
 
+// ── Daftar PO Supplier untuk dipilih (alur transportir) ───────
+const { data: poSupplierList } = await useAsyncData(
+  'po-transportir-po-suppliers',
+  async () => {
+    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
+      '/purchase-orders',
+      { page: 1, page_size: 100, type: 'supplier' }
+    )
+    return (res.items || []).map(po => ({
+      id: po.id,
+      po_number: po.po_number,
+      supplier_name: po.supplier_name || '',
+      supplier_id: po.supplier_id || '',
+      total: po.total ?? 0,
+      details: po.details || {}
+    }))
+  },
+  { default: () => [], server: false }
+)
+
 const selectedPOCustomer = ref<{
   id: string
   po_number: string
@@ -41,6 +61,37 @@ const selectedPOCustomer = ref<{
   total: number
   details: Record<string, unknown>
 } | null>(null)
+
+const selectedPOSupplier = ref<{
+  id: string
+  po_number: string
+  supplier_name: string
+  supplier_id: string
+  total: number
+  details: Record<string, unknown>
+} | null>(null)
+
+// Watch PO Supplier selection → auto-fill form
+watch(selectedPOSupplier, (val) => {
+  if (val) {
+    // Pre-fill products dari PO Supplier jika tersedia
+    const poProducts = val.details?.products
+    if (Array.isArray(poProducts) && poProducts.length > 0) {
+      poTransportDetails.products = poProducts.map((p: Product) => ({
+        name: p.name || 'Solar',
+        loadingDate: `${new Date().toISOString().split('T')[0]}`,
+        unloadingDate: `${new Date().toISOString().split('T')[0]}`,
+        qty: p.qty || 0,
+        ratePrice: p.price || 500,
+        totalPrice: p.totalPrice || 0
+      }))
+    }
+    // Auto-fill receiver dari nama supplier
+    if (val.supplier_name) {
+      poTransportHeader.receiver = val.supplier_name || poTransportHeader.receiver
+    }
+  }
+})
 
 // Watch PO Customer selection → auto-fill form
 watch(selectedPOCustomer, (val) => {
@@ -161,10 +212,17 @@ async function onFormSubmit() {
       receiver: poTransportData.receiver,
       total,
       status: 'created',
-      id_purchase_order: selectedPOCustomer.value?.id || null,
+      id_purchase_order: selectedPOCustomer.value?.id || selectedPOSupplier.value?.id || null,
       customer_id: selectedPOCustomer.value?.customer_id || null,
       details: {
         ...poTransportData,
+        poSupplier: selectedPOSupplier.value
+          ? {
+              id: selectedPOSupplier.value.id,
+              po_number: selectedPOSupplier.value.po_number,
+              supplier_name: selectedPOSupplier.value.supplier_name
+            }
+          : undefined,
         products: poTransportData.products.map(p => ({
           name: p.name,
           qty: p.qty,
@@ -237,25 +295,48 @@ definePageMeta({ layout: 'operations' })
     </template>
 
     <template #body>
-      <!-- Pilih PO Customer terlebih dahulu -->
+      <!-- Pilih PO Customer / PO Supplier terlebih dahulu -->
       <UCard class="mx-4 mt-4" :ui="{ body: { padding: 'p-4 sm:p-4' } }">
-        <div class="space-y-2">
-          <label class="text-sm font-medium">Pilih PO Customer</label>
-          <USelectMenu
-            v-model="selectedPOCustomer"
-            :items="purchaseOrderList.map(po => ({
-              label: po.po_number,
-              value: po,
-              customer_name: po.customer_name
-            }))"
-            placeholder="Pilih Purchase Order Customer..."
-            class="w-full"
-            searchable
-            searchable-placeholder="Cari nomor PO..."
-          />
-          <p v-if="selectedPOCustomer" class="text-xs text-gray-500">
-            Customer: {{ selectedPOCustomer.customer_name }} &mdash; Total: {{ selectedPOCustomer.total.toLocaleString() }}
-          </p>
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Pilih PO Customer</label>
+            <USelectMenu
+              v-model="selectedPOCustomer"
+              :items="purchaseOrderList.map(po => ({
+                label: po.po_number,
+                value: po,
+                customer_name: po.customer_name
+              }))"
+              placeholder="Pilih Purchase Order Customer..."
+              class="w-full"
+              searchable
+              searchable-placeholder="Cari nomor PO..."
+            />
+            <p v-if="selectedPOCustomer" class="text-xs text-gray-500">
+              Customer: {{ selectedPOCustomer.customer_name }} &mdash; Total: {{ selectedPOCustomer.total.toLocaleString() }}
+            </p>
+          </div>
+
+          <USeparator />
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Pilih PO Supplier</label>
+            <USelectMenu
+              v-model="selectedPOSupplier"
+              :items="poSupplierList.map(po => ({
+                label: po.po_number,
+                value: po,
+                supplier_name: po.supplier_name
+              }))"
+              placeholder="Pilih Purchase Order Supplier..."
+              class="w-full"
+              searchable
+              searchable-placeholder="Cari nomor PO Supplier..."
+            />
+            <p v-if="selectedPOSupplier" class="text-xs text-gray-500">
+              Supplier: {{ selectedPOSupplier.supplier_name }} &mdash; Total: {{ selectedPOSupplier.total.toLocaleString() }}
+            </p>
+          </div>
         </div>
       </UCard>
 

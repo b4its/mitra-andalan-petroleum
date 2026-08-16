@@ -84,14 +84,14 @@ const signatureBlock = computed(() => {
       {
         image: signatureBarcode.value,
         width: 40,
-        alignment: 'center',
+        alignment: 'start',
         marginTop: 8
       },
       {
         text: `(${signatureCaption.value})`,
         bold: true,
         marginTop: 0,
-        alignment: 'center'
+        alignment: 'start'
       }
     ] as Content[]
   }

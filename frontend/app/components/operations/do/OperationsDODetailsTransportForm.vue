@@ -73,6 +73,34 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
 
       <USeparator />
 
+      <p>Pilih Item yang Diantar</p>
+      <p class="text-sm text-muted mb-2">
+        Pilih satu atau lebih item dari PO Transportir yang akan diantar.
+      </p>
+
+      <div v-if="(state.products || []).length" class="flex flex-col gap-2">
+        <label
+          v-for="(product, index) in state.products"
+          :key="index"
+          class="flex items-center gap-3 rounded-lg border border-default px-3 py-2 cursor-pointer hover:bg-elevated/50"
+        >
+          <UCheckbox v-model="product.selected" />
+          <div class="min-w-0">
+            <p class="text-sm font-medium truncate">{{ product.name }}</p>
+            <p class="text-xs text-muted">{{ product.qty || 0 }} Liter</p>
+          </div>
+          <span class="ml-auto text-sm font-semibold">
+            {{ product.qty ? `${Number(product.qty).toLocaleString()} L` : '-' }}
+          </span>
+        </label>
+      </div>
+      <p v-else class="text-sm text-muted py-2">
+        Belum ada item. Pilih PO Transportir terlebih dahulu di langkah "Kop
+        Surat Delivery Order".
+      </p>
+
+      <USeparator />
+
       <p>Informasi Produk</p>
 
       <div class="flex w-full gap-4">
