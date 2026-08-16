@@ -51,11 +51,17 @@ function onChartViewRecords(metric: AdminDrilldownMetric) {
 }
 
 // ── Data fetch ────────────────────────────────────────────────
+const dateFrom = ref('')
+const dateTo = ref('')
+
 const { data, pending, refresh } = useAsyncData(
   'admin-operations',
   async () => {
     const [stats, doResult] = await Promise.all([
-      get<AdminStats>('/stats/admin'),
+      get<AdminStats>('/stats/admin', {
+        ...(dateFrom.value ? { date_from: new Date(dateFrom.value + 'T00:00:00').toISOString() } : {}),
+        ...(dateTo.value ? { date_to: new Date(dateTo.value + 'T23:59:59').toISOString() } : {})
+      }),
       get<Paginated<AdminDeliveryOrderRow>>('/delivery-orders', {
         page: 1,
         page_size: 100
@@ -63,7 +69,12 @@ const { data, pending, refresh } = useAsyncData(
     ])
     return { stats, doList: doResult?.items || [] }
   },
-  { default: () => ({ stats: null, doList: [] }), lazy: true, server: false }
+  {
+    default: () => ({ stats: null, doList: [] }),
+    lazy: true,
+    server: false,
+    watch: [dateFrom, dateTo]
+  }
 )
 
 // ── Stats cards ───────────────────────────────────────────────
@@ -257,6 +268,33 @@ const filterTabs = [
         </template>
 
         <template v-else>
+          <UCard>
+            <div class="flex flex-col gap-3">
+              <p class="text-sm font-medium">
+                Filter Periode Data
+              </p>
+              <div class="flex flex-wrap items-end gap-3">
+                <UFormField label="Dari Tanggal">
+                  <UInput v-model="dateFrom" type="date" />
+                </UFormField>
+                <UFormField label="Sampai Tanggal">
+                  <UInput v-model="dateTo" type="date" />
+                </UFormField>
+                <UButton icon="i-lucide-search" :loading="pending" @click="() => refresh()">
+                  Terapkan
+                </UButton>
+                <UButton
+                  icon="i-lucide-rotate-ccw"
+                  color="neutral"
+                  variant="soft"
+                  @click="dateFrom = ''; dateTo = ''"
+                >
+                  Reset
+                </UButton>
+              </div>
+            </div>
+          </UCard>
+
           <!-- Stats KPI -->
           <div v-if="doStats.length" class="grid gap-4 sm:grid-cols-2">
             <UCard v-for="m in doStats" :key="m.key" variant="subtle">
