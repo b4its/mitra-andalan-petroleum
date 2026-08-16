@@ -18,21 +18,30 @@ const { data: purchaseOrderDetails, pending } = await useAsyncData(
   }
 )
 
-const details: Details = purchaseOrderDetails.value?.details as Details
+const details = computed<Details | null>(() => purchaseOrderDetails.value?.details ?? null)
 
 const loadPdf = async () => {
-  if (!details?.signed) return
-  pdfLink.value = await buildPoSupplierPdf(details, {
+  const d = details.value
+  if (!d?.signed) return
+  pdfLink.value = await buildPoSupplierPdf(d, {
     supplierName: purchaseOrderDetails.value?.supplier_name || '',
     poNumber: purchaseOrderDetails.value?.po_number || '',
-    createdByBarcode: details.signed.createdBy
-      ? generateBarcodeDataUrl(details.signed.createdBy)
+    createdByBarcode: d.signed.createdBy
+      ? generateBarcodeDataUrl(d.signed.createdBy)
       : '',
-    approvedByBarcode: details.signed.approvedBy
-      ? generateBarcodeDataUrl(details.signed.approvedBy)
+    approvedByBarcode: d.signed.approvedBy
+      ? generateBarcodeDataUrl(d.signed.approvedBy)
       : ''
   })
 }
+
+watch(
+  details,
+  (d) => {
+    if (d && !pdfLink.value) loadPdf()
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   loadPdf()

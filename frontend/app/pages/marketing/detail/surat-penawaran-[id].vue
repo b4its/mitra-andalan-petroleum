@@ -61,6 +61,14 @@ const loadPdf = async () => {
   )
 }
 
+watch(
+  [() => details, () => customerDetail.value],
+  () => {
+    if (details && !pdfLink.value) loadPdf()
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   loadPdf()
 })

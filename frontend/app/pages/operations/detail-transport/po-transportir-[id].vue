@@ -30,6 +30,14 @@ const loadPdf = async () => {
   pdfLink.value = await buildPoTransportPdf(d)
 }
 
+watch(
+  details,
+  (d) => {
+    if (d && !pdfLink.value) loadPdf()
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   loadPdf()
 })

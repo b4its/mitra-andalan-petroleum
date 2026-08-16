@@ -15,15 +15,26 @@ const { data: invoiceDetails, pending } = await useAsyncData(
     return res
   }
 )
-const details: InvoiceDetailsData = invoiceDetails.value?.details as InvoiceDetailsData
+const details = computed<InvoiceDetailsData | null>(
+  () => invoiceDetails.value?.details ?? null
+)
 
 const loadPdf = async () => {
-  if (!details?.companyInformation) return
-  pdfLink.value = await buildInvoicePdf(details)
+  const d = details.value
+  if (!d?.companyInformation) return
+  pdfLink.value = await buildInvoicePdf(d)
 }
 
+watch(
+  details,
+  (d) => {
+    if (d && !pdfLink.value) loadPdf()
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
-  if (details?.companyInformation) {
+  if (details.value?.companyInformation) {
     loadPdf()
   }
 })
