@@ -8,10 +8,15 @@ import {
 const emit = defineEmits<{
   submit: []
   previous: []
+  preview: []
 }>()
 
 const state = defineModel<MarketingOLFooterState>({ required: true })
 const location = defineModel<string>('location', { default: '' })
+
+function onPreview() {
+  emit('preview')
+}
 
 const deadlineOptions = [
   { label: '1 - 14', value: '1 - 14' },
@@ -186,9 +191,20 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
           Sebelumnya
         </UButton>
 
-        <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-          Selesai
-        </UButton>
+        <div class="flex gap-2">
+          <UButton
+            color="info"
+            variant="soft"
+            leading-icon="i-lucide-eye"
+            @click="onPreview"
+          >
+            Preview Dokumen
+          </UButton>
+
+          <UButton type="submit" trailing-icon="i-lucide-arrow-right">
+            Selesai
+          </UButton>
+        </div>
       </div>
     </UPageCard>
   </UForm>

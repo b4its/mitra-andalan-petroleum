@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import type { StepperItem } from '@nuxt/ui'
 import type { ResUploads } from '~/types'
-import type { OfferingLetterPost, Customer } from '~/types/marketing'
+import type { OfferingLetterPost, Customer, OfferingLetterDetails } from '~/types/marketing'
 import type {
   MarketingOLDetailsState,
   MarketingOLFooterState,
   MarketingOLHeaderState
 } from '~/types/schemas'
+import { useOfferingLetterPdf } from '~/composables/useOfferingLetterPdf'
 
 const { user } = useAuth()
 const { get } = useApi()
+const previewOpen = ref(false)
+const { buildOfferingLetterPdf } = useOfferingLetterPdf()
 
 interface CustomerOption {
   id: string
@@ -133,6 +136,21 @@ function onDetailsSubmit() {
   stepper.value?.next()
 }
 
+async function buildPreviewPdf() {
+  const details = {
+    ...letterHeader,
+    ...letterOfferDetails,
+    ...letterFooter
+  }
+  const customerName = customerList.value.find(
+    c => c.id === letterHeader.receiver
+  )?.name || letterFooter.companyInformation?.email || ''
+  return await buildOfferingLetterPdf(
+    details as unknown as OfferingLetterDetails,
+    customerName
+  )
+}
+
 const toast = useToast()
 const { post, postFile, del } = useApi()
 
@@ -235,8 +253,16 @@ definePageMeta({ layout: 'marketing' })
         v-model:location="letterHeader.location"
         :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
+        @preview="previewOpen = true"
         @submit="onFooterSubmit"
       />
     </template>
   </UStepper>
+
+  <DocumentPreviewModal
+    :open="previewOpen"
+    title="Preview Surat Penawaran"
+    :build-pdf="buildPreviewPdf"
+    @close="previewOpen = false"
+  />
 </template>
