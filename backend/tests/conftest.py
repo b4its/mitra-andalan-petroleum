@@ -94,13 +94,23 @@ def seeded_db(client):
             {"id": ids["po_id"], "num": "PO/2026/VI/100", "type": "customer", "cid": ids["cust_id"],
              "dt": "2026-06-01", "total": 143600000, "st": "created", "now": now})
 
+        ids["po_transportir_id"] = str(uuid.uuid4())
+        conn.execute(text("""INSERT INTO po_transportir (id, po_number, date, pic_person,
+            receiver, total, status, id_purchase_order, customer_id, created_at, updated_at)
+            VALUES (:id, :num, :dt, :pic, :recv, :total, :st, :po_id, :cid, :now, :now)"""),
+            {"id": ids["po_transportir_id"], "num": "121/PO-TRANS/MAP/VI/2026",
+             "dt": "2026-06-05", "pic": "Bpk Bambang Nugroho",
+             "recv": "PT Armada Kaltim Sejahtera", "total": 4440000,
+             "st": "created", "po_id": ids["po_id"], "cid": ids["cust_id"], "now": now})
+
         ids["do_id"] = str(uuid.uuid4())
         conn.execute(text("""INSERT INTO delivery_orders (id, do_number, customer_id, po_number,
             transport_name, fuel_total, status, status_rilis_dana, status_ready_order,
-            status_selesai_dikirim, status_lunas_ongkir, created_at, updated_at)
-            VALUES (:id, :num, :cid, :po, :trans, :ft, :st, 0, 0, 0, 0, :now, :now)"""),
+            status_selesai_dikirim, status_lunas_ongkir, id_po_transportir, created_at, updated_at)
+            VALUES (:id, :num, :cid, :po, :trans, :ft, :st, 0, 0, 0, 0, :pt_id, :now, :now)"""),
             {"id": ids["do_id"], "num": "001/DO/MAP/VI/2026", "cid": ids["cust_id"], "po": "PO/2026/VI/100",
-             "trans": "PT Armada Kaltim Sejahtera", "ft": 8000, "st": "created", "now": now})
+             "trans": "PT Armada Kaltim Sejahtera", "ft": 8000, "st": "created",
+             "pt_id": ids["po_transportir_id"], "now": now})
 
         ids["inv_id"] = str(uuid.uuid4())
         conn.execute(text("""INSERT INTO invoices (id, invoice_number, customer_id, terms_day, grand_total,
@@ -114,14 +124,5 @@ def seeded_db(client):
             VALUES (:id, :title, :msg, :type, :is_read, :now, :now)"""),
             {"id": ids["notif_id"], "title": "Test Notif", "msg": "Test message",
              "type": "info", "is_read": False, "now": now})
-
-        ids["po_transportir_id"] = str(uuid.uuid4())
-        conn.execute(text("""INSERT INTO po_transportir (id, po_number, date, pic_person,
-            receiver, total, status, created_at, updated_at)
-            VALUES (:id, :num, :dt, :pic, :recv, :total, :st, :now, :now)"""),
-            {"id": ids["po_transportir_id"], "num": "121/PO-TRANS/MAP/VI/2026",
-             "dt": "2026-06-05", "pic": "Bpk Bambang Nugroho",
-             "recv": "PT Armada Kaltim Sejahtera", "total": 4440000,
-             "st": "created", "now": now})
 
     return ids
