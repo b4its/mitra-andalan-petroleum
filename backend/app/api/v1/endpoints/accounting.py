@@ -12,6 +12,8 @@ from app.schemas.accounting import (
     AccountResponse,
     AccountCreate,
     AccountUpdate,
+    AccountDetailResponse,
+    AccountJournalLine,
     JournalEntryResponse,
     JournalEntryCreate,
     JournalEntryUpdate,
@@ -196,6 +198,71 @@ async def delete_account(id: str, db: AsyncSession = Depends(get_db)):
     return MessageResponse(message="Deleted", code=200)
 
 
+@router.get(
+    "/accounting/accounts/{id}/detail",
+    response_model=AccountDetailResponse,
+    summary="Detail lengkap akun dengan mutasi jurnal",
+)
+async def get_account_detail(id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Account).where(Account.id == id))
+    account = result.scalar_one_or_none()
+    if not account:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    # Total debit/credit
+    agg = await db.execute(
+        select(
+            func.coalesce(func.sum(JournalLine.debit), 0.0),
+            func.coalesce(func.sum(JournalLine.credit), 0.0),
+            func.count(JournalLine.id),
+        ).where(JournalLine.account_id == id)
+    )
+    total_debit, total_credit, journal_count = agg.one()
+    total_debit = round(total_debit or 0, 2)
+    total_credit = round(total_credit or 0, 2)
+
+    # Balance
+    if account.type in DEBIT_TYPES:
+        balance = total_debit - total_credit
+    else:
+        balance = total_credit - total_debit
+
+    # Recent journals
+    recent_stmt = (
+        select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date, JournalEntry.description)
+        .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+        .where(JournalLine.account_id == id)
+        .order_by(JournalEntry.entry_date.desc(), JournalLine.created_at.desc())
+        .limit(20)
+    )
+    recent_result = await db.execute(recent_stmt)
+    recent = [
+        AccountJournalLine(
+            id=line.id,
+            entry_number=entry_number,
+            entry_date=entry_date,
+            description=description,
+            debit=round(line.debit or 0, 2),
+            credit=round(line.credit or 0, 2),
+        )
+        for line, entry_number, entry_date, description in recent_result.all()
+    ]
+
+    return AccountDetailResponse(
+        id=account.id,
+        code=account.code,
+        name=account.name,
+        type=account.type,
+        description=account.description,
+        is_active=account.is_active,
+        total_debit=total_debit,
+        total_credit=total_credit,
+        balance=round(balance, 2),
+        journal_count=journal_count,
+        recent_journals=recent,
+    )
+
+
 # ── Journal Entries ────────────────────────────────────────────
 
 @router.get(
@@ -209,6 +276,7 @@ async def list_journals(
     search: str | None = Query(default=None),
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
+    account_id: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     base = select(JournalEntry)
@@ -222,6 +290,12 @@ async def list_journals(
         base = base.where(JournalEntry.entry_date >= date_from)
     if date_to:
         base = base.where(JournalEntry.entry_date <= date_to)
+    if account_id:
+        base = base.where(
+            JournalEntry.id.in_(
+                select(JournalLine.journal_entry_id).where(JournalLine.account_id == account_id)
+            )
+        )
     total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0
 
@@ -508,6 +582,7 @@ async def get_trial_balance(db: AsyncSession = Depends(get_db)):
 async def _income_expense_rows(
     db: AsyncSession, account_type: str, amount_side: str,
     page: int, page_size: int, date_from: date | None, date_to: date | None,
+    search: str | None = None,
 ):
     base = (
         select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date,
@@ -516,6 +591,13 @@ async def _income_expense_rows(
         .join(Account, JournalLine.account_id == Account.id)
         .where(Account.type == account_type)
     )
+    if search:
+        base = base.where(or_(
+            JournalEntry.description.ilike(f"%{search}%"),
+            JournalEntry.entry_number.ilike(f"%{search}%"),
+            Account.name.ilike(f"%{search}%"),
+            Account.code.ilike(f"%{search}%"),
+        ))
     if date_from:
         base = base.where(JournalEntry.entry_date >= date_from)
     if date_to:
@@ -554,10 +636,11 @@ async def list_income(
     page: int = 1, page_size: int = 20,
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
+    search: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     items, total = await _income_expense_rows(
-        db, "revenue", "credit", page, page_size, date_from, date_to
+        db, "revenue", "credit", page, page_size, date_from, date_to, search
     )
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
@@ -572,10 +655,11 @@ async def list_expenses(
     page: int = 1, page_size: int = 20,
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
+    search: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     items, total = await _income_expense_rows(
-        db, "expense", "debit", page, page_size, date_from, date_to
+        db, "expense", "debit", page, page_size, date_from, date_to, search
     )
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 

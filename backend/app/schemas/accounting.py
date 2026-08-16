@@ -330,3 +330,29 @@ class BankInterestResponse(BaseModel):
     total_interest: float = 0
     total_paid: float = 0
     rows: list[BankInterestRow] = []
+
+
+# ── Detail Akun ────────────────────────────────────────────────
+
+
+class AccountJournalLine(BaseModel):
+    id: str
+    entry_number: str
+    entry_date: date
+    description: str
+    debit: float = 0
+    credit: float = 0
+
+
+class AccountDetailResponse(BaseModel):
+    id: str
+    code: str
+    name: str
+    type: str
+    description: str | None = None
+    is_active: bool = True
+    total_debit: float = 0
+    total_credit: float = 0
+    balance: float = 0
+    journal_count: int = 0
+    recent_journals: list[AccountJournalLine] = []
