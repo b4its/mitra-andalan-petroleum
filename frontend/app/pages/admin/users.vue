@@ -496,7 +496,7 @@ const showPassword = ref(false)
             autocomplete="off"
           />
         </UFormField>
-        <UFormField name="password" label="Password" required>
+        <UFormField name="password" label="Kata Sandi" required>
           <UInput
             v-model="formState.password"
             :type="showPassword ? 'text' : 'password'"

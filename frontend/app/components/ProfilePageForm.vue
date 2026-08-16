@@ -169,7 +169,7 @@ function toggleShow() {
         @submit="onSubmit"
       >
         <UPageCard variant="subtle">
-          <UFormField name="name" label="Name" required>
+          <UFormField name="name" label="Nama" required>
             <UInput v-model="profile.name" autocomplete="off" />
           </UFormField>
 
@@ -177,10 +177,10 @@ function toggleShow() {
             <UInput v-model="profile.email" type="email" autocomplete="off" />
           </UFormField>
 
-          <UFormField name="password" label="Password">
+          <UFormField name="password" label="Kata Sandi">
             <UInput
               v-model="profile.password"
-              placeholder="Password"
+              placeholder="Kata Sandi"
               :type="show ? 'text' : 'password'"
               :ui="{ trailing: 'pe-1' }"
             >
