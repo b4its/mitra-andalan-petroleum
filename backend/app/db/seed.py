@@ -24,13 +24,14 @@ from app.models.invoice import Invoice
 from app.models.notification import Notification
 from app.models.sale import Sale
 from app.models.upload import Upload
+from app.models.po_transportir import PoTransportir
 from app.models.accounting import Account, JournalEntry, JournalLine
 
 
 # ── Urutan hapus data (FK-safe: child dulu, parent belakangan) ──
 _CLEAR_ORDER = [
     Upload, JournalLine, JournalEntry, Notification,
-    Invoice, DeliveryOrder, PurchaseOrder, OfferingLetter,
+    Invoice, PoTransportir, DeliveryOrder, PurchaseOrder, OfferingLetter,
     Sale, Account, Supplier, Customer, User,
 ]
 
@@ -62,12 +63,13 @@ async def seed_database(db: AsyncSession, force: bool = False):
     await _seed_purchase_orders(db)
     await _seed_delivery_orders(db)
     await _seed_invoices(db)
+    await _seed_po_transportir(db)
     await _seed_notifications(db)
     await _seed_sales(db)
     await _seed_accounting(db)
     await _seed_signatures(db)
     await db.commit()
-    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan).")
+    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 15 DO, 15 invoice, 3 PO transportir, notifikasi, penjualan, akuntansi, tanda tangan).")
 
 
 async def _clear_all(db: AsyncSession):
@@ -513,6 +515,67 @@ async def _seed_invoices(db: AsyncSession):
     await db.flush()
 
 
+# ── PO Transportir ─────────────────────────────────────────────
+
+def _po_transportir_details(po_number: str, receiver: str, pic_person: str, products: list, loading_date: str, discharge: str) -> str:
+    sub_total = sum(p["totalPrice"] for p in products)
+    ppn = round(sub_total * 0.11)
+    return json.dumps({
+        "date": loading_date,
+        "poTransportNumber": po_number,
+        "regarding": "Purchase Order Transportir (PO)",
+        "receiver": receiver,
+        "picPerson": pic_person,
+        "products": products,
+        "percentageNum": {"ppn": 0.11},
+        "priceSummary": {"subTotal": sub_total, "ppn": ppn, "grandTotal": sub_total + ppn},
+        "loadingInformation": "Masbro, Pendingin, Kutai Kartanegara, Kalimantan Timur",
+        "discharge": discharge,
+        "termsOfPayment": "30 Hari kerja setelah invoice beserta kelengkapan dokumen selesai diverifikasi",
+        "shrinkageTolerance": "Toleransi susut 0.3 %, Claim Susut Rp. 25.000,- / Liter",
+        "contactPerson": {
+            "companyName": "PT. Mitra Andalan Petroleum",
+            "customerName": receiver,
+            "companyContactPerson": [{"name": "Nico Pratama", "phoneNumber": "0812 3456 7890"}],
+            "customerContactPerson": [{"name": "Dedi Kurniawan", "phoneNumber": "0812 5617 8230"}],
+        },
+        "offeror": {"name": "Nico Pratama"},
+    })
+
+
+async def _seed_po_transportir(db: AsyncSession):
+    ops_users = (await db.execute(select(User).where(User.role == "operations"))).scalars().all()
+    creator = ops_users[0] if ops_users else None
+    pic_person = "Bpk Bambang Nugroho"
+
+    records = [
+        ("121/PO-TRANS/MAP/VI/2026", "2026-06-05", "PT. Armada Kaltim Sejahtera",
+         [{"name": "Solar", "loadingDate": "2026-06-05", "unloadingDate": "2026-06-06", "qty": 8000, "ratePrice": 500, "totalPrice": 4000000}],
+         "Site MHU - Kutai Kartanegara", "created"),
+        ("122/PO-TRANS/MAP/VI/2026", "2026-06-12", "CV. Tiga Putra Transport",
+         [{"name": "Solar", "loadingDate": "2026-06-12", "unloadingDate": "2026-06-13", "qty": 10000, "ratePrice": 500, "totalPrice": 5000000}],
+         "Site TDM / Separi - Kutai Kartanegara", "created"),
+        ("123/PO-TRANS/MAP/VI/2026", "2026-06-20", "PT. Borneo Distribusi Logistik",
+         [{"name": "Solar", "loadingDate": "2026-06-20", "unloadingDate": "2026-06-21", "qty": 8000, "ratePrice": 475, "totalPrice": 3800000}],
+         "Site MHU - Kutai Kartanegara", "completed"),
+    ]
+
+    for po_number, po_date, receiver, products, discharge, status in records:
+        sub_total = sum(p["totalPrice"] for p in products)
+        po = PoTransportir(
+            po_number=po_number,
+            date=po_date,
+            pic_person=pic_person,
+            receiver=receiver,
+            total=sub_total + round(sub_total * 0.11),
+            status=status,
+            created_by=creator.id if creator else None,
+            details=_po_transportir_details(po_number, receiver, pic_person, products, po_date, discharge),
+        )
+        db.add(po)
+    await db.flush()
+
+
 # ── Notifications ──────────────────────────────────────────────
 
 async def _seed_notifications(db: AsyncSession):
@@ -729,6 +792,7 @@ async def _check_seed(db: AsyncSession) -> bool:
         ("purchase_orders", await count(PurchaseOrder), 10),
         ("delivery_orders", await count(DeliveryOrder), 15),
         ("invoices", await count(Invoice), 15),
+        ("po_transportir", await count(PoTransportir), 3),
         ("accounts", await count(Account), 21),
         ("journal_entries", await count(JournalEntry), 10),
     ]:
@@ -787,6 +851,11 @@ async def _check_seed(db: AsyncSession) -> bool:
     for inv in invs:
         if not re.fullmatch(r"INV/2026/VI/\d{3}", inv.invoice_number or ""):
             print(f"  [FAIL] INV {inv.invoice_number}: format nomor tidak sesuai pola INV/2026/VI/001")
+            format_ok = False
+    po_trans = (await db.execute(select(PoTransportir))).scalars().all()
+    for pt in po_trans:
+        if not re.fullmatch(r"\d{3}/PO-TRANS/MAP/VI/2026", pt.po_number or ""):
+            print(f"  [FAIL] PO Transportir {pt.po_number}: format nomor tidak sesuai pola 121/PO-TRANS/MAP/VI/2026")
             format_ok = False
     all_ok = all_ok and format_ok
     print(f"  [{'OK' if format_ok else 'FAIL'}] format nomor dokumen (OL/PO/DO/INV)")
