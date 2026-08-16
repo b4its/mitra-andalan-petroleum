@@ -13,6 +13,7 @@ from app.models.delivery_order import DeliveryOrder
 from app.models.customer import Customer
 from app.models.offering_letter import OfferingLetter
 from app.models.purchase_order import PurchaseOrder
+from app.models.po_transportir import PoTransportir
 from app.models.upload import Upload
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.delivery_order import (
@@ -87,12 +88,14 @@ async def _sync_offering_letters(
     await db.flush()
 
 
-def _to_response(do, customer_name):
+def _to_response(do, customer_name, po_transportir_number=None):
     return DeliveryOrderResponse(
         id=do.id, do_number=do.do_number,
         customer_id=do.customer_id, customer_name=customer_name,
         id_purchase_order=do.id_purchase_order,
-        po_number=do.po_number, transport_name=do.transport_name,
+        id_po_transportir=do.id_po_transportir,
+        po_number=do.po_number, po_transportir_number=po_transportir_number,
+        transport_name=do.transport_name,
         fuel_total=do.fuel_total, status=do.status,
         details=_details_from_str(do.details),
         created_by=do.created_by,
@@ -122,6 +125,10 @@ async def list_delivery_orders(
         default=None,
         description="Filter DO yang berparent ke purchase order ini",
     ),
+    po_transportir_id: str | None = Query(
+        default=None,
+        description="Filter DO yang berparent ke PO Transportir ini",
+    ),
     db: AsyncSession = Depends(get_db)
 ):
     base = select(DeliveryOrder)
@@ -134,6 +141,8 @@ async def list_delivery_orders(
         ))
     if purchase_order_id:
         base = base.where(DeliveryOrder.id_purchase_order == purchase_order_id)
+    if po_transportir_id:
+        base = base.where(DeliveryOrder.id_po_transportir == po_transportir_id)
     if status_rilis_dana is not None:
         if status_rilis_dana:
             base = base.where(
@@ -153,9 +162,15 @@ async def list_delivery_orders(
     dos = result.scalars().all()
 
     items = []
+    # Resolve po_transportir numbers untuk list
+    potrans_ids = {do.id_po_transportir for do in dos if do.id_po_transportir}
+    potrans_map = {}
+    if potrans_ids:
+        pt_rows = await db.execute(select(PoTransportir).where(PoTransportir.id.in_(potrans_ids)))
+        potrans_map = {pt.id: pt.po_number for pt in pt_rows.scalars().all()}
     for do in dos:
         cn = await _get_customer_name(db, do.customer_id)
-        items.append(_to_response(do, cn))
+        items.append(_to_response(do, cn, potrans_map.get(do.id_po_transportir)))
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
 
@@ -170,7 +185,12 @@ async def get_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     if not do:
         raise HTTPException(status_code=404, detail="Not found")
     cn = await _get_customer_name(db, do.customer_id)
-    return _to_response(do, cn)
+    potrans_number = None
+    if do.id_po_transportir:
+        pt = await db.get(PoTransportir, do.id_po_transportir)
+        if pt:
+            potrans_number = pt.po_number
+    return _to_response(do, cn, potrans_number)
 
 
 @router.post(
@@ -184,9 +204,38 @@ async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = De
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
 
-    # ── Resolusi PO parent ──────────────────────────────────────
+    # ── Resolusi PO Transportir (alur baru) ──────────────────────
+    po_transportir_number = None
+    if data.get("id_po_transportir"):
+        pt_result = await db.execute(
+            select(PoTransportir).where(PoTransportir.id == data["id_po_transportir"])
+        )
+        pt = pt_result.scalar_one_or_none()
+        if not pt:
+            raise HTTPException(status_code=400, detail="PO Transportir tidak ditemukan")
+        po_transportir_number = pt.po_number
+        # Resolve parent PO Customer dari PoTransportir
+        if pt.id_purchase_order:
+            po_res = await db.execute(
+                select(PurchaseOrder).where(PurchaseOrder.id == pt.id_purchase_order)
+            )
+            parent_po = po_res.scalar_one_or_none()
+            if parent_po:
+                data["id_purchase_order"] = parent_po.id
+                data["po_number"] = data.get("po_number") or parent_po.po_number
+        # Copy customer_id dari PoTransportir
+        if not data.get("customer_id") and pt.customer_id:
+            data["customer_id"] = pt.customer_id
+        # Copy transport_name dari receiver PO Transportir
+        if not data.get("transport_name") and pt.receiver:
+            data["transport_name"] = pt.receiver
+        # Jika fuel_total tidak diisi, gunakan total PO Transportir
+        if not data.get("fuel_total"):
+            data["fuel_total"] = pt.total or 0
+
+    # ── Resolusi PO parent (alur lama) ────────────────────────────
     po = None
-    if data.get("id_purchase_order"):
+    if data.get("id_purchase_order") and not data.get("id_po_transportir"):
         po_result = await db.execute(
             select(PurchaseOrder).where(PurchaseOrder.id == data["id_purchase_order"])
         )
@@ -214,7 +263,7 @@ async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = De
         sender_id=do.created_by,
         to="/operations",
     )
-    return _to_response(do, cn)
+    return _to_response(do, cn, po_transportir_number)
 
 
 @router.put(

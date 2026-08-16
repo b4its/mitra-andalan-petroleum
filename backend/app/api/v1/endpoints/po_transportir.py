@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
 from app.models.po_transportir import PoTransportir
+from app.models.purchase_order import PurchaseOrder
+from app.models.customer import Customer
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.po_transportir import (
     PoTransportirResponse,
@@ -26,7 +28,7 @@ def _details_from_str(details: str | None) -> dict[str, Any] | None:
     return json.loads(details) if details else None
 
 
-def _to_response(po: PoTransportir) -> PoTransportirResponse:
+def _to_response(po: PoTransportir, customer_name: str = "", po_number: str | None = None) -> PoTransportirResponse:
     return PoTransportirResponse(
         id=po.id,
         po_number=po.po_number,
@@ -37,6 +39,10 @@ def _to_response(po: PoTransportir) -> PoTransportirResponse:
         status=po.status,
         details=_details_from_str(po.details),
         created_by=po.created_by,
+        id_purchase_order=po.id_purchase_order,
+        customer_id=po.customer_id,
+        customer_name=customer_name,
+        purchase_order_number=po_number,
         created_at=po.created_at,
         updated_at=po.updated_at,
     )
@@ -75,8 +81,24 @@ async def list_po_transportir(
     result = await db.execute(stmt)
     items = result.scalars().all()
 
+    # Resolve customer_name & po_number untuk response
+    po_ids = {p.id_purchase_order for p in items if p.id_purchase_order}
+    cust_ids = {p.customer_id for p in items if p.customer_id}
+    pos = {}
+    if po_ids:
+        po_rows = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id.in_(po_ids)))
+        pos = {po.id: po for po in po_rows.scalars().all()}
+    customers = {}
+    if cust_ids:
+        c_rows = await db.execute(select(Customer).where(Customer.id.in_(cust_ids)))
+        customers = {c.id: c for c in c_rows.scalars().all()}
+
     return PaginatedResponse(
-        items=[_to_response(po) for po in items],
+        items=[_to_response(
+            po,
+            customer_name=(customers.get(po.customer_id).name if po.customer_id and customers.get(po.customer_id) else ""),
+            po_number=(pos.get(po.id_purchase_order).po_number if po.id_purchase_order and pos.get(po.id_purchase_order) else None),
+        ) for po in items],
         total=total,
         page=page,
         page_size=page_size,
@@ -92,7 +114,19 @@ async def get_po_transportir(id: str, db: AsyncSession = Depends(get_db)):
     po = await db.get(PoTransportir, id)
     if not po:
         raise HTTPException(status_code=404, detail="PO Transportir tidak ditemukan")
-    return _to_response(po)
+    customer_name = ""
+    po_number = None
+    if po.customer_id:
+        c = await db.execute(select(Customer).where(Customer.id == po.customer_id))
+        c_obj = c.scalar_one_or_none()
+        if c_obj:
+            customer_name = c_obj.name
+    if po.id_purchase_order:
+        po_res = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == po.id_purchase_order))
+        po_obj = po_res.scalar_one_or_none()
+        if po_obj:
+            po_number = po_obj.po_number
+    return _to_response(po, customer_name, po_number)
 
 
 @router.post(
@@ -102,6 +136,18 @@ async def get_po_transportir(id: str, db: AsyncSession = Depends(get_db)):
     status_code=201,
 )
 async def create_po_transportir(body: PoTransportirCreate, db: AsyncSession = Depends(get_db)):
+    # ── Resolve PO Customer ──────────────────────────────────────
+    customer_id = body.customer_id
+    po_number_ref = None
+    if body.id_purchase_order:
+        po_res = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == body.id_purchase_order))
+        po = po_res.scalar_one_or_none()
+        if not po:
+            raise HTTPException(status_code=400, detail="Purchase Order customer tidak ditemukan")
+        if not customer_id:
+            customer_id = po.customer_id
+        po_number_ref = po.po_number
+
     po = PoTransportir(
         po_number=body.po_number,
         date=body.date,
@@ -111,9 +157,18 @@ async def create_po_transportir(body: PoTransportirCreate, db: AsyncSession = De
         status=body.status or "created",
         details=_details_to_str(body.details),
         created_by=await valid_sender_id(db, body.created_by),
+        id_purchase_order=body.id_purchase_order,
+        customer_id=customer_id,
     )
     db.add(po)
     await db.flush()
+
+    customer_name = ""
+    if customer_id:
+        c = await db.execute(select(Customer).where(Customer.id == customer_id))
+        c_obj = c.scalar_one_or_none()
+        if c_obj:
+            customer_name = c_obj.name
 
     await create_document_notification(
         db,
@@ -127,7 +182,7 @@ async def create_po_transportir(body: PoTransportirCreate, db: AsyncSession = De
 
     await db.commit()
     await db.refresh(po)
-    return _to_response(po)
+    return _to_response(po, customer_name, po_number_ref)
 
 
 @router.put(
