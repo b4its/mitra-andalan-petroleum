@@ -334,8 +334,6 @@ async def ready_order(id: str, db: AsyncSession = Depends(get_db)):
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Not found")
-    if not do.status_rilis_dana:
-        raise HTTPException(status_code=400, detail="Dana belum dirilis oleh Finance")
     if do.status_ready_order:
         raise HTTPException(status_code=400, detail="Pengantaran sudah disiapkan sebelumnya")
     now_wita = datetime.now(WITA)

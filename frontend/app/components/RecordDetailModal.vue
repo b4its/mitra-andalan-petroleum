@@ -774,17 +774,6 @@ async function downloadFile(upload: RecordUpload) {
                 <div class="flex flex-wrap gap-x-4 gap-y-1.5 pt-1.5 border-t border-default text-xs">
                   <span class="flex items-center gap-1">
                     <UIcon
-                      name="i-lucide-circle-dollar-sign"
-                      class="size-3.5"
-                      :class="doItem.status_rilis_dana ? 'text-success' : 'text-muted'"
-                    />
-                    Rilis Dana:
-                    <span class="font-medium">
-                      {{ doItem.status_rilis_dana ? 'Sudah' : 'Belum' }}
-                    </span>
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <UIcon
                       name="i-lucide-package"
                       class="size-3.5"
                       :class="doItem.status_ready_order ? 'text-info' : 'text-muted'"
@@ -1009,30 +998,6 @@ async function downloadFile(upload: RecordUpload) {
               Status Alur Pengiriman
             </p>
             <div class="grid grid-cols-2 gap-3">
-              <div class="rounded-lg border border-default p-3 space-y-1">
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    name="i-lucide-circle-dollar-sign"
-                    class="size-4 shrink-0"
-                    :class="
-                      data.status_rilis_dana ? 'text-success' : 'text-muted'
-                    "
-                  />
-                  <p class="text-xs font-medium">
-                    Rilis Dana
-                  </p>
-                  <UBadge
-                    :color="data.status_rilis_dana ? 'success' : 'warning'"
-                    variant="subtle"
-                    class="ml-auto text-xs"
-                  >
-                    {{ data.status_rilis_dana ? "Sudah" : "Belum" }}
-                  </UBadge>
-                </div>
-                <p v-if="data.rilis_dana_at" class="text-xs text-muted pl-6">
-                  {{ fmtDateTime(data.rilis_dana_at) }}
-                </p>
-              </div>
               <div class="rounded-lg border border-default p-3 space-y-1">
                 <div class="flex items-center gap-2">
                   <UIcon

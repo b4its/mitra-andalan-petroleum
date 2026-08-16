@@ -78,10 +78,7 @@ const doStats = computed(() => {
 const doAlurStats = computed(() => {
   const list: AdminDeliveryOrderRow[] = data.value?.doList || []
   return {
-    belumRilisDana: list.filter(d => !d.status_rilis_dana).length,
-    sudahRilisDana: list.filter(
-      d => d.status_rilis_dana && !d.status_ready_order
-    ).length,
+    perluDisiapkan: list.filter(d => !d.status_ready_order).length,
     sudahReadyOrder: list.filter(
       d => d.status_ready_order && !d.status_selesai_dikirim
     ).length,
@@ -116,7 +113,7 @@ const page = ref(1)
 const PAGE_SIZE = 7
 
 // Filter tab
-const filterTab = ref<'all' | 'rilis' | 'ready' | 'selesai' | 'lunas'>('all')
+const filterTab = ref<'all' | 'ready' | 'selesai' | 'lunas'>('all')
 const statusFilter = ref('all')
 
 const filtered = computed(() => {
@@ -124,18 +121,16 @@ const filtered = computed(() => {
   let list: AdminDeliveryOrderRow[] = data.value?.doList || []
 
   // Filter berdasarkan tab status alur
-  if (filterTab.value === 'rilis')
-    list = list.filter(d => d.status_rilis_dana && !d.status_ready_order)
-  else if (filterTab.value === 'ready')
+  if (filterTab.value === 'ready')
+    list = list.filter(d => !d.status_ready_order)
+  else if (filterTab.value === 'selesai')
     list = list.filter(
       d => d.status_ready_order && !d.status_selesai_dikirim
     )
-  else if (filterTab.value === 'selesai')
+  else if (filterTab.value === 'lunas')
     list = list.filter(
       d => d.status_selesai_dikirim && !d.status_lunas_ongkir
     )
-  else if (filterTab.value === 'lunas')
-    list = list.filter(d => d.status_lunas_ongkir)
 
   if (statusFilter.value !== 'all') {
     list = list.filter(d => d.status === statusFilter.value)
@@ -203,12 +198,6 @@ const columns: TableColumn<AdminDeliveryOrderRow>[] = [
     cell: ({ row }) => formatNumber(row.getValue('fuel_total') ?? 0)
   },
   {
-    accessorKey: 'status_rilis_dana',
-    header: 'Rilis Dana',
-    cell: ({ row }) =>
-      alurBadge(row.original.status_rilis_dana, row.original.rilis_dana_at)
-  },
-  {
     accessorKey: 'status_ready_order',
     header: 'Siap Kirim',
     cell: ({ row }) =>
@@ -253,10 +242,9 @@ function openDetail(id: string) {
 
 const filterTabs = [
   { key: 'all', label: 'Semua' },
-  { key: 'rilis', label: 'Dana Dirilis' },
-  { key: 'ready', label: 'Siap Kirim' },
-  { key: 'selesai', label: 'Selesai Kirim' },
-  { key: 'lunas', label: 'Lunas Ongkir' }
+  { key: 'ready', label: 'Perlu Disiapkan' },
+  { key: 'selesai', label: 'Siap Kirim' },
+  { key: 'lunas', label: 'Selesai/Lunas' }
 ]
 </script>
 
@@ -319,21 +307,13 @@ const filterTabs = [
           </div>
 
           <!-- Ringkasan Alur DO -->
-          <div class="grid gap-3 sm:grid-cols-5">
+          <div class="grid gap-3 sm:grid-cols-4">
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">
-                Belum Rilis Dana
+                Perlu Disiapkan
               </p>
               <p class="text-2xl font-bold text-warning">
-                {{ doAlurStats.belumRilisDana }}
-              </p>
-            </UCard>
-            <UCard variant="subtle" class="text-center">
-              <p class="text-xs text-muted mb-1">
-                Dana Dirilis
-              </p>
-              <p class="text-2xl font-bold text-info">
-                {{ doAlurStats.sudahRilisDana }}
+                {{ doAlurStats.perluDisiapkan }}
               </p>
             </UCard>
             <UCard variant="subtle" class="text-center">

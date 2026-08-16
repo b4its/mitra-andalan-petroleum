@@ -90,9 +90,9 @@ const invStats = computed(() => {
 const doFinanceStats = computed(() => {
   const list: AdminDeliveryOrderRow[] = data.value?.doList || []
   return {
-    belumRilisDana: list.filter(d => !d.status_rilis_dana).length,
+    menantiSiapKirim: list.filter(d => !d.status_ready_order).length,
     menantiSelesaiKirim: list.filter(
-      d => d.status_rilis_dana && !d.status_selesai_dikirim
+      d => d.status_ready_order && !d.status_selesai_dikirim
     ).length,
     menunggakLunas: list.filter(
       d => d.status_selesai_dikirim && !d.status_lunas_ongkir
@@ -175,10 +175,12 @@ const doFiltered = computed(() => {
   const q = doSearch.value.trim().toLowerCase()
   let list: AdminDeliveryOrderRow[] = data.value?.doList || []
 
-  if (doFlowFilter.value === 'belum_rilis')
-    list = list.filter(d => !d.status_rilis_dana)
+  if (doFlowFilter.value === 'menanti_siap')
+    list = list.filter(d => !d.status_ready_order)
   else if (doFlowFilter.value === 'menanti_selesai')
-    list = list.filter(d => d.status_rilis_dana && !d.status_selesai_dikirim)
+    list = list.filter(
+      d => d.status_ready_order && !d.status_selesai_dikirim
+    )
   else if (doFlowFilter.value === 'menunggu_lunas')
     list = list.filter(
       d => d.status_selesai_dikirim && !d.status_lunas_ongkir
@@ -237,7 +239,7 @@ const deadlineStatusOptions = [
 ]
 const doFlowOptions = [
   { label: 'Semua Alur Delivery Order', value: 'all' },
-  { label: 'Belum Rilis Dana', value: 'belum_rilis' },
+  { label: 'Menanti Siap Kirim', value: 'menanti_siap' },
   { label: 'Menanti Selesai Kirim', value: 'menanti_selesai' },
   { label: 'Menunggu Lunas Ongkir', value: 'menunggu_lunas' },
   { label: 'Ongkir Lunas', value: 'lunas' }
@@ -305,12 +307,6 @@ const doColumns: TableColumn<AdminDeliveryOrderRow>[] = [
   { accessorKey: 'do_number', header: 'Nomor Delivery Order' },
   { accessorKey: 'customer_name', header: 'Customer' },
   { accessorKey: 'po_number', header: 'Nomor Purchase Order' },
-  {
-    accessorKey: 'status_rilis_dana',
-    header: 'Rilis Dana',
-    cell: ({ row }) =>
-      alurBadge(row.original.status_rilis_dana, row.original.rilis_dana_at)
-  },
   {
     accessorKey: 'status_ready_order',
     header: 'Siap Kirim',
@@ -413,10 +409,10 @@ function openDetail(id: string, type: 'invoice' | 'do') {
           <div class="grid gap-3 sm:grid-cols-4">
             <UCard variant="subtle" class="text-center">
               <p class="text-xs text-muted mb-1">
-                Belum Rilis Dana
+                Menanti Siap Kirim
               </p>
               <p class="text-2xl font-bold text-warning">
-                {{ doFinanceStats.belumRilisDana }}
+                {{ doFinanceStats.menantiSiapKirim }}
               </p>
             </UCard>
             <UCard variant="subtle" class="text-center">

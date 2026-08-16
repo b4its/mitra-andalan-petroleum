@@ -157,40 +157,6 @@ async function submitEdit() {
   }
 }
 
-// ── Modal Rilis Dana ──────────────────────────────────────────
-const rilisDanaOpen = ref(false)
-const rilisDanaTarget = ref<DeliveryOrderRow | null>(null)
-const rilisDanaLoading = ref(false)
-
-function openRilisDana(row: DeliveryOrderRow) {
-  rilisDanaTarget.value = row
-  rilisDanaOpen.value = true
-}
-
-async function confirmRilisDana() {
-  if (rilisDanaLoading.value || !rilisDanaTarget.value) return
-  rilisDanaLoading.value = true
-  try {
-    await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {})
-    toast.add({
-      title: 'Berhasil',
-      description: 'Dana telah dirilis. Delivery Order tersedia di Operations.',
-      color: 'success'
-    })
-    rilisDanaOpen.value = false
-    rilisDanaTarget.value = null
-    refresh()
-  } catch (err) {
-    toast.add({
-      title: 'Gagal',
-      description: err instanceof Error ? err.message : 'Gagal merilis dana.',
-      color: 'error'
-    })
-  } finally {
-    rilisDanaLoading.value = false
-  }
-}
-
 // ── Modal Lunas Ongkir ────────────────────────────────────────
 const lunasOngkirOpen = ref(false)
 const lunasOngkirTarget = ref<DeliveryOrderRow | null>(null)
@@ -293,16 +259,6 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
       )
   },
   {
-    accessorKey: 'status_rilis_dana',
-    header: 'Rilis Dana',
-    cell: ({ row }) =>
-      statusBadge(
-        row.original.status_rilis_dana,
-        'Dirilis',
-        row.original.rilis_dana_at
-      )
-  },
-  {
     accessorKey: 'status_ready_order',
     header: 'Siap Kirim',
     cell: ({ row }) =>
@@ -390,18 +346,6 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
             <template #actions-cell="{ row }">
               <div class="flex flex-col items-center gap-3">
                 <div class="space-x-2">
-                  <!-- Rilis Dana: belum dirilis -->
-                  <UButton
-                    v-if="!row.original.status_rilis_dana"
-                    size="sm"
-                    color="success"
-                    variant="solid"
-                    icon="i-lucide-circle-dollar-sign"
-                    @click="openRilisDana(row.original)"
-                  >
-                    Rilis Dana
-                  </UButton>
-
                   <!-- Lunasi Ongkir: muncul setelah siap dikirim (ready_order=true) dan belum lunas -->
                   <UButton
                     v-if="
@@ -573,46 +517,6 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
   </UModal>
 
   <RecordDetailModal :id="detailId" v-model:open="detailOpen" type="do" />
-
-  <!-- ── Modal Konfirmasi Rilis Dana ── -->
-  <UModal v-model:open="rilisDanaOpen" :ui="{ content: 'max-w-md' }">
-    <template #title>
-      <div class="flex items-center gap-2 text-success">
-        <UIcon name="i-lucide-circle-dollar-sign" class="size-5" />
-        Konfirmasi Rilis Dana
-      </div>
-    </template>
-    <template #body>
-      <p class="text-sm text-muted">
-        Apakah Anda yakin ingin
-        <span class="font-semibold text-highlighted">merilis dana</span>
-        untuk Delivery Order
-        <span class="font-semibold text-highlighted">{{
-          rilisDanaTarget?.do_number
-        }}</span>?
-      </p>
-      <p class="mt-2 text-xs text-dimmed">
-        Setelah dirilis, Delivery Order akan muncul di halaman Operations dan tim dapat
-        menyiapkan pengantaran.
-      </p>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2">
-        <UButton
-          color="success"
-          :loading="rilisDanaLoading"
-          icon="i-lucide-check"
-          @click="confirmRilisDana"
-        >
-          Konfirmasi Rilis Dana
-        </UButton>
-
-        <UButton color="neutral" variant="ghost" @click="rilisDanaOpen = false">
-          Batal
-        </UButton>
-      </div>
-    </template>
-  </UModal>
 
   <!-- ── Modal Konfirmasi Lunas Ongkir ── -->
   <UModal v-model:open="lunasOngkirOpen" :ui="{ content: 'max-w-md' }">

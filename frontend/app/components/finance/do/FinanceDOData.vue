@@ -76,40 +76,6 @@ const { data: DoData, pending, refresh } = await useAsyncData(
   { default: () => [], watch: [debouncedSearch] }
 )
 
-// ── Modal Rilis Dana ──────────────────────────────────────────
-const rilisDanaOpen = ref(false)
-const rilisDanaTarget = ref<FinanceDoRow | null>(null)
-const rilisDanaLoading = ref(false)
-
-function _openRilisDana(row: FinanceDoRow) {
-  rilisDanaTarget.value = row
-  rilisDanaOpen.value = true
-}
-
-async function confirmRilisDana() {
-  if (rilisDanaLoading.value || !rilisDanaTarget.value) return
-  rilisDanaLoading.value = true
-  try {
-    await post(`/delivery-orders/${rilisDanaTarget.value.id}/rilis-dana`, {})
-    toast.add({
-      title: 'Berhasil',
-      description: 'Dana telah dirilis. Delivery Order tersedia di Operations.',
-      color: 'success'
-    })
-    rilisDanaOpen.value = false
-    rilisDanaTarget.value = null
-    refresh()
-  } catch (err) {
-    toast.add({
-      title: 'Gagal',
-      description: err instanceof Error ? err.message : 'Gagal merilis dana.',
-      color: 'error'
-    })
-  } finally {
-    rilisDanaLoading.value = false
-  }
-}
-
 // ── Modal Lunas Ongkir ────────────────────────────────────────
 const lunasOngkirOpen = ref(false)
 const lunasOngkirTarget = ref<FinanceDoRow | null>(null)
@@ -179,31 +145,6 @@ const columns: TableColumn<FinanceDoRow>[] = [
   { accessorKey: 'deliveryOrderNumber', header: 'Nomor Delivery Order' },
   { accessorKey: 'customerName', header: 'Customer' },
   { accessorKey: 'purchaseOrderNumber', header: 'Nomor Purchase Order' },
-  {
-    accessorKey: 'statusRilisDana',
-    header: 'Rilis Dana',
-    cell: ({ row }) => {
-      const val = row.original.statusRilisDana as boolean
-      return h('div', { class: 'flex flex-col gap-0.5' }, [
-        h(
-          UBadge,
-          {
-            variant: 'subtle',
-            color: val ? 'success' : 'warning',
-            class: 'text-xs'
-          },
-          () => (val ? 'Dirilis' : 'Belum')
-        ),
-        val && row.original.rilisDanaAt
-          ? h(
-              'span',
-              { class: 'text-[10px] text-muted' },
-              formatDate(row.original.rilisDanaAt)
-            )
-          : null
-      ])
-    }
-  },
   {
     accessorKey: 'statusReadyOrder',
     header: 'Siap Kirim',
@@ -300,49 +241,6 @@ const columns: TableColumn<FinanceDoRow>[] = [
       />
     </div>
   </section>
-
-  <!-- ── Modal Konfirmasi Rilis Dana ── -->
-  <UModal v-model:open="rilisDanaOpen" :ui="{ content: 'max-w-md' }">
-    <template #title>
-      <div class="flex items-center gap-2 text-success">
-        <UIcon name="i-lucide-circle-dollar-sign" class="size-5" />
-        Konfirmasi Rilis Dana
-      </div>
-    </template>
-    <template #body>
-      <p class="text-sm text-muted">
-        Apakah Anda yakin ingin
-        <span class="font-semibold text-highlighted">merilis dana</span>
-        untuk Delivery Order
-        <span class="font-semibold text-highlighted">{{
-          rilisDanaTarget?.deliveryOrderNumber
-        }}</span>?
-      </p>
-      <p class="mt-2 text-xs text-dimmed">
-        Setelah dirilis, Delivery Order akan muncul di halaman Operations dan tim dapat
-        menyiapkan pengantaran.
-      </p>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2">
-        <UButton
-          color="success"
-          :loading="rilisDanaLoading"
-          icon="i-lucide-check"
-          @click="confirmRilisDana"
-        >
-          Konfirmasi Rilis Dana
-        </UButton>
-        <UButton
-          color="neutral"
-          variant="ghost"
-          @click="rilisDanaOpen = false"
-        >
-          Batal
-        </UButton>
-      </div>
-    </template>
-  </UModal>
 
   <!-- ── Modal Konfirmasi Lunas Ongkir ── -->
   <UModal v-model:open="lunasOngkirOpen" :ui="{ content: 'max-w-md' }">

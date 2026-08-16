@@ -136,8 +136,6 @@ const { data: DoData, pending, refresh } = await useAsyncData(
         status: d.status,
         // Cek apakah details sudah lengkap (ada companyInformation = dibuat via form)
         detailsLengkap: !!(d.details && d.details.companyInformation),
-        statusRilisDana: d.status_rilis_dana ?? false,
-        rilisDanaAt: d.rilis_dana_at,
         statusReadyOrder: d.status_ready_order ?? false,
         readyOrderAt: d.ready_order_at,
         statusSelesaiDikirim: d.status_selesai_dikirim ?? false,
@@ -145,13 +143,7 @@ const { data: DoData, pending, refresh } = await useAsyncData(
         statusLunasOngkir: d.status_lunas_ongkir ?? false,
         lunasOngkirAt: d.lunas_ongkir_at
       }))
-      .sort((a, b) => {
-        // Rilis dana di atas, lalu urut terbaru
-        if (a.statusRilisDana !== b.statusRilisDana) {
-          return a.statusRilisDana ? -1 : 1
-        }
-        return b.dateCreated.localeCompare(a.dateCreated)
-      })
+      .sort((a, b) => b.dateCreated.localeCompare(a.dateCreated))
   },
   { default: () => [], watch: [debouncedSearch] }
 )
@@ -577,16 +569,6 @@ const columns: TableColumn<DoRow>[] = [
   { accessorKey: 'customerName', header: 'Customer' },
   { accessorKey: 'purchaseOrderNumber', header: 'Nomor Purchase Order' },
   {
-    accessorKey: 'statusRilisDana',
-    header: 'Rilis Dana',
-    cell: ({ row }) =>
-      statusBadge(
-        row.original.statusRilisDana,
-        'Rilis',
-        row.original.rilisDanaAt
-      )
-  },
-  {
     accessorKey: 'detailsLengkap',
     header: 'Surat',
     cell: ({ row }) => {
@@ -719,11 +701,9 @@ const columns: TableColumn<DoRow>[] = [
           >
             Lengkapi Data
           </UButton>
-          <!-- Siapkan Pengantaran: setelah rilis dana, belum ready -->
+          <!-- Siapkan Pengantaran: belum ready, tidak tergantung rilis dana -->
           <UButton
-            v-if="
-              row.original.statusRilisDana && !row.original.statusReadyOrder
-            "
+            v-if="!row.original.statusReadyOrder"
             size="xs"
             color="info"
             variant="soft"
