@@ -828,17 +828,20 @@ async def _check_seed(db: AsyncSession) -> bool:
     ols = (await db.execute(select(OfferingLetter))).scalars().all()
     ol_ids = {o.id for o in ols}
 
+    do_po_ok = True
     for do in dos:
         if do.po_number not in po_numbers:
             print(f"  [FAIL] DO {do.do_number}: po_number '{do.po_number}' tidak cocok dengan PO mana pun")
-            all_ok = False
+            do_po_ok = False
         if do.id_purchase_order and do.id_purchase_order not in pos:
             print(f"  [FAIL] DO {do.do_number}: id_purchase_order tidak merujuk PO yang valid")
-            all_ok = False
-    print(f"  [{'OK' if all_ok else 'FAIL'}] delivery_orders -> purchase_orders ({len(dos)} DO terhubung ke PO)")
+            do_po_ok = False
+    all_ok = all_ok and do_po_ok
+    print(f"  [{'OK' if do_po_ok else 'FAIL'}] delivery_orders -> purchase_orders ({len(dos)} DO terhubung ke PO)")
 
-    # Validasi PO Transportir → PO Customer
+    # Validasi PO Customer → Offering Letter
     pois = (await db.execute(select(PurchaseOrder))).scalars().all()
+    po_ol_ok = True
     po_linked = 0
     for po in pois:
         if not po.id_offering_letters:
@@ -848,12 +851,13 @@ async def _check_seed(db: AsyncSession) -> bool:
             linked = json.loads(po.id_offering_letters)
         except (TypeError, json.JSONDecodeError):
             print(f"  [FAIL] PO {po.po_number}: id_offering_letters bukan JSON valid")
-            all_ok = False
+            po_ol_ok = False
             continue
         if linked and not set(linked).issubset(ol_ids):
             print(f"  [FAIL] PO {po.po_number}: merujuk offering letter yang tidak ada")
-            all_ok = False
-    print(f"  [{'OK' if all_ok else 'FAIL'}] purchase_orders -> offering_letters ({po_linked} PO terhubung ke OL)")
+            po_ol_ok = False
+    all_ok = all_ok and po_ol_ok
+    print(f"  [{'OK' if po_ol_ok else 'FAIL'}] purchase_orders -> offering_letters ({po_linked} PO terhubung ke OL)")
 
     # Validasi PO Transportir → PO Customer
     potrans = (await db.execute(select(PoTransportir))).scalars().all()
