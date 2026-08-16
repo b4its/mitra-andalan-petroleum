@@ -225,6 +225,8 @@ class CashflowItem(BaseModel):
     description: str
     amount: float = 0
     category: str = ""
+    account_code: str = ""
+    account_name: str = ""
 
 
 class CashflowSection(BaseModel):
@@ -318,6 +320,8 @@ class BankInterestRow(BaseModel):
     id: str
     entry_date: date
     description: str
+    account_code: str = ""
+    account_name: str = ""
     amount: float = 0
     interest_rate: float = 0
     days: int = 0

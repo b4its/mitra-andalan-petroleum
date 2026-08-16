@@ -862,7 +862,7 @@ async def get_cashflow(
     ) -> CashflowSection:
         side = "credit" if is_inflow else "debit"
         stmt = (
-            select(JournalLine, JournalEntry.description, JournalEntry.entry_date, Account.name)
+            select(JournalLine, JournalEntry.description, JournalEntry.entry_date, Account.name, Account.code)
             .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
             .join(Account, JournalLine.account_id == Account.id)
             .where(Account.type == account_type)
@@ -873,10 +873,16 @@ async def get_cashflow(
         result = await db.execute(stmt)
         items = []
         total = 0.0
-        for line, desc, _, acc_name in result.all():
+        for line, desc, _, acc_name, acc_code in result.all():
             amount = (line.credit if side == "credit" else line.debit) or 0
             if amount > 0:
-                items.append(CashflowItem(description=desc, amount=amount, category=acc_name))
+                items.append(CashflowItem(
+                    description=desc,
+                    amount=amount,
+                    category=acc_name,
+                    account_code=acc_code or "",
+                    account_name=acc_name or "",
+                ))
                 total += amount
         return CashflowSection(section=section_name, items=items, total=round(total, 2))
 
@@ -1071,25 +1077,6 @@ async def get_monitoring(
         # Next month
         current = month_end
 
-        if penghasilan > 0 or operasional > 0:
-            rows.append(MonitoringRow(
-                bulan=bulan_names[bulan],
-                invoice=invoice_count,
-                modal_elnusa=modal_elnusa,
-                oat=oat,
-                gross_margin=gross_margin,
-                penghasilan=penghasilan,
-                operasional=operasional,
-                fee_manajemen=fee_manajemen,
-            ))
-            totals["invoice"] += invoice_count
-            totals["modal"] += modal_elnusa
-            totals["oat"] += oat
-            totals["gm"] += gross_margin
-            totals["penghasilan"] += penghasilan
-            totals["operasional"] += operasional
-            totals["fee"] += fee_manajemen
-
     return MonitoringResponse(
         rows=rows,
         total_invoice=totals["invoice"],
@@ -1228,6 +1215,9 @@ async def get_bank_interest(
     total_paid = 0.0
 
     # Data pinjaman (credit liability)
+    loan_code_name = {a.id: (a.code, a.name) for a in loan_accounts}
+    interest_code_name = {a.id: (a.code, a.name) for a in interest_accounts}
+
     if loan_ids:
         stmt = (
             select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date,
@@ -1243,8 +1233,10 @@ async def get_bank_interest(
             amount = line.credit or 0
             total_principal += amount
             interest_val = round(amount * 0.06 / 12, 2)  # estimasi 6% p.a / 12 bulan
+            code, name = loan_code_name.get(line.account_id, ("", ""))
             rows.append(BankInterestRow(
                 id=line.id, entry_date=entry_date, description=desc,
+                account_code=code, account_name=name,
                 amount=amount, interest_rate=6.0, days=30,
                 interest_amount=interest_val, reference=ref,
             ))
