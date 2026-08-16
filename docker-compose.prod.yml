@@ -1,0 +1,100 @@
+# ── Production stack: MySQL + Backend + Frontend + Nginx + Ngrok ──
+#
+# Cara menjalankan:
+#   1. Salin .env.production.example menjadi .env.production lalu isi:
+#        NGROK_AUTHTOKEN=<token dari https://dashboard.ngrok.com>
+#        NGROK_DOMAIN=<domain ngrok, mis. mitra-andalan.ngrok-free.app atau domain custom>
+#   2. docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+#   3. Buka URL ngrok yang tampil di log: docker compose logs -f ngrok
+#
+# Akses lokal tetap tersedia di http://localhost:8080 (lewat nginx).
+
+name: mandalan-prod
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mandalan-prod-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_USER: ${MYSQL_USER:-mandalan}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-mandalan}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mandalan}
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mandalan-prod-backend
+    restart: unless-stopped
+    command: ["python", "-m", "app.db.boot"]
+    environment:
+      DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-mandalan}:${MYSQL_PASSWORD:-mandalan}@db:3306/${MYSQL_DATABASE:-mandalan}
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mandalan-prod-frontend
+    restart: unless-stopped
+    environment:
+      NUXT_API_PROXY_TARGET: http://backend:8000/api/v1
+      NUXT_MEDIA_PROXY_TARGET: http://backend:8000/media
+      NUXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ── Reverse proxy: menggabungkan frontend + backend dalam satu port ──
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: mandalan-prod-nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
+
+  # ── Ngrok: tunnel HTTPS publik ke nginx ─────────────────────
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: mandalan-prod-ngrok
+    restart: unless-stopped
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?NGROK_AUTHTOKEN wajib diisi di .env.production}
+    command:
+      - "http"
+      - "nginx:80"
+      - "--domain=${NGROK_DOMAIN:?NGROK_DOMAIN wajib diisi di .env.production}"
+      - "--log=stdout"
+    depends_on:
+      - nginx
+
+volumes:
+  mysqldata:
+  media_data:

@@ -45,6 +45,33 @@ first-run di database kosong. Pengembangan dengan Dev Container (VS Code):
 | ReDoc | http://localhost:8000/redoc |
 | Uploaded Files | http://localhost:8000/media/... |
 
+## Produksi dengan Ngrok (hosting + domain)
+
+Stack produksi menambahkan **Nginx** (reverse proxy frontend+backend dalam satu
+port) dan **Ngrok** (tunnel HTTPS publik ke domain) di atas DB/Backend/Frontend.
+
+```bash
+# 1. Siapkan env produksi
+cp .env.production.example .env.production
+#    Isi: NGROK_AUTHTOKEN, NGROK_DOMAIN (mis. mitra-andalan.ngrok-free.app
+#    atau domain custom), PUBLIC_SITE_URL, HTTP_PORT (default 8080)
+
+# 2. Build & jalankan stack produksi
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+
+# 3. Lihat URL publik ngrok
+docker compose -f docker-compose.prod.yml logs -f ngrok
+```
+
+Catatan:
+- **Akses lokal** tetap tersedia di `http://localhost:8080` (lewat nginx).
+- Ngrok membutuhkan akun: daftar gratis di https://ngrok.com, ambil token di
+  dashboard, dan pilih domain (gratis `.ngrok-free.app` atau custom berbayar).
+- Stack produksi memakai project name `mandalan-prod` sehingga **bisa berjalan
+  paralel** dengan stack development (`mandalan`).
+- Hentikan dengan: `docker compose -f docker-compose.prod.yml down`.
+
+
 ## Struktur Proyek
 
 ```
