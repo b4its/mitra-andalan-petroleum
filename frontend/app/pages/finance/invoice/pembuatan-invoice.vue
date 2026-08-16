@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StepperItem, SelectMenuItem } from '@nuxt/ui'
-import type { FinanceDeliveryOrders, InvoicePost } from '~/types/finance'
+import type { FinanceDeliveryOrders, InvoicePost, InvoiceDetailsData } from '~/types/finance'
 import type { PurchaseOrdersSupplier, Product } from '~/types/marketing'
 import type {
   FinanceInvoiceDetailsState,
@@ -8,11 +8,14 @@ import type {
   FinanceInvoiceHeaderState,
   FinanceInvoiceProductsState
 } from '~/types/schemas'
+import { useInvoicePdf } from '~/composables/useInvoicePdf'
 
 const { get, post } = useApi()
 const toast = useToast()
 const { user } = useAuth()
 const loading = ref(false)
+const previewOpen = ref(false)
+const { buildInvoicePdf } = useInvoicePdf()
 
 const { data: poCustomer } = await useAsyncData(
   'purchase-orders-customer',
@@ -249,6 +252,16 @@ function onFormSubmitToNext() {
   stepper.value?.next()
 }
 
+async function buildPreviewPdf() {
+  const invoiceData = {
+    ...financeHeader,
+    ...financeDetails,
+    ...financeProducts,
+    ...financeFooter
+  }
+  return await buildInvoicePdf(invoiceData as unknown as InvoiceDetailsData)
+}
+
 async function onFormSubmit() {
   try {
     if (loading.value) return
@@ -334,10 +347,19 @@ definePageMeta({ layout: 'finance' })
     <template #invoiceFooter>
       <FinanceInvoiceFooterForm
         v-model="financeFooter"
+        :is-loading="loading"
         :has-previous="stepper?.hasPrev"
         @previous="previousNavigation"
+        @preview="previewOpen = true"
         @submit="onFormSubmit"
       />
     </template>
   </UStepper>
+
+  <DocumentPreviewModal
+    :open="previewOpen"
+    title="Preview Invoice"
+    :build-pdf="buildPreviewPdf"
+    @close="previewOpen = false"
+  />
 </template>

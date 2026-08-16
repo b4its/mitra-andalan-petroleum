@@ -7,11 +7,13 @@ import {
 
 defineProps<{
   hasPrevious: boolean | undefined
+  isLoading?: boolean | undefined
 }>()
 
 const emit = defineEmits<{
   submit: []
   previous: []
+  preview: []
 }>()
 
 const state = defineModel<FinanceInvoiceFooterState>({ required: true })
@@ -35,6 +37,10 @@ function removeNote(index: number) {
 
 function previous() {
   emit('previous')
+}
+
+function onPreview() {
+  emit('preview')
 }
 
 function onSubmit(_event: FormSubmitEvent<FinanceInvoiceFooterState>) {
@@ -150,9 +156,24 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceFooterState>) {
           Sebelumnya
         </UButton>
 
-        <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-          Selesai
-        </UButton>
+        <div class="flex gap-2">
+          <UButton
+            color="info"
+            variant="soft"
+            leading-icon="i-lucide-eye"
+            @click="onPreview"
+          >
+            Preview Dokumen
+          </UButton>
+
+          <UButton
+            :loading="isLoading"
+            type="submit"
+            trailing-icon="i-lucide-arrow-right"
+          >
+            Selesai
+          </UButton>
+        </div>
       </div>
     </UPageCard>
   </UForm>
