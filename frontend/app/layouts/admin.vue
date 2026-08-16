@@ -32,6 +32,14 @@ const links = [
           }
         },
         {
+          label: 'Data Purchase Order Supplier',
+          to: '/admin/data-po-supplier',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
           label: 'Halaman Marketing',
           icon: 'i-lucide-square-arrow-out-up-right',
           to: '/marketing',
@@ -63,14 +71,7 @@ const links = [
             open.value = false
           }
         },
-        {
-          label: 'Data PO Supplier',
-          to: '/admin/data-po-supplier',
-          exact: true,
-          onSelect: () => {
-            open.value = false
-          }
-        },
+
         {
           label: 'Halaman Operations',
           icon: 'i-lucide-square-arrow-out-up-right',

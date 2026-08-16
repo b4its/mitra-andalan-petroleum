@@ -329,17 +329,21 @@ const showPassword = ref(false)
 
     <template #body>
       <div class="space-y-5 p-4 lg:p-6">
-        <!-- Toolbar: search + add -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <UInput
-            v-model="search"
-            icon="i-lucide-search"
-            placeholder="Cari nama, email, atau role..."
-            class="w-72"
-          />
-          <UButton icon="i-lucide-user-plus" color="primary" @click="openAdd">
-            Tambah Pengguna
-          </UButton>
+        <!-- Toolbar: filter + aksi -->
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-end gap-3">
+            <UInput
+              v-model="search"
+              icon="i-lucide-search"
+              placeholder="Cari nama, email, atau role..."
+              class="w-72"
+            />
+          </div>
+          <div class="flex flex-wrap justify-end gap-2">
+            <UButton icon="i-lucide-user-plus" color="primary" @click="openAdd">
+              Tambah Pengguna
+            </UButton>
+          </div>
         </div>
 
         <!-- Skeleton -->

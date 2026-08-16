@@ -271,8 +271,8 @@ definePageMeta({ layout: 'accounting' })
     <template #body>
       <div class="p-4 lg:p-6">
         <section class="flex flex-col lg:gap-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-wrap items-end gap-3">
               <UInput
                 v-model="search"
                 icon="i-lucide-search"
@@ -292,6 +292,9 @@ definePageMeta({ layout: 'accounting' })
               >
                 Tampilkan
               </UButton>
+            </div>
+
+            <div class="flex flex-wrap justify-end gap-2">
               <UDropdownMenu
                 :items="[
                   { type: 'label', label: 'Ekspor Data' },

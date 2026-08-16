@@ -917,35 +917,39 @@ const exportItems = (
           <!-- Tabel Jurnal -->
           <UCard>
             <template #header>
-              <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex flex-col gap-3 flex-wrap">
                 <p class="font-medium">
                   Data Jurnal Umum
                 </p>
-                <div class="flex items-center gap-2">
-                  <USelect
-                    v-model="journalStatusFilter"
-                    :items="journalStatusOptions"
-                    value-key="value"
-                    size="sm"
-                    class="w-36"
-                  />
-                  <UInput
-                    v-model="journalSearch"
-                    icon="i-lucide-search"
-                    placeholder="Cari nomor, deskripsi, akun..."
-                    size="sm"
-                    class="w-64"
-                  />
-                  <UDropdownMenu :items="exportItems(onJournalExport)">
-                    <UButton
-                      icon="i-lucide-download"
-                      color="neutral"
-                      variant="soft"
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                  <div class="flex flex-wrap items-end gap-2">
+                    <USelect
+                      v-model="journalStatusFilter"
+                      :items="journalStatusOptions"
+                      value-key="value"
                       size="sm"
-                    >
-                      Export
-                    </UButton>
-                  </UDropdownMenu>
+                      class="w-36"
+                    />
+                    <UInput
+                      v-model="journalSearch"
+                      icon="i-lucide-search"
+                      placeholder="Cari nomor, deskripsi, akun..."
+                      size="sm"
+                      class="w-64"
+                    />
+                  </div>
+                  <div class="flex flex-wrap justify-end gap-2">
+                    <UDropdownMenu :items="exportItems(onJournalExport)">
+                      <UButton
+                        icon="i-lucide-download"
+                        color="neutral"
+                        variant="soft"
+                        size="sm"
+                      >
+                        Export
+                      </UButton>
+                    </UDropdownMenu>
+                  </div>
                 </div>
               </div>
             </template>
@@ -973,28 +977,32 @@ const exportItems = (
           <!-- Tabel Neraca Saldo -->
           <UCard>
             <template #header>
-              <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="flex flex-col gap-3 flex-wrap">
                 <p class="font-medium">
                   Neraca Saldo
                 </p>
-                <div class="flex items-center gap-2">
-                  <UInput
-                    v-model="trialSearch"
-                    icon="i-lucide-search"
-                    placeholder="Cari kode, nama akun..."
-                    size="sm"
-                    class="w-64"
-                  />
-                  <UDropdownMenu :items="exportItems(onTrialExport)">
-                    <UButton
-                      icon="i-lucide-download"
-                      color="neutral"
-                      variant="soft"
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                  <div class="flex flex-wrap items-end gap-2">
+                    <UInput
+                      v-model="trialSearch"
+                      icon="i-lucide-search"
+                      placeholder="Cari kode, nama akun..."
                       size="sm"
-                    >
-                      Export
-                    </UButton>
-                  </UDropdownMenu>
+                      class="w-64"
+                    />
+                  </div>
+                  <div class="flex flex-wrap justify-end gap-2">
+                    <UDropdownMenu :items="exportItems(onTrialExport)">
+                      <UButton
+                        icon="i-lucide-download"
+                        color="neutral"
+                        variant="soft"
+                        size="sm"
+                      >
+                        Export
+                      </UButton>
+                    </UDropdownMenu>
+                  </div>
                 </div>
               </div>
             </template>

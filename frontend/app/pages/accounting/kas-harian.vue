@@ -114,38 +114,42 @@ definePageMeta({ layout: 'accounting' })
       <div class="p-4 lg:p-6">
         <section class="flex flex-col lg:gap-4">
           <UCard>
-            <div class="flex flex-wrap items-end gap-3">
-              <UFormField label="Dari Tanggal">
-                <UInput v-model="dateFrom" type="date" />
-              </UFormField>
-              <UFormField label="Sampai Tanggal">
-                <UInput v-model="dateTo" type="date" />
-              </UFormField>
-              <UButton
-                icon="i-lucide-search"
-                :loading="pending"
-                @click="() => refresh()"
-              >
-                Tampilkan
-              </UButton>
-              <UDropdownMenu
-                :items="[
-                  { type: 'label', label: 'Ekspor Data' },
-                  { type: 'separator' },
-                  { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
-                  { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
-                  { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
-                ]"
-              >
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-wrap items-end gap-3">
+                <UFormField label="Dari Tanggal">
+                  <UInput v-model="dateFrom" type="date" />
+                </UFormField>
+                <UFormField label="Sampai Tanggal">
+                  <UInput v-model="dateTo" type="date" />
+                </UFormField>
                 <UButton
-                  icon="i-lucide-download"
-                  color="neutral"
-                  variant="soft"
-                  :disabled="!data"
+                  icon="i-lucide-search"
+                  :loading="pending"
+                  @click="() => refresh()"
                 >
-                  Export
+                  Tampilkan
                 </UButton>
-              </UDropdownMenu>
+              </div>
+              <div class="flex flex-wrap justify-end gap-2">
+                <UDropdownMenu
+                  :items="[
+                    { type: 'label', label: 'Ekspor Data' },
+                    { type: 'separator' },
+                    { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
+                    { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
+                    { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
+                  ]"
+                >
+                  <UButton
+                    icon="i-lucide-download"
+                    color="neutral"
+                    variant="soft"
+                    :disabled="!data"
+                  >
+                    Export
+                  </UButton>
+                </UDropdownMenu>
+              </div>
             </div>
           </UCard>
 

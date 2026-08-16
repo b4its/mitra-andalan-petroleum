@@ -368,17 +368,21 @@ const modalTitle = computed(() => {
 
     <template #body>
       <div class="space-y-5 p-4 lg:p-6">
-        <!-- Toolbar: search + add -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <UInput
-            v-model="search"
-            icon="i-lucide-search"
-            placeholder="Cari nama, email, telepon, alamat..."
-            class="w-72"
-          />
-          <UButton icon="i-lucide-circle-plus" color="primary" @click="openAdd">
-            Tambah Supplier
-          </UButton>
+        <!-- Toolbar: filter + aksi -->
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-end gap-3">
+            <UInput
+              v-model="search"
+              icon="i-lucide-search"
+              placeholder="Cari nama, email, telepon, alamat..."
+              class="w-72"
+            />
+          </div>
+          <div class="flex flex-wrap justify-end gap-2">
+            <UButton icon="i-lucide-circle-plus" color="primary" @click="openAdd">
+              Tambah Supplier
+            </UButton>
+          </div>
         </div>
 
         <!-- Skeleton -->
