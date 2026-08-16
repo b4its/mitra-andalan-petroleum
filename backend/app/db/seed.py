@@ -83,11 +83,11 @@ async def _clear_all(db: AsyncSession):
 
 async def _seed_users(db: AsyncSession):
     users = [
-        User(name="Admin", email="admin@email.com", password=bcrypt.hash("admin123"), demo_password="admin123", role="admin", signature_caption="Admin"),
-        User(name="Baits", email="ops@email.com", password=bcrypt.hash("ops123"), demo_password="ops123", role="operations", signature_caption="Baits - Operations"),
-        User(name="Nico", email="marketing@email.com", password=bcrypt.hash("marketing123"), demo_password="marketing123", role="marketing", signature_caption="Nico - Marketing"),
-        User(name="Alea", email="finance@email.com", password=bcrypt.hash("finance123"), demo_password="finance123", role="finance", signature_caption="Alea - Finance"),
-        User(name="Rina", email="accounting@email.com", password=bcrypt.hash("accounting123"), demo_password="accounting123", role="accounting", signature_caption="Rina - Accounting"),
+        User(name="Ahmad Fauzi", email="admin@mapetroleum.co.id", password=bcrypt.hash("admin123"), demo_password="admin123", role="admin", signature_caption="Ahmad Fauzi - Admin"),
+        User(name="Bambang Nugroho", email="ops@mapetroleum.co.id", password=bcrypt.hash("ops123"), demo_password="ops123", role="operations", signature_caption="Bambang Nugroho - Operations"),
+        User(name="Nico Pratama", email="marketing@mapetroleum.co.id", password=bcrypt.hash("marketing123"), demo_password="marketing123", role="marketing", signature_caption="Nico Pratama - Marketing"),
+        User(name="Alea Rahmawati", email="finance@mapetroleum.co.id", password=bcrypt.hash("finance123"), demo_password="finance123", role="finance", signature_caption="Alea Rahmawati - Finance"),
+        User(name="Rina Marlina", email="accounting@mapetroleum.co.id", password=bcrypt.hash("accounting123"), demo_password="accounting123", role="accounting", signature_caption="Rina Marlina - Accounting"),
     ]
     for u in users:
         db.add(u)
@@ -98,9 +98,9 @@ async def _seed_users(db: AsyncSession):
 
 async def _seed_customers(db: AsyncSession):
     customers = [
-        Customer(name="PT. Bina Karya Sentosa", npwp="01.234.567.8-901.000", address="Jl. Jenderal Sudirman No. 45, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-1234567", phone2="081234567001", email="bina@karya-sentosa.com"),
-        Customer(name="CV. Maju Jaya Abadi", npwp="02.345.678.9-012.000", address="Jl. Pahlawan No. 88, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-2345678", phone2="081234567002", email="maju.jaya@abadi.co.id"),
-        Customer(name="PT. Sumber Rejeki Mandiri", npwp="03.456.789.0-123.000", address="Jl. Empat Lima No. 12, Tenggarong", province="Kalimantan Timur", city="Tenggarong", phone="0541-3456789", phone2="081234567003", email="sumber.rejeki@gmail.com"),
+        Customer(name="PT. Surya Tambang Energi", npwp="01.609.052.4-091.000", address="Jl. A. W. Syahrani No. 45, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-741231", phone2="0812 5617 8230", email="cs@suryatambangenergi.co.id"),
+        Customer(name="CV. Kaltim Jaya Abadi", npwp="02.104.783.2-091.000", address="Jl. Jend. Sudirman No. 88, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-426817", phone2="0813 9920 4471", email="admin@kaltimjayaabadi.co.id"),
+        Customer(name="PT. Borneo Energi Utama", npwp="02.345.219.6-091.000", address="Jl. Teuku Umar No. 12, Tenggarong", province="Kalimantan Timur", city="Tenggarong", phone="0541-661234", phone2="0821 5507 1198", email="info@borneoenergiutama.co.id"),
     ]
     for c in customers:
         db.add(c)
@@ -111,8 +111,8 @@ async def _seed_customers(db: AsyncSession):
 
 async def _seed_suppliers(db: AsyncSession):
     suppliers = [
-        Supplier(name="PT. Supplier Logistik Mandiri", npwp="021234567890123", address="Jl. Industri No. 7, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="021-5678910", phone2="081234567890", email="logistik@mandiri.co.id", bank_name="BANK BCA", bank_account="8801234567"),
-        Supplier(name="CV. Bahan Bakar Utama", npwp="032345678901234", address="Jl. Minyak No. 33, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-1234567", phone2="081298765432", email="bbu@bahanbakar.com", bank_name="BANK BRI", bank_account="002345678901"),
+        Supplier(name="PT. Persada Energi Nusantara", npwp="01.457.812.4-091.000", address="Jl. MT Haryono No. 7, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-746912", phone2="0811 235 7819", email="penjualan@persadaenerginusantara.co.id", bank_name="BANK BCA", bank_account="2881306571"),
+        Supplier(name="CV. Sinar Petrolindo", npwp="02.451.963.9-091.000", address="Jl. Soekarno Hatta No. 33, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-882345", phone2="0852 4710 6653", email="cv.sinarpetrolindo@gmail.com", bank_name="BANK BRI", bank_account="002901123456789"),
     ]
     for s in suppliers:
         db.add(s)
@@ -124,7 +124,7 @@ async def _seed_suppliers(db: AsyncSession):
 def _ol_details(ol_number: str, customer_name: str, address: str, fuel_price: float, transport_price: float) -> str:
     return json.dumps({
         "location": "Samarinda",
-        "date": "2025-06-01",
+        "date": "2026-06-01",
         "offeringLetterNumber": ol_number,
         "regarding": "Penawaran Harga BBM Solar Industri",
         "receiver": customer_name,
@@ -138,10 +138,10 @@ def _ol_details(ol_number: str, customer_name: str, address: str, fuel_price: fl
         "paymentTerm": "1 - 14",
         "latePenalty": 0.02,
         "servicePattern": "Setiap hari kerja (Senin-Sabtu)",
-        "personInCharge": {"name": "Nico", "phoneNumber": "08123456789"},
+        "personInCharge": {"name": "Nico Pratama", "phoneNumber": "0812 3456 7890"},
         "paymentAddress": {
             "bankName": "BANK BCA",
-            "accountNumber": "1234567890",
+            "accountNumber": "2881306571",
             "accountName": "PT. MITRA ANDALAN PETROLEUM"
         },
         "fuelPrices": {
@@ -151,10 +151,10 @@ def _ol_details(ol_number: str, customer_name: str, address: str, fuel_price: fl
             "basePrice": 17950,
             "totalPrice": fuel_price,
             "sellingPrice": {"ppkb": 0, "oat": transport_price, "ppn": 0.11 * fuel_price, "pph": 0},
-            "percentageNum": {"oat": 0, "ppkb": 0.1, "ppn": 0.11, "pph": 0}
+            "percentageNum": {"oat": 0, "ppkb": 0, "ppn": 0.11, "pph": 0}
         },
         "purchaseOrderDeadline": "1 - 14",
-        "offeror": {"name": "Nico"},
+        "offeror": {"name": "Nico Pratama"},
         "companyInformation": {
             "address": "Jl. Belatuk Samarinda, Indonesia",
             "phoneNumber": "0541-1234567",
@@ -167,11 +167,11 @@ def _po_details(main_company: dict, receiver: dict, po_number: str, products: li
     return json.dumps({
         "companyInformation": main_company,
         "receiver": receiver,
-        "po": {"date": "2025-06-01", "number": po_number},
+        "po": {"date": "2026-06-01", "number": po_number},
         "vat": vat,
         "paymentAddress": {
             "bankName": "BCA Samarinda",
-            "accountNumber": "1234567890",
+            "accountNumber": "2881306571",
             "accountName": "PT. Mitra Andalan Petroleum"
         },
         "selectedOfferingLetter": {},
@@ -180,16 +180,16 @@ def _po_details(main_company: dict, receiver: dict, po_number: str, products: li
         "termAndCondition": "Pembayaran dilakukan 7 hari setelah invoice diterbitkan",
         "delivery": {
             "loadingTerminal": "Pelabuhan Samarinda",
-            "loadingDate": "2025-06-05",
-            "picOperationMap": "Baits",
+            "loadingDate": "2026-06-05",
+            "picOperationMap": "Bambang Nugroho",
             "distance": 120
         },
         "forwarder": {"trucking": "Armada sendiri"},
-        "signed": {"createdBy": "Nico", "approvedBy": "Admin"}
+        "signed": {"createdBy": "Nico Pratama", "approvedBy": "Ahmad Fauzi"}
     })
 
 
-def _do_details(customer_name: str, customer_address: str, po_customer_number: dict, transport_name: str, driver_name: str, fuel_total: float) -> str:
+def _do_details(customer_name: str, customer_address: str, customer_phone: str, po_customer_number: dict, transport_name: str, transport_number: str, driver_name: str, driver_phone: str, fuel_total: float) -> str:
     return json.dumps({
         "companyInformation": {
             "name": "PT. MITRA ANDALAN PETROLEUM",
@@ -198,23 +198,23 @@ def _do_details(customer_name: str, customer_address: str, po_customer_number: d
             "phoneNumber": "0541-1234567"
         },
         "doInformation": {
-            "doNumber": "001/DO/MAP/VI/2025",
-            "doDateCreated": "2025-06-02",
+            "doNumber": "001/DO/MAP/VI/2026",
+            "doDateCreated": "2026-06-02",
             "poCustomerNumber": po_customer_number,
-            "soNumber": "SO/001/VI/2025"
+            "soNumber": "SO/001/VI/2026"
         },
         "customerName": customer_name,
         "customerId": po_customer_number.get("customerId") or "",
         "customerAddress": customer_address,
-        "receiverInformation": {"name": customer_name, "phoneNumber": "08123456789"},
-        "receiverDateReceived": "2025-06-02",
+        "receiverInformation": {"name": customer_name, "phoneNumber": customer_phone},
+        "receiverDateReceived": "2026-06-02",
         "transportName": transport_name,
         "transportId": "",
-        "transportAddress": "Jl. Angkut No. 1, Samarinda",
-        "driverInformation": {"name": driver_name, "phoneNumber": "08129876543"},
-        "helperName": "Budi",
-        "transportDateReceived": "2025-06-02",
-        "dueDate": "2025-06-03",
+        "transportAddress": "Jl. Pelita No. 18, Samarinda",
+        "driverInformation": {"name": driver_name, "phoneNumber": driver_phone},
+        "helperName": "Joko Susilo",
+        "transportDateReceived": "2026-06-02",
+        "dueDate": "2026-06-03",
         "productInformation": {
             "name": "Solar Industri (B35)",
             "qty": fuel_total,
@@ -224,7 +224,7 @@ def _do_details(customer_name: str, customer_address: str, po_customer_number: d
         },
         "transportInformation": {
             "transportType": "Mobil Tangki",
-            "transportNumber": "KT 1234 AB",
+            "transportNumber": transport_number,
             "startKm": 12500,
             "endKm": 12680,
             "sgMeter": 0.845,
@@ -245,8 +245,8 @@ def _do_details(customer_name: str, customer_address: str, po_customer_number: d
         "t2Unloading": 29.0,
         "indexSensitivity": 0.05,
         "fuelReceived": fuel_total,
-        "companyCoordinator": "Baits",
-        "distributionAdmin": "Rina",
+        "companyCoordinator": "Bambang Nugroho",
+        "distributionAdmin": "Rina Marlina",
         "receiver": customer_name,
         "driver": driver_name
     })
@@ -265,15 +265,15 @@ def _invoice_details(customer_name: str, customer_address: str, invoice_number: 
         "deliveryPointInformation": customer_address,
         "invoiceInformation": {
             "invoiceNumber": invoice_number,
-            "invoiceDate": "2025-06-10",
+            "invoiceDate": "2026-06-10",
             "terms": 30,
-            "invoiceDueDate": "2025-07-10"
+            "invoiceDueDate": "2026-07-10"
         },
         "customerPurchaseInformation": {
             "deliveryOrderNumberData": do_numbers,
             "customerPurchaseOrderNumber": po_customer_number,
-            "taxInvoiceNumber": "010.000-25.00000001",
-            "salesOrderNumber": "SO/001/VI/2025"
+            "taxInvoiceNumber": "010.000-26.00000001",
+            "salesOrderNumber": "SO/001/VI/2026"
         },
         "products": products,
         "priceSummary": {
@@ -290,12 +290,12 @@ def _invoice_details(customer_name: str, customer_address: str, invoice_number: 
         ],
         "paymentInformation": {
             "bankName": "BANK BCA",
-            "accountNumber": "1234567890",
+            "accountNumber": "2881306571",
             "accountName": "PT. MITRA ANDALAN PETROLEUM"
         },
         "signature": {
             "companyName": "PT. Mitra Andalan Petroleum",
-            "createdBy": "Alea"
+            "createdBy": "Alea Rahmawati"
         }
     })
 
@@ -310,15 +310,15 @@ async def _seed_offering_letters(db: AsyncSession):
 
     for i in range(15):
         customer = customers[i % len(customers)]
-        ol_number = f"{i + 1:03d}/OL/VI/2025"
-        fuel_price = 50000000 + (i * 1000000)
+        ol_number = f"{i + 1:03d}/OL/VI/2026"
+        fuel_price = 8000 * 17950
         transport_price = 2500000 + (i * 100000)
         status = statuses[i % len(statuses)]
         ol = OfferingLetter(
             offering_letter_number=ol_number,
             customer_id=customer.id,
             location="Samarinda",
-            date="2025-06-01",
+            date="2026-06-01",
             regarding="Penawaran BBM Solar Industri",
             receiver=customer.name,
             fuel_total_price=fuel_price,
@@ -351,16 +351,16 @@ async def _seed_purchase_orders(db: AsyncSession):
     # PO Customer
     for i in range(5):
         customer = customers[i % len(customers)]
-        po_number = f"PO/2025/VI/{100 + i}"
+        po_number = f"PO/2026/VI/{100 + i}"
         products = [
-            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 6250, "totalPrice": 50000000}
+            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 17950, "totalPrice": 8000 * 17950}
         ]
         po = PurchaseOrder(
             po_number=po_number,
             type="customer",
             customer_id=customer.id,
-            date="2025-06-01",
-            total=50000000,
+            date="2026-06-01",
+            total=8000 * 17950,
             status=["created", "po_received"][i % 2],
             created_by=marketing_user.id if marketing_user else None,
             details=_po_details(main_company, {
@@ -373,9 +373,9 @@ async def _seed_purchase_orders(db: AsyncSession):
     # PO Supplier
     for i in range(5):
         supplier = suppliers[i % len(suppliers)]
-        po_number = f"PO-SUP/2025/VI/{100 + i}"
+        po_number = f"PO-SUP/2026/VI/{100 + i}"
         products = [
-            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 5625, "totalPrice": 45000000, "ppkb": 450000, "pph": 0.5, "ppn": 4950000}
+            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 15000, "totalPrice": 8000 * 15000, "ppkb": 0, "pph": 0.5, "ppn": 0.11 * 8000 * 15000}
         ]
         # Sebagian PO supplier sudah dirilis dana oleh admin (menyesuaikan alur:
         # marketing buat PO supplier -> admin rilis dana -> baru bisa lihat surat)
@@ -384,11 +384,11 @@ async def _seed_purchase_orders(db: AsyncSession):
             po_number=po_number,
             type="supplier",
             supplier_id=supplier.id,
-            date="2025-06-01",
-            total=45000000,
+            date="2026-06-01",
+            total=8000 * 15000,
             status="created",
             created_by=marketing_user.id if marketing_user else None,
-            rilis_dana_at=datetime(2025, 6, 2, 9, 0, 0) if rilis else None,
+            rilis_dana_at=datetime(2026, 6, 2, 9, 0, 0) if rilis else None,
             status_rilis_dana=rilis,
             details=_po_details(main_company, {
                 "id": supplier.id, "name": supplier.name, "npwp": "",
@@ -418,17 +418,27 @@ async def _seed_delivery_orders(db: AsyncSession):
     ops_users = (await db.execute(select(User).where(User.role == "operations"))).scalars().all()
     creator = ops_users[0] if ops_users else None
     customer_by_id = {c.id: c for c in customers}
-    transports = ["PT. Transport Logistik", "CV. Angkutan Cepat", "PT. Distribusi Mandiri"]
-    drivers = ["Supriyanto", "Hendra", "Agus", "Bambang"]
+    transports = [
+        ("PT. Armada Kaltim Sejahtera", "KT 1832 AJ"),
+        ("CV. Tiga Putra Transport", "KT 5741 BE"),
+        ("PT. Borneo Distribusi Logistik", "KT 2906 CA"),
+    ]
+    drivers = [
+        ("Supriyanto", "0812 3027 4491"),
+        ("Hendra Gunawan", "0813 4538 2210"),
+        ("Agus Salim", "0821 3762 9950"),
+        ("Bambang Purnomo", "0852 2147 8836"),
+    ]
     statuses = ["created", "document_returned"]
 
     for i in range(15):
         po = pos[i % len(pos)]
         customer = customer_by_id.get(po.customer_id) or customers[i % len(customers)]
         fuel_total = 8000 + (i * 500)
-        transport_name = transports[i % len(transports)]
+        transport_name, transport_number = transports[i % len(transports)]
+        driver_name, driver_phone = drivers[i % len(drivers)]
         status = statuses[i % 2]
-        do_number = f"{i + 1:03d}/DO/MAP/VI/2025"
+        do_number = f"{i + 1:03d}/DO/MAP/VI/2026"
         po_customer_number = {
             "id": po.id,
             "purchaseOrderNumber": po.po_number,
@@ -448,9 +458,9 @@ async def _seed_delivery_orders(db: AsyncSession):
             status=status,
             created_by=creator.id if creator else None,
             details=_do_details(
-                customer.name, customer.address or "",
+                customer.name, customer.address or "", customer.phone2 or "",
                 po_customer_number,
-                transport_name, drivers[i % len(drivers)], fuel_total,
+                transport_name, transport_number, driver_name, driver_phone, fuel_total,
             ),
         )
         db.add(do)
@@ -467,15 +477,16 @@ async def _seed_invoices(db: AsyncSession):
     customer_by_id = {c.id: c for c in customers}
     statuses = ["unpaid", "paid", "overdue"]
     deadlines = ["on_time", "overdue", "due_soon"]
-    do_numbers = [f"{i + 1:03d}/DO/MAP/VI/2025" for i in range(3)]
 
     for i in range(15):
         po = pos[i % len(pos)]
         customer = customer_by_id.get(po.customer_id) or customers[i % len(customers)]
-        grand_total = 50000000 + (i * 2500000)
+        sub_total = 8000 * 17950
+        grand_total = round(sub_total * 1.11)
         products = [
-            {"qty": 8000, "unit": "Liter", "name": "Solar Industri (B35)", "price": 6250, "totalPrice": 50000000}
+            {"qty": 8000, "unit": "Liter", "name": "Solar Industri (B35)", "price": 17950, "totalPrice": sub_total}
         ]
+        do_numbers = [f"{i + 1:03d}/DO/MAP/VI/2026"]
         po_customer_number = {
             "id": po.id,
             "purchaseOrderNumber": po.po_number,
@@ -486,7 +497,7 @@ async def _seed_invoices(db: AsyncSession):
             "fuelTotalQty": 8000
         }
         inv = Invoice(
-            invoice_number=f"INV/2025/VI/{i + 1:03d}",
+            invoice_number=f"INV/2026/VI/{i + 1:03d}",
             customer_id=po.customer_id,
             terms_day=30,
             grand_total=grand_total,
@@ -494,7 +505,7 @@ async def _seed_invoices(db: AsyncSession):
             deadline_status=deadlines[i % 3],
             details=_invoice_details(
                 customer.name, customer.address or "",
-                f"INV/2025/VI/{i + 1:03d}",
+                f"INV/2026/VI/{i + 1:03d}",
                 products, grand_total, po_customer_number, do_numbers,
             ),
         )
@@ -512,15 +523,15 @@ async def _seed_notifications(db: AsyncSession):
     accounting_user = users.get("accounting")
 
     notifications = [
-        Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Bina Karya Sentosa telah masuk.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
-        Notification(title="Invoice Jatuh Tempo", message="Invoice INV/2025/VI/001 akan jatuh tempo dalam 3 hari.", type="warning", sender_id=finance_user.id if finance_user else None, to="/finance/invoice/data-invoice-customer", is_read=True),
-        Notification(title="DO Selesai", message="Delivery Order 001/DO/MAP/VI/2025 telah selesai diproses.", type="success", sender_id=ops_user.id if ops_user else None, to="/operations", is_read=True),
-        Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2025 memerlukan revisi.", type="error", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
-        Notification(title="Penawaran Baru", message="Surat penawaran 003/OL/VI/2025 berhasil dibuat oleh tim marketing.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=False),
-        Notification(title="PO Supplier Dibuat", message="Purchase Order ke PT. Supplier Logistik Mandiri berhasil dibuat.", type="success", sender_id=marketing_user.id if marketing_user else None, to="/marketing/supplier", is_read=False),
+        Notification(title="PO Baru Masuk", message="Purchase Order baru dari PT. Surya Tambang Energi telah masuk.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
+        Notification(title="Invoice Jatuh Tempo", message="Invoice INV/2026/VI/001 akan jatuh tempo dalam 3 hari.", type="warning", sender_id=finance_user.id if finance_user else None, to="/finance/invoice/data-invoice-customer", is_read=True),
+        Notification(title="DO Selesai", message="Delivery Order 001/DO/MAP/VI/2026 telah selesai diproses.", type="success", sender_id=ops_user.id if ops_user else None, to="/operations", is_read=True),
+        Notification(title="Revisi Surat Penawaran", message="Surat penawaran 002/OL/VI/2026 memerlukan revisi.", type="error", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=True),
+        Notification(title="Penawaran Baru", message="Surat penawaran 003/OL/VI/2026 berhasil dibuat oleh tim marketing.", type="info", sender_id=marketing_user.id if marketing_user else None, to="/marketing/customer", is_read=False),
+        Notification(title="PO Supplier Dibuat", message="Purchase Order ke PT. Persada Energi Nusantara berhasil dibuat.", type="success", sender_id=marketing_user.id if marketing_user else None, to="/marketing/supplier", is_read=False),
         Notification(title="Jurnal Baru", message="Jurnal umum baru telah diposting oleh tim finance.", type="info", sender_id=finance_user.id if finance_user else None, role="accounting", to="/accounting/jurnal-umum", is_read=True),
-        Notification(title="Laba Rugi Bulanan", message="Laporan laba rugi bulan Juli 2025 tersedia. Cek neraca dan rekap biaya.", type="info", sender_id=accounting_user.id if accounting_user else None, role="accounting", to="/accounting/neraca", is_read=False),
-        Notification(title="Rekonsiliasi Bank", message="Data rekening bank BCA perlu direkonsiliasi untuk periode Agustus 2025.", type="warning", sender_id=finance_user.id if finance_user else None, role="accounting", to="/accounting/kas-harian", is_read=False),
+        Notification(title="Laba Rugi Bulanan", message="Laporan laba rugi bulan Juli 2026 tersedia. Cek neraca dan rekap biaya.", type="info", sender_id=accounting_user.id if accounting_user else None, role="accounting", to="/accounting/neraca", is_read=False),
+        Notification(title="Rekonsiliasi Bank", message="Data rekening bank BCA perlu direkonsiliasi untuk periode Agustus 2026.", type="warning", sender_id=finance_user.id if finance_user else None, role="accounting", to="/accounting/kas-harian", is_read=False),
     ]
     for n in notifications:
         db.add(n)
@@ -531,11 +542,11 @@ async def _seed_notifications(db: AsyncSession):
 
 async def _seed_sales(db: AsyncSession):
     sales = [
-        Sale(date="2025-06-01", status="paid", email="admin@email.com", amount=25000000),
-        Sale(date="2025-06-05", status="paid", email="marketing@email.com", amount=35000000),
-        Sale(date="2025-06-10", status="failed", email="finance@email.com", amount=30000000),
-        Sale(date="2025-06-15", status="paid", email="ops@email.com", amount=45000000),
-        Sale(date="2025-06-20", status="refunded", email="user@email.com", amount=40000000),
+        Sale(date="2026-06-01", status="paid", email="admin@mapetroleum.co.id", amount=25000000),
+        Sale(date="2026-06-05", status="paid", email="marketing@mapetroleum.co.id", amount=35000000),
+        Sale(date="2026-06-10", status="failed", email="finance@mapetroleum.co.id", amount=30000000),
+        Sale(date="2026-06-15", status="paid", email="ops@mapetroleum.co.id", amount=45000000),
+        Sale(date="2026-06-20", status="refunded", email="accounting@mapetroleum.co.id", amount=40000000),
     ]
     for s in sales:
         db.add(s)
@@ -600,15 +611,15 @@ async def _seed_accounting(db: AsyncSession):
     beban_listrik_air = accounts["5-1030"]
 
     entries = [
-        {"entry_number": "JRM-202606-0001", "entry_date": date(2026, 6, 5), "description": "Penjualan BBM tunai ke PT. Bina Karya Sentosa", "reference": "INV/2026/VI/001", "lines": [(kas, None, 50000000, 0), (pendapatan, None, 0, 50000000)]},
-        {"entry_number": "JRM-202606-0002", "entry_date": date(2026, 6, 10), "description": "Penjualan BBM kredit ke CV. Maju Jaya Abadi", "reference": "INV/2026/VI/002", "lines": [(piutang, None, 75000000, 0), (pendapatan, None, 0, 75000000)]},
+        {"entry_number": "JRM-202606-0001", "entry_date": date(2026, 6, 5), "description": "Penjualan BBM tunai ke PT. Surya Tambang Energi", "reference": "INV/2026/VI/001", "lines": [(kas, None, 50000000, 0), (pendapatan, None, 0, 50000000)]},
+        {"entry_number": "JRM-202606-0002", "entry_date": date(2026, 6, 10), "description": "Penjualan BBM kredit ke CV. Kaltim Jaya Abadi", "reference": "INV/2026/VI/002", "lines": [(piutang, None, 75000000, 0), (pendapatan, None, 0, 75000000)]},
         {"entry_number": "JRM-202606-0003", "entry_date": date(2026, 6, 15), "description": "Pembayaran jasa angkut transportir", "reference": "DO/2026/VI/003", "lines": [(beban_transport, None, 2500000, 0), (kas, None, 0, 2500000)]},
-        {"entry_number": "JRM-202606-0004", "entry_date": date(2026, 6, 20), "description": "Penerimaan pembayaran piutang dari CV. Maju Jaya Abadi", "reference": "PAY/2026/VI/004", "lines": [(bank, None, 75000000, 0), (piutang, None, 0, 75000000)]},
+        {"entry_number": "JRM-202606-0004", "entry_date": date(2026, 6, 20), "description": "Penerimaan pembayaran piutang dari CV. Kaltim Jaya Abadi", "reference": "PAY/2026/VI/004", "lines": [(bank, None, 75000000, 0), (piutang, None, 0, 75000000)]},
         {"entry_number": "JRM-202606-0005", "entry_date": date(2026, 6, 25), "description": "Pembayaran beban operasional bulan Juni", "reference": "EXP/2026/VI/005", "lines": [(beban_operasional, None, 8000000, 0), (kas, None, 0, 8000000)]},
         {"entry_number": "JRM-202606-0006", "entry_date": date(2026, 6, 28), "description": "Pendapatan jasa angkut diterima tunai", "reference": "TR/2026/VI/006", "lines": [(kas, None, 5000000, 0), (ongkir, None, 0, 5000000)]},
         # Pemasukan (mutasi kredit pada akun pendapatan)
-        {"entry_number": "JRM-202606-0007", "entry_date": date(2026, 6, 30), "description": "Pendapatan jasa angkut dibayar tunai oleh CV. Maju Jaya Abadi", "reference": "DO/2026/VI/007", "lines": [(kas, None, 6000000, 0), (ongkir, None, 0, 6000000)]},
-        {"entry_number": "JRM-202607-0001", "entry_date": date(2026, 7, 3), "description": "Penjualan BBM kredit ke PT. Sumber Rejeki Mandiri", "reference": "INV/2026/VII/003", "lines": [(piutang, None, 42000000, 0), (pendapatan, None, 0, 42000000)]},
+        {"entry_number": "JRM-202606-0007", "entry_date": date(2026, 6, 30), "description": "Pendapatan jasa angkut dibayar tunai oleh CV. Kaltim Jaya Abadi", "reference": "DO/2026/VI/007", "lines": [(kas, None, 6000000, 0), (ongkir, None, 0, 6000000)]},
+        {"entry_number": "JRM-202607-0001", "entry_date": date(2026, 7, 3), "description": "Penjualan BBM kredit ke PT. Borneo Energi Utama", "reference": "INV/2026/VI/003", "lines": [(piutang, None, 42000000, 0), (pendapatan, None, 0, 42000000)]},
         # Pengeluaran (mutasi debit pada akun beban)
         {"entry_number": "JRM-202606-0008", "entry_date": date(2026, 6, 29), "description": "Pembayaran beban listrik & air bulan Juni", "reference": "UTL/2026/VI/001", "lines": [(beban_listrik_air, None, 1250000, 0), (kas_kecil, None, 0, 1250000)]},
         {"entry_number": "JRM-202607-0002", "entry_date": date(2026, 7, 5), "description": "Pembayaran gaji karyawan bulan Juni", "reference": "PAY/2026/VII/001", "lines": [(beban_gaji, None, 28000000, 0), (bank, None, 0, 28000000)]},
@@ -687,7 +698,7 @@ async def _seed_signatures(db: AsyncSession):
         file_path.write_bytes(png_bytes)
 
         db.add(Upload(
-            original_filename=f"signature-{user.name}.png",
+            original_filename=f"signature-{user.name.replace(' ', '_')}.png",
             stored_filename=stored,
             folder="profiles",
             mime_type="image/png",
@@ -761,21 +772,21 @@ async def _check_seed(db: AsyncSession) -> bool:
     import re
     format_ok = True
     for do in dos:
-        if not re.fullmatch(r"\d{3}/DO/MAP/VI/2025", do.do_number or ""):
-            print(f"  [FAIL] DO {do.do_number}: format nomor tidak sesuai pola 001/DO/MAP/VI/2025")
+        if not re.fullmatch(r"\d{3}/DO/MAP/VI/2026", do.do_number or ""):
+            print(f"  [FAIL] DO {do.do_number}: format nomor tidak sesuai pola 001/DO/MAP/VI/2026")
             format_ok = False
     for ol in ols:
-        if not re.fullmatch(r"\d{3}/OL/VI/2025", ol.offering_letter_number or ""):
-            print(f"  [FAIL] OL {ol.offering_letter_number}: format nomor tidak sesuai pola 001/OL/VI/2025")
+        if not re.fullmatch(r"\d{3}/OL/VI/2026", ol.offering_letter_number or ""):
+            print(f"  [FAIL] OL {ol.offering_letter_number}: format nomor tidak sesuai pola 001/OL/VI/2026")
             format_ok = False
     for po in pois:
-        if not re.fullmatch(r"(PO|PO-SUP)/2025/VI/\d{3}", po.po_number or ""):
-            print(f"  [FAIL] PO {po.po_number}: format nomor tidak sesuai pola PO/2025/VI/100")
+        if not re.fullmatch(r"(PO|PO-SUP)/2026/VI/\d{3}", po.po_number or ""):
+            print(f"  [FAIL] PO {po.po_number}: format nomor tidak sesuai pola PO/2026/VI/100")
             format_ok = False
     invs = (await db.execute(select(Invoice))).scalars().all()
     for inv in invs:
-        if not re.fullmatch(r"INV/2025/VI/\d{3}", inv.invoice_number or ""):
-            print(f"  [FAIL] INV {inv.invoice_number}: format nomor tidak sesuai pola INV/2025/VI/001")
+        if not re.fullmatch(r"INV/2026/VI/\d{3}", inv.invoice_number or ""):
+            print(f"  [FAIL] INV {inv.invoice_number}: format nomor tidak sesuai pola INV/2026/VI/001")
             format_ok = False
     all_ok = all_ok and format_ok
     print(f"  [{'OK' if format_ok else 'FAIL'}] format nomor dokumen (OL/PO/DO/INV)")
