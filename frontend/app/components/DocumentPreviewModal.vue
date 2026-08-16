@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import * as pdfjsLib from 'pdfjs-dist'
-
 const props = defineProps<{
   open: boolean
   title?: string
@@ -16,15 +14,16 @@ const loadingPdf = ref(false)
 const pdfError = ref('')
 const pages = ref<Array<{ dataUrl: string, width: number, height: number }>>([])
 
-// Konfigurasi worker pdfjs (tanpa unduhan eksternal)
-// @ts-expect-error — di Nuxt client bundle path worker tersedia di node_modules
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString()
-
+// Import pdfjs-dist hanya di client (SSR tidak punya DOMMatrix/canvas)
 async function renderPdfToCanvas(dataUrl: string) {
-  const doc = await pdfjsLib.getDocument({ data: atob(dataUrl.split(',')[1]!) }).promise
+  const pdfjs = await import('pdfjs-dist')
+  // @ts-expect-error — path worker tersedia di bundle client
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString()
+
+  const doc = await pdfjs.getDocument({ data: atob(dataUrl.split(',')[1]!) }).promise
   const rendered: Array<{ dataUrl: string, width: number, height: number }> = []
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i)
