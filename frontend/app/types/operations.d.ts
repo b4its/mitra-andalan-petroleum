@@ -4,7 +4,9 @@ export interface DeliveryOrdersDetails {
   customer_id: string
   customer_name: string
   id_purchase_order: string
+  id_po_transportir: string | null
   po_number: string
+  po_transportir_number: string | null
   transport_name: string
   fuel_total: number
   status: string
@@ -118,6 +120,7 @@ export interface DeliveryOrderPost {
   do_number: string
   customer_id: string
   id_purchase_order: string
+  id_po_transportir?: string | null
   po_number: string
   transport_name: string | null
   date: string | null
@@ -133,6 +136,7 @@ export interface DeliveryOrders {
   customer_id: string
   customer_name: CustomerName
   po_number: PoNumber
+  po_transportir_number: string | null
   transport_name: TransportName
   fuel_total: number
   status: Status
@@ -162,6 +166,10 @@ export interface PoTransportirs {
   receiver: string | null
   total: number
   status: Status
+  id_purchase_order: string | null
+  customer_id: string | null
+  customer_name: string
+  purchase_order_number: string | null
   created_at: Date
   updated_at: Date
 }
@@ -223,4 +231,6 @@ export interface PoTransportirsPost {
   status: string
   details: PoTransportirDetails
   created_by: string | null
+  id_purchase_order?: string | null
+  customer_id?: string | null
 }

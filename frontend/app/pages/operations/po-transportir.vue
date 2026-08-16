@@ -6,11 +6,65 @@ import type {
   OperationsPOTransportHeaderState
 } from '~/types/schemas'
 import type { PoTransportirsDetails, PoTransportirsPost } from '~/types/operations'
+import type { PurchaseOrdersSupplier } from '~/types/marketing'
 
 const toast = useToast()
 const loading = ref(false)
 const { user } = useAuth()
-const { post } = useApi()
+const { get, post } = useApi()
+
+// ── Daftar PO Customer untuk dipilih ───────────────────────────
+const { data: purchaseOrderList } = await useAsyncData(
+  'po-transportir-po-customers',
+  async () => {
+    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
+      '/purchase-orders',
+      { page: 1, page_size: 100, type: 'customer' }
+    )
+    return (res.items || []).map(po => ({
+      id: po.id,
+      po_number: po.po_number,
+      customer_name: po.customer_name || '',
+      customer_id: po.customer_id || '',
+      total: po.total ?? 0,
+      details: (po as any).details || {}
+    }))
+  },
+  { default: () => [], server: false }
+)
+
+const selectedPOCustomer = ref<{
+  id: string
+  po_number: string
+  customer_name: string
+  customer_id: string
+  total: number
+  details: Record<string, unknown>
+} | null>(null)
+
+// Watch PO Customer selection → auto-fill form
+watch(selectedPOCustomer, (val) => {
+  if (val) {
+    poTransportHeader.picPerson = user.value?.name ? `Bpk ${user.value.name}` : 'Bpk Bambang Nugroho'
+    poTransportHeader.receiver = val.customer_name || poTransportHeader.receiver
+    // Pre-fill products from PO Customer if available
+    const poProducts = (val.details as any)?.products
+    if (Array.isArray(poProducts) && poProducts.length > 0) {
+      poTransportDetails.products = poProducts.map((p: any) => ({
+        name: p.name || 'Solar',
+        loadingDate: `${new Date().toISOString().split('T')[0]}`,
+        unloadingDate: `${new Date().toISOString().split('T')[0]}`,
+        qty: p.qty || 0,
+        ratePrice: 500,
+        totalPrice: p.totalPrice || 0
+      }))
+    }
+    // Auto-fill contactPerson customer name
+    if (val.customer_name) {
+      poTransportFooter.contactPerson.customerName = val.customer_name
+    }
+  }
+})
 
 const items: StepperItem[] = [
   { title: 'Kop Surat PO Transportir', slot: 'poTransportHeader' },
@@ -107,6 +161,8 @@ async function onFormSubmit() {
       receiver: poTransportData.receiver,
       total,
       status: 'created',
+      id_purchase_order: selectedPOCustomer.value?.id || null,
+      customer_id: selectedPOCustomer.value?.customer_id || null,
       details: {
         ...poTransportData,
         products: poTransportData.products.map(p => ({
@@ -170,6 +226,71 @@ definePageMeta({ layout: 'operations' })
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
+      </UDashboardNavbar>
+
+      <UDashboardToolbar>
+        <template #left>
+          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
+          <UNavigationMenu :items="links" highlight class="-mx-1 flex-1" />
+        </template>
+      </UDashboardToolbar>
+    </template>
+
+    <template #body>
+      <!-- Pilih PO Customer terlebih dahulu -->
+      <UCard class="mx-4 mt-4" :ui="{ body: { padding: 'p-4 sm:p-4' } }">
+        <div class="space-y-2">
+          <label class="text-sm font-medium">Pilih PO Customer</label>
+          <USelectMenu
+            v-model="selectedPOCustomer"
+            :items="purchaseOrderList.map(po => ({
+              label: po.po_number,
+              value: po,
+              customer_name: po.customer_name
+            }))"
+            placeholder="Pilih Purchase Order Customer..."
+            class="w-full"
+            searchable
+            searchable-placeholder="Cari nomor PO..."
+          />
+          <p v-if="selectedPOCustomer" class="text-xs text-gray-500">
+            Customer: {{ selectedPOCustomer.customer_name }} &mdash; Total: {{ selectedPOCustomer.total.toLocaleString() }}
+          </p>
+        </div>
+      </UCard>
+
+      <UStepper ref="stepper" disabled :items>
+        <template #poTransportHeader>
+          <OperationsPOTransportHeaderForm
+            v-model="poTransportHeader"
+            :has-previous="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmitToNext"
+          />
+        </template>
+
+        <template #poTransportDetails>
+          <OperationsPOTransportDetailsForm
+            v-model="poTransportDetails"
+            :has-previous="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmitToNext"
+          />
+        </template>
+
+        <template #poTransportFooter>
+          <OperationsPOTransportFooterForm
+            v-model="poTransportFooter"
+            :is-loading="loading"
+            :has-previous="stepper?.hasPrev"
+            @previous="previousNavigation"
+            @submit="onFormSubmit"
+          />
+        </template>
+      </UStepper>
+    </template>
+  </UDashboardPanel>
+</template>
       </UDashboardNavbar>
 
       <UDashboardToolbar>
