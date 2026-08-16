@@ -7,15 +7,58 @@ import {
 
 defineProps<{
   hasPrevious: boolean | undefined
+  poCustomers: Array<{
+    id: string
+    po_number: string
+    customer_name: string
+    customer_id: string
+    total: number
+    details: Record<string, unknown>
+  }>
 }>()
 
 const emit = defineEmits<{
-  submit: []
-  previous: []
+  'submit': []
+  'previous': []
+  'select-po-customer': [value: {
+    id: string
+    po_number: string
+    customer_name: string
+    customer_id: string
+    total: number
+    details: Record<string, unknown>
+  } | null]
 }>()
 
 const state = defineModel<OperationsPOTransportDetailsState>({
   required: true
+})
+
+const selectedPOCustomer = ref<{
+  id: string
+  po_number: string
+  customer_name: string
+  customer_id: string
+  total: number
+  details: Record<string, unknown>
+} | null>(null)
+
+watch(selectedPOCustomer, (val) => {
+  emit('select-po-customer', val)
+  if (val) {
+    // Pre-fill products dari PO Customer yang dipilih
+    const poProducts = val.details?.products
+    if (Array.isArray(poProducts) && poProducts.length > 0) {
+      state.value.products = poProducts.map((p: { name?: string, qty?: number, price?: number, totalPrice?: number }) => ({
+        name: p.name || 'Solar',
+        loadingDate: new Date().toISOString().split('T')[0],
+        unloadingDate: new Date().toISOString().split('T')[0],
+        qty: p.qty || 0,
+        ratePrice: p.price || 500,
+        totalPrice: p.totalPrice || 0
+      }))
+    }
+  }
 })
 
 function emptyProduct() {
@@ -100,6 +143,27 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
       <p>Informasi PO Transportir</p>
 
       <div class="space-y-3">
+        <div class="space-y-2">
+          <label class="text-sm font-medium">Pilih PO Customer</label>
+          <USelectMenu
+            v-model="selectedPOCustomer"
+            :items="poCustomers.map(po => ({
+              label: po.po_number,
+              value: po,
+              customer_name: po.customer_name
+            }))"
+            placeholder="Pilih Purchase Order Customer..."
+            class="w-full"
+            searchable
+            searchable-placeholder="Cari nomor PO..."
+          />
+          <p v-if="selectedPOCustomer" class="text-xs text-gray-500">
+            Customer: {{ selectedPOCustomer.customer_name }} &mdash; Total: {{ selectedPOCustomer.total.toLocaleString() }}
+          </p>
+        </div>
+
+        <USeparator />
+
         <p class="font-medium">
           Daftar Produk
         </p>
