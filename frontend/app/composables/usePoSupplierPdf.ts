@@ -13,8 +13,6 @@ export function usePoSupplierPdf() {
     meta: {
       supplierName: string
       poNumber: string
-      createdByBarcode?: string
-      approvedByBarcode?: string
     }
   ): Promise<string> {
     const pdfMake = usePDFMake()
@@ -22,8 +20,6 @@ export function usePoSupplierPdf() {
 
     const products: Product[] = details.products || []
     const paymentAddress: PaymentAddress = details.paymentAddress || {}
-    const createdByBarcode = meta.createdByBarcode || ''
-    const approvedByBarcode = meta.approvedByBarcode || ''
 
     const tableBodyDetails: TableCell[][] = [
       [
@@ -333,26 +329,10 @@ export function usePoSupplierPdf() {
                         bold: true,
                         alignment: 'center'
                       },
-                      ...(createdByBarcode
-                        ? [
-                            {
-                              image: createdByBarcode,
-                              width: 90,
-                              alignment: 'center',
-                              marginTop: 6
-                            },
-                            {
-                              text: `(${details.signed.createdBy || ''})`,
-                              alignment: 'center',
-                              marginTop: 0
-                            }
-                          ]
-                        : [
-                            {
-                              text: `\n\n\n\n(${details.signed.createdBy || ''})`,
-                              alignment: 'center'
-                            }
-                          ])
+                      {
+                        text: `\n\n\n\n(${details.signed.createdBy || ''})`,
+                        alignment: 'center'
+                      }
                     ],
                     border: [true, false, false, true]
                   },
@@ -363,26 +343,10 @@ export function usePoSupplierPdf() {
                         bold: true,
                         alignment: 'center'
                       },
-                      ...(approvedByBarcode
-                        ? [
-                            {
-                              image: approvedByBarcode,
-                              width: 90,
-                              alignment: 'center',
-                              marginTop: 6
-                            },
-                            {
-                              text: `(${details.signed.approvedBy || ''})`,
-                              alignment: 'center',
-                              marginTop: 0
-                            }
-                          ]
-                        : [
-                            {
-                              text: `\n\n\n\n(${details.signed.approvedBy || ''})`,
-                              alignment: 'center'
-                            }
-                          ])
+                      {
+                        text: `\n\n\n\n(${details.signed.approvedBy || ''})`,
+                        alignment: 'center'
+                      }
                     ],
                     border: [false, false, true, true]
                   }

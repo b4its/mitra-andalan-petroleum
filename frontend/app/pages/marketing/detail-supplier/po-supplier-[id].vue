@@ -25,13 +25,7 @@ const loadPdf = async () => {
   if (!d?.signed) return
   pdfLink.value = await buildPoSupplierPdf(d, {
     supplierName: purchaseOrderDetails.value?.supplier_name || '',
-    poNumber: purchaseOrderDetails.value?.po_number || '',
-    createdByBarcode: d.signed.createdBy
-      ? generateBarcodeDataUrl(d.signed.createdBy)
-      : '',
-    approvedByBarcode: d.signed.approvedBy
-      ? generateBarcodeDataUrl(d.signed.approvedBy)
-      : ''
+    poNumber: purchaseOrderDetails.value?.po_number || ''
   })
 }
 

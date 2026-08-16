@@ -204,13 +204,7 @@ async function buildPreviewPdf() {
     poData as unknown as Parameters<typeof buildPoSupplierPdf>[0],
     {
       supplierName: supplier?.name || '',
-      poNumber: poData.po?.number || '',
-      createdByBarcode: poData.signed?.createdBy
-        ? generateBarcodeDataUrl(poData.signed.createdBy)
-        : '',
-      approvedByBarcode: poData.signed?.approvedBy
-        ? generateBarcodeDataUrl(poData.signed.approvedBy)
-        : ''
+      poNumber: poData.po?.number || ''
     }
   )
 }
