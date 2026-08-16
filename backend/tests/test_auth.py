@@ -3,7 +3,7 @@ from starlette.testclient import TestClient
 
 def test_login_success(client: TestClient, seeded_db):
     resp = client.post("/api/v1/auth/login", json={
-        "email": "admin@email.com", "password": "admin123"
+        "email": "admin@mapetroleum.co.id", "password": "admin123"
     })
     assert resp.status_code == 200
     data = resp.json()
@@ -14,7 +14,7 @@ def test_login_success(client: TestClient, seeded_db):
 
 def test_login_marketing(client: TestClient, seeded_db):
     resp = client.post("/api/v1/auth/login", json={
-        "email": "marketing@email.com", "password": "marketing123"
+        "email": "marketing@mapetroleum.co.id", "password": "marketing123"
     })
     assert resp.status_code == 200
     assert resp.json()["role"] == "marketing"
@@ -22,7 +22,7 @@ def test_login_marketing(client: TestClient, seeded_db):
 
 def test_login_wrong_password(client: TestClient, seeded_db):
     resp = client.post("/api/v1/auth/login", json={
-        "email": "admin@email.com", "password": "wrongpass"
+        "email": "admin@mapetroleum.co.id", "password": "wrongpass"
     })
     assert resp.status_code == 401
 
@@ -43,7 +43,7 @@ def test_login_empty_email(client: TestClient, seeded_db):
 
 def test_login_empty_password(client: TestClient, seeded_db):
     resp = client.post("/api/v1/auth/login", json={
-        "email": "admin@email.com", "password": ""
+        "email": "admin@mapetroleum.co.id", "password": ""
     })
     assert resp.status_code in (401, 422)
 

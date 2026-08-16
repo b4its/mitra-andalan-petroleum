@@ -15,7 +15,7 @@ router = APIRouter()
     "/auth/login",
     response_model=LoginResponse,
     summary="Login user",
-    description="Autentikasi user dengan email & password.\n\nAkun default:\n- `admin@email.com` / `admin123` (admin)\n- `ops@email.com` / `ops123` (operations)\n- `marketing@email.com` / `marketing123` (marketing)\n- `finance@email.com` / `finance123` (finance)",
+    description="Autentikasi user dengan email & password.\n\nAkun default:\n- `admin@mapetroleum.co.id` / `admin123` (admin)\n- `ops@mapetroleum.co.id` / `ops123` (operations)\n- `marketing@mapetroleum.co.id` / `marketing123` (marketing)\n- `finance@mapetroleum.co.id` / `finance123` (finance)",
 )
 async def login(body: LoginRequest, db=Depends(get_db)):
     result = await db.execute(select(User).where(User.email == body.email))

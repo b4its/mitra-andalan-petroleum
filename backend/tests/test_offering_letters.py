@@ -14,7 +14,7 @@ def test_get_offering_letter_by_id(client: TestClient, seeded_db):
     ol_id = list_resp.json()["items"][0]["id"]
     response = client.get(f"/api/v1/offering-letters/{ol_id}")
     assert response.status_code == 200
-    assert response.json()["offering_letter_number"] == "001/OL/VI/2025"
+    assert response.json()["offering_letter_number"] == "001/OL/VI/2026"
 
 
 def test_get_offering_letter_not_found(client: TestClient, seeded_db):

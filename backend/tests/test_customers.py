@@ -14,7 +14,7 @@ def test_get_customer_by_id(client: TestClient, seeded_db):
     cust_id = list_resp.json()[0]["id"]
     response = client.get(f"/api/v1/customers/{cust_id}")
     assert response.status_code == 200
-    assert response.json()["name"] == "PT Bina Karya"
+    assert response.json()["name"] == "PT Surya Tambang Energi"
 
 
 def test_get_customer_not_found(client: TestClient, seeded_db):

@@ -12,7 +12,7 @@ def test_get_invoice_by_id(client: TestClient, seeded_db):
     inv_id = list_resp.json()["items"][0]["id"]
     response = client.get(f"/api/v1/invoices/{inv_id}")
     assert response.status_code == 200
-    assert response.json()["invoice_number"] == "INV/2025/VI/001"
+    assert response.json()["invoice_number"] == "INV/2026/VI/001"
 
 
 def test_get_invoice_not_found(client: TestClient, seeded_db):

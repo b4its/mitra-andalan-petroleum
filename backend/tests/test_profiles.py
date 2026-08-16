@@ -36,7 +36,7 @@ def test_create_profile(client: TestClient, seeded_db):
 
 def test_create_profile_duplicate_email(client: TestClient, seeded_db):
     response = client.post("/api/v1/profiles", json={
-        "name": "Dup", "email": "admin@email.com",
+        "name": "Duplikat", "email": "admin@mapetroleum.co.id",
         "password": "test123", "role": "admin"
     })
     assert response.status_code == 400
