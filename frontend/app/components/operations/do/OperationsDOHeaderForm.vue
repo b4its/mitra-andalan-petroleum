@@ -6,7 +6,12 @@ import {
 } from '~/types/schemas'
 
 defineProps<{
-  purchaseOrders: any
+  purchaseOrders: {
+    label: string
+    customerName: string
+    subtitle: string
+    value: Record<string, unknown>
+  }[]
   hasPrevious: boolean | undefined
 }>()
 

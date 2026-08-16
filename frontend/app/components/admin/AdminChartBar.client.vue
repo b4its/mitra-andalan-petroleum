@@ -20,15 +20,23 @@ const labels: Record<string, string> = {
   invoices: 'Invoice'
 }
 
-const xAccessor = (_d: any, i: number) => i
-const yAccessors = categories.map(cat => (d: any) => d[cat] ?? 0)
-const colorAccessor = (_d: any, i: number) => colors[i % colors.length]
-
-function tickFormat(d: any): string {
-  return d?.month?.split(' ')[0] ?? ''
+interface ChartDatum {
+  month?: string
+  offering_letters?: number
+  purchase_orders?: number
+  delivery_orders?: number
+  invoices?: number
 }
 
-function tooltipTemplate(d: any, _i: number, cat: string): string {
+const xAccessor = (_d: ChartDatum, i: number) => i
+const yAccessors = categories.map(cat => (d: ChartDatum) => (d[cat] as number) ?? 0)
+const colorAccessor = (_d: ChartDatum, i: number) => colors[i % colors.length]
+
+function tickFormat(d: ChartDatum): string {
+  return d.month?.split(' ')[0] ?? ''
+}
+
+function tooltipTemplate(d: unknown, _i: number, cat: string): string {
   const label = labels[cat] || cat
   return `${label}: ${d}`
 }

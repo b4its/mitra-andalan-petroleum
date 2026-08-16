@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
+import type { DeliveryOrders } from '~/types/operations'
 import { operationsDOSchema, type OperationsDOState } from '~/types/schemas'
 
 const emit = defineEmits<{
@@ -12,7 +13,7 @@ const { get } = useApi()
 const { data: deliveryOrderList, pending } = await useAsyncData(
   'operations-returned-delivery-orders',
   async () => {
-    const res = await get<{ items: any[] }>('/delivery-orders', {
+    const res = await get<{ items: DeliveryOrders[] }>('/delivery-orders', {
       page: 1,
       page_size: 100
     })
@@ -22,7 +23,7 @@ const { data: deliveryOrderList, pending } = await useAsyncData(
 )
 
 const deliveryOrders = computed(() =>
-  deliveryOrderList.value.map((deliveryOrder: any) => ({
+  deliveryOrderList.value.map((deliveryOrder: DeliveryOrders) => ({
     label: deliveryOrder.customer_name || deliveryOrder.do_number,
     value: deliveryOrder.id,
     doNumber: deliveryOrder.do_number

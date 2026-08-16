@@ -737,20 +737,36 @@ async function downloadFile(upload: RecordUpload) {
 
                 <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                   <div>
-                    <p class="text-muted">Customer</p>
-                    <p class="font-medium truncate">{{ fmt(doItem.customer_name) }}</p>
+                    <p class="text-muted">
+                      Customer
+                    </p>
+                    <p class="font-medium truncate">
+                      {{ fmt(doItem.customer_name) }}
+                    </p>
                   </div>
                   <div>
-                    <p class="text-muted">Volume BBM</p>
-                    <p class="font-medium">{{ formatNumber(doItem.fuel_total ?? 0) }} L</p>
+                    <p class="text-muted">
+                      Volume BBM
+                    </p>
+                    <p class="font-medium">
+                      {{ formatNumber(doItem.fuel_total ?? 0) }} L
+                    </p>
                   </div>
                   <div>
-                    <p class="text-muted">Transportir</p>
-                    <p class="font-medium truncate">{{ fmt(doItem.transport_name) }}</p>
+                    <p class="text-muted">
+                      Transportir
+                    </p>
+                    <p class="font-medium truncate">
+                      {{ fmt(doItem.transport_name) }}
+                    </p>
                   </div>
                   <div>
-                    <p class="text-muted">Dibuat</p>
-                    <p class="font-medium">{{ fmtDateTime(doItem.created_at) }}</p>
+                    <p class="text-muted">
+                      Dibuat
+                    </p>
+                    <p class="font-medium">
+                      {{ fmtDateTime(doItem.created_at) }}
+                    </p>
                   </div>
                 </div>
 
@@ -894,7 +910,6 @@ async function downloadFile(upload: RecordUpload) {
               >
                 Purchase Order
               </p>
-
             </div>
 
             <!-- Loading -->
@@ -928,11 +943,17 @@ async function downloadFile(upload: RecordUpload) {
 
               <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                 <div>
-                  <p class="text-muted">Customer</p>
-                  <p class="font-medium truncate">{{ fmt(doRelatedPo.customer_name) }}</p>
+                  <p class="text-muted">
+                    Customer
+                  </p>
+                  <p class="font-medium truncate">
+                    {{ fmt(doRelatedPo.customer_name) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-muted">Supplier</p>
+                  <p class="text-muted">
+                    Supplier
+                  </p>
                   <p
                     class="font-medium truncate"
                     :class="doRelatedPo.supplier_name ? '' : 'text-muted'"
@@ -945,22 +966,36 @@ async function downloadFile(upload: RecordUpload) {
                   </p>
                 </div>
                 <div>
-                  <p class="text-muted">Tanggal Purchase Order</p>
-                  <p class="font-medium">{{ fmt(doRelatedPo.date) }}</p>
+                  <p class="text-muted">
+                    Tanggal Purchase Order
+                  </p>
+                  <p class="font-medium">
+                    {{ fmt(doRelatedPo.date) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-muted">Total Purchase Order</p>
+                  <p class="text-muted">
+                    Total Purchase Order
+                  </p>
                   <p class="font-medium text-primary">
                     {{ fmtCurrency(doRelatedPo.total) }}
                   </p>
                 </div>
                 <div>
-                  <p class="text-muted">Status</p>
-                  <p class="font-medium capitalize">{{ fmt(doRelatedPo.status) }}</p>
+                  <p class="text-muted">
+                    Status
+                  </p>
+                  <p class="font-medium capitalize">
+                    {{ fmt(doRelatedPo.status) }}
+                  </p>
                 </div>
                 <div>
-                  <p class="text-muted">Dibuat</p>
-                  <p class="font-medium">{{ fmtDateTime(doRelatedPo.created_at) }}</p>
+                  <p class="text-muted">
+                    Dibuat
+                  </p>
+                  <p class="font-medium">
+                    {{ fmtDateTime(doRelatedPo.created_at) }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1082,10 +1117,10 @@ async function downloadFile(upload: RecordUpload) {
           <div
             v-if="
               doDetails
-              && (doDetails.t2Depot
-                || doDetails.t2Unloading
-                || doDetails.indexSensitivity
-                || doDetails.fuelReceived)
+                && (doDetails.t2Depot
+                  || doDetails.t2Unloading
+                  || doDetails.indexSensitivity
+                  || doDetails.fuelReceived)
             "
             class="border-t border-default pt-3"
           >
@@ -1096,25 +1131,33 @@ async function downloadFile(upload: RecordUpload) {
             </p>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <p class="text-xs text-muted">T2 Depo</p>
+                <p class="text-xs text-muted">
+                  T2 Depo
+                </p>
                 <p class="font-medium">
                   {{ doDetails.t2Depot ?? '-' }}
                 </p>
               </div>
               <div>
-                <p class="text-xs text-muted">T2 Bongkar</p>
+                <p class="text-xs text-muted">
+                  T2 Bongkar
+                </p>
                 <p class="font-medium">
                   {{ doDetails.t2Unloading ?? '-' }}
                 </p>
               </div>
               <div>
-                <p class="text-xs text-muted">Kepekaan Index</p>
+                <p class="text-xs text-muted">
+                  Kepekaan Index
+                </p>
                 <p class="font-medium">
                   {{ doDetails.indexSensitivity ?? '-' }}
                 </p>
               </div>
               <div>
-                <p class="text-xs text-muted">BBM Diterima</p>
+                <p class="text-xs text-muted">
+                  BBM Diterima
+                </p>
                 <p class="font-medium">
                   {{ doDetails.fuelReceived ?? '-' }} L
                 </p>

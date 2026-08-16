@@ -6,7 +6,7 @@ import type {
   OperationsPOTransportHeaderState
 } from '~/types/schemas'
 import type { PoTransportirsDetails, PoTransportirsPost } from '~/types/operations'
-import type { PurchaseOrdersSupplier } from '~/types/marketing'
+import type { PurchaseOrdersSupplier, Product } from '~/types/marketing'
 
 const toast = useToast()
 const loading = ref(false)
@@ -27,7 +27,7 @@ const { data: purchaseOrderList } = await useAsyncData(
       customer_name: po.customer_name || '',
       customer_id: po.customer_id || '',
       total: po.total ?? 0,
-      details: (po as any).details || {}
+      details: po.details || {}
     }))
   },
   { default: () => [], server: false }
@@ -48,9 +48,9 @@ watch(selectedPOCustomer, (val) => {
     poTransportHeader.picPerson = user.value?.name ? `Bpk ${user.value.name}` : 'Bpk Bambang Nugroho'
     poTransportHeader.receiver = val.customer_name || poTransportHeader.receiver
     // Pre-fill products from PO Customer if available
-    const poProducts = (val.details as any)?.products
+    const poProducts = val.details?.products
     if (Array.isArray(poProducts) && poProducts.length > 0) {
-      poTransportDetails.products = poProducts.map((p: any) => ({
+      poTransportDetails.products = poProducts.map((p: Product) => ({
         name: p.name || 'Solar',
         loadingDate: `${new Date().toISOString().split('T')[0]}`,
         unloadingDate: `${new Date().toISOString().split('T')[0]}`,

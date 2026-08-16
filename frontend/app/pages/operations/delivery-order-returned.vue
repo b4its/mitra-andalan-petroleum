@@ -42,8 +42,8 @@ async function onDoSubmit() {
     toast.add({ title: 'Sukses', description: 'File Delivery Order berhasil diupload.', color: 'success' })
     doReturned.deliveryOrderNumber = ''
     doReturned.doDocument = undefined
-  } catch (error: any) {
-    toast.add({ title: 'Gagal', description: error.message || 'Gagal upload file Delivery Order.', color: 'error' })
+  } catch (error: unknown) {
+    toast.add({ title: 'Gagal', description: (error as Error).message || 'Gagal upload file Delivery Order.', color: 'error' })
   } finally {
     uploading.value = false
   }

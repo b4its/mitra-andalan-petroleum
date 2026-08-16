@@ -259,8 +259,8 @@ definePageMeta({ layout: 'accounting' })
               <!-- Detail mutasi per akun yang diekspansi -->
               <div
                 v-for="item in ledgers"
-                :key="item.account_id"
                 v-show="expandedAccount === item.account_id"
+                :key="item.account_id"
                 class="mt-4 border-t border-default pt-4"
               >
                 <p class="mb-2 text-sm font-semibold">

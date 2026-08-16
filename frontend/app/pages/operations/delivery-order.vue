@@ -4,6 +4,7 @@ import type { Customer } from '~/types/marketing'
 import type {
   DeliveryOrderPost,
   DeliveryOrdersDetails,
+  PoTransportirDetails,
   PoTransportirsDetails
 } from '~/types/operations'
 import type {
@@ -331,7 +332,7 @@ watch(
           doTransport.transportName = pt.transportName
         }
         // Auto-fill produk dari PO Transportir
-        const ptProducts = (pt.details as any)?.products || []
+        const ptProducts = (pt.details as Partial<PoTransportirDetails>).products || []
         if (ptProducts.length > 0) {
           const firstProduct = ptProducts[0]
           doDetailsTransport.total = firstProduct.qty || pt.total || value.fuelTotalQty || 0
@@ -375,11 +376,11 @@ async function onFormSubmit() {
     }
 
     const res = editingDoId.value
-      ? await put<any, DeliveryOrderPost>(
+      ? await put<DeliveryOrdersDetails, DeliveryOrderPost>(
           `/delivery-orders/${editingDoId.value}`,
           doPost
         )
-      : await post<any, DeliveryOrderPost>('/delivery-orders', doPost)
+      : await post<DeliveryOrdersDetails, DeliveryOrderPost>('/delivery-orders', doPost)
 
     console.log('Data submitted')
     console.log(res)
@@ -391,8 +392,8 @@ async function onFormSubmit() {
         : 'Data Delivery Order berhasil dibuat',
       color: 'success'
     })
-  } catch (e: any) {
-    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
+  } catch (e: unknown) {
+    toast.add({ title: 'Gagal', description: (e as Error).message, color: 'error' })
   } finally {
     loading.value = false
   }

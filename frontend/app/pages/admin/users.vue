@@ -457,7 +457,7 @@ const showPassword = ref(false)
               :src="selectedUser.signature"
               alt="Tanda tangan"
               class="h-12 w-auto object-contain rounded border"
-            />
+            >
             <p
               v-if="selectedUser.signature_caption"
               class="mt-1 text-xs text-muted"
@@ -599,7 +599,7 @@ const showPassword = ref(false)
             :src="selectedUser.signature"
             alt="Tanda tangan saat ini"
             class="h-10 w-auto object-contain"
-          />
+          >
           <span class="text-xs text-muted">
             Tanda tangan terpasang saat ini
           </span>

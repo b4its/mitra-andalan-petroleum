@@ -143,10 +143,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
     emit('update:open', false)
     emit('updated')
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal menyimpan data.',
+      description: (err as Error).message || 'Gagal menyimpan data.',
       color: 'error'
     })
   } finally {

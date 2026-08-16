@@ -12,7 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  saved: []
+  'saved': []
 }>()
 
 const { get, post } = useApi()
@@ -76,7 +76,7 @@ function resetForm() {
 
 watch(
   () => props.open,
-  value => {
+  (value) => {
     if (value) resetForm()
   }
 )
@@ -219,7 +219,12 @@ async function onSubmit() {
         </div>
 
         <UFormField label="Nominal" required>
-          <UInput v-model.number="form.amount" type="number" min="0" placeholder="0" />
+          <UInput
+            v-model.number="form.amount"
+            type="number"
+            min="0"
+            placeholder="0"
+          />
         </UFormField>
       </div>
     </template>

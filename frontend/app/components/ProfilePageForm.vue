@@ -111,7 +111,7 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
       body.signature_caption = event.data.signature_caption
     }
 
-    const updated = await put<any, typeof body>(`/profiles/${userId}`, body)
+    const updated = await put<Record<string, string>, typeof body>(`/profiles/${userId}`, body)
 
     auth.setUser({
       id: userId,
@@ -129,10 +129,10 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
       icon: 'i-lucide-check',
       color: 'success'
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal memperbarui profil',
+      description: (err as Error).message || 'Gagal memperbarui profil',
       color: 'error'
     })
   } finally {
@@ -217,7 +217,7 @@ function toggleShow() {
                 :src="userSignature"
                 alt="Tanda tangan saat ini"
                 class="h-10 w-auto object-contain"
-              />
+              >
               <span class="text-xs text-muted">
                 Tanda tangan terpasang saat ini
               </span>

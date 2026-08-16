@@ -1150,25 +1150,33 @@ const exportItems = (
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Saldo Awal</p>
+                <p class="text-sm text-muted">
+                  Saldo Awal
+                </p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.dailyCash.opening_balance) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Masuk</p>
+                <p class="text-sm text-muted">
+                  Total Masuk
+                </p>
                 <p class="text-xl font-bold text-success">
                   {{ formatCurrency(data.dailyCash.total_debit) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Keluar</p>
+                <p class="text-sm text-muted">
+                  Total Keluar
+                </p>
                 <p class="text-xl font-bold text-error">
                   {{ formatCurrency(data.dailyCash.total_credit) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Saldo Akhir</p>
+                <p class="text-sm text-muted">
+                  Saldo Akhir
+                </p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.dailyCash.closing_balance) }}
                 </p>
@@ -1211,13 +1219,17 @@ const exportItems = (
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Saldo Awal</p>
+                <p class="text-sm text-muted">
+                  Saldo Awal
+                </p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.cashflow.opening_balance) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Arus Kas Bersih</p>
+                <p class="text-sm text-muted">
+                  Arus Kas Bersih
+                </p>
                 <p
                   class="text-xl font-bold"
                   :class="data.cashflow.net_cashflow >= 0 ? 'text-success' : 'text-error'"
@@ -1226,13 +1238,17 @@ const exportItems = (
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Saldo Akhir</p>
+                <p class="text-sm text-muted">
+                  Saldo Akhir
+                </p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.cashflow.closing_balance) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Arus Kas Operasi</p>
+                <p class="text-sm text-muted">
+                  Arus Kas Operasi
+                </p>
                 <p
                   class="text-xl font-bold"
                   :class="data.cashflow.operating.total >= 0 ? 'text-success' : 'text-error'"
@@ -1307,7 +1323,9 @@ const exportItems = (
                     class="flex items-center justify-between py-2 px-4 text-sm"
                   >
                     <div class="min-w-0">
-                      <p class="truncate max-w-96">{{ item.description }}</p>
+                      <p class="truncate max-w-96">
+                        {{ item.description }}
+                      </p>
                       <p class="text-xs text-muted">
                         {{ formatDate(item.entry_date) }}
                         <span v-if="item.reference">· {{ item.reference }}</span>
@@ -1324,24 +1342,24 @@ const exportItems = (
                 </p>
               </div>
 
-<p
-              v-if="!data.costRecap.groups.length"
-              class="py-4 text-center text-sm text-muted"
-            >
-              Belum ada data biaya
-            </p>
-
-            <div class="mt-4">
-              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                Grafik Rekap Biaya per Akun
+              <p
+                v-if="!data.costRecap.groups.length"
+                class="py-4 text-center text-sm text-muted"
+              >
+                Belum ada data biaya
               </p>
-              <AdminBarChart
-                v-if="costRecapChart"
-                :labels="costRecapChart.labels"
-                :datasets="costRecapChart.datasets"
-                :height="240"
-              />
-            </div>
+
+              <div class="mt-4">
+                <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
+                  Grafik Rekap Biaya per Akun
+                </p>
+                <AdminBarChart
+                  v-if="costRecapChart"
+                  :labels="costRecapChart.labels"
+                  :datasets="costRecapChart.datasets"
+                  :height="240"
+                />
+              </div>
             </div>
           </UCard>
 
@@ -1360,25 +1378,33 @@ const exportItems = (
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Penghasilan</p>
+                <p class="text-sm text-muted">
+                  Total Penghasilan
+                </p>
                 <p class="text-xl font-bold text-success">
                   {{ formatCurrency(data.monitoring.total_penghasilan) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Operasional</p>
+                <p class="text-sm text-muted">
+                  Total Operasional
+                </p>
                 <p class="text-xl font-bold text-error">
                   {{ formatCurrency(data.monitoring.total_operasional) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Margin Kotor</p>
+                <p class="text-sm text-muted">
+                  Total Margin Kotor
+                </p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.monitoring.total_gross_margin) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total OAT</p>
+                <p class="text-sm text-muted">
+                  Total OAT
+                </p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.monitoring.total_oat) }}
                 </p>
@@ -1421,19 +1447,25 @@ const exportItems = (
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Pokok Pinjaman</p>
+                <p class="text-sm text-muted">
+                  Total Pokok Pinjaman
+                </p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(data.bankInterest.total_principal) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Bunga</p>
+                <p class="text-sm text-muted">
+                  Total Bunga
+                </p>
                 <p class="text-xl font-bold text-warning">
                   {{ formatCurrency(data.bankInterest.total_interest) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">Total Pembayaran</p>
+                <p class="text-sm text-muted">
+                  Total Pembayaran
+                </p>
                 <p class="text-xl font-bold text-success">
                   {{ formatCurrency(data.bankInterest.total_paid) }}
                 </p>
