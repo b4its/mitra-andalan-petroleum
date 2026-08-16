@@ -6,7 +6,7 @@ async function loginAsAdmin(page: Page) {
   const expected = /\/admin/
   for (let attempt = 0; attempt < 3; attempt++) {
     if (page.url().match(expected)) return
-    await page.fill('input[type="email"]', 'admin@email.com')
+    await page.fill('input[type="email"]', 'admin@mapetroleum.co.id')
     await page.fill('input[type="password"]', 'admin123')
     await page.click('button[type="submit"]')
     try {

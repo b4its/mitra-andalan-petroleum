@@ -36,34 +36,34 @@ test.describe('Login Page', () => {
   test('login with admin credentials redirects to admin dashboard', async ({
     page
   }) => {
-    await login(page, 'admin@email.com', 'admin123', /\/admin/)
+    await login(page, 'admin@mapetroleum.co.id', 'admin123', /\/admin/)
     expect(page.url()).toContain('/admin')
   })
 
   test('login with marketing credentials redirects to marketing dashboard', async ({
     page
   }) => {
-    await login(page, 'marketing@email.com', 'marketing123', /\/marketing/)
+    await login(page, 'marketing@mapetroleum.co.id', 'marketing123', /\/marketing/)
     expect(page.url()).toContain('/marketing')
   })
 
   test('login with operations credentials redirects to operations dashboard', async ({
     page
   }) => {
-    await login(page, 'ops@email.com', 'ops123', /\/operations/)
+    await login(page, 'ops@mapetroleum.co.id', 'ops123', /\/operations/)
     expect(page.url()).toContain('/operations')
   })
 
   test('login with finance credentials redirects to finance dashboard', async ({
     page
   }) => {
-    await login(page, 'finance@email.com', 'finance123', /\/finance/)
+    await login(page, 'finance@mapetroleum.co.id', 'finance123', /\/finance/)
     expect(page.url()).toContain('/finance')
   })
 
   test('shows error on wrong password', async ({ page }) => {
     await page.goto('/login', { waitUntil: 'networkidle' })
-    await page.fill('input[type="email"]', 'admin@email.com')
+    await page.fill('input[type="email"]', 'admin@mapetroleum.co.id')
     await page.fill('input[type="password"]', 'wrongpassword')
     await expect(page.locator('button[type="submit"]')).toBeEnabled()
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -73,7 +73,7 @@ test.describe('Login Page', () => {
         return
       } catch {
         // Hydration Vue bisa mengeset ulang field di submit pertama; isi ulang lalu coba lagi.
-        await page.fill('input[type="email"]', 'admin@email.com')
+        await page.fill('input[type="email"]', 'admin@mapetroleum.co.id')
         await page.fill('input[type="password"]', 'wrongpassword')
       }
     }
@@ -104,7 +104,7 @@ test.describe('Login Page', () => {
   })
 
   test('logout returns to login page', async ({ page }) => {
-    await login(page, 'admin@email.com', 'admin123', /\/admin/)
+    await login(page, 'admin@mapetroleum.co.id', 'admin123', /\/admin/)
 
     const logoutButton = page.locator('text=Logout')
     if (await logoutButton.isVisible()) {

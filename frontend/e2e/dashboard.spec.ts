@@ -2,10 +2,10 @@ import { test, expect, type Page } from '@playwright/test'
 
 async function loginAs(page: Page, role: string) {
   const credentials: Record<string, { email: string, password: string }> = {
-    admin: { email: 'admin@email.com', password: 'admin123' },
-    marketing: { email: 'marketing@email.com', password: 'marketing123' },
-    operations: { email: 'ops@email.com', password: 'ops123' },
-    finance: { email: 'finance@email.com', password: 'finance123' }
+    admin: { email: 'admin@mapetroleum.co.id', password: 'admin123' },
+    marketing: { email: 'marketing@mapetroleum.co.id', password: 'marketing123' },
+    operations: { email: 'ops@mapetroleum.co.id', password: 'ops123' },
+    finance: { email: 'finance@mapetroleum.co.id', password: 'finance123' }
   }
   const cred = credentials[role]
   await page.goto('/login', { waitUntil: 'networkidle' })

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 
 const AUTH = JSON.stringify({
-  id: 'test', name: 'Admin', email: 'admin@email.com', password: 'x',
+  id: 'test', name: 'Admin', email: 'admin@mapetroleum.co.id', password: 'x',
   role: 'admin', token: 'x', loggedInAt: new Date().toISOString()
 })
 

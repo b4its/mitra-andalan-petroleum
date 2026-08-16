@@ -91,11 +91,11 @@ describe('passwordSchema', () => {
 describe('marketingOLHeaderSchema', () => {
   it('accepts valid OL header', () => {
     const result = marketingOLHeaderSchema.safeParse({
-      location: 'Jakarta',
-      date: '2025-06-01',
-      offeringLetterNumber: '001/OL/VI/2025',
+      location: 'Samarinda',
+      date: '2026-06-01',
+      offeringLetterNumber: '001/OL/VI/2026',
       regarding: 'Penawaran BBM Solar',
-      receiver: 'PT Bina Karya'
+      receiver: 'PT Surya Tambang Energi'
     })
     expect(result.success).toBe(true)
   })
@@ -103,7 +103,7 @@ describe('marketingOLHeaderSchema', () => {
   it('rejects short location', () => {
     const result = marketingOLHeaderSchema.safeParse({
       location: 'J',
-      date: '2025-06-01',
+      date: '2026-06-01',
       offeringLetterNumber: '001',
       regarding: 'Test',
       receiver: 'Test'
@@ -113,7 +113,7 @@ describe('marketingOLHeaderSchema', () => {
 
   it('rejects invalid date', () => {
     const result = marketingOLHeaderSchema.safeParse({
-      location: 'Jakarta',
+      location: 'Samarinda',
       date: 'not-a-date',
       offeringLetterNumber: '001',
       regarding: 'Test',

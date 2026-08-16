@@ -14,7 +14,7 @@ async function login(email: string, password: string) {
 
 describe('Auth API', () => {
   it('login success returns token and role', async () => {
-    const data = await login('admin@email.com', 'admin123')
+    const data = await login('admin@mapetroleum.co.id', 'admin123')
     expect(data).not.toBeNull()
     expect(data).toHaveProperty('token')
     expect(data).toHaveProperty('role')
@@ -22,7 +22,7 @@ describe('Auth API', () => {
   })
 
   it('login marketing returns marketing role', async () => {
-    const data = await login('marketing@email.com', 'marketing123')
+    const data = await login('marketing@mapetroleum.co.id', 'marketing123')
     expect(data).not.toBeNull()
     expect(data.role).toBe('marketing')
   })
@@ -31,7 +31,7 @@ describe('Auth API', () => {
     const res = await fetch(`${API}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'admin@email.com', password: 'wrong' })
+      body: JSON.stringify({ email: 'admin@mapetroleum.co.id', password: 'wrong' })
     })
     expect(res.status).toBe(401)
   })

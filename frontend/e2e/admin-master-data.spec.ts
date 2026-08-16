@@ -6,7 +6,7 @@ async function loginAsAdmin(page: Page) {
   const expected = /\/admin/
   for (let attempt = 0; attempt < 3; attempt++) {
     if (page.url().match(expected)) return
-    await page.fill('input[type="email"]', 'admin@email.com')
+    await page.fill('input[type="email"]', 'admin@mapetroleum.co.id')
     await page.fill('input[type="password"]', 'admin123')
     await page.click('button[type="submit"]')
     try {
@@ -29,8 +29,8 @@ test.describe('Admin Master Data', () => {
     await page.goto('/admin/users', { waitUntil: 'networkidle' })
     await expect(page.getByText('Manajemen Pengguna')).toBeVisible()
     await expect(page.locator('table').first()).toBeVisible()
-    await expect(page.getByText('admin@email.com').first()).toBeVisible()
-    await expect(page.getByText('accounting@email.com').first()).toBeVisible()
+    await expect(page.getByText('admin@mapetroleum.co.id').first()).toBeVisible()
+    await expect(page.getByText('accounting@mapetroleum.co.id').first()).toBeVisible()
   })
 
   test('suppliers page renders seeded suppliers', async ({ page }) => {
