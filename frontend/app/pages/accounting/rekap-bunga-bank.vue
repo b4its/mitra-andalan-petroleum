@@ -14,6 +14,7 @@ const debouncedSearch = refDebounced(search, 300)
 
 const exportColumns: ExportColumn<BankInterestRow>[] = [
   { header: 'Tanggal', accessor: (row: BankInterestRow) => formatDate(row.entry_date) },
+  { header: 'Akun', accessor: (row: BankInterestRow) => `${row.account_code} · ${row.account_name}` },
   { header: 'Deskripsi', accessor: (row: BankInterestRow) => row.description },
   { header: 'Pokok Pinjaman', accessor: (row: BankInterestRow) => row.amount },
   { header: 'Bunga (%)', accessor: (row: BankInterestRow) => `${row.interest_rate}%` },
@@ -58,6 +59,18 @@ const columns: TableColumn<BankInterestRow>[] = [
     accessorKey: 'entry_date',
     header: 'Tanggal',
     cell: ({ row }) => formatDate(row.getValue('entry_date'))
+  },
+  {
+    accessorKey: 'account_code',
+    header: 'Akun',
+    cell: ({ row }) => {
+      const code = row.getValue('account_code') as string
+      const name = row.getValue('account_name') as string
+      return h('div', { class: 'flex flex-col gap-0.5' }, [
+        h('span', { class: 'text-xs font-medium text-muted' }, code || '—'),
+        h('span', { class: 'text-xs text-muted' }, name || 'Alur Sistem Utama')
+      ])
+    }
   },
   {
     accessorKey: 'description',

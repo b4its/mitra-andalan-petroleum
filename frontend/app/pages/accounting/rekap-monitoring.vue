@@ -9,6 +9,17 @@ const { toCSV, toExcel, toPDF } = useExport()
 
 const dateFrom = ref('')
 const dateTo = ref('')
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
+
+const filteredRows = computed(() => {
+  if (!data.value) return []
+  if (!debouncedSearch.value) return data.value.rows
+  const q = debouncedSearch.value.toLowerCase()
+  return data.value.rows.filter((row: Record<string, unknown>) =>
+    Object.values(row).some(v => String(v).toLowerCase().includes(q))
+  )
+})
 
 const exportColumns: ExportColumn<MonitoringRow>[] = [
   { header: 'Bulan', accessor: (row: MonitoringRow) => row.bulan },
@@ -125,31 +136,41 @@ definePageMeta({ layout: 'accounting' })
       <div class="p-4 lg:p-6">
         <section class="flex flex-col lg:gap-4">
           <UCard>
-            <div class="flex flex-wrap items-end gap-3">
-              <UFormField label="Dari Tanggal">
-                <UInput v-model="dateFrom" type="date" />
-              </UFormField>
-              <UFormField label="Sampai Tanggal">
-                <UInput v-model="dateTo" type="date" />
-              </UFormField>
-              <UDropdownMenu
-                :items="[
-                  { type: 'label', label: 'Ekspor Data' },
-                  { type: 'separator' },
-                  { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
-                  { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
-                  { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
-                ]"
-              >
-                <UButton
-                  icon="i-lucide-download"
-                  color="neutral"
-                  variant="soft"
-                  :disabled="!data"
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-wrap items-end gap-3">
+                <UInput
+                  v-model="search"
+                  icon="i-lucide-search"
+                  placeholder="Cari bulan, akun, kategori..."
+                  class="w-64"
+                />
+                <UFormField label="Dari Tanggal">
+                  <UInput v-model="dateFrom" type="date" />
+                </UFormField>
+                <UFormField label="Sampai Tanggal">
+                  <UInput v-model="dateTo" type="date" />
+                </UFormField>
+              </div>
+              <div class="flex flex-wrap justify-end gap-2">
+                <UDropdownMenu
+                  :items="[
+                    { type: 'label', label: 'Ekspor Data' },
+                    { type: 'separator' },
+                    { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
+                    { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
+                    { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
+                  ]"
                 >
-                  Export
-                </UButton>
-              </UDropdownMenu>
+                  <UButton
+                    icon="i-lucide-download"
+                    color="neutral"
+                    variant="soft"
+                    :disabled="!data"
+                  >
+                    Export
+                  </UButton>
+                </UDropdownMenu>
+              </div>
             </div>
           </UCard>
 
@@ -198,7 +219,7 @@ definePageMeta({ layout: 'accounting' })
 
             <UCard class="overflow-x-auto">
               <UTable
-                :data="data.rows"
+                :data="filteredRows"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0 min-w-[800px]',
@@ -268,6 +289,25 @@ definePageMeta({ layout: 'accounting' })
                   <p class="font-bold">
                     {{ formatCurrency(data.total_fee_manajemen) }}
                   </p>
+                </div>
+              </div>
+            </UCard>
+
+            <!-- Akun Terkait -->
+            <UCard color="info" variant="subtle">
+              <div class="flex items-start gap-2">
+                <UIcon name="i-lucide-book-open" class="mt-0.5 text-info" />
+                <div class="text-sm space-y-1">
+                  <p class="font-medium">
+                    Akun Terkait Laporan Ini
+                  </p>
+                  <ul class="list-disc list-inside text-neutral-600 dark:text-neutral-300 space-y-0.5">
+                    <li>Penghasilan — akun pendapatan (revenue): kredit jurnal.</li>
+                    <li>Operasional — akun beban (expense): debit jurnal.</li>
+                    <li>OAT — akun <code class="font-mono">4-1100</code> Pendapatan Jasa Angkut.</li>
+                    <li>Modal Elnusa &amp; Fee Manajemen — estimasi dari total penghasilan.</li>
+                    <li>Jika data tidak terhubung ke akun, dikategorikan dari alur sistem utama (Marketing → Operations → Finance).</li>
+                  </ul>
                 </div>
               </div>
             </UCard>

@@ -138,6 +138,8 @@ export interface CashflowItem {
   description: string
   amount: number
   category: string
+  account_code: string
+  account_name: string
 }
 
 export interface CashflowSection {
@@ -227,6 +229,8 @@ export interface BankInterestRow {
   id: string
   entry_date: string
   description: string
+  account_code: string
+  account_name: string
   amount: number
   interest_rate: number
   days: number

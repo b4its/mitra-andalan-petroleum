@@ -32,6 +32,18 @@ const filteredOperating = computed(() => {
 
 const columns: TableColumn<CashflowItem>[] = [
   {
+    accessorKey: 'account_code',
+    header: 'Akun',
+    cell: ({ row }) => {
+      const code = row.getValue('account_code') as string
+      const name = row.getValue('account_name') as string
+      return h('div', { class: 'flex flex-col gap-0.5' }, [
+        h('span', { class: 'text-xs font-medium text-muted' }, code || '—'),
+        h('span', { class: 'text-xs text-muted' }, name || 'Alur Sistem Utama')
+      ])
+    }
+  },
+  {
     accessorKey: 'description',
     header: 'Deskripsi',
     cell: ({ row }) => {
