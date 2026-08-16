@@ -55,6 +55,23 @@ def test_create_po_transportir_missing_number(client: TestClient, seeded_db):
     assert response.status_code == 422
 
 
+def test_create_po_transportir_stale_created_by(client: TestClient, seeded_db):
+    response = client.post("/api/v1/po-transportir", json={
+        "po_number": "200/PO-TRANS/MAP/VI/2026",
+        "date": "2026-06-30",
+        "pic_person": "Bpk Bambang Nugroho",
+        "receiver": "PT Armada Kaltim Sejahtera",
+        "total": 4440000,
+        "status": "created",
+        "created_by": "00000000-0000-0000-0000-000000000000",
+        "details": {"products": [], "offeror": {"name": "Nico Pratama"}}
+    })
+    assert response.status_code == 201
+    data = response.json()
+    assert data["po_number"] == "200/PO-TRANS/MAP/VI/2026"
+    assert data["created_by"] is None
+
+
 def test_update_po_transportir(client: TestClient, seeded_db):
     list_resp = client.get("/api/v1/po-transportir?page=1&page_size=10")
     po_id = list_resp.json()["items"][0]["id"]

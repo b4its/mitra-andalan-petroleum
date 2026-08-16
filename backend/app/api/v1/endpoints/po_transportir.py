@@ -13,7 +13,7 @@ from app.schemas.po_transportir import (
     PoTransportirCreate,
     PoTransportirUpdate,
 )
-from app.utils.notifications import create_document_notification
+from app.utils.notifications import create_document_notification, valid_sender_id
 
 router = APIRouter()
 
@@ -110,7 +110,7 @@ async def create_po_transportir(body: PoTransportirCreate, db: AsyncSession = De
         total=body.total,
         status=body.status or "created",
         details=_details_to_str(body.details),
-        created_by=body.created_by,
+        created_by=await valid_sender_id(db, body.created_by),
     )
     db.add(po)
     await db.flush()
@@ -156,6 +156,8 @@ async def update_po_transportir(
         po.status = body.status
     if body.details is not None:
         po.details = _details_to_str(body.details)
+    if body.created_by is not None:
+        po.created_by = await valid_sender_id(db, body.created_by)
 
     await db.commit()
     await db.refresh(po)

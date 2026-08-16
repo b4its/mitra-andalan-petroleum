@@ -19,7 +19,7 @@ from app.schemas.offering_letter import (
     OfferingLetterPurchaseOrderItem,
     OfferingLetterPurchaseOrdersResponse,
 )
-from app.utils.notifications import create_document_notification
+from app.utils.notifications import create_document_notification, valid_sender_id
 
 router = APIRouter()
 
@@ -204,6 +204,9 @@ async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = 
         customer_name = c.name
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
+    # created_by dari browser bisa basi (mis. setelah DB di-reseed & user id berubah);
+    # validasi dulu agar penyimpanan tidak gagal karena constraint FK.
+    data["created_by"] = await valid_sender_id(db, data.get("created_by"))
     ol = OfferingLetter(**data)
     db.add(ol)
     await db.flush()

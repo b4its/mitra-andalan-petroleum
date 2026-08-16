@@ -18,7 +18,7 @@ from app.schemas.purchase_order import (
     PurchaseOrderCreate,
     PurchaseOrderUpdate,
 )
-from app.utils.notifications import create_document_notification
+from app.utils.notifications import create_document_notification, valid_sender_id
 from app.schemas.purchase_order import (
     PurchaseOrderResponse,
     PurchaseOrderCreate,
@@ -137,6 +137,9 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
             raise HTTPException(status_code=400, detail="Supplier tidak ditemukan")
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
+    # created_by dari browser bisa basi (mis. setelah DB di-reseed & user id berubah);
+    # validasi dulu agar penyimpanan tidak gagal karena constraint FK.
+    data["created_by"] = await valid_sender_id(db, data.get("created_by"))
     po = PurchaseOrder(**data)
     db.add(po)
     await db.flush()

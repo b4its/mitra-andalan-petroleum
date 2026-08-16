@@ -13,7 +13,7 @@ from app.models.notification import Notification
 from app.models.user import User
 
 
-async def _valid_sender_id(db: AsyncSession, sender_id: str | None) -> str | None:
+async def valid_sender_id(db: AsyncSession, sender_id: str | None) -> str | None:
     """Pastikan sender_id benar-benar ada di tabel users, jika tidak kembalikan None."""
     if not sender_id:
         return None
@@ -41,7 +41,7 @@ async def create_document_notification(
         async with db.begin_nested():
             # Hindari ForeignKeyViolation di tabel notifications saat user id
             # sudah tidak ada di tabel users (stale id dari localStorage).
-            safe_sender_id = await _valid_sender_id(db, sender_id)
+            safe_sender_id = await valid_sender_id(db, sender_id)
             n = Notification(
                 title=title,
                 message=message,
