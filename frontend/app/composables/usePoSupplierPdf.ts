@@ -14,9 +14,9 @@ export function usePoSupplierPdf() {
       supplierName: string
       poNumber: string
     }
-  ): Promise<string> {
+  ): Promise<string | null> {
     const pdfMake = usePDFMake()
-    if (!pdfMake) throw new Error('PDF engine tidak tersedia')
+    if (!pdfMake || import.meta.server) return null
 
     const products: Product[] = details.products || []
     const paymentAddress: PaymentAddress = details.paymentAddress || {}

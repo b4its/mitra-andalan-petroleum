@@ -10,9 +10,9 @@ import type { Details } from '~/types/operations'
 export function useDeliveryOrderPdf() {
   const { user } = useAuth()
 
-  async function buildDeliveryOrderPdf(details: Details): Promise<string> {
+  async function buildDeliveryOrderPdf(details: Details): Promise<string | null> {
     const pdfMake = usePDFMake()
-    if (!pdfMake) throw new Error('PDF engine tidak tersedia')
+    if (!pdfMake || import.meta.server) return null
 
     const surat = details
     const tableBodyNotes: { text: string, border: [boolean, boolean, boolean, boolean] }[][] = [

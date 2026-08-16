@@ -11,9 +11,9 @@ import type { InvoiceDetailsData } from '~/types/finance'
 export function useInvoicePdf() {
   const { user } = useAuth()
 
-  async function buildInvoicePdf(details: InvoiceDetailsData): Promise<string> {
+  async function buildInvoicePdf(details: InvoiceDetailsData): Promise<string | null> {
     const pdfMake = usePDFMake()
-    if (!pdfMake) throw new Error('PDF engine tidak tersedia')
+    if (!pdfMake || import.meta.server) return null
 
     const letterIds = details?.customerPurchaseInformation?.deliveryOrderNumberData || []
     const formattedLetterIds = (() => {

@@ -9,9 +9,9 @@ import type { PoTransportirDetails } from '~/types/operations'
 export function usePoTransportPdf() {
   const { user } = useAuth()
 
-  async function buildPoTransportPdf(d: PoTransportirDetails): Promise<string> {
+  async function buildPoTransportPdf(d: PoTransportirDetails): Promise<string | null> {
     const pdfMake = usePDFMake()
-    if (!pdfMake) throw new Error('PDF engine tidak tersedia')
+    if (!pdfMake || import.meta.server) return null
 
     const products = d.products || []
     const subTotal = products.reduce(
