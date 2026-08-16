@@ -100,9 +100,9 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
   servicePattern: offeringLetter.value?.details.servicePattern
     || 'Pengiriman truk tangki ke lokasi customer',
   personInCharge: {
-    name: offeringLetter.value?.details.personInCharge.name || 'Budi Santoso',
+    name: offeringLetter.value?.details.personInCharge.name || 'Nico Pratama',
     phoneNumber: offeringLetter.value?.details.personInCharge.phoneNumber
-      || '08123456789'
+      || '0812 3456 7890'
   },
   paymentAddress: {
     bankName: offeringLetter.value?.details.paymentAddress.bankName
@@ -145,7 +145,7 @@ const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline:
     offeringLetter.value?.details.purchaseOrderDeadline || '1 - 14',
   offeror: {
-    name: offeringLetter.value?.details.offeror.name || 'Budi Santoso',
+    name: offeringLetter.value?.details.offeror.name || 'Nico Pratama',
     signature: undefined
   },
   companyInformation: {

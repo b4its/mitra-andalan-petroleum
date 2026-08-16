@@ -421,7 +421,7 @@ const loadPdf = async () => {
           width: 90
         },
         {
-          text: `(Stenly Boseke)`,
+          text: `(Nico Pratama)`,
           marginTop: 30
         },
         {

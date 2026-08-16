@@ -980,7 +980,7 @@ const columns: TableColumn<DoRow>[] = [
               <label class="block text-xs text-muted mb-1">Nama Transportir <span class="text-error">*</span></label>
               <UInput
                 v-model="lengkapiForm.transport_name"
-                placeholder="PT. Transport Logistik"
+                placeholder="PT. Armada Kaltim Sejahtera"
                 size="sm"
               />
             </div>
@@ -1096,7 +1096,7 @@ const columns: TableColumn<DoRow>[] = [
               <label class="block text-xs text-muted mb-1">No. Kendaraan</label>
               <UInput
                 v-model="lengkapiForm.transport_number"
-                placeholder="KT 1234 AB"
+                placeholder="KT 1832 AJ"
                 size="sm"
               />
             </div>

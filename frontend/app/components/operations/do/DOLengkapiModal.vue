@@ -39,14 +39,14 @@ type Schema = z.output<typeof schema>
 
 const form = reactive<Partial<Schema>>({
   do_number: '005/DO/MAP/VIII/26',
-  transport_name: 'PT. Trans Borneo',
+  transport_name: 'PT. Armada Kaltim Sejahtera',
   product_name: 'Bio Solar',
   fuel_qty: 10000,
   do_date: new Date().toISOString().split('T')[0],
-  transport_number: 'KT 1234 AB',
-  driver_name: 'Jaya',
-  company_coordinator: 'Andi Wijaya',
-  distribution_admin: user.value?.name || 'Rina Kartika'
+  transport_number: 'KT 1832 AJ',
+  driver_name: 'Supriyanto',
+  company_coordinator: 'Bambang Nugroho',
+  distribution_admin: user.value?.name || 'Rina Marlina'
 })
 
 // Isi default dari props saat modal dibuka
@@ -203,14 +203,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UFormField name="transport_name" label="Nama Transportir" required>
             <UInput
               v-model="form.transport_name"
-              placeholder="PT. Transport Logistik"
+              placeholder="PT. Armada Kaltim Sejahtera"
               class="w-full"
             />
           </UFormField>
           <UFormField name="transport_number" label="Nomor Kendaraan">
             <UInput
               v-model="form.transport_number"
-              placeholder="KT 1234 AB"
+              placeholder="KT 1832 AJ"
               class="w-full"
             />
           </UFormField>

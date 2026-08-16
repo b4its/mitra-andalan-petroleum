@@ -18,9 +18,9 @@ const items: StepperItem[] = [
 const poTransportHeader = reactive<OperationsPOTransportHeaderState>({
   date: `${new Date().toISOString().split('T')[0]}`,
   regarding: 'Purchase Order Transportir (PO) ',
-  picPerson: 'Bpk Budi',
+  picPerson: 'Bpk Bambang Nugroho',
   poTransportNumber: '123/PO-TRANS/MAP/VIII/2026 ',
-  receiver: 'PT. Sumber Energi'
+  receiver: 'PT. Surya Tambang Energi'
 })
 
 const poTransportDetails = reactive<OperationsPOTransportDetailsState>({
@@ -52,17 +52,17 @@ const poTransportFooter = reactive<OperationsPOTransportFooterState>({
   shrinkageTolerance: 'Toleransi susut 0.3 %, Claim Susut Rp. 25.000,- / Liter',
   contactPerson: {
     companyName: 'PT. Mitra Andalan Petroleum',
-    customerName: 'PT. Sumber Energi',
+    customerName: 'PT. Surya Tambang Energi',
     companyContactPerson: [
       {
-        name: 'Budi Santoso',
-        phoneNumber: '081234567890'
+        name: 'Nico Pratama',
+        phoneNumber: '0812 3456 7890'
       }
     ],
     customerContactPerson: undefined
   },
   offeror: {
-    name: 'Stenly Boseke',
+    name: 'Nico Pratama',
     signature: undefined
   }
 })

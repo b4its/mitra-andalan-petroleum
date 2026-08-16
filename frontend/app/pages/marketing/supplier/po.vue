@@ -117,7 +117,7 @@ const letterCompanyMain = reactive<MarketingPOCompanyState>({
   companyInformation: {
     name: 'PT. Mitra Andalan Petroleum',
     address: '',
-    npwp: '02.123.456.7-901.000',
+    npwp: '02.458.113.4-091.000',
     contactPerson: '0541-2832313',
     email: 'cs@map.co.id'
   }
@@ -126,11 +126,11 @@ const letterCompanyMain = reactive<MarketingPOCompanyState>({
 const letterCompanyAssociate = reactive<MarketingPOAssociateState>({
   receiver: {
     id: '',
-    name: 'PT. Sumber Rejeki Transport',
-    address: '',
-    contactPerson: '081298765432',
-    email: 'marketing@sumberrejeki.co.id',
-    npwp: '01.234.567.8-901.000'
+    name: 'PT. Surya Tambang Energi',
+    address: 'Jl. A. W. Syahrani No. 45, Samarinda',
+    contactPerson: '0812 5617 8230',
+    email: 'cs@suryatambangenergi.co.id',
+    npwp: '01.609.052.4-091.000'
   }
 })
 
@@ -166,16 +166,16 @@ const letterAdditional = reactive<MarketingPOAdditionalState>({
   delivery: {
     loadingTerminal: 'Terminal BBM Balikpapan',
     loadingDate: '2026-08-11',
-    picOperationMap: 'Budi Santoso',
+    picOperationMap: 'Bambang Nugroho',
     distance: 120
   },
   details: 'Pengiriman dilakukan bertahap sesuai kebutuhan customer',
   forwarder: {
-    trucking: 'Truk Tangki 32.000 L - PT. Sumber Rejeki Transport'
+    trucking: 'Truk Tangki 32.000 L - PT. Armada Kaltim Sejahtera'
   },
   signed: {
     createdBy: user.value?.name || '',
-    approvedBy: 'Dwi Hartanto'
+    approvedBy: 'Ahmad Fauzi'
   }
 })
 

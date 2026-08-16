@@ -114,22 +114,22 @@ onMounted(async () => {
   }
 })
 const doReceiver = reactive<OperationsDOReceiverState>({
-  customerName: 'PT. Bina Karya Sentosa',
+  customerName: 'PT. Surya Tambang Energi',
   customerId: '',
-  customerAddress: 'Jl. Ahmad Yani No. 88, Sungai Pinang Luar, Samarinda',
+  customerAddress: 'Jl. A. W. Syahrani No. 45, Samarinda',
   receiverInformation: {
-    name: 'Budi Santoso',
-    phoneNumber: '081234567890'
+    name: 'Dedi Kurniawan',
+    phoneNumber: '0812 5617 8230'
   },
   receiverDateReceived: `${new Date().toISOString().split('T')[0]}`
 })
 const doTransport = reactive<OperationsDOTransportState>({
-  transportName: 'PT. Trans Borneo',
-  transportId: 'TRB-001',
-  transportAddress: 'Jl. Poros Samarinda-Balikpapan KM 23',
+  transportName: 'PT. Armada Kaltim Sejahtera',
+  transportId: 'AKS-001',
+  transportAddress: 'Jl. Pelita No. 18, Samarinda',
   driverInformation: {
-    name: 'Jaya',
-    phoneNumber: '081234567890'
+    name: 'Supriyanto',
+    phoneNumber: '0812 3027 4491'
   },
   transportDateReceived: `${new Date().toISOString().split('T')[0]}`,
   helperName: undefined
@@ -155,7 +155,7 @@ const doDetailsTransport = reactive<OperationsDODetailsTransportState>({
       depotArrivalTime: '13:15',
       unloadingTime: '13:30'
     },
-    transportNumber: 'KT 1234 AB',
+    transportNumber: 'KT 1832 AJ',
     transportType: 'Tangki'
   }
 })
@@ -177,10 +177,10 @@ const doAdditional = reactive<OperationsDOAdditionalState>({
   fuelReceived: 10000
 })
 const doFooter = reactive<OperationsDOFooterState>({
-  companyCoordinator: user.value?.name || 'Andi Wijaya',
-  distributionAdmin: user.value?.name || 'Rina Kartika',
-  receiver: 'Budi Santoso',
-  driver: 'Jaya'
+  companyCoordinator: user.value?.name || 'Bambang Nugroho',
+  distributionAdmin: user.value?.name || 'Rina Marlina',
+  receiver: 'Dedi Kurniawan',
+  driver: 'Supriyanto'
 })
 
 const { data: existingDeliveryOrder, pending: pendingExisting } = await useAsyncData(

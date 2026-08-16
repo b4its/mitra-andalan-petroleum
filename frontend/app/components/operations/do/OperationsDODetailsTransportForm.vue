@@ -141,7 +141,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
             v-model="state.transportInformation.transportNumber"
             type="text"
             autocomplete="off"
-            placeholder="contoh KT 1234 AB"
+            placeholder="contoh KT 1832 AJ"
           />
         </UFormField>
       </div>
