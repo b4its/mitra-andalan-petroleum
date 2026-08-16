@@ -15,3 +15,12 @@ class PoTransportir(BaseModel):
     status: Mapped[str] = mapped_column(String(30), default="created")
     details: Mapped[str] = mapped_column(Text, nullable=True, comment="JSON: full form data per schemas.ts")
     created_by: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=True, comment="ID user yang membuat dokumen")
+    # ── Relasi ke PO Customer ────────────────────────────────────
+    id_purchase_order: Mapped[str | None] = mapped_column(
+        ForeignKey("purchase_orders.id"), nullable=True,
+        comment="ID Purchase Order customer yang di-transportirkan"
+    )
+    customer_id: Mapped[str | None] = mapped_column(
+        ForeignKey("customers.id"), nullable=True,
+        comment="ID customer (end customer, dari PO Customer)"
+    )

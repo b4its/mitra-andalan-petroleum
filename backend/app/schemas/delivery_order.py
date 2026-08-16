@@ -12,7 +12,9 @@ class DeliveryOrderResponse(BaseModel):
     customer_id: str | None = None
     customer_name: str = ""
     id_purchase_order: str | None = None
+    id_po_transportir: str | None = None
     po_number: str | None = None
+    po_transportir_number: str | None = None
     transport_name: str | None = None
     fuel_total: float = 0
     status: str = "created"
@@ -38,6 +40,7 @@ class DeliveryOrderCreate(BaseModel):
     do_number: str
     customer_id: str | None = None
     id_purchase_order: str | None = None
+    id_po_transportir: str | None = None
     po_number: str | None = None
     transport_name: str | None = None
     fuel_total: float = 0
@@ -50,6 +53,7 @@ class DeliveryOrderUpdate(BaseModel):
     do_number: str | None = None
     customer_id: str | None = None
     id_purchase_order: str | None = None
+    id_po_transportir: str | None = None
     po_number: str | None = None
     transport_name: str | None = None
     fuel_total: float | None = None

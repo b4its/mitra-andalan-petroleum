@@ -16,6 +16,10 @@ class PoTransportirResponse(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
+    id_purchase_order: str | None = None
+    customer_id: str | None = None
+    customer_name: str = ""
+    purchase_order_number: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -29,6 +33,8 @@ class PoTransportirCreate(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
+    id_purchase_order: str | None = None
+    customer_id: str | None = None
 
 
 class PoTransportirUpdate(BaseModel):
@@ -40,3 +46,5 @@ class PoTransportirUpdate(BaseModel):
     status: str | None = None
     details: dict[str, Any] | None = None
     created_by: str | None = None
+    id_purchase_order: str | None = None
+    customer_id: str | None = None

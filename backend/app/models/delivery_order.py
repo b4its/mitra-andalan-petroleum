@@ -15,6 +15,10 @@ class DeliveryOrder(BaseModel):
         ForeignKey("purchase_orders.id"), nullable=True,
         comment="ID purchase order (parent). Satu PO dapat memiliki banyak DO"
     )
+    id_po_transportir: Mapped[str | None] = mapped_column(
+        ForeignKey("po_transportir.id"), nullable=True,
+        comment="ID PO Transportir sebagai parent baru DO (alur baru: PO Customer → PO Transportir → DO)"
+    )
     po_number: Mapped[str] = mapped_column(String(50), nullable=True)
     transport_name: Mapped[str] = mapped_column(String(100), nullable=True)
     fuel_total: Mapped[float] = mapped_column(Float, default=0)
