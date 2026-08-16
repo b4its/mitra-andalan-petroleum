@@ -12,12 +12,17 @@ defineProps<{
 const emit = defineEmits<{
   submit: []
   previous: []
+  preview: []
 }>()
 
 const state = defineModel<OperationsDOFooterState>({ required: true })
 
 function previous() {
   emit('previous')
+}
+
+function onPreview() {
+  emit('preview')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsDOFooterState>) {
@@ -78,13 +83,24 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOFooterState>) {
           Sebelumnya
         </UButton>
 
-        <UButton
-          :loading="isLoading"
-          type="submit"
-          trailing-icon="i-lucide-arrow-right"
-        >
-          Selesai
-        </UButton>
+        <div class="flex gap-2">
+          <UButton
+            color="info"
+            variant="soft"
+            leading-icon="i-lucide-eye"
+            @click="onPreview"
+          >
+            Preview Dokumen
+          </UButton>
+
+          <UButton
+            :loading="isLoading"
+            type="submit"
+            trailing-icon="i-lucide-arrow-right"
+          >
+            Selesai
+          </UButton>
+        </div>
       </div>
     </UPageCard>
   </UForm>

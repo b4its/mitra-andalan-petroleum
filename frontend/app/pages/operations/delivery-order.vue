@@ -15,12 +15,15 @@ import type {
   OperationsDOReceiverState,
   OperationsDOTransportState
 } from '~/types/schemas'
+import { useDeliveryOrderPdf } from '~/composables/useDeliveryOrderPdf'
 
 const { user } = useAuth()
 const { get, put, post } = useApi()
 const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
+const previewOpen = ref(false)
+const { buildDeliveryOrderPdf } = useDeliveryOrderPdf()
 const selectedDoId = ref('')
 const selectedPoId = ref('')
 const selectedPoTransportirId = ref('')
@@ -305,6 +308,18 @@ function onFormSubmitToNext() {
   stepper.value?.next()
 }
 
+async function buildPreviewPdf() {
+  const doData = {
+    ...doHeader,
+    ...doReceiver,
+    ...doTransport,
+    ...doDetailsTransport,
+    ...doAdditional,
+    ...doFooter
+  }
+  return await buildDeliveryOrderPdf(doData as unknown as Parameters<typeof buildDeliveryOrderPdf>[0])
+}
+
 // ── Saat user memilih PO Transportir (via poCustomerNumber) ──
 watch(
   () => doHeader.doInformation.poCustomerNumber,
@@ -556,10 +571,18 @@ definePageMeta({ layout: 'operations' })
             :is-loading="loading"
             :has-previous="stepper?.hasPrev"
             @previous="previousNavigation"
+            @preview="previewOpen = true"
             @submit="onFormSubmit"
           />
         </template>
       </UStepper>
+
+      <DocumentPreviewModal
+        :open="previewOpen"
+        title="Preview Surat Pengantar Pengiriman (Delivery Order)"
+        :build-pdf="buildPreviewPdf"
+        @close="previewOpen = false"
+      />
     </template>
   </UDashboardPanel>
 </template>
