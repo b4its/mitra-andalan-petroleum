@@ -787,7 +787,219 @@ const links = [
               </UCard>
             </div>
 
-            <div class="grid gap-4 lg:grid-cols-2">
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between">
+                  <p class="font-medium">
+                    Jurnal Terbaru
+                  </p>
+                  <UButton
+                    to="/accounting/jurnal-umum"
+                    size="sm"
+                    variant="ghost"
+                    color="primary"
+                  >
+                    Lihat Semua
+                  </UButton>
+                </div>
+              </template>
+
+              <div class="flex flex-col divide-y divide-default">
+                <div
+                  v-for="journal in accounting.recent_journals ?? []"
+                  :key="journal.id"
+                  class="flex items-center justify-between gap-2 py-2"
+                >
+                  <div class="min-w-0">
+                    <p class="truncate font-medium">
+                      {{ journal.description }}
+                    </p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                      {{ journal.entry_number }}
+                      · {{ formatDate(journal.entry_date) }}
+                    </p>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <p class="font-semibold">
+                      {{ formatCurrency(totalDebit(journal)) }}
+                    </p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                      {{ journal.lines.length }} baris
+                    </p>
+                  </div>
+                </div>
+
+                <p
+                  v-if="!accounting.recent_journals?.length"
+                  class="py-6 text-center text-sm text-neutral-500"
+                >
+                  Belum ada jurnal
+                </p>
+              </div>
+            </UCard>
+          </div>
+
+          <!-- Tabel Notifikasi + Search + Pagination -->
+          <div class="grid gap-6 xl:grid-cols-2">
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <p class="font-medium">
+                    Notifikasi Sistem
+                  </p>
+                  <UInput
+                    v-model="notifSearch"
+                    icon="i-lucide-search"
+                    placeholder="Cari notifikasi..."
+                    size="sm"
+                    class="w-48"
+                  />
+                </div>
+              </template>
+              <UTable
+                :data="pagedNotifications"
+                :columns="notificationColumns"
+              />
+              <UEmpty
+                v-if="!pagedNotifications.length"
+                icon="i-lucide-bell-off"
+                title="Tidak ada notifikasi"
+              />
+              <div
+                v-if="filteredNotifications.length > NOTIF_PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-3 mt-2"
+              >
+                <UPagination
+                  v-model:page="notifPage"
+                  :total="filteredNotifications.length"
+                  :items-per-page="NOTIF_PAGE_SIZE"
+                />
+              </div>
+            </UCard>
+
+            <!-- Tabel Aktivitas + Search + Pagination -->
+            <UCard>
+              <template #header>
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <p class="font-medium">
+                    Aktivitas Dokumen Terbaru
+                  </p>
+                  <UInput
+                    v-model="actSearch"
+                    icon="i-lucide-search"
+                    placeholder="Cari aktivitas..."
+                    size="sm"
+                    class="w-48"
+                  />
+                </div>
+              </template>
+              <UTable :data="pagedActivities" :columns="activityColumns" />
+              <UEmpty
+                v-if="!pagedActivities.length"
+                icon="i-lucide-history"
+                title="Tidak ada aktivitas"
+              />
+              <div
+                v-if="filteredActivities.length > ACT_PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-3 mt-2"
+              >
+                <UPagination
+                  v-model:page="actPage"
+                  :total="filteredActivities.length"
+                  :items-per-page="ACT_PAGE_SIZE"
+                />
+              </div>
+            </UCard>
+          </div>
+
+          <!-- Grafik (penutup halaman) -->
+          <div id="chartsSection">
+            <div class="mb-3 flex items-center justify-between">
+              <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+                Grafik
+              </p>
+              <p class="text-xs text-muted">
+                Visualisasi data keseluruhan sistem
+              </p>
+            </div>
+
+            <div class="grid gap-6 xl:grid-cols-3">
+              <UCard class="xl:col-span-2">
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Tren Dokumen per Periode
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik bar untuk detail
+                    </p>
+                  </div>
+                </template>
+                <AdminBarChart
+                  v-if="trendLabels.length"
+                  :labels="trendLabels"
+                  :datasets="trendDatasets"
+                  @bar-click="onBarClick"
+                />
+                <UEmpty
+                  v-else
+                  icon="i-lucide-chart-no-axes-combined"
+                  title="Belum ada tren"
+                />
+              </UCard>
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Distribusi Status Invoice
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik segment untuk detail
+                    </p>
+                  </div>
+                </template>
+                <AdminPieChart
+                  v-if="invoiceLabels.length"
+                  :labels="invoiceLabels"
+                  :data="invoiceValues"
+                  @segment-click="onPieSegmentClick"
+                />
+                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+              </UCard>
+            </div>
+
+            <!-- Distribusi Keseluruhan Data Sistem -->
+            <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <UCard v-for="key in distributionKeys" :key="key">
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium flex items-center gap-2">
+                      <UIcon
+                        :name="distributionIcons[key] ?? 'i-lucide-chart-pie'"
+                        class="size-4 text-primary"
+                      />
+                      {{ distributionLabels[key] ?? key }}
+                    </p>
+                    <p class="text-xs text-muted">
+                      {{ ((data?.distributions || {})[key] || []).length }}
+                      kategori
+                    </p>
+                  </div>
+                </template>
+                <AdminPieChart
+                  v-if="distributionChart(key).values.length"
+                  :labels="distributionChart(key).labels"
+                  :data="distributionChart(key).values"
+                  :background-color="distributionChart(key).colors"
+                  :height="220"
+                  @segment-click="(p) => onDistributionSegmentClick(key, p)"
+                />
+                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+              </UCard>
+            </div>
+
+            <!-- Grafik Accounting -->
+            <div class="mt-6 grid gap-4 lg:grid-cols-2">
               <UCard v-if="balanceSheetChart">
                 <template #header>
                   <p class="font-medium">
@@ -866,213 +1078,6 @@ const links = [
                 />
               </UCard>
             </div>
-
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Jurnal Terbaru
-                  </p>
-                  <UButton
-                    to="/accounting/jurnal-umum"
-                    size="sm"
-                    variant="ghost"
-                    color="primary"
-                  >
-                    Lihat Semua
-                  </UButton>
-                </div>
-              </template>
-
-              <div class="flex flex-col divide-y divide-default">
-                <div
-                  v-for="journal in accounting.recent_journals ?? []"
-                  :key="journal.id"
-                  class="flex items-center justify-between gap-2 py-2"
-                >
-                  <div class="min-w-0">
-                    <p class="truncate font-medium">
-                      {{ journal.description }}
-                    </p>
-                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                      {{ journal.entry_number }}
-                      · {{ formatDate(journal.entry_date) }}
-                    </p>
-                  </div>
-                  <div class="shrink-0 text-right">
-                    <p class="font-semibold">
-                      {{ formatCurrency(totalDebit(journal)) }}
-                    </p>
-                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                      {{ journal.lines.length }} baris
-                    </p>
-                  </div>
-                </div>
-
-                <p
-                  v-if="!accounting.recent_journals?.length"
-                  class="py-6 text-center text-sm text-neutral-500"
-                >
-                  Belum ada jurnal
-                </p>
-              </div>
-            </UCard>
-          </div>
-
-          <!-- Charts -->
-          <div id="chartsSection" class="flex justify-between">
-            <div>
-              <h1 class="text-2xl font-semibold">
-                Rekap Data Grafik
-              </h1>
-            </div>
-          </div>
-          <div class="grid gap-6 xl:grid-cols-3">
-            <UCard class="xl:col-span-2">
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Tren Dokumen per Periode
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik bar untuk detail
-                  </p>
-                </div>
-              </template>
-              <AdminBarChart
-                v-if="trendLabels.length"
-                :labels="trendLabels"
-                :datasets="trendDatasets"
-                @bar-click="onBarClick"
-              />
-              <UEmpty
-                v-else
-                icon="i-lucide-chart-no-axes-combined"
-                title="Belum ada tren"
-              />
-            </UCard>
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Distribusi Status Invoice
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik segment untuk detail
-                  </p>
-                </div>
-              </template>
-              <AdminPieChart
-                v-if="invoiceLabels.length"
-                :labels="invoiceLabels"
-                :data="invoiceValues"
-                @segment-click="onPieSegmentClick"
-              />
-              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
-            </UCard>
-          </div>
-
-          <!-- Distribusi Keseluruhan Data Sistem -->
-          <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            <UCard v-for="key in distributionKeys" :key="key">
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium flex items-center gap-2">
-                    <UIcon
-                      :name="distributionIcons[key] ?? 'i-lucide-chart-pie'"
-                      class="size-4 text-primary"
-                    />
-                    {{ distributionLabels[key] ?? key }}
-                  </p>
-                  <p class="text-xs text-muted">
-                    {{ ((data?.distributions || {})[key] || []).length }}
-                    kategori
-                  </p>
-                </div>
-              </template>
-              <AdminPieChart
-                v-if="distributionChart(key).values.length"
-                :labels="distributionChart(key).labels"
-                :data="distributionChart(key).values"
-                :background-color="distributionChart(key).colors"
-                :height="220"
-                @segment-click="(p) => onDistributionSegmentClick(key, p)"
-              />
-              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
-            </UCard>
-          </div>
-
-          <!-- Tabel Notifikasi + Search + Pagination -->
-          <div class="grid gap-6 xl:grid-cols-2">
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between gap-3 flex-wrap">
-                  <p class="font-medium">
-                    Notifikasi Sistem
-                  </p>
-                  <UInput
-                    v-model="notifSearch"
-                    icon="i-lucide-search"
-                    placeholder="Cari notifikasi..."
-                    size="sm"
-                    class="w-48"
-                  />
-                </div>
-              </template>
-              <UTable
-                :data="pagedNotifications"
-                :columns="notificationColumns"
-              />
-              <UEmpty
-                v-if="!pagedNotifications.length"
-                icon="i-lucide-bell-off"
-                title="Tidak ada notifikasi"
-              />
-              <div
-                v-if="filteredNotifications.length > NOTIF_PAGE_SIZE"
-                class="flex justify-end border-t border-default pt-3 mt-2"
-              >
-                <UPagination
-                  v-model:page="notifPage"
-                  :total="filteredNotifications.length"
-                  :items-per-page="NOTIF_PAGE_SIZE"
-                />
-              </div>
-            </UCard>
-
-            <!-- Tabel Aktivitas + Search + Pagination -->
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between gap-3 flex-wrap">
-                  <p class="font-medium">
-                    Aktivitas Dokumen Terbaru
-                  </p>
-                  <UInput
-                    v-model="actSearch"
-                    icon="i-lucide-search"
-                    placeholder="Cari aktivitas..."
-                    size="sm"
-                    class="w-48"
-                  />
-                </div>
-              </template>
-              <UTable :data="pagedActivities" :columns="activityColumns" />
-              <UEmpty
-                v-if="!pagedActivities.length"
-                icon="i-lucide-history"
-                title="Tidak ada aktivitas"
-              />
-              <div
-                v-if="filteredActivities.length > ACT_PAGE_SIZE"
-                class="flex justify-end border-t border-default pt-3 mt-2"
-              >
-                <UPagination
-                  v-model:page="actPage"
-                  :total="filteredActivities.length"
-                  :items-per-page="ACT_PAGE_SIZE"
-                />
-              </div>
-            </UCard>
           </div>
         </template>
       </div>

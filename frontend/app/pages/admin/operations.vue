@@ -299,58 +299,6 @@ const filterTabs = [
             </UCard>
           </div>
 
-          <!-- Charts -->
-          <div class="grid gap-6 lg:grid-cols-2">
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Tren Delivery Order per Periode
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik bar untuk detail
-                  </p>
-                </div>
-              </template>
-              <AdminBarChart
-                v-if="trendLabels.length"
-                :labels="trendLabels"
-                :datasets="[
-                  {
-                    label: 'Delivery Order',
-                    data: doTrendData,
-                    backgroundColor: 'rgba(245,158,11,0.7)'
-                  }
-                ]"
-                @bar-click="onBarClick"
-              />
-              <UEmpty
-                v-else
-                icon="i-lucide-chart-bar"
-                title="Belum ada data tren"
-              />
-            </UCard>
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Distribusi Status Delivery Order
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik segment untuk detail
-                  </p>
-                </div>
-              </template>
-              <AdminPieChart
-                v-if="doDistLabels.length"
-                :labels="doDistLabels"
-                :data="doDistValues"
-                @segment-click="onPieClick"
-              />
-              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
-            </UCard>
-          </div>
-
           <!-- Tabel DO dengan status alur lengkap -->
           <UCard>
             <template #header>
@@ -422,6 +370,68 @@ const filterTabs = [
               />
             </div>
           </UCard>
+
+          <!-- Grafik (penutup halaman) -->
+          <div>
+            <div class="mb-3 flex items-center justify-between">
+              <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+                Grafik
+              </p>
+              <p class="text-xs text-muted">
+                Visualisasi data operations
+              </p>
+            </div>
+            <div class="grid gap-6 lg:grid-cols-2">
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Tren Delivery Order per Periode
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik bar untuk detail
+                    </p>
+                  </div>
+                </template>
+                <AdminBarChart
+                  v-if="trendLabels.length"
+                  :labels="trendLabels"
+                  :datasets="[
+                    {
+                      label: 'Delivery Order',
+                      data: doTrendData,
+                      backgroundColor: 'rgba(245,158,11,0.7)'
+                    }
+                  ]"
+                  @bar-click="onBarClick"
+                />
+                <UEmpty
+                  v-else
+                  icon="i-lucide-chart-bar"
+                  title="Belum ada data tren"
+                />
+              </UCard>
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Distribusi Status Delivery Order
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik segment untuk detail
+                    </p>
+                  </div>
+                </template>
+                <AdminPieChart
+                  v-if="doDistLabels.length"
+                  :labels="doDistLabels"
+                  :data="doDistValues"
+                  @segment-click="onPieClick"
+                />
+                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+              </UCard>
+            </div>
+          </div>
         </template>
       </div>
     </template>

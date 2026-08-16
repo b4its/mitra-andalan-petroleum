@@ -398,82 +398,6 @@ function openDetail(id: string, type: 'invoice' | 'do') {
             </UCard>
           </div>
 
-          <!-- Charts -->
-          <div class="grid gap-6 lg:grid-cols-3">
-            <UCard class="lg:col-span-1">
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Tren Invoice per Periode
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik bar
-                  </p>
-                </div>
-              </template>
-              <AdminBarChart
-                v-if="trendLabels.length"
-                :labels="trendLabels"
-                :datasets="[
-                  {
-                    label: 'Invoice',
-                    data: invTrendData,
-                    backgroundColor: 'rgba(239,68,68,0.7)'
-                  }
-                ]"
-                @bar-click="onBarClick"
-              />
-              <UEmpty
-                v-else
-                icon="i-lucide-chart-bar"
-                title="Belum ada data tren"
-              />
-            </UCard>
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Status Pembayaran
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik segment
-                  </p>
-                </div>
-              </template>
-              <AdminPieChart
-                v-if="invDistLabels.length"
-                :labels="invDistLabels"
-                :data="invDistValues"
-                @segment-click="onPieClick"
-              />
-              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
-            </UCard>
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Status Tenggat
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik segment
-                  </p>
-                </div>
-              </template>
-              <AdminPieChart
-                v-if="deadlineDistLabels.length"
-                :labels="deadlineDistLabels"
-                :data="deadlineDistValues"
-                :background-color="[
-                  'rgba(16,185,129,0.8)',
-                  'rgba(245,158,11,0.8)',
-                  'rgba(239,68,68,0.8)'
-                ]"
-                @segment-click="onPieClick"
-              />
-              <UEmpty v-else icon="i-lucide-clock" title="Belum ada data" />
-            </UCard>
-          </div>
-
           <!-- Tabel Invoice -->
           <UCard>
             <template #header>
@@ -596,6 +520,92 @@ function openDetail(id: string, type: 'invoice' | 'do') {
               />
             </div>
           </UCard>
+
+          <!-- Grafik (penutup halaman) -->
+          <div>
+            <div class="mb-3 flex items-center justify-between">
+              <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+                Grafik
+              </p>
+              <p class="text-xs text-muted">
+                Visualisasi data finance
+              </p>
+            </div>
+            <div class="grid gap-6 lg:grid-cols-3">
+              <UCard class="lg:col-span-1">
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Tren Invoice per Periode
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik bar
+                    </p>
+                  </div>
+                </template>
+                <AdminBarChart
+                  v-if="trendLabels.length"
+                  :labels="trendLabels"
+                  :datasets="[
+                    {
+                      label: 'Invoice',
+                      data: invTrendData,
+                      backgroundColor: 'rgba(239,68,68,0.7)'
+                    }
+                  ]"
+                  @bar-click="onBarClick"
+                />
+                <UEmpty
+                  v-else
+                  icon="i-lucide-chart-bar"
+                  title="Belum ada data tren"
+                />
+              </UCard>
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Status Pembayaran
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik segment
+                    </p>
+                  </div>
+                </template>
+                <AdminPieChart
+                  v-if="invDistLabels.length"
+                  :labels="invDistLabels"
+                  :data="invDistValues"
+                  @segment-click="onPieClick"
+                />
+                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+              </UCard>
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Status Tenggat
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik segment
+                    </p>
+                  </div>
+                </template>
+                <AdminPieChart
+                  v-if="deadlineDistLabels.length"
+                  :labels="deadlineDistLabels"
+                  :data="deadlineDistValues"
+                  :background-color="[
+                    'rgba(16,185,129,0.8)',
+                    'rgba(245,158,11,0.8)',
+                    'rgba(239,68,68,0.8)'
+                  ]"
+                  @segment-click="onPieClick"
+                />
+                <UEmpty v-else icon="i-lucide-clock" title="Belum ada data" />
+              </UCard>
+            </div>
+          </div>
         </template>
       </div>
     </template>

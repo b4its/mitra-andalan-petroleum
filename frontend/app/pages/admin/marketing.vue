@@ -242,63 +242,6 @@ function openDetail(id: string) {
             </UCard>
           </div>
 
-          <!-- Charts -->
-          <div class="grid gap-6 lg:grid-cols-2">
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Tren Surat Penawaran & Purchase Order per Periode
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik bar untuk detail
-                  </p>
-                </div>
-              </template>
-              <AdminBarChart
-                v-if="trendLabels.length"
-                :labels="trendLabels"
-                :datasets="[
-                  {
-                    label: 'Surat Penawaran',
-                    data: olTrendData,
-                    backgroundColor: 'rgba(59,130,246,0.7)'
-                  },
-                  {
-                    label: 'Purchase Order',
-                    data: poTrendData,
-                    backgroundColor: 'rgba(16,185,129,0.7)'
-                  }
-                ]"
-                @bar-click="onBarClick"
-              />
-              <UEmpty
-                v-else
-                icon="i-lucide-chart-bar"
-                title="Belum ada data tren"
-              />
-            </UCard>
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Distribusi Status Surat Penawaran
-                  </p>
-                  <p class="text-xs text-muted">
-                    Klik segment untuk detail
-                  </p>
-                </div>
-              </template>
-              <AdminPieChart
-                v-if="olDistLabels.length"
-                :labels="olDistLabels"
-                :data="olDistValues"
-                @segment-click="onPieClick"
-              />
-              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
-            </UCard>
-          </div>
-
           <!-- Tabel SP + Search + Pagination -->
           <UCard>
             <template #header>
@@ -356,6 +299,73 @@ function openDetail(id: string) {
               />
             </div>
           </UCard>
+
+          <!-- Grafik (penutup halaman) -->
+          <div>
+            <div class="mb-3 flex items-center justify-between">
+              <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+                Grafik
+              </p>
+              <p class="text-xs text-muted">
+                Visualisasi data marketing
+              </p>
+            </div>
+            <div class="grid gap-6 lg:grid-cols-2">
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Tren Surat Penawaran & Purchase Order per Periode
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik bar untuk detail
+                    </p>
+                  </div>
+                </template>
+                <AdminBarChart
+                  v-if="trendLabels.length"
+                  :labels="trendLabels"
+                  :datasets="[
+                    {
+                      label: 'Surat Penawaran',
+                      data: olTrendData,
+                      backgroundColor: 'rgba(59,130,246,0.7)'
+                    },
+                    {
+                      label: 'Purchase Order',
+                      data: poTrendData,
+                      backgroundColor: 'rgba(16,185,129,0.7)'
+                    }
+                  ]"
+                  @bar-click="onBarClick"
+                />
+                <UEmpty
+                  v-else
+                  icon="i-lucide-chart-bar"
+                  title="Belum ada data tren"
+                />
+              </UCard>
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Distribusi Status Surat Penawaran
+                    </p>
+                    <p class="text-xs text-muted">
+                      Klik segment untuk detail
+                    </p>
+                  </div>
+                </template>
+                <AdminPieChart
+                  v-if="olDistLabels.length"
+                  :labels="olDistLabels"
+                  :data="olDistValues"
+                  @segment-click="onPieClick"
+                />
+                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+              </UCard>
+            </div>
+          </div>
         </template>
       </div>
     </template>
