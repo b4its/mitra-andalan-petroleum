@@ -1,176 +1,29 @@
 <script setup lang="ts">
 import type { TableCell } from 'pdfmake'
 import logoImage from '~/assets/images/map-logo.jpeg'
-import type { DeliveryOrdersDetails, Details } from '~/types/operations'
+import type { PoTransportirsDetails } from '~/types/operations'
 
 const pdfLink = ref<string | null>(null)
 const route = useRoute()
-const idDoLetter = route.params.id
+const idPoTransportir = route.params.id
 const { user } = useAuth()
 const { get } = useApi()
 
-const { data: doDetails, pending }
-  = await useAsyncData<DeliveryOrdersDetails | null>(
+const { data: poData, pending }
+  = await useAsyncData<PoTransportirsDetails | null>(
     'po-transportir-details',
     async () => {
-      const res = await get<DeliveryOrdersDetails>(
-        `/delivery-orders/${idDoLetter}`
+      const res = await get<PoTransportirsDetails>(
+        `/po-transportir/${idPoTransportir}`
       )
       return res
     },
     { default: () => null, server: false }
   )
 
-const details = computed<Details | null>(
-  () => doDetails.value?.details ?? null
+const details = computed<PoTransportirsDetails['details'] | null>(
+  () => poData.value?.details ?? null
 )
-
-const tableBodyDetails: TableCell[][] = [
-  [
-    {
-      text: 'NO',
-      bold: true,
-      verticalAlignment: 'middle',
-      alignment: 'center'
-    },
-    {
-      text: 'DESKRIPSI',
-      bold: true,
-      verticalAlignment: 'middle',
-      alignment: 'center'
-    },
-    {
-      text: 'Tanggal Loading',
-      bold: true,
-      verticalAlignment: 'middle',
-      alignment: 'center'
-    },
-    {
-      text: 'Tanggal Bongkar',
-      bold: true,
-      verticalAlignment: 'middle',
-      alignment: 'center'
-    },
-    {
-      text: 'VOL\n(LITER)',
-      bold: true,
-      verticalAlignment: 'middle',
-      alignment: 'center'
-    },
-    {
-      text: 'RATE/LITER\n(RP.)',
-      bold: true,
-      verticalAlignment: 'middle',
-      alignment: 'center'
-    },
-    {
-      text: 'TOTAL (Rp.)',
-      bold: true,
-      verticalAlignment: 'middle',
-      alignment: 'center'
-    }
-  ]
-]
-
-let count = 1
-const productsDummy = [
-  {
-    name: 'Bio Solar',
-    loadingDate: '08-07-2026',
-    unloadingDate: '08-07-2026',
-    qty: 20_000,
-    ratePrice: 300,
-    totalPrice: 6_000_000
-  }
-]
-
-for (const product of productsDummy) {
-  tableBodyDetails.push([
-    {
-      text: count.toString(),
-      alignment: 'center'
-    },
-    {
-      text: product.name || '',
-      alignment: 'left'
-    },
-    {
-      text: formatDateDoc(product.loadingDate) || '',
-      alignment: 'center'
-    },
-    {
-      text: formatDateDoc(product.unloadingDate) || '',
-      alignment: 'center'
-    },
-    {
-      text: product.qty || '',
-      alignment: 'center'
-    },
-    {
-      text: formatCurrency(product.ratePrice) || '',
-      alignment: 'center'
-    },
-    {
-      text: formatCurrency(product.totalPrice) || '',
-      alignment: 'center'
-    }
-  ])
-  count++
-}
-
-tableBodyDetails.push([
-  {
-    text: 'Total',
-    bold: true,
-    alignment: 'center',
-    colSpan: 6
-  },
-  {},
-  {},
-  {},
-  {},
-  {},
-  {
-    text: `${formatCurrency(6_000_000)}`,
-    alignment: 'center'
-  }
-])
-
-tableBodyDetails.push([
-  {
-    text: 'PPN',
-    bold: true,
-    alignment: 'center',
-    colSpan: 6
-  },
-  {},
-  {},
-  {},
-  {},
-  {},
-  {
-    text: `${formatCurrency(660_000)}`,
-    alignment: 'center'
-  }
-])
-
-tableBodyDetails.push([
-  {
-    text: 'Grand Total',
-    bold: true,
-    alignment: 'center',
-    colSpan: 6
-  },
-  {},
-  {},
-  {},
-  {},
-  {},
-  {
-    text: `${formatCurrency(6_660_000)}`,
-    alignment: 'center'
-  }
-])
 
 const loadPdf = async () => {
   const pdfMake = usePDFMake()
@@ -178,10 +31,175 @@ const loadPdf = async () => {
   const d = details.value
   if (!d) return
 
+  const products = d.products || []
+  const subTotal = products.reduce(
+    (sum, p) => sum + (p.totalPrice || 0),
+    0
+  )
+  const ppn = d.priceSummary?.ppn ?? Math.round(subTotal * (d.percentageNum?.ppn || 0.11))
+  const grandTotal = d.priceSummary?.grandTotal ?? subTotal + ppn
+
+  const tableBodyDetails: TableCell[][] = [
+    [
+      {
+        text: 'NO',
+        bold: true,
+        verticalAlignment: 'middle',
+        alignment: 'center'
+      },
+      {
+        text: 'DESKRIPSI',
+        bold: true,
+        verticalAlignment: 'middle',
+        alignment: 'center'
+      },
+      {
+        text: 'Tanggal Loading',
+        bold: true,
+        verticalAlignment: 'middle',
+        alignment: 'center'
+      },
+      {
+        text: 'Tanggal Bongkar',
+        bold: true,
+        verticalAlignment: 'middle',
+        alignment: 'center'
+      },
+      {
+        text: 'VOL\n(LITER)',
+        bold: true,
+        verticalAlignment: 'middle',
+        alignment: 'center'
+      },
+      {
+        text: 'RATE/LITER\n(RP.)',
+        bold: true,
+        verticalAlignment: 'middle',
+        alignment: 'center'
+      },
+      {
+        text: 'TOTAL (Rp.)',
+        bold: true,
+        verticalAlignment: 'middle',
+        alignment: 'center'
+      }
+    ]
+  ]
+
+  products.forEach((product, index) => {
+    tableBodyDetails.push([
+      {
+        text: (index + 1).toString(),
+        alignment: 'center'
+      },
+      {
+        text: product.name || '',
+        alignment: 'left'
+      },
+      {
+        text: formatDateDoc(product.loadingDate) || '',
+        alignment: 'center'
+      },
+      {
+        text: formatDateDoc(product.unloadingDate) || '',
+        alignment: 'center'
+      },
+      {
+        text: product.qty || '',
+        alignment: 'center'
+      },
+      {
+        text: formatCurrency(product.ratePrice) || '',
+        alignment: 'center'
+      },
+      {
+        text: formatCurrency(product.totalPrice) || '',
+        alignment: 'center'
+      }
+    ])
+  })
+
+  tableBodyDetails.push([
+    {
+      text: 'Total',
+      bold: true,
+      alignment: 'center',
+      colSpan: 6
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {
+      text: `${formatCurrency(subTotal)}`,
+      alignment: 'center'
+    }
+  ])
+
+  tableBodyDetails.push([
+    {
+      text: 'PPN',
+      bold: true,
+      alignment: 'center',
+      colSpan: 6
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {
+      text: `${formatCurrency(ppn)}`,
+      alignment: 'center'
+    }
+  ])
+
+  tableBodyDetails.push([
+    {
+      text: 'Grand Total',
+      bold: true,
+      alignment: 'center',
+      colSpan: 6
+    },
+    {},
+    {},
+    {},
+    {},
+    {},
+    {
+      text: `${formatCurrency(grandTotal)}`,
+      alignment: 'center'
+    }
+  ])
+
+  const companyContacts = d.contactPerson?.companyContactPerson || []
+  const customerContacts = d.contactPerson?.customerContactPerson || []
+  const rowCount = Math.max(companyContacts.length, customerContacts.length, 1)
+  const contactRows: TableCell[][] = Array.from(
+    { length: rowCount },
+    (_, i) => [
+      {
+        text: companyContacts[i]
+          ? `${i + 1}.   ${companyContacts[i]?.name}\n Telp: ${companyContacts[i]?.phoneNumber}`
+          : '',
+        border: [true, false, true,
+          companyContacts.length > 1 && i === companyContacts.length - 1] as [boolean, boolean, boolean, boolean]
+      },
+      {
+        text: customerContacts[i]
+          ? `${i + 1}.   ${customerContacts[i]?.name}\n Telp: ${customerContacts[i]?.phoneNumber}`
+          : '',
+        border: [true, false, true,
+          customerContacts.length > 1 && i === customerContacts.length - 1] as [boolean, boolean, boolean, boolean]
+      }
+    ]
+  )
+
   pdfLink.value = await pdfMake
     .createPdf({
       info: {
-        title: `Purchase Order Transportir (${d.doInformation?.doNumber || ''})`,
+        title: `Purchase Order Transportir (${d.poTransportNumber || ''})`,
         author: 'PT. Mitra Andalan Petroleum',
         creator: user.value?.name,
         producer: 'PT. Mitra Andalan Petroleum'
@@ -195,7 +213,7 @@ const loadPdf = async () => {
           marginLeft: -20
         },
         {
-          text: `Samarinda, ${formatDateDoc(new Date())}`,
+          text: `Samarinda, ${formatDateDoc(d.date || new Date())}`,
           alignment: 'right',
           marginRight: 35
         },
@@ -221,7 +239,7 @@ const loadPdf = async () => {
                   text: ':'
                 },
                 {
-                  text: `Purchase Order Transportir (PO)`
+                  text: d.regarding || 'Purchase Order Transportir (PO)'
                 }
               ],
               [
@@ -233,7 +251,7 @@ const loadPdf = async () => {
                   text: ':'
                 },
                 {
-                  text: `368/PO-TRANS/MAP/VIII/2026`
+                  text: d.poTransportNumber || ''
                 }
               ]
             ]
@@ -245,11 +263,11 @@ const loadPdf = async () => {
           text: 'Kepada Yth.'
         },
         {
-          text: `PT. Anugrah Mahakam Energy`,
+          text: d.receiver || '',
           bold: true
         },
         {
-          text: `PIC: Bpk Hence`,
+          text: `PIC: ${d.picPerson || '-'}`,
           bold: true,
           marginTop: 15,
           marginBottom: 15
@@ -261,12 +279,6 @@ const loadPdf = async () => {
 
         {
           layout: {
-            // paddingTop: function (i) {
-            //   return i === 0 ? 0 : 0;
-            // },
-            // paddingBottom: function (i) {
-            //   return i === 0 ? 0 : 0;
-            // },
             paddingLeft: function (_i) {
               return 5
             },
@@ -294,13 +306,12 @@ const loadPdf = async () => {
                 },
                 {
                   text: 'Loading'
-                  // marginRight: 25,
                 },
                 {
                   text: ':'
                 },
                 {
-                  text: `Masbro, Pendingin, Kutai Kartanegara, Kalimantan Timur`,
+                  text: d.loadingInformation || '',
                   marginLeft: -5
                 }
               ],
@@ -310,13 +321,12 @@ const loadPdf = async () => {
                 },
                 {
                   text: 'Discharge'
-                  // marginRight: 25,
                 },
                 {
                   text: ':'
                 },
                 {
-                  text: `PT. Bina Sarana Sukses\nSite TDM /Separi - Kutai Kartanegara`,
+                  text: d.discharge || '',
                   bold: true,
                   marginLeft: -5
                 }
@@ -327,13 +337,12 @@ const loadPdf = async () => {
                 },
                 {
                   text: 'Terms of Payment'
-                  // marginRight: 25,
                 },
                 {
                   text: ':'
                 },
                 {
-                  text: `30 Hari kerja setelah invoice beserta kelengkapan dokumen selesai diverifikasi`,
+                  text: d.termsOfPayment || '',
                   marginLeft: -5
                 }
               ],
@@ -342,7 +351,7 @@ const loadPdf = async () => {
                   text: '4.'
                 },
                 {
-                  text: `Toleransi susut 0.9 %, Claim Susut Rp. 25.000,- / Liter`,
+                  text: d.shrinkageTolerance || '',
                   bold: true,
                   colSpan: 3
                 },
@@ -378,36 +387,17 @@ const loadPdf = async () => {
             body: [
               [
                 {
-                  text: `PT. Mitra Andalan Petroleum`,
+                  text: d.contactPerson?.companyName || '',
                   bold: true,
                   alignment: 'center'
                 },
                 {
-                  text: `PT. Bina Sarana Sukses`,
+                  text: d.contactPerson?.customerName || '',
                   bold: true,
                   alignment: 'center'
                 }
               ],
-              [
-                {
-                  text: `1.   Aditya\n Telp: 0812 3456 7890`,
-                  border: [true, false, true, false]
-                },
-                {
-                  text: '',
-                  border: [true, false, true, false]
-                }
-              ],
-              [
-                {
-                  text: `2.   Fitri\n Telp: 0812 3456 7890`,
-                  border: [true, false, true, true]
-                },
-                {
-                  text: '',
-                  border: [true, false, true, true]
-                }
-              ]
+              ...contactRows
             ]
           }
         },
@@ -421,7 +411,7 @@ const loadPdf = async () => {
           width: 90
         },
         {
-          text: `(Nico Pratama)`,
+          text: `(${d.offeror?.name || '-'})`,
           marginTop: 30
         },
         {

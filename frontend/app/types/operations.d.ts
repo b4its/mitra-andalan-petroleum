@@ -153,3 +153,74 @@ export type TransportName
   = | 'CV. Tiga Putra Transport'
     | 'PT. Armada Kaltim Sejahtera'
     | 'PT. Borneo Distribusi Logistik'
+
+export interface PoTransportirs {
+  id: string
+  po_number: string
+  date: string | null
+  pic_person: string | null
+  receiver: string | null
+  total: number
+  status: Status
+  created_at: Date
+  updated_at: Date
+}
+
+export interface PoTransportirsDetails extends PoTransportirs {
+  details: PoTransportirDetails
+}
+
+export interface PoTransportirDetails {
+  date: string
+  poTransportNumber: string
+  regarding: string
+  receiver: string
+  picPerson: string
+  products: {
+    name: string
+    loadingDate: string
+    unloadingDate: string
+    qty: number
+    ratePrice: number
+    totalPrice: number
+  }[]
+  percentageNum: {
+    ppn: number
+  }
+  priceSummary: {
+    subTotal: number
+    ppn: number
+    grandTotal: number
+  }
+  loadingInformation: string
+  discharge: string
+  termsOfPayment: string
+  shrinkageTolerance: string
+  contactPerson: {
+    companyName: string
+    customerName: string
+    companyContactPerson?: {
+      name: string
+      phoneNumber: string
+    }[]
+    customerContactPerson?: {
+      name: string
+      phoneNumber: string
+    }[]
+  }
+  offeror: {
+    name: string
+    signature?: unknown
+  }
+}
+
+export interface PoTransportirsPost {
+  po_number: string
+  date: string
+  pic_person: string
+  receiver: string
+  total: number
+  status: string
+  details: PoTransportirDetails
+  created_by: string | null
+}

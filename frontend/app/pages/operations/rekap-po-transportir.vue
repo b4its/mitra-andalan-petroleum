@@ -2,7 +2,7 @@
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import { h } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { DeliveryOrders } from '~/types/operations'
+import type { PoTransportirs } from '~/types/operations'
 
 const table = useTemplateRef('table')
 const UBadge = resolveComponent('UBadge')
@@ -20,8 +20,8 @@ const {
     const params: Record<string, string | number> = { page: 1, page_size: 50 }
     if (debouncedSearch.value) params.search = debouncedSearch.value
 
-    const res = await get<{ items: DeliveryOrders[] }>(
-      '/delivery-orders',
+    const res = await get<{ items: PoTransportirs[] }>(
+      '/po-transportir',
       params
     )
     return res.items || []
@@ -29,26 +29,34 @@ const {
   { default: () => [], server: false, watch: [debouncedSearch] }
 )
 
-const columns: TableColumn<DeliveryOrders>[] = [
+const columns: TableColumn<PoTransportirs>[] = [
   {
-    accessorKey: 'do_number',
-    header: 'Nomor Delivery Order',
-    cell: ({ row }) => `${row.getValue('do_number')}`
+    accessorKey: 'po_number',
+    header: 'Nomor PO Transportir',
+    cell: ({ row }) => `${row.getValue('po_number')}`
   },
   {
-    accessorKey: 'transport_name',
+    accessorKey: 'date',
+    header: 'Tanggal',
+    cell: ({ row }) => {
+      const date = String(row.getValue('date') || '')
+      return date ? formatDateDoc(new Date(date)) : '-'
+    }
+  },
+  {
+    accessorKey: 'receiver',
     header: 'Transportir',
-    cell: ({ row }) => row.getValue('transport_name') || '-'
+    cell: ({ row }) => row.getValue('receiver') || '-'
   },
   {
-    accessorKey: 'customer_name',
-    header: 'Customer',
-    cell: ({ row }) => row.getValue('customer_name') || '-'
+    accessorKey: 'pic_person',
+    header: 'PIC',
+    cell: ({ row }) => row.getValue('pic_person') || '-'
   },
   {
-    accessorKey: 'fuel_total',
-    header: 'Volume BBM',
-    cell: ({ row }) => `${formatNumber(row.getValue('fuel_total'))} L`
+    accessorKey: 'total',
+    header: 'Total',
+    cell: ({ row }) => formatCurrency(row.getValue('total') as number)
   },
   {
     accessorKey: 'status',
@@ -62,9 +70,9 @@ const columns: TableColumn<DeliveryOrders>[] = [
         }[row.getValue('status') as string] ?? 'neutral'
       const label
         = {
-          created: 'Dibuat',
-          document_returned: 'Dokumen Dikembalikan',
-          completed: 'Selesai'
+          created: 'PO Telah Dibuat',
+          document_returned: 'PO Dikembalikan',
+          completed: 'PO Selesai'
         }[row.getValue('status') as string] ?? row.getValue('status')
       return h(UBadge, { variant: 'subtle', color: color }, label)
     }
@@ -183,7 +191,8 @@ definePageMeta({ layout: 'operations' })
           v-if="!pending && rows.length === 0"
           class="py-6 text-center text-sm text-neutral-500"
         >
-          Belum ada Delivery Order untuk dibuatkan surat transportir
+          Belum ada PO Transportir. Buat melalui menu "Pembuatan PO
+          Transportir".
         </p>
       </div>
     </template>

@@ -5,9 +5,12 @@ import type {
   OperationsPOTransportFooterState,
   OperationsPOTransportHeaderState
 } from '~/types/schemas'
+import type { PoTransportirsDetails, PoTransportirsPost } from '~/types/operations'
 
 const toast = useToast()
 const loading = ref(false)
+const { user } = useAuth()
+const { post } = useApi()
 
 const items: StepperItem[] = [
   { title: 'Kop Surat PO Transportir', slot: 'poTransportHeader' },
@@ -83,20 +86,56 @@ async function onFormSubmit() {
 
     loading.value = true
 
-    const poTrasnportData = {
+    const poTransportData = {
       ...poTransportHeader,
       ...poTransportDetails,
       ...poTransportFooter
     }
 
-    console.log('Data submitted')
-    console.log(poTrasnportData)
+    const total
+      = poTransportData.priceSummary.grandTotal
+        || poTransportData.products.reduce(
+          (sum, p) => sum + (p.totalPrice || 0),
+          0
+        )
+
+    const today = new Date().toISOString().split('T')[0]
+    const poTransportPost: PoTransportirsPost = {
+      po_number: poTransportData.poTransportNumber.trim(),
+      date: poTransportData.date,
+      pic_person: poTransportData.picPerson,
+      receiver: poTransportData.receiver,
+      total,
+      status: 'created',
+      details: {
+        ...poTransportData,
+        products: poTransportData.products.map(p => ({
+          name: p.name,
+          qty: p.qty,
+          ratePrice: p.ratePrice,
+          totalPrice: p.totalPrice,
+          loadingDate: (p.loadingDate || today) as string,
+          unloadingDate: (p.unloadingDate || today) as string
+        }))
+      },
+      created_by: user.value?.id ?? null
+    }
+
+    const res = await post<PoTransportirsDetails, PoTransportirsPost>(
+      '/po-transportir',
+      poTransportPost
+    )
+
     toast.add({
       title: 'Sukses',
       icon: 'i-lucide-check-circle',
-      description: 'Data PO Transportir berhasil dibuat',
+      description: `Data PO Transportir ${res.po_number} berhasil dibuat`,
       color: 'success'
     })
+
+    await navigateTo(
+      `/operations/detail-transport/po-transportir-${res.id}`
+    )
   } catch (e) {
     toast.add({
       title: 'Gagal',
