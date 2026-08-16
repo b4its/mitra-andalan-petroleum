@@ -7,11 +7,25 @@ import type {
 } from '~/types/schemas'
 import type { PoTransportirsDetails, PoTransportirsPost } from '~/types/operations'
 import type { PurchaseOrdersSupplier, Product } from '~/types/marketing'
+import { usePoTransportPdf } from '~/composables/usePoTransportPdf'
 
 const toast = useToast()
 const loading = ref(false)
 const { user } = useAuth()
 const { get, post } = useApi()
+const { buildPoTransportPdf } = usePoTransportPdf()
+
+// ── Preview dokumen sebelum simpan ────────────────────────────
+const previewOpen = ref(false)
+
+async function buildPreviewPdf() {
+  const data = {
+    ...poTransportHeader,
+    ...poTransportDetails,
+    ...poTransportFooter
+  }
+  return await buildPoTransportPdf(data as unknown as Parameters<typeof buildPoTransportPdf>[0])
+}
 
 // ── Daftar PO Customer untuk dipilih (di form Rincian PO Transportir) ──
 const { data: purchaseOrderList } = await useAsyncData(
@@ -275,10 +289,18 @@ definePageMeta({ layout: 'operations' })
             :is-loading="loading"
             :has-previous="stepper?.hasPrev"
             @previous="previousNavigation"
+            @preview="previewOpen = true"
             @submit="onFormSubmit"
           />
         </template>
       </UStepper>
+
+      <DocumentPreviewModal
+        :open="previewOpen"
+        title="Preview Surat Purchase Order Transportir"
+        :build-pdf="buildPreviewPdf"
+        @close="previewOpen = false"
+      />
     </template>
   </UDashboardPanel>
 </template>

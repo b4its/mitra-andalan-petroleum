@@ -7,11 +7,13 @@ import {
 
 defineProps<{
   hasPrevious: boolean | undefined
+  isLoading?: boolean | undefined
 }>()
 
 const emit = defineEmits<{
   submit: []
   previous: []
+  preview: []
 }>()
 
 const state = defineModel<OperationsPOTransportFooterState>({ required: true })
@@ -66,6 +68,10 @@ function removeItem(
 
 function previous() {
   emit('previous')
+}
+
+function onPreview() {
+  emit('preview')
 }
 
 function onSubmit(_event: FormSubmitEvent<OperationsPOTransportFooterState>) {
@@ -242,9 +248,24 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportFooterState>) {
           Sebelumnya
         </UButton>
 
-        <UButton type="submit" trailing-icon="i-lucide-arrow-right">
-          Selanjutnya
-        </UButton>
+        <div class="flex gap-2">
+          <UButton
+            color="info"
+            variant="soft"
+            leading-icon="i-lucide-eye"
+            @click="onPreview"
+          >
+            Preview Dokumen
+          </UButton>
+
+          <UButton
+            :loading="isLoading"
+            type="submit"
+            trailing-icon="i-lucide-arrow-right"
+          >
+            Selanjutnya
+          </UButton>
+        </div>
       </div>
     </UPageCard>
   </UForm>
