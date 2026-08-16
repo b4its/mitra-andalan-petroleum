@@ -115,4 +115,13 @@ def seeded_db(client):
             {"id": ids["notif_id"], "title": "Test Notif", "msg": "Test message",
              "type": "info", "is_read": False, "now": now})
 
+        ids["po_transportir_id"] = str(uuid.uuid4())
+        conn.execute(text("""INSERT INTO po_transportir (id, po_number, date, pic_person,
+            receiver, total, status, created_at, updated_at)
+            VALUES (:id, :num, :dt, :pic, :recv, :total, :st, :now, :now)"""),
+            {"id": ids["po_transportir_id"], "num": "121/PO-TRANS/MAP/VI/2026",
+             "dt": "2026-06-05", "pic": "Bpk Bambang Nugroho",
+             "recv": "PT Armada Kaltim Sejahtera", "total": 4440000,
+             "st": "created", "now": now})
+
     return ids
