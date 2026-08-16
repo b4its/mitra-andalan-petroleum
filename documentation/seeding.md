@@ -104,6 +104,7 @@ cd mandalan/backend && source env/bin/activate && python -m app.db.migrate
 | Purchase Order | 10 | 5 PO customer + 5 PO supplier; produk PO supplier berisi `ppkb`/`pph`/`ppn`; sebagian PO supplier sudah **rilis dana** (`status_rilis_dana`) |
 | Delivery Order | 15 | terhubung ke PO customer, lengkap dengan `details` (catatan pengiriman, T2, dll.) |
 | Invoice | 15 | status `unpaid`, `paid`, `overdue` |
+| PO Transportir | 3 | surat ke transportir (PT. Armada Kaltim Sejahtera, CV. Tiga Putra Transport, PT. Borneo Distribusi Logistik) dengan detail produk/lokasi bongkar muat; status `created`/`completed` |
 | Notifikasi | 8 | info/warning/success/error ke berbagai role |
 | Sales | 5 | status `paid`, `failed`, `refunded` |
 | Accounting | 1 set | 21 akun (aset/kewajiban/ekuitas/pendapatan/beban) + 10 jurnal umum posted (termasuk pemasukan & pengeluaran) |
