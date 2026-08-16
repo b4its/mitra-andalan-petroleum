@@ -98,8 +98,8 @@ cd mandalan/backend && source env/bin/activate && python -m app.db.migrate
 | Data | Jumlah | Detail |
 | --- | --- | --- |
 | User | 5 | admin, operations, marketing, finance, accounting (lihat `setup.md` untuk akun default) — punya `signature_caption` + **file tanda tangan (upload)** |
-| Customer | 3 | PT. Bina Karya Sentosa, CV. Maju Jaya Abadi, PT. Sumber Rejeki Mandiri — punya `phone2` (telepon PIC) |
-| Supplier | 2 | PT. Supplier Logistik Mandiri, CV. Bahan Bakar Utama — punya `phone2`, `bank_name`, `bank_account` |
+| Customer | 3 | PT. Surya Tambang Energi, CV. Kaltim Jaya Abadi, PT. Borneo Energi Utama — punya `phone2` (telepon PIC), NPWP valid |
+| Supplier | 2 | PT. Persada Energi Nusantara, CV. Sinar Petrolindo — punya `phone2`, `bank_name`, `bank_account` |
 | Offering Letter | 15 | status campuran `created`, `under_revision`, `po_received`; `paymentMethod` (cash/kredit), `paymentTerm` string, `purchaseOrderDeadline` string, field `pph` |
 | Purchase Order | 10 | 5 PO customer + 5 PO supplier; produk PO supplier berisi `ppkb`/`pph`/`ppn`; sebagian PO supplier sudah **rilis dana** (`status_rilis_dana`) |
 | Delivery Order | 15 | terhubung ke PO customer, lengkap dengan `details` (catatan pengiriman, T2, dll.) |
@@ -150,7 +150,7 @@ Hasil yang diharapkan: `5 / 3 / 2 / 15 / 10 / 15 / 15`.
 ### Cek via UI
 
 1. Buka `http://localhost:8080`, login dengan salah satu akun default
-   (mis. `admin@email.com` / `admin123`).
+   (mis. `admin@mapetroleum.co.id` / `admin123`).
 2. Halaman login menampilkan daftar akun demo lengkap dengan passwordnya
    (endpoint `/api/v1/profiles/demo`, lihat `demo-login.md`).
 3. Cek halaman Marketing (Offering Letter/Purchase Order), Operations

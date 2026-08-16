@@ -43,11 +43,11 @@ Endpoint demo **bukan** perubahan dari endpoint lama — endpoint lama
 3. Akun seed (lihat `backend/app/db/seed.py` dan docstring
    `POST /api/v1/auth/login`) menggunakan kata sandi default yang sudah
    terdokumentasi:
-   - `admin@email.com` / `admin123` (admin)
-   - `ops@email.com` / `ops123` (operations)
-   - `marketing@email.com` / `marketing123` (marketing)
-   - `finance@email.com` / `finance123` (finance)
-   - `accounting@email.com` / `accounting123` (accounting)
+   - `admin@mapetroleum.co.id` / `admin123` (admin)
+   - `ops@mapetroleum.co.id` / `ops123` (operations)
+   - `marketing@mapetroleum.co.id` / `marketing123` (marketing)
+   - `finance@mapetroleum.co.id` / `finance123` (finance)
+   - `accounting@mapetroleum.co.id` / `accounting123` (accounting)
 
 ## Migrasi database
 

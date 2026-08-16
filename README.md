@@ -103,8 +103,8 @@ anti-flaky (login wajib `waitUntil: "networkidle"`).
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@email.com | admin123 |
-| Marketing | marketing@email.com | marketing123 |
-| Finance | finance@email.com | finance123 |
-| Operations | ops@email.com | ops123 |
-| Accounting | accounting@email.com | accounting123 |
+| Admin | admin@mapetroleum.co.id | admin123 |
+| Marketing | marketing@mapetroleum.co.id | marketing123 |
+| Finance | finance@mapetroleum.co.id | finance123 |
+| Operations | ops@mapetroleum.co.id | ops123 |
+| Accounting | accounting@mapetroleum.co.id | accounting123 |

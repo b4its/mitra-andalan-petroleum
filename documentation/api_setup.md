@@ -33,11 +33,11 @@ Interactive docs: [Swagger UI](http://localhost:8000/docs) | [ReDoc](http://loca
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@email.com | admin123 |
-| Marketing | marketing@email.com | marketing123 |
-| Finance | finance@email.com | finance123 |
-| Operations | ops@email.com | ops123 |
-| Accounting | accounting@email.com | accounting123 |
+| Admin | admin@mapetroleum.co.id | admin123 |
+| Marketing | marketing@mapetroleum.co.id | marketing123 |
+| Finance | finance@mapetroleum.co.id | finance123 |
+| Operations | ops@mapetroleum.co.id | ops123 |
+| Accounting | accounting@mapetroleum.co.id | accounting123 |
 
 ---
 
@@ -67,13 +67,13 @@ curl -X GET http://localhost:8000/api/v1/health
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@email.com","password":"admin123"}'
+  -d '{"email":"admin@mapetroleum.co.id","password":"admin123"}'
 ```
 
 ```json
 {
   "name": "Admin",
-  "email": "admin@email.com",
+  "email": "admin@mapetroleum.co.id",
   "role": "admin",
   "token": "token-f47ac10b-58cc-4372-a567-0e02b2c3d479",
   "logged_in_at": "2026-07-26T10:30:00.000000"
@@ -230,7 +230,7 @@ curl -X GET http://localhost:8000/api/v1/suppliers/uuid-supplier-1
 curl -X POST http://localhost:8000/api/v1/suppliers \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "PT Bahan Bakar Nusantara",
+    "name": "PT Persada Energi Nusantara",
     "address": "Jl. Industri Raya No. 8",
     "phone": "08222233344",
     "phone2": "081234567003",
@@ -243,7 +243,7 @@ curl -X POST http://localhost:8000/api/v1/suppliers \
 ```json
 {
   "id": "uuid-supplier-baru",
-  "name": "PT Bahan Bakar Nusantara",
+  "name": "PT Persada Energi Nusantara",
   "address": "Jl. Industri Raya No. 8",
   "phone": "08222233344",
   "phone2": "081234567003",
@@ -267,7 +267,7 @@ curl -X PUT http://localhost:8000/api/v1/suppliers/uuid-supplier-baru \
 ```json
 {
   "id": "uuid-supplier-baru",
-  "name": "PT Bahan Bakar Nusantara",
+  "name": "PT Persada Energi Nusantara",
   "address": "Jl. Industri Raya No. 8",
   "phone": "08222233344",
   "phone2": "081234567003",
@@ -305,7 +305,7 @@ curl -X GET http://localhost:8000/api/v1/profiles
   {
     "id": "uuid-user-1",
     "name": "Admin",
-    "email": "admin@email.com",
+    "email": "admin@mapetroleum.co.id",
     "role": "admin",
     "signature": "/media/profiles/xxxx.png",
     "signature_caption": "Admin"
@@ -323,7 +323,7 @@ curl -X GET http://localhost:8000/api/v1/profiles/uuid-user-1
 {
   "id": "uuid-user-1",
   "name": "Admin",
-  "email": "admin@email.com",
+  "email": "admin@mapetroleum.co.id",
   "role": "admin",
   "signature": "/media/profiles/xxxx.png",
   "signature_caption": "Admin"
@@ -337,7 +337,7 @@ curl -X POST http://localhost:8000/api/v1/profiles \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Staff Baru",
-    "email": "staff@email.com",
+    "email": "staff@mapetroleum.co.id",
     "password": "staff123",
     "role": "staff",
     "signature": "/media/profiles/xxxx.png",
@@ -349,7 +349,7 @@ curl -X POST http://localhost:8000/api/v1/profiles \
 {
   "id": "uuid-user-baru",
   "name": "Staff Baru",
-  "email": "staff@email.com",
+  "email": "staff@mapetroleum.co.id",
   "role": "staff",
   "signature": "/media/profiles/xxxx.png",
   "signature_caption": "Staff Baru - Marketing"
@@ -373,7 +373,7 @@ curl -X PUT http://localhost:8000/api/v1/profiles/uuid-user-baru \
 {
   "id": "uuid-user-baru",
   "name": "Staff Baru",
-  "email": "staff@email.com",
+  "email": "staff@mapetroleum.co.id",
   "role": "marketing",
   "signature": "/media/profiles/xxxx.png",
   "signature_caption": "Staff Baru - Marketing"
@@ -722,7 +722,7 @@ curl -X GET http://localhost:8000/api/v1/purchase-orders/uuid-po-1
     "delivery": {
       "loadingTerminal": "TBBM Balikpapan",
       "loadingDate": "2026-07-22",
-      "picOperationMap": "Budi"
+      "picOperationMap": "Bambang Nugroho"
     },
     "forwarder": {
       "trucking": "PT Logistik Nusantara"
@@ -923,14 +923,14 @@ curl -X GET http://localhost:8000/api/v1/delivery-orders/uuid-do-1
     "receiver": {
       "customerName": "PT Bintang Jaya",
       "address": "Jl. A. Yani No. 10",
-      "receiverInformation": { "name": "Budi", "phoneNumber": "08123456789" },
+      "receiverInformation": { "name": "Dedi Kurniawan", "phoneNumber": "0812 5617 8230" },
       "dateReceived": "2026-07-21"
     },
     "transport": {
       "transportName": "PT Logistik Nusantara",
       "transportId": "TRK-001",
       "address": "Jl. Transport No. 1",
-      "driverInformation": { "name": "Slamet", "phoneNumber": "08234567890" },
+      "driverInformation": { "name": "Supriyanto", "phoneNumber": "0812 3027 4491" },
       "helperName": "Joko",
       "dateReceived": "2026-07-21"
     },
@@ -940,7 +940,7 @@ curl -X GET http://localhost:8000/api/v1/delivery-orders/uuid-do-1
       "total": 20000
     },
     "additional": { "notes": [{ "note": "Hati-hati muatan" }], "t2Depot": 30, "t2Unloading": 28, "indexSensitivity": 0.5, "fuelReceived": 19980 },
-    "footer": { "companyCoordinator": "Andi", "distributionAdmin": "Rina", "receiver": "Budi", "driver": "Slamet" }
+    "footer": { "companyCoordinator": "Bambang Nugroho", "distributionAdmin": "Rina Marlina", "receiver": "Dedi Kurniawan", "driver": "Supriyanto" }
   },
   "created_at": "2026-07-21T08:00:00",
   "updated_at": "2026-07-21T08:00:00"
@@ -973,15 +973,15 @@ curl -X POST http://localhost:8000/api/v1/delivery-orders \
       "receiver": {
         "customerName": "PT Bintang Jaya",
         "address": "Jl. A. Yani No. 10",
-        "receiverInformation": { "name": "Budi" },
+        "receiverInformation": { "name": "Dedi Kurniawan" },
         "dateReceived": "2026-07-26"
       },
       "transport": {
         "transportName": "PT Angkut Cepat",
-        "driverInformation": { "name": "Slamet" },
+        "driverInformation": { "name": "Supriyanto" },
         "dateReceived": "2026-07-26"
       },
-      "footer": { "companyCoordinator": "Andi", "distributionAdmin": "Rina" }
+      "footer": { "companyCoordinator": "Bambang Nugroho", "distributionAdmin": "Rina Marlina" }
     }
   }'
 ```
@@ -1485,7 +1485,7 @@ curl "http://localhost:8000/api/v1/accounting/ledger-all?date_from=2026-06-01&da
           "id": "uuid-line-1",
           "entry_number": "JRM-202606-0001",
           "entry_date": "2026-06-05",
-          "description": "Penjualan BBM tunai ke PT. Bina Karya Sentosa",
+          "description": "Penjualan BBM tunai ke PT. Surya Tambang Energi",
           "account_code": "1-1000",
           "account_name": "Kas Besar",
           "debit": 50000000,
@@ -1777,7 +1777,7 @@ curl -X PUT http://localhost:8000/api/v1/offering-letters/uuid-ol-1 \
       "companyInformation": {
         "address": "Jl. Contoh",
         "phoneNumber": "081234",
-        "email": "map@email.com"
+        "email": "map@mapetroleum.co.id"
       }
     }
   }'
