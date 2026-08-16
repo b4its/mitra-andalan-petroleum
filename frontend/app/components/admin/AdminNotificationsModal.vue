@@ -1,163 +1,173 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
+import { h } from "vue";
+import type { TableColumn } from "@nuxt/ui";
 
-const props = defineProps<{ open: boolean }>()
-const emit = defineEmits<{ 'update:open': [value: boolean] }>()
+const props = defineProps<{ open: boolean }>();
+const emit = defineEmits<{ "update:open": [value: boolean] }>();
+const columnPinning = ref({
+  right: ["actions"],
+});
 
-const { get, put } = useApi()
+const { get, put } = useApi();
 
 // ── Fetch ─────────────────────────────────────────────────────
 const { data, pending, error, refresh } = await useAsyncData(
-  'admin-notifications-list',
-  () => get<any[]>('/notifications'),
-  { default: () => [] }
-)
+  "admin-notifications-list",
+  () => get<any[]>("/notifications"),
+  { default: () => [] },
+);
 
 const notifications = computed<any[]>(() =>
-  Array.isArray(data.value) ? data.value : []
-)
+  Array.isArray(data.value) ? data.value : [],
+);
 
-watch(() => props.open, (isOpen) => {
-  if (isOpen) refresh()
-})
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (isOpen) refresh();
+  },
+);
 
 // ── Search (frontend) ─────────────────────────────────────────
-const search = ref('')
+const search = ref("");
 
 const filtered = computed(() => {
-  const q = search.value.trim().toLowerCase()
-  if (!q) return notifications.value
+  const q = search.value.trim().toLowerCase();
+  if (!q) return notifications.value;
 
   return notifications.value.filter((n) => {
     // Gunakan kurung kurawal {} dan let/const di sini
-    const is_reading = n.is_read ? 'Dibaca' : 'Belum'
+    const is_reading = n.is_read ? "Dibaca" : "Belum";
 
     // Wajib pakai 'return' untuk mengembalikan hasil filternya
     return (
-      n.title?.toLowerCase().includes(q)
-      || n.message?.toLowerCase().includes(q)
-      || n.user_name?.toLowerCase().includes(q)
-      || is_reading.toLowerCase().includes(q)
-      || n.type?.toLowerCase().includes(q)
-    )
-  })
-})
+      n.title?.toLowerCase().includes(q) ||
+      n.message?.toLowerCase().includes(q) ||
+      n.user_name?.toLowerCase().includes(q) ||
+      is_reading.toLowerCase().includes(q) ||
+      n.type?.toLowerCase().includes(q)
+    );
+  });
+});
 
 // ── Pagination ────────────────────────────────────────────────
-const page = ref(1)
-const PAGE_SIZE = 10
+const page = ref(1);
+const PAGE_SIZE = 10;
 watch(search, () => {
-  page.value = 1
-})
+  page.value = 1;
+});
 
 const paged = computed(() => {
-  const start = (page.value - 1) * PAGE_SIZE
-  return filtered.value.slice(start, start + PAGE_SIZE)
-})
+  const start = (page.value - 1) * PAGE_SIZE;
+  return filtered.value.slice(start, start + PAGE_SIZE);
+});
 
 // ── Mark as read ──────────────────────────────────────────────
 async function markAsRead(id: string) {
   try {
-    await put(`/notifications/${id}`, { is_read: true })
-    refresh()
+    await put(`/notifications/${id}`, { is_read: true });
+    refresh();
   } catch {
     // silently ignore
   }
 }
 
 // ── Detail modal ──────────────────────────────────────────────
-const detailOpen = ref(false)
-const selectedNotif = ref<any>(null)
+const detailOpen = ref(false);
+const selectedNotif = ref<any>(null);
 
 function openDetail(notif: any) {
-  selectedNotif.value = notif
+  selectedNotif.value = notif;
   // Tutup modal list, buka detail
-  emit('update:open', false)
-  detailOpen.value = true
+  emit("update:open", false);
+  detailOpen.value = true;
   // Tandai dibaca otomatis saat dibuka
-  if (!notif.is_read) markAsRead(notif.id)
+  if (!notif.is_read) markAsRead(notif.id);
 }
 
 function closeDetail() {
-  detailOpen.value = false
+  detailOpen.value = false;
   // Buka kembali modal list
-  emit('update:open', true)
+  emit("update:open", true);
 }
 
 // ── Type badge ────────────────────────────────────────────────
-const typeColor: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
-  info: 'info',
-  success: 'success',
-  warning: 'warning',
-  error: 'error'
-}
+const typeColor: Record<string, "info" | "success" | "warning" | "error"> = {
+  info: "info",
+  success: "success",
+  warning: "warning",
+  error: "error",
+};
 
 function formatDateTime(raw: any): string {
-  if (!raw) return '-'
-  const d = new Date(raw)
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  const hh = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${dd}-${mm}-${yyyy}, ${hh}:${min}`
+  if (!raw) return "-";
+  const d = new Date(raw);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}-${mm}-${yyyy}, ${hh}:${min}`;
 }
 
 // ── Kolom tabel ───────────────────────────────────────────────
 const columns: TableColumn<any>[] = [
   {
-    accessorKey: 'created_at',
-    header: 'Waktu',
-    cell: ({ row }) => formatDateTime(row.getValue('created_at'))
+    accessorKey: "created_at",
+    header: "Waktu",
+    cell: ({ row }) => formatDateTime(row.getValue("created_at")),
   },
   {
-    accessorKey: 'user_name',
-    header: 'Pengguna',
-    cell: ({ row }) => row.getValue('user_name') || '-'
+    accessorKey: "user_name",
+    header: "Pengguna",
+    cell: ({ row }) => row.getValue("user_name") || "-",
   },
   {
-    accessorKey: 'is_read',
-    header: 'Status',
+    accessorKey: "is_read",
+    header: "Status",
     cell: ({ row }) => {
-      const read = row.getValue('is_read') as boolean
-      return h(resolveComponent('UBadge'), {
-        variant: 'subtle',
-        color: read ? 'success' : 'warning'
-      }, () => read ? 'Dibaca' : 'Belum')
-    }
+      const read = row.getValue("is_read") as boolean;
+      return h(
+        resolveComponent("UBadge"),
+        {
+          variant: "subtle",
+          color: read ? "success" : "warning",
+        },
+        () => (read ? "Dibaca" : "Belum"),
+      );
+    },
   },
 
-  { accessorKey: 'title', header: 'Judul' },
-  { accessorKey: 'message', header: 'Pesan' },
+  { accessorKey: "title", header: "Judul" },
+  { accessorKey: "message", header: "Pesan" },
 
   {
-    id: 'actions',
-    header: '',
+    id: "actions",
+    header: "",
     cell: ({ row }) => {
-      const notif = row.original
-      return h('div', { class: 'flex items-center gap-1' }, [
-        h(resolveComponent('UButton'), {
-          size: 'xs',
-          variant: 'ghost',
-          color: 'primary',
-          icon: 'i-lucide-eye',
-          label: 'Lihat',
-          onClick: () => openDetail(notif)
+      const notif = row.original;
+      return h("div", { class: "flex items-center gap-1" }, [
+        h(resolveComponent("UButton"), {
+          size: "xs",
+          variant: "ghost",
+          color: "primary",
+          icon: "i-lucide-eye",
+          label: "Lihat",
+          onClick: () => openDetail(notif),
         }),
         !notif.is_read
-          ? h(resolveComponent('UButton'), {
-              size: 'xs',
-              variant: 'soft',
-              color: 'neutral',
-              label: 'Tandai dibaca',
-              onClick: () => markAsRead(notif.id)
+          ? h(resolveComponent("UButton"), {
+              size: "xs",
+              variant: "soft",
+              color: "neutral",
+              label: "Tandai dibaca",
+              onClick: () => markAsRead(notif.id),
             })
-          : null
-      ])
-    }
-  }
-]
+          : null,
+      ]);
+    },
+  },
+];
 </script>
 
 <template>
@@ -202,7 +212,11 @@ const columns: TableColumn<any>[] = [
           </div>
         </div>
 
-        <UTable :data="paged" :columns="columns" />
+        <UTable
+          :data="paged"
+          :column-pinning="columnPinning"
+          :columns="columns"
+        />
 
         <UEmpty
           v-if="!paged.length"
@@ -229,7 +243,11 @@ const columns: TableColumn<any>[] = [
   <UModal
     :open="detailOpen"
     :ui="{ content: 'max-w-lg' }"
-    @update:open="(val) => { if (!val) closeDetail() }"
+    @update:open="
+      (val) => {
+        if (!val) closeDetail();
+      }
+    "
   >
     <template #title>
       <div class="flex items-center gap-2">
@@ -253,24 +271,20 @@ const columns: TableColumn<any>[] = [
             :color="selectedNotif.is_read ? 'success' : 'warning'"
             variant="subtle"
           >
-            {{ selectedNotif.is_read ? 'Sudah Dibaca' : 'Belum Dibaca' }}
+            {{ selectedNotif.is_read ? "Sudah Dibaca" : "Belum Dibaca" }}
           </UBadge>
         </div>
 
         <!-- Detail fields -->
         <div class="space-y-3 text-sm">
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">
-              Judul
-            </p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">Judul</p>
             <p class="font-semibold text-highlighted">
               {{ selectedNotif.title }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">
-              Pesan
-            </p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">Pesan</p>
             <p class="text-muted leading-relaxed">
               {{ selectedNotif.message }}
             </p>
@@ -281,7 +295,7 @@ const columns: TableColumn<any>[] = [
                 Pengguna
               </p>
               <p class="font-medium">
-                {{ selectedNotif.user_name || '-' }}
+                {{ selectedNotif.user_name || "-" }}
               </p>
             </div>
             <div>
@@ -301,9 +315,7 @@ const columns: TableColumn<any>[] = [
               </p>
             </div>
             <div>
-              <p class="text-xs text-muted uppercase tracking-wide mb-1">
-                ID
-              </p>
+              <p class="text-xs text-muted uppercase tracking-wide mb-1">ID</p>
               <p class="font-mono text-xs text-muted truncate">
                 {{ selectedNotif.id }}
               </p>
@@ -322,7 +334,12 @@ const columns: TableColumn<any>[] = [
           v-if="selectedNotif?.to"
           color="primary"
           icon="i-lucide-external-link"
-          @click="() => { closeDetail(); navigateTo(selectedNotif.to) }"
+          @click="
+            () => {
+              closeDetail();
+              navigateTo(selectedNotif.to);
+            }
+          "
         >
           Buka Halaman
         </UButton>

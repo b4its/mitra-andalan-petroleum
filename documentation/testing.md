@@ -19,13 +19,8 @@ docker compose exec mandalan-backend python -m pytest tests/ -v --cov=app --cov-
 docker compose exec mandalan-backend python -m pytest tests/test_auth.py -v
 ```
 
-**164 tests** covering auth, customers, suppliers, profiles, offering letters,
-purchase orders, delivery orders, invoices, notifications, sales, stats,
-accounting (akun, jurnal, buku besar, pemasukan/pengeluaran, monitoring, kas
-harian, dll), dan admin database.
-
-> Catatan: `pytest` diinstall sementara untuk test (tidak ada di image). Jalankan:
-> `docker exec mandalan-backend pip install -q pytest pytest-asyncio aiosqlite httpx`
+**95 tests** covering auth, customers, delivery orders, invoices, notifications,
+offering letters, profiles, purchase orders, stats, and suppliers.
 
 ---
 
@@ -48,10 +43,10 @@ docker compose exec mandalan-frontend sh -c 'cd /app && npx vitest run --exclude
 > backend running. Run them **from the host** where the port is exposed, or
 > exclude them inside the container.
 
-**47 tests (3 files)** — utility functions (formatCurrency, formatDate,
-formatPercent, randomInt, randomFrom), Zod schemas (addCustomer, profile,
-password, marketingOLHeader), dummy account integrity, dan API contract tests
-(auth, CRUD, pagination, CORS).
+**53 tests** — utility functions (formatCurrency, formatDate, formatPercent,
+randomInt, randomFrom), Zod schemas (addCustomer, profile, password,
+marketingOLHeader), dummy account integrity, and 22 API contract tests (auth,
+CRUD, pagination, CORS).
 
 ---
 
@@ -121,6 +116,6 @@ timeout 900 pnpm exec playwright test --reporter=line --workers=1
 
 | Layer | Command | Count |
 |---|---|---|
-| Backend | `pytest tests/ -v` | 164 |
-| Frontend (headless) | `npx vitest run` | 47 |
+| Backend | `pytest tests/ -v` | 95 |
+| Frontend (headless) | `npx vitest run` | 53 |
 | Frontend (browser) | `pnpm exec playwright test` | 76 |

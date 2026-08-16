@@ -11,10 +11,8 @@ Lokasi: `backend/app/db/seed.py` — dijalankan lewat `python -m app.db.seed`.
 ## Kapan seeder berjalan?
 
 1. **Otomatis saat backend start** — `docker-compose.yml` service `backend`
-   menjalankan **boot Python** (`python -m app.db.boot`) sebelum uvicorn:
-   tunggu database → **migrasi skema** (`python -m app.db.migrate`) →
-   **seeder** (`python -m app.db.seed`) → uvicorn. Boot memakai Python (bukan
-   shell script) agar aman dari masalah CRLF/LF saat clone di Windows.
+   menjalankan **migrasi skema** lalu seeder sebelum uvicorn:
+   `python -m app.db.migrate && python -m app.db.seed && uvicorn ...`.
    Artinya setiap `docker compose --profile full up -d --build` =
    **migrasi + build + seed menyatu**. Fungsi `seed_database` di lifespan
    (`backend/app/main.py`) tetap ada sebagai cadangan.
@@ -40,20 +38,16 @@ dari nol, jalankan `make reseed` secara eksplisit.
 
 | Perintah | Fungsi |
 | --- | --- |
-| `make doctor` | Periksa prasyarat (make, docker, docker compose plugin) |
-| `make build` | Build ulang service + seed menyatu (tunggu backend sehat) |
+| `make build` | Build ulang service + seed menyatu setelah `up` |
 | `make seed` | Isi data contoh (aman: hanya jika database kosong) |
 | `make reseed` | Hapus SEMUA data lalu isi ulang dari nol (setara `--force`) |
 | `make seed-check` | Periksa jumlah data & pola relasi hasil seed |
 | `make up` / `make down` / `make logs` / `make ps` | Kelola service |
 
-`make build` / `make up` secara otomatis **menunggu backend sehat** (healthcheck)
-sebelum menjalankan seed — sehingga aman dijalankan pertama kali.
-
 Setara dengan tanpa make (Docker):
 
 ```bash
-docker compose --profile full up -d --build   # build + boot + seed menyatu
+docker compose --profile full up -d --build   # build + seed menyatu
 docker exec mandalan-backend python -m app.db.seed         # seed
 docker exec mandalan-backend python -m app.db.seed --force # reseed
 docker exec mandalan-backend python -m app.db.seed --check # check
@@ -76,14 +70,9 @@ uvicorn app.main:app --reload --port 8000
 ## Migrasi skema (sebelum seed)
 
 Migrasi kolom ringan (ALTER TABLE idempotent) dipisah ke
-`backend/app/db/migrate.py` agar berjalan **sebelum seeder** di boot container
-(seeder butuh kolom seperti `signature`, `bank_account`, `phone2`, `rilis_dana_at`,
+`backend/app/db/migrate.py` agar berjalan **sebelum seeder** di entrypoint
+container (seeder butuh kolom seperti `signature`, `bank_account`, `phone2`,
 dll). Migrasi juga tetap dijalankan dari lifespan FastAPI saat uvicorn start.
-
-> ⚠️ `migrate.py` wajib meng-import model (`import app.models`) agar
-> `Base.metadata.create_all` membuat SEMUA tabel saat database baru — tanpa
-> ini, `create_all` diam-diam tidak membuat apa pun dan seed gagal dengan
-> `Table 'mandalan.users' doesn't exist`.
 
 ```bash
 # Manual (Docker)
@@ -97,17 +86,16 @@ cd mandalan/backend && source env/bin/activate && python -m app.db.migrate
 
 | Data | Jumlah | Detail |
 | --- | --- | --- |
-| User | 5 | admin, operations, marketing, finance, accounting (lihat `setup.md` untuk akun default) — punya `signature_caption` + **file tanda tangan (upload)** |
+| User | 5 | admin, operations, marketing, finance, accounting (lihat `setup.md` untuk akun default) — punya `signature_caption` (penanda siapa) |
 | Customer | 3 | PT. Bina Karya Sentosa, CV. Maju Jaya Abadi, PT. Sumber Rejeki Mandiri — punya `phone2` (telepon PIC) |
 | Supplier | 2 | PT. Supplier Logistik Mandiri, CV. Bahan Bakar Utama — punya `phone2`, `bank_name`, `bank_account` |
-| Offering Letter | 15 | status campuran `created`, `under_revision`, `po_received`; `paymentMethod` (cash/kredit), `paymentTerm` string, `purchaseOrderDeadline` string, field `pph` |
-| Purchase Order | 10 | 5 PO customer + 5 PO supplier; produk PO supplier berisi `ppkb`/`pph`/`ppn`; sebagian PO supplier sudah **rilis dana** (`status_rilis_dana`) |
+| Offering Letter | 15 | status campuran `created`, `under_revision`, `po_received`; `paymentTerm` string (contoh "7 Hari"), `purchaseOrderDeadline` string (contoh "1 - 14"), field `pph` di sellingPrice |
+| Purchase Order | 10 | 5 PO customer + 5 PO supplier; produk PO supplier berisi `ppkb`/`pph`/`ppn` |
 | Delivery Order | 15 | terhubung ke PO customer, lengkap dengan `details` (catatan pengiriman, T2, dll.) |
 | Invoice | 15 | status `unpaid`, `paid`, `overdue` |
 | Notifikasi | 8 | info/warning/success/error ke berbagai role |
 | Sales | 5 | status `paid`, `failed`, `refunded` |
 | Accounting | 1 set | 21 akun (aset/kewajiban/ekuitas/pendapatan/beban) + 10 jurnal umum posted (termasuk pemasukan & pengeluaran) |
-| Upload (tanda tangan) | 5 | file PNG tanda tangan per user (`document_type=profile`) dibuat otomatis di `media/profiles` |
 
 ## Verifikasi hasil seed
 
@@ -188,10 +176,9 @@ docker compose restart backend   # seed otomatis terisi saat backend start
 ## Referensi
 
 - `backend/app/db/seed.py` — script seeder (satu-satunya sumber kebenaran).
-- `backend/app/db/migrate.py` — migrasi skema ringan (ALTER TABLE idempotent + `create_all`), dijalankan sebelum seed.
-- `backend/app/db/boot.py` — boot container (tunggu DB → migrate → seed → uvicorn).
+- `backend/app/db/migrate.py` — migrasi skema ringan (ALTER TABLE idempotent), dijalankan sebelum seed.
 - `backend/app/main.py` — pemanggilan cadangan `seed_database` saat startup.
-- `docker-compose.yml` — service `backend` menjalankan `python -m app.db.boot`.
-- `Makefile` — target `doctor`/`build`/`seed`/`reseed`/`seed-check`.
+- `docker-compose.yml` — service `backend` menjalankan migrate + seed sebelum uvicorn.
+- `Makefile` — target `build`/`seed`/`reseed`/`seed-check`.
 - `documentation/setup.md` — cara menjalankan sistem secara keseluruhan.
 - `documentation/demo-login.md` — detail akun demo & endpoint `/profiles/demo`.

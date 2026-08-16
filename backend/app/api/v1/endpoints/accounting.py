@@ -891,7 +891,7 @@ async def get_cost_recap(
     "/accounting/monitoring",
     response_model=MonitoringResponse,
     summary="Rekap Monitoring Bulanan",
-    description="Rekap monitoring pendapatan, biaya, dan margin per bulan. Filter memakai range tanggal `date_from`/`date_to` (default: tahun berjalan).",
+    description="Rekap monitoring pendapatan, biaya, dan margin per bulan.",
 )
 async def get_monitoring(
     date_from: date | None = Query(default=None, description="Awal periode (default: 1 Januari tahun berjalan)"),
