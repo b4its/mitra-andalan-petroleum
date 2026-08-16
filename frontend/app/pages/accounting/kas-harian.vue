@@ -2,7 +2,7 @@
 import { h } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { ExportColumn } from '~/composables/useExport'
-import type { DailyCashResponse, DailyCashRow } from '~/types/accounting'
+import type { DailyCashResponse, DailyCashRow, AccountingAccount } from '~/types/accounting'
 
 const { get } = useApi()
 const { toCSV, toExcel, toPDF } = useExport()
@@ -11,6 +11,14 @@ const dateFrom = ref('')
 const dateTo = ref('')
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
+
+const accountFilters = ref<string[]>([])
+const { data: accounts } = await useAsyncData(
+  'accounting-accounts-options-kas-harian',
+  () => get<AccountingAccount[]>('/accounting/accounts'),
+  { default: () => [], server: false }
+)
+const accountItems = computed(() => accounts.value.map(a => ({ label: `${a.code} · ${a.name}`, value: a.id })))
 
 const exportColumns: ExportColumn<DailyCashRow>[] = [
   { header: 'Tanggal', accessor: (row: DailyCashRow) => formatDate(row.entry_date) },
@@ -36,12 +44,13 @@ function onExport(format: 'excel' | 'pdf' | 'csv') {
 const { data, refresh, pending } = await useAsyncData(
   'accounting-daily-cash',
   async () => {
-    const params: Record<string, string> = {}
+    const params: Record<string, string | string[]> = {}
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
+    if (accountFilters.value.length) params.account_ids = accountFilters.value
     return get<DailyCashResponse>('/accounting/daily-cash', params)
   },
-  { default: () => null, server: false }
+  { default: () => null, watch: [dateFrom, dateTo, accountFilters], server: false }
 )
 
 const filteredData = computed(() => {
@@ -131,6 +140,16 @@ definePageMeta({ layout: 'accounting' })
                   v-model="search"
                   icon="i-lucide-search"
                   placeholder="Cari deskripsi, akun..."
+                  class="w-64"
+                />
+                <USelectMenu
+                  v-model="accountFilters"
+                  :items="accountItems"
+                  value-key="value"
+                  multiple
+                  searchable
+                  searchable-placeholder="Cari akun..."
+                  placeholder="Akun Kas/Bank"
                   class="w-64"
                 />
                 <UFormField label="Dari Tanggal">

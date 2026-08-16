@@ -10,11 +10,13 @@ const API_BASE = '/api/v1'
 function apiUrl(path: string, params?: Record<string, unknown>) {
   const search = params
     ? '?' + new URLSearchParams(
-      Object.fromEntries(
-        Object.entries(params)
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, String(v)] as [string, string])
-      )
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== null)
+        .flatMap(([k, v]) =>
+          Array.isArray(v)
+            ? v.map(item => [k, String(item)] as [string, string])
+            : [[k, String(v)] as [string, string]]
+        )
     ).toString()
     : ''
   const url = `${API_BASE}${path}${search}`

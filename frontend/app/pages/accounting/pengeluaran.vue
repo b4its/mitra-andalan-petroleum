@@ -2,7 +2,7 @@
 import { h } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { ExportColumn } from '~/composables/useExport'
-import type { AccountingIncomeExpenseRow } from '~/types/accounting'
+import type { AccountingIncomeExpenseRow, AccountingAccount } from '~/types/accounting'
 
 const { get } = useApi()
 const { toCSV, toExcel, toPDF } = useExport()
@@ -13,6 +13,14 @@ const dateFrom = ref('')
 const dateTo = ref('')
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
+
+const accountFilters = ref<string[]>([])
+const { data: accounts } = await useAsyncData(
+  'accounting-accounts-options-pengeluaran',
+  () => get<AccountingAccount[]>('/accounting/accounts'),
+  { default: () => [], server: false }
+)
+const accountItems = computed(() => accounts.value.map(a => ({ label: `${a.code} · ${a.name}`, value: a.id })))
 
 const exportColumns: ExportColumn<AccountingIncomeExpenseRow>[] = [
   { header: 'Tanggal', accessor: (row: AccountingIncomeExpenseRow) => formatDate(row.entry_date) },
@@ -34,17 +42,18 @@ function onExport(format: 'excel' | 'pdf' | 'csv') {
 const { data: rows, refresh, pending } = await useAsyncData(
   'accounting-expenses',
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 50 }
+    const params: Record<string, string | number | string[]> = { page: 1, page_size: 50 }
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
     if (debouncedSearch.value) params.search = debouncedSearch.value
+    if (accountFilters.value.length) params.account_ids = accountFilters.value
     const res = await get<{ items: AccountingIncomeExpenseRow[], total: number }>(
       '/accounting/expenses',
       params
     )
     return res
   },
-  { default: () => ({ items: [], total: 0 }), server: false }
+  { default: () => ({ items: [], total: 0 }), watch: [debouncedSearch, dateFrom, dateTo, accountFilters], server: false }
 )
 
 const totalAmount = computed(() =>
@@ -131,6 +140,16 @@ definePageMeta({ layout: 'accounting' })
                   v-model="search"
                   icon="i-lucide-search"
                   placeholder="Cari nomor jurnal, deskripsi..."
+                  class="w-64"
+                />
+                <USelectMenu
+                  v-model="accountFilters"
+                  :items="accountItems"
+                  value-key="value"
+                  multiple
+                  searchable
+                  searchable-placeholder="Cari akun..."
+                  placeholder="Semua Akun"
                   class="w-64"
                 />
                 <UFormField label="Dari Tanggal">

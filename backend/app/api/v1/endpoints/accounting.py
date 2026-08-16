@@ -276,7 +276,7 @@ async def list_journals(
     search: str | None = Query(default=None),
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
-    account_id: str | None = Query(default=None),
+    account_ids: list[str] | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     base = select(JournalEntry)
@@ -290,10 +290,10 @@ async def list_journals(
         base = base.where(JournalEntry.entry_date >= date_from)
     if date_to:
         base = base.where(JournalEntry.entry_date <= date_to)
-    if account_id:
+    if account_ids:
         base = base.where(
             JournalEntry.id.in_(
-                select(JournalLine.journal_entry_id).where(JournalLine.account_id == account_id)
+                select(JournalLine.journal_entry_id).where(JournalLine.account_id.in_(account_ids))
             )
         )
     total_result = await db.execute(select(func.count()).select_from(base.subquery()))
@@ -582,7 +582,7 @@ async def get_trial_balance(db: AsyncSession = Depends(get_db)):
 async def _income_expense_rows(
     db: AsyncSession, account_type: str, amount_side: str,
     page: int, page_size: int, date_from: date | None, date_to: date | None,
-    search: str | None = None,
+    search: str | None = None, account_ids: list[str] | None = None,
 ):
     base = (
         select(JournalLine, JournalEntry.entry_number, JournalEntry.entry_date,
@@ -598,6 +598,8 @@ async def _income_expense_rows(
             Account.name.ilike(f"%{search}%"),
             Account.code.ilike(f"%{search}%"),
         ))
+    if account_ids:
+        base = base.where(JournalLine.account_id.in_(account_ids))
     if date_from:
         base = base.where(JournalEntry.entry_date >= date_from)
     if date_to:
@@ -637,10 +639,11 @@ async def list_income(
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
     search: str | None = Query(default=None),
+    account_ids: list[str] | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     items, total = await _income_expense_rows(
-        db, "revenue", "credit", page, page_size, date_from, date_to, search
+        db, "revenue", "credit", page, page_size, date_from, date_to, search, account_ids
     )
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
@@ -656,10 +659,11 @@ async def list_expenses(
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
     search: str | None = Query(default=None),
+    account_ids: list[str] | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     items, total = await _income_expense_rows(
-        db, "expense", "debit", page, page_size, date_from, date_to, search
+        db, "expense", "debit", page, page_size, date_from, date_to, search, account_ids
     )
     return PaginatedResponse(items=items, total=total, page=page, page_size=page_size)
 
@@ -1100,6 +1104,7 @@ async def get_monitoring(
 async def get_daily_cash(
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
+    account_ids: list[str] | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     # Cari akun Kas/Bank
@@ -1115,6 +1120,8 @@ async def get_daily_cash(
         return DailyCashResponse(opening_balance=0, closing_balance=0, total_debit=0, total_credit=0, rows=[])
 
     conditions = [JournalLine.account_id.in_(kas_ids)]
+    if account_ids:
+        conditions = [JournalLine.account_id.in_(account_ids)]
     if date_from:
         conditions.append(JournalEntry.entry_date >= date_from)
     if date_to:

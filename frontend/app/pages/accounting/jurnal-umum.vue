@@ -15,7 +15,7 @@ const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
 const dateFrom = ref('')
 const dateTo = ref('')
-const accountFilter = ref('')
+const accountFilters = ref<string[]>([])
 
 const { toCSV, toExcel, toPDF } = useExport()
 
@@ -49,18 +49,18 @@ function onExport(format: 'excel' | 'pdf' | 'csv') {
 const { data: journals, refresh, pending: pendingJournals } = await useAsyncData(
   'accounting-journals',
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 50 }
+    const params: Record<string, string | number | string[]> = { page: 1, page_size: 50 }
     if (debouncedSearch.value) params.search = debouncedSearch.value
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
-    if (accountFilter.value) params.account_id = accountFilter.value
+    if (accountFilters.value.length) params.account_ids = accountFilters.value
     const res = await get<{ items: AccountingJournal[] }>(
       '/accounting/journal',
       params
     )
     return res.items
   },
-  { default: () => [], watch: [debouncedSearch, dateFrom, dateTo, accountFilter], server: false }
+  { default: () => [], watch: [debouncedSearch, dateFrom, dateTo, accountFilters], server: false }
 )
 
 const { data: accounts, pending: pendingAccounts } = await useAsyncData(
@@ -281,12 +281,15 @@ definePageMeta({ layout: 'accounting' })
                 placeholder="Cari nomor atau deskripsi..."
                 class="w-64"
               />
-              <USelect
-                v-model="accountFilter"
+              <USelectMenu
+                v-model="accountFilters"
                 :items="accountItems"
                 value-key="value"
+                multiple
+                searchable
+                searchable-placeholder="Cari akun..."
                 placeholder="Semua Akun"
-                class="w-56"
+                class="w-64"
               />
               <UFormField label="Dari Tanggal">
                 <UInput v-model="dateFrom" type="date" />
