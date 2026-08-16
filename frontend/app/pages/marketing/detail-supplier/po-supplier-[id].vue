@@ -438,30 +438,62 @@ const loadPdf = async () => {
             body: [
               [
                 {
-                  text: [
+                  stack: [
                     {
-                      text: 'Created By\n\n\n\n'
+                      text: 'Created By',
+                      bold: true,
+                      alignment: 'center'
                     },
                     ...(createdByBarcode.value
-                      ? [{ image: createdByBarcode.value, width: 90 }]
-                      : []),
-                    {
-                      text: `\n(${details.signed.createdBy || ''})`
-                    }
+                      ? [
+                          {
+                            image: createdByBarcode.value,
+                            width: 90,
+                            alignment: 'center',
+                            marginTop: 6
+                          },
+                          {
+                            text: `(${details.signed.createdBy || ''})`,
+                            alignment: 'center',
+                            marginTop: 0
+                          }
+                        ]
+                      : [
+                          {
+                            text: `\n\n\n\n(${details.signed.createdBy || ''})`,
+                            alignment: 'center'
+                          }
+                        ])
                   ],
                   border: [true, false, false, true]
                 },
                 {
-                  text: [
+                  stack: [
                     {
-                      text: 'Approved By\n\n\n\n'
+                      text: 'Approved By',
+                      bold: true,
+                      alignment: 'center'
                     },
                     ...(approvedByBarcode.value
-                      ? [{ image: approvedByBarcode.value, width: 90 }]
-                      : []),
-                    {
-                      text: `\n(${details.signed.approvedBy || ''})`
-                    }
+                      ? [
+                          {
+                            image: approvedByBarcode.value,
+                            width: 90,
+                            alignment: 'center',
+                            marginTop: 6
+                          },
+                          {
+                            text: `(${details.signed.approvedBy || ''})`,
+                            alignment: 'center',
+                            marginTop: 0
+                          }
+                        ]
+                      : [
+                          {
+                            text: `\n\n\n\n(${details.signed.approvedBy || ''})`,
+                            alignment: 'center'
+                          }
+                        ])
                   ],
                   border: [false, false, true, true]
                 }
