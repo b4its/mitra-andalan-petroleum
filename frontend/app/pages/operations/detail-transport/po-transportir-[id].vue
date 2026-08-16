@@ -406,10 +406,7 @@ const loadPdf = async () => {
           marginTop: 25,
           marginBottom: logoImage ? 5 : 30
         },
-        {
-          image: await toBase64(logoImage),
-          width: 90
-        },
+
         {
           text: `(${d.offeror?.name || '-'})`,
           marginTop: 30
