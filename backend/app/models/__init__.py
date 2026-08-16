@@ -10,10 +10,10 @@ from app.models.notification import Notification
 from app.models.sale import Sale
 from app.models.upload import Upload
 from app.models.price import Price
+from app.models.po_transportir import PoTransportir
 from app.models.accounting import Account, JournalEntry, JournalLine
 
 __all__ = [
-    "BaseModel",
     "User",
     "Customer",
     "Supplier",
@@ -25,6 +25,7 @@ __all__ = [
     "Sale",
     "Upload",
     "Price",
+    "PoTransportir",
     "Account",
     "JournalEntry",
     "JournalLine",
