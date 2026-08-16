@@ -11,11 +11,14 @@ import type {
   MarketingPOCompanyState,
   MarketingPODetailsState
 } from '~/types/schemas'
+import { usePoSupplierPdf } from '~/composables/usePoSupplierPdf'
 
 const { get, post } = useApi()
 
 const toast = useToast()
 const { user } = useAuth()
+const previewOpen = ref(false)
+const { buildPoSupplierPdf } = usePoSupplierPdf()
 
 interface SupplierOption {
   id: string
@@ -189,6 +192,29 @@ function onFormSubmitToNext() {
   stepper.value?.next()
 }
 
+async function buildPreviewPdf() {
+  const poData = {
+    ...letterCompanyMain,
+    ...letterCompanyAssociate,
+    ...letterOfferDetails,
+    ...letterAdditional
+  }
+  const supplier = supplierList.value.find(s => s.id === poData.receiver?.id)
+  return await buildPoSupplierPdf(
+    poData as unknown as Parameters<typeof buildPoSupplierPdf>[0],
+    {
+      supplierName: supplier?.name || '',
+      poNumber: poData.po?.number || '',
+      createdByBarcode: poData.signed?.createdBy
+        ? generateBarcodeDataUrl(poData.signed.createdBy)
+        : '',
+      approvedByBarcode: poData.signed?.approvedBy
+        ? generateBarcodeDataUrl(poData.signed.approvedBy)
+        : ''
+    }
+  )
+}
+
 const loading = ref(false)
 
 async function onFormSubmit() {
@@ -316,8 +342,16 @@ definePageMeta({ layout: 'marketing' })
         :has-previous="stepper?.hasPrev"
         :is-loading="loading"
         @previous="previousNavigation"
+        @preview="previewOpen = true"
         @submit="onFormSubmit"
       />
     </template>
   </UStepper>
+
+  <DocumentPreviewModal
+    :open="previewOpen"
+    title="Preview Purchase Order Supplier"
+    :build-pdf="buildPreviewPdf"
+    @close="previewOpen = false"
+  />
 </template>
