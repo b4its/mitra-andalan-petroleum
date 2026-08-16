@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { StepperItem, NavigationMenuItem } from '@nuxt/ui'
-import type { Customer, PurchaseOrdersSupplier } from '~/types/marketing'
+import type { Customer } from '~/types/marketing'
 import type {
   DeliveryOrderPost,
-  DeliveryOrdersDetails
+  DeliveryOrdersDetails,
+  PoTransportirsDetails
 } from '~/types/operations'
 import type {
   OperationsDOAdditionalState,
@@ -21,31 +22,31 @@ const route = useRoute()
 const loading = ref(false)
 const selectedDoId = ref('')
 const selectedPoId = ref('')
+const selectedPoTransportirId = ref('')
 const editingDoId = computed(
   () =>
     (typeof route.query.do_id === 'string' ? route.query.do_id : '')
     || selectedDoId.value
 )
 
-const { data: purchaseOrderList, pending: pendingLinked } = await useAsyncData(
-  'purchase-orders-customer-for-do',
+// ── PO Transportir sebagai data source (alur baru: PO Customer → PO Transportir → DO) ──
+const { data: poTransportirList, pending: pendingLinked } = await useAsyncData(
+  'po-transportir-for-do',
   async () => {
-    const res = await get<{ items: PurchaseOrdersSupplier[] }>(
-      '/purchase-orders',
-      {
-        page: 1,
-        page_size: 100,
-        type: 'customer'
-      }
+    const res = await get<{ items: PoTransportirsDetails[] }>(
+      '/po-transportir',
+      { page: 1, page_size: 100 }
     )
-    return (res.items || []).map(po => ({
-      id: po.id,
-      purchaseOrderNumber: po.po_number,
-      customerName: po.customer_name || '',
-      customerId: po.customer_id || '',
-      fuelTotalQty: po.total ?? 0,
-      dateCreated: po.created_at?.toString() ?? '',
-      dateChanged: po.updated_at?.toString() ?? ''
+    return (res.items || []).map(pt => ({
+      id: pt.id,
+      poTransportirNumber: pt.po_number,
+      customerName: pt.customer_name || '',
+      customerId: pt.customer_id || '',
+      purchaseOrderId: pt.id_purchase_order || '',
+      purchaseOrderNumber: pt.purchase_order_number || '',
+      transportName: pt.receiver || '',
+      total: pt.total || 0,
+      details: pt.details || {}
     }))
   },
   { default: () => [], server: false }
@@ -201,22 +202,36 @@ function hydrateFormFromExistingDeliveryOrder(
 
   const details = value.details || {}
   const existingPo = details.doInformation?.poCustomerNumber
-  const poNumber = existingPo?.purchaseOrderNumber ?? value.po_number
-  const poFromList = purchaseOrderList.value.find(
-    po => po.purchaseOrderNumber === poNumber
-  )
+
+  // Cari di poTransportirList berdasarkan id_po_transportir atau po_transportir_number
+  const ptFromList = value.id_po_transportir
+    ? poTransportirList.value.find(pt => pt.id === value.id_po_transportir)
+    : poTransportirList.value.find(pt => pt.poTransportirNumber === value.po_transportir_number)
+
+  const poNumber = ptFromList?.purchaseOrderNumber
+    || existingPo?.purchaseOrderNumber
+    || value.po_number
+  const poId = ptFromList?.purchaseOrderId
+    || value.id_purchase_order
+    || existingPo?.id
+
   Object.assign(doHeader.companyInformation, details.companyInformation || {})
   Object.assign(doHeader.doInformation, {
     ...(details.doInformation || {}),
     poCustomerNumber: {
       ...(existingPo || {}),
-      id: value.id_purchase_order || poFromList?.id || existingPo?.id,
+      id: poId,
       purchaseOrderNumber: poNumber,
-      customerName: existingPo?.customerName ?? value.customer_name,
-      customerId: existingPo?.customerId ?? value.customer_id,
+      customerName: ptFromList?.customerName ?? existingPo?.customerName ?? value.customer_name,
+      customerId: ptFromList?.customerId ?? existingPo?.customerId ?? value.customer_id,
       fuelTotalQty: existingPo?.fuelTotalQty ?? value.fuel_total
     }
   })
+
+  // Set id_po_transportir untuk edit
+  if (value.id_po_transportir) {
+    selectedPoTransportirId.value = value.id_po_transportir
+  }
 
   Object.assign(doReceiver, {
     customerName: details.customerName || value.customer_name || '',
@@ -284,14 +299,15 @@ function onFormSubmitToNext() {
   stepper.value?.next()
 }
 
+// ── Saat user memilih PO Transportir (via poCustomerNumber) ──
 watch(
   () => doHeader.doInformation.poCustomerNumber,
   (value) => {
-    if (value) {
-      console.log(value)
+    if (value && typeof value === 'object' && 'id' in value) {
+      console.log('Selected PO Transportir / PO Customer:', value)
       doReceiver.customerName = value.customerName || ''
       doReceiver.customerId = value.customerId || ''
-      // Lengkapi alamat customer dari tabel customers berdasarkan customer_id PO
+      // Lengkapi alamat customer dari tabel customers berdasarkan customer_id
       const customer = customersById.value.get(value.customerId || '')
       if (customer) {
         if (customer.address) doReceiver.customerAddress = customer.address
@@ -302,6 +318,29 @@ watch(
       doAdditional.fuelReceived = value.fuelTotalQty || 0
       if (value.id) {
         selectedPoId.value = value.id
+      }
+
+      // Resolve PO Transportir dari id_purchase_order (value.id)
+      const pt = poTransportirList.value.find(
+        p => p.purchaseOrderId === value.id
+      )
+      if (pt) {
+        selectedPoTransportirId.value = pt.id
+        // Auto-fill transport name dari receiver PO Transportir
+        if (pt.transportName) {
+          doTransport.transportName = pt.transportName
+        }
+        // Auto-fill produk dari PO Transportir
+        const ptProducts = (pt.details as any)?.products || []
+        if (ptProducts.length > 0) {
+          const firstProduct = ptProducts[0]
+          doDetailsTransport.total = firstProduct.qty || pt.total || value.fuelTotalQty || 0
+          doDetailsTransport.productInformation.qty = firstProduct.qty || 0
+          doDetailsTransport.productInformation.name = firstProduct.name || 'Bio Solar'
+          doAdditional.fuelReceived = firstProduct.qty || 0
+        }
+      } else {
+        selectedPoTransportirId.value = null
       }
     }
   }
@@ -327,6 +366,7 @@ async function onFormSubmit() {
       date: doData.doInformation.doDateCreated,
       fuel_total: doData.total,
       id_purchase_order: doData.doInformation.poCustomerNumber.id || '',
+      id_po_transportir: selectedPoTransportirId.value || null,
       po_number:
         doData.doInformation.poCustomerNumber.purchaseOrderNumber || '',
       status: 'created',
@@ -343,7 +383,6 @@ async function onFormSubmit() {
 
     console.log('Data submitted')
     console.log(res)
-    // console.log(doPost);
     toast.add({
       title: 'Sukses',
       icon: 'i-lucide-check-circle',
@@ -359,20 +398,20 @@ async function onFormSubmit() {
   }
 }
 
-const purchaseOrders = computed(() =>
-  purchaseOrderList.value.map((entry) => {
+// ── PO Transportir dropdown items (menggantikan PO Customer dropdown) ──
+const poTransportirItems = computed(() =>
+  poTransportirList.value.map((entry) => {
     return {
-      label: entry.purchaseOrderNumber,
+      label: entry.poTransportirNumber,
       value: {
-        id: entry.id,
+        id: entry.purchaseOrderId,
         purchaseOrderNumber: entry.purchaseOrderNumber,
         customerName: entry.customerName,
         customerId: entry.customerId,
-        dateCreated: entry.dateCreated,
-        dateChanged: entry.dateChanged,
-        fuelTotalQty: entry.fuelTotalQty
+        fuelTotalQty: entry.total
       },
-      customerName: entry.customerName
+      customerName: entry.customerName,
+      subtitle: entry.transportName
     }
   })
 )
@@ -438,7 +477,7 @@ definePageMeta({ layout: 'operations' })
         <template #doHeader>
           <OperationsDOHeaderForm
             v-model="doHeader"
-            :purchase-orders="purchaseOrders"
+            :purchase-orders="poTransportirItems"
             :has-previous="stepper?.hasPrev"
             @previous="previousNavigation"
             @submit="onFormSubmitToNext"
