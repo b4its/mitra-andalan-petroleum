@@ -48,15 +48,15 @@ const { data: accounts, refresh, pending } = await useAsyncData(
       include_inactive: true
     }
     if (debouncedSearch.value) params.search = debouncedSearch.value
-    if (typeFilter.value) params.type = typeFilter.value
+    if (typeFilter.value && typeFilter.value !== 'all') params.type = typeFilter.value
     const res = await get<AccountingAccount[]>('/accounting/accounts', params)
     return res
   },
   { default: () => [], watch: [debouncedSearch, typeFilter], server: false }
 )
 
-const typeOptions: { label: string, value: AccountType | '', color: string }[] = [
-  { label: 'Semua Jenis', value: '', color: 'neutral' },
+const typeOptions: { label: string, value: string, color: string }[] = [
+  { label: 'Semua Jenis', value: 'all', color: 'neutral' },
   { label: 'Aset', value: 'asset', color: 'info' },
   { label: 'Kewajiban', value: 'liability', color: 'warning' },
   { label: 'Ekuitas', value: 'equity', color: 'primary' },
