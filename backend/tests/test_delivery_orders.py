@@ -55,6 +55,22 @@ def test_create_do_missing_number(client: TestClient, seeded_db):
     assert response.status_code == 422
 
 
+def test_create_delivery_order_with_po_transportir(client: TestClient, seeded_db):
+    """DO dibuat dari PO Transportir: data customer/fuel_total diambil via PT → PO Customer."""
+    pt_list = client.get("/api/v1/po-transportir?page=1&page_size=10")
+    pt = pt_list.json()["items"][0]
+    assert pt["id_purchase_order"] is not None, "Seeded PO Transportir harus punya id_purchase_order"
+    response = client.post("/api/v1/delivery-orders", json={
+        "do_number": "DO/FROM/PT/001",
+        "id_po_transportir": pt["id"]
+    })
+    assert response.status_code == 201
+    body = response.json()
+    assert body["id_po_transportir"] == pt["id"]
+    assert body["id_purchase_order"] == pt["id_purchase_order"]
+    assert body["po_transportir_number"] == pt["po_number"]
+
+
 def test_create_do_negative_fuel(client: TestClient, seeded_db):
     list_resp = client.get("/api/v1/customers")
     cust_id = list_resp.json()[0]["id"]

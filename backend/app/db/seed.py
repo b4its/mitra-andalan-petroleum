@@ -61,15 +61,15 @@ async def seed_database(db: AsyncSession, force: bool = False):
     await _seed_suppliers(db)
     await _seed_offering_letters(db)
     await _seed_purchase_orders(db)
+    await _seed_po_transportir(db)
     await _seed_delivery_orders(db)
     await _seed_invoices(db)
-    await _seed_po_transportir(db)
     await _seed_notifications(db)
     await _seed_sales(db)
     await _seed_accounting(db)
     await _seed_signatures(db)
     await db.commit()
-    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 15 DO, 15 invoice, 3 PO transportir, notifikasi, penjualan, akuntansi, tanda tangan).")
+    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 3 PO transportir, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan).")
 
 
 async def _clear_all(db: AsyncSession):
@@ -417,9 +417,11 @@ async def _seed_delivery_orders(db: AsyncSession):
     pos = (await db.execute(
         select(PurchaseOrder).where(PurchaseOrder.type == "customer")
     )).scalars().all()
+    po_transportirs = (await db.execute(select(PoTransportir))).scalars().all()
     ops_users = (await db.execute(select(User).where(User.role == "operations"))).scalars().all()
     creator = ops_users[0] if ops_users else None
     customer_by_id = {c.id: c for c in customers}
+    po_by_id = {p.id: p for p in pos}
     transports = [
         ("PT. Armada Kaltim Sejahtera", "KT 1832 AJ"),
         ("CV. Tiga Putra Transport", "KT 5741 BE"),
@@ -434,27 +436,31 @@ async def _seed_delivery_orders(db: AsyncSession):
     statuses = ["created", "document_returned"]
 
     for i in range(15):
-        po = pos[i % len(pos)]
-        customer = customer_by_id.get(po.customer_id) or customers[i % len(customers)]
+        # Ambil PO Transportir (cycle) untuk di-link
+        pt = po_transportirs[i % len(po_transportirs)] if po_transportirs else None
+        # Resolve PO Customer dari PO Transportir
+        linked_po = po_by_id.get(pt.id_purchase_order) if pt and pt.id_purchase_order else pos[i % len(pos)]
+        customer = customer_by_id.get(linked_po.customer_id) if linked_po else customers[i % len(customers)]
         fuel_total = 8000 + (i * 500)
         transport_name, transport_number = transports[i % len(transports)]
         driver_name, driver_phone = drivers[i % len(drivers)]
         status = statuses[i % 2]
         do_number = f"{i + 1:03d}/DO/MAP/VI/2026"
         po_customer_number = {
-            "id": po.id,
-            "purchaseOrderNumber": po.po_number,
+            "id": linked_po.id if linked_po else "",
+            "purchaseOrderNumber": linked_po.po_number if linked_po else "",
             "customerName": customer.name,
             "customerId": customer.id,
-            "dateCreated": po.date,
-            "dateChanged": po.date,
+            "dateCreated": linked_po.date if linked_po else "",
+            "dateChanged": linked_po.date if linked_po else "",
             "fuelTotalQty": fuel_total
         }
         do = DeliveryOrder(
             do_number=do_number,
-            customer_id=po.customer_id,
-            id_purchase_order=po.id,
-            po_number=po.po_number,
+            customer_id=customer.id,
+            id_purchase_order=linked_po.id if linked_po else None,
+            id_po_transportir=pt.id if pt else None,
+            po_number=linked_po.po_number if linked_po else "",
             transport_name=transport_name,
             fuel_total=fuel_total,
             status=status,
@@ -517,7 +523,7 @@ async def _seed_invoices(db: AsyncSession):
 
 # ── PO Transportir ─────────────────────────────────────────────
 
-def _po_transportir_details(po_number: str, receiver: str, pic_person: str, products: list, loading_date: str, discharge: str) -> str:
+def _po_transportir_details(po_number: str, receiver: str, pic_person: str, products: list, loading_date: str, discharge: str, customer_name: str | None = None) -> str:
     sub_total = sum(p["totalPrice"] for p in products)
     ppn = round(sub_total * 0.11)
     return json.dumps({
@@ -535,7 +541,7 @@ def _po_transportir_details(po_number: str, receiver: str, pic_person: str, prod
         "shrinkageTolerance": "Toleransi susut 0.3 %, Claim Susut Rp. 25.000,- / Liter",
         "contactPerson": {
             "companyName": "PT. Mitra Andalan Petroleum",
-            "customerName": receiver,
+            "customerName": customer_name or receiver,
             "companyContactPerson": [{"name": "Nico Pratama", "phoneNumber": "0812 3456 7890"}],
             "customerContactPerson": [{"name": "Dedi Kurniawan", "phoneNumber": "0812 5617 8230"}],
         },
@@ -547,6 +553,12 @@ async def _seed_po_transportir(db: AsyncSession):
     ops_users = (await db.execute(select(User).where(User.role == "operations"))).scalars().all()
     creator = ops_users[0] if ops_users else None
     pic_person = "Bpk Bambang Nugroho"
+
+    # Ambil PO Customer untuk di-link
+    pos = (await db.execute(
+        select(PurchaseOrder).where(PurchaseOrder.type == "customer")
+    )).scalars().all()
+    customers = {c.id: c for c in (await db.execute(select(Customer))).scalars().all()}
 
     records = [
         ("121/PO-TRANS/MAP/VI/2026", "2026-06-05", "PT. Armada Kaltim Sejahtera",
@@ -560,8 +572,12 @@ async def _seed_po_transportir(db: AsyncSession):
          "Site MHU - Kutai Kartanegara", "completed"),
     ]
 
-    for po_number, po_date, receiver, products, discharge, status in records:
+    for i, (po_number, po_date, receiver, products, discharge, status) in enumerate(records):
         sub_total = sum(p["totalPrice"] for p in products)
+        # Link ke PO Customer (cycle melalui PO yang ada)
+        linked_po = pos[i % len(pos)] if pos else None
+        customer_id = linked_po.customer_id if linked_po else None
+        customer = customers.get(customer_id) if customer_id else None
         po = PoTransportir(
             po_number=po_number,
             date=po_date,
@@ -570,7 +586,12 @@ async def _seed_po_transportir(db: AsyncSession):
             total=sub_total + round(sub_total * 0.11),
             status=status,
             created_by=creator.id if creator else None,
-            details=_po_transportir_details(po_number, receiver, pic_person, products, po_date, discharge),
+            id_purchase_order=linked_po.id if linked_po else None,
+            customer_id=customer_id,
+            details=_po_transportir_details(
+                po_number, receiver, pic_person, products, po_date, discharge,
+                customer_name=customer.name if customer else None,
+            ),
         )
         db.add(po)
     await db.flush()
@@ -816,6 +837,7 @@ async def _check_seed(db: AsyncSession) -> bool:
             all_ok = False
     print(f"  [{'OK' if all_ok else 'FAIL'}] delivery_orders -> purchase_orders ({len(dos)} DO terhubung ke PO)")
 
+    # Validasi PO Transportir → PO Customer
     pois = (await db.execute(select(PurchaseOrder))).scalars().all()
     po_linked = 0
     for po in pois:
@@ -832,6 +854,34 @@ async def _check_seed(db: AsyncSession) -> bool:
             print(f"  [FAIL] PO {po.po_number}: merujuk offering letter yang tidak ada")
             all_ok = False
     print(f"  [{'OK' if all_ok else 'FAIL'}] purchase_orders -> offering_letters ({po_linked} PO terhubung ke OL)")
+
+    # Validasi PO Transportir → PO Customer
+    potrans = (await db.execute(select(PoTransportir))).scalars().all()
+    potrans_ok = True
+    potrans_po_linked = 0
+    for pt in potrans:
+        if pt.id_purchase_order:
+            if pt.id_purchase_order not in pos:
+                print(f"  [FAIL] PO Transportir {pt.po_number}: id_purchase_order tidak merujuk PO yang valid")
+                potrans_ok = False
+            else:
+                potrans_po_linked += 1
+    print(f"  [{'OK' if potrans_ok else 'FAIL'}] po_transportir -> purchase_orders ({potrans_po_linked}/{len(potrans)} PO Transportir terhubung ke PO Customer)")
+    all_ok = all_ok and potrans_ok
+
+    # Validasi DO → PO Transportir
+    do_potrans_ok = True
+    do_potrans_linked = 0
+    potrans_ids = {pt.id for pt in potrans}
+    for do in dos:
+        if do.id_po_transportir:
+            if do.id_po_transportir not in potrans_ids:
+                print(f"  [FAIL] DO {do.do_number}: id_po_transportir tidak merujuk PO Transportir yang valid")
+                do_potrans_ok = False
+            else:
+                do_potrans_linked += 1
+    print(f"  [{'OK' if do_potrans_ok else 'FAIL'}] delivery_orders -> po_transportir ({do_potrans_linked}/{len(dos)} DO terhubung ke PO Transportir)")
+    all_ok = all_ok and do_potrans_ok
 
     import re
     format_ok = True

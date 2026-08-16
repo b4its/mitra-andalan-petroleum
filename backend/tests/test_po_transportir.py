@@ -15,6 +15,8 @@ def test_get_po_transportir_by_id(client: TestClient, seeded_db):
     response = client.get(f"/api/v1/po-transportir/{po_id}")
     assert response.status_code == 200
     assert response.json()["id"] == po_id
+    # Pastikan field baru ada di response
+    assert "id_purchase_order" in response.json()
 
 
 def test_get_po_transportir_not_found(client: TestClient, seeded_db):
