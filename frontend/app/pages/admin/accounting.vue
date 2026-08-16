@@ -27,10 +27,34 @@ definePageMeta({ layout: 'admin' })
 const { get } = useApi()
 const { toCSV, toExcel, toPDF } = useExport()
 
+// ── Filter global ─────────────────────────────────────────────
+const dateFrom = ref('')
+const dateTo = ref('')
+const accountFilters = ref<string[]>([])
+const { data: accountOptions } = await useAsyncData(
+  'admin-accounting-account-options',
+  () => get<AccountingAccount[]>('/accounting/accounts', { include_inactive: true }),
+  { default: () => [], server: false }
+)
+const accountItems = computed(() =>
+  accountOptions.value.map(a => ({ label: `${a.code} · ${a.name}`, value: a.id }))
+)
+
 // ── Data fetch ────────────────────────────────────────────────
 const { data, pending, refresh } = await useAsyncData(
   'admin-accounting',
   async () => {
+    const dateParams: Record<string, string> = {}
+    if (dateFrom.value) dateParams.date_from = dateFrom.value
+    if (dateTo.value) dateParams.date_to = dateTo.value
+    const journalParams: Record<string, string | number | string[]> = {
+      page: 1,
+      page_size: 500
+    }
+    if (dateFrom.value) journalParams.date_from = dateFrom.value
+    if (dateTo.value) journalParams.date_to = dateTo.value
+    if (accountFilters.value.length) journalParams.account_ids = accountFilters.value
+
     const [
       summary,
       journalResult,
@@ -43,23 +67,21 @@ const { data, pending, refresh } = await useAsyncData(
       dailyCash,
       bankInterest
     ] = await Promise.all([
-      get<AccountingSummary>('/accounting/summary'),
-      get<{ items: AccountingJournal[] }>('/accounting/journal', {
-        page: 1,
-        page_size: 500
-      }),
+      get<AccountingSummary>('/accounting/summary', dateParams),
+      get<{ items: AccountingJournal[] }>('/accounting/journal', journalParams),
       get<AccountingTrialBalance>('/accounting/trial-balance'),
       get<AccountingAccount[]>('/accounting/accounts', {
         include_inactive: true
       }),
-      get<BalanceSheetResponse>('/accounting/balance-sheet'),
-      get<CashflowResponse>('/accounting/cashflow'),
-      get<CostRecapResponse>('/accounting/cost-recap'),
+      get<BalanceSheetResponse>('/accounting/balance-sheet', dateParams),
+      get<CashflowResponse>('/accounting/cashflow', dateParams),
+      get<CostRecapResponse>('/accounting/cost-recap', dateParams),
       get<MonitoringResponse>('/accounting/monitoring', {
-        year: new Date().getFullYear()
+        date_from: dateFrom.value || undefined,
+        date_to: dateTo.value || undefined
       }),
-      get<DailyCashResponse>('/accounting/daily-cash'),
-      get<BankInterestResponse>('/accounting/bank-interest')
+      get<DailyCashResponse>('/accounting/daily-cash', dateParams),
+      get<BankInterestResponse>('/accounting/bank-interest', dateParams)
     ])
     return {
       summary,
@@ -88,7 +110,8 @@ const { data, pending, refresh } = await useAsyncData(
       bankInterest: null
     }),
     lazy: true,
-    server: false
+    server: false,
+    watch: [dateFrom, dateTo, accountFilters]
   }
 )
 
@@ -807,6 +830,52 @@ const exportItems = (
 
     <template #body>
       <div class="space-y-6 p-4 lg:p-6">
+        <!-- Filter Global -->
+        <UCard>
+          <div class="flex flex-col gap-3">
+            <p class="text-sm font-medium">
+              Filter Data Accounting
+            </p>
+            <div class="flex flex-wrap items-end gap-3">
+              <UFormField label="Dari Tanggal">
+                <UInput v-model="dateFrom" type="date" />
+              </UFormField>
+              <UFormField label="Sampai Tanggal">
+                <UInput v-model="dateTo" type="date" />
+              </UFormField>
+              <USelectMenu
+                v-model="accountFilters"
+                :items="accountItems"
+                value-key="value"
+                multiple
+                searchable
+                searchable-placeholder="Cari akun..."
+                placeholder="Semua Akun"
+                class="w-64"
+              />
+              <UButton
+                icon="i-lucide-search"
+                :loading="pending"
+                @click="() => refresh()"
+              >
+                Terapkan Filter
+              </UButton>
+              <UButton
+                icon="i-lucide-rotate-ccw"
+                color="neutral"
+                variant="soft"
+                @click="
+                  dateFrom = '';
+                  dateTo = '';
+                  accountFilters = []
+                "
+              >
+                Reset
+              </UButton>
+            </div>
+          </div>
+        </UCard>
+
         <!-- Skeleton -->
         <template v-if="pending">
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -861,56 +930,6 @@ const exportItems = (
               <p class="text-xs text-muted mt-1">
                 {{ c.title }}
               </p>
-            </UCard>
-          </div>
-
-          <!-- Charts -->
-          <div class="grid gap-6 lg:grid-cols-2">
-            <UCard class="lg:col-span-1">
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Pemasukan vs Pengeluaran
-                  </p>
-                  <p class="text-xs text-muted">
-                    Total nominal
-                  </p>
-                </div>
-              </template>
-              <AdminBarChart
-                v-if="incomeExpenseValues.length"
-                :labels="incomeExpenseLabels"
-                :datasets="[
-                  {
-                    label: 'Nominal',
-                    data: incomeExpenseValues,
-                    backgroundColor: [
-                      'rgba(16,185,129,0.8)',
-                      'rgba(239,68,68,0.8)'
-                    ]
-                  }
-                ]"
-              />
-              <UEmpty v-else icon="i-lucide-chart-bar" title="Belum ada data" />
-            </UCard>
-            <UCard>
-              <template #header>
-                <div class="flex items-center justify-between">
-                  <p class="font-medium">
-                    Distribusi Akun per Tipe
-                  </p>
-                  <p class="text-xs text-muted">
-                    {{ (data?.accounts || []).length }} akun
-                  </p>
-                </div>
-              </template>
-              <AdminPieChart
-                v-if="accountDistLabels.length"
-                :labels="accountDistLabels"
-                :data="accountDistValues"
-                :background-color="accountDistColors"
-              />
-              <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
             </UCard>
           </div>
 
@@ -1129,18 +1148,6 @@ const exportItems = (
                 </div>
               </div>
             </div>
-
-            <div class="mt-4">
-              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                Grafik Neraca
-              </p>
-              <AdminBarChart
-                v-if="balanceSheetChart"
-                :labels="balanceSheetChart.labels"
-                :datasets="balanceSheetChart.datasets"
-                :height="220"
-              />
-            </div>
           </UCard>
 
           <!-- Kas Harian -->
@@ -1189,18 +1196,6 @@ const exportItems = (
                   {{ formatCurrency(data.dailyCash.closing_balance) }}
                 </p>
               </div>
-            </div>
-
-            <div class="mt-4">
-              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                Grafik Kas Harian
-              </p>
-              <AdminBarChart
-                v-if="dailyCashChart"
-                :labels="dailyCashChart.labels"
-                :datasets="dailyCashChart.datasets"
-                :height="220"
-              />
             </div>
 
             <UTable :data="data.dailyCash.rows.slice(0, 10)" :columns="dailyCashColumns" />
@@ -1269,14 +1264,6 @@ const exportItems = (
             <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
               Arus Kas Operasi
             </p>
-            <div class="mt-4 mb-4">
-              <AdminBarChart
-                v-if="cashflowChart"
-                :labels="cashflowChart.labels"
-                :datasets="cashflowChart.datasets"
-                :height="220"
-              />
-            </div>
             <UTable :data="data.cashflow.operating.items" :columns="cashflowColumns" />
             <p
               v-if="!data.cashflow.operating.items.length"
@@ -1356,18 +1343,6 @@ const exportItems = (
               >
                 Belum ada data biaya
               </p>
-
-              <div class="mt-4">
-                <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                  Grafik Rekap Biaya per Akun
-                </p>
-                <AdminBarChart
-                  v-if="costRecapChart"
-                  :labels="costRecapChart.labels"
-                  :datasets="costRecapChart.datasets"
-                  :height="240"
-                />
-              </div>
             </div>
           </UCard>
 
@@ -1419,18 +1394,6 @@ const exportItems = (
               </div>
             </div>
 
-            <div class="mt-4">
-              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                Grafik Monitoring per Bulan
-              </p>
-              <AdminBarChart
-                v-if="monitoringChart"
-                :labels="monitoringChart.labels"
-                :datasets="monitoringChart.datasets"
-                :height="260"
-              />
-            </div>
-
             <UTable :data="data.monitoring.rows" :columns="monitoringColumns" />
             <p
               v-if="!data.monitoring.rows.length"
@@ -1480,18 +1443,6 @@ const exportItems = (
               </div>
             </div>
 
-            <div class="mt-4">
-              <p class="text-xs font-semibold text-muted uppercase tracking-wide mb-2">
-                Grafik Rekap Bunga Bank
-              </p>
-              <AdminBarChart
-                v-if="bankInterestChart"
-                :labels="bankInterestChart.labels"
-                :datasets="bankInterestChart.datasets"
-                :height="220"
-              />
-            </div>
-
             <UTable :data="data.bankInterest.rows.slice(0, 10)" :columns="bankInterestColumns" />
             <p
               v-if="!data.bankInterest.rows.length"
@@ -1515,6 +1466,146 @@ const exportItems = (
             </template>
             <UTable :data="data.accounts" :columns="accountColumns" />
           </UCard>
+
+          <!-- Grafik (penutup halaman) -->
+          <div>
+            <div class="mb-3 flex items-center justify-between">
+              <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+                Grafik
+              </p>
+              <p class="text-xs text-muted">
+                Visualisasi data accounting (terfilter oleh filter di atas)
+              </p>
+            </div>
+
+            <div class="grid gap-6 lg:grid-cols-2">
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Pemasukan vs Pengeluaran
+                    </p>
+                    <p class="text-xs text-muted">
+                      Total nominal
+                    </p>
+                  </div>
+                </template>
+                <AdminBarChart
+                  v-if="incomeExpenseValues.length"
+                  :labels="incomeExpenseLabels"
+                  :datasets="[
+                    {
+                      label: 'Nominal',
+                      data: incomeExpenseValues,
+                      backgroundColor: [
+                        'rgba(16,185,129,0.8)',
+                        'rgba(239,68,68,0.8)'
+                      ]
+                    }
+                  ]"
+                />
+                <UEmpty v-else icon="i-lucide-chart-bar" title="Belum ada data" />
+              </UCard>
+
+              <UCard>
+                <template #header>
+                  <div class="flex items-center justify-between">
+                    <p class="font-medium">
+                      Distribusi Akun per Tipe
+                    </p>
+                    <p class="text-xs text-muted">
+                      {{ (data?.accounts || []).length }} akun
+                    </p>
+                  </div>
+                </template>
+                <AdminPieChart
+                  v-if="accountDistLabels.length"
+                  :labels="accountDistLabels"
+                  :data="accountDistValues"
+                  :background-color="accountDistColors"
+                />
+                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+              </UCard>
+
+              <UCard v-if="balanceSheetChart">
+                <template #header>
+                  <p class="font-medium">
+                    Grafik Neraca
+                  </p>
+                </template>
+                <AdminBarChart
+                  :labels="balanceSheetChart.labels"
+                  :datasets="balanceSheetChart.datasets"
+                  :height="220"
+                />
+              </UCard>
+
+              <UCard v-if="dailyCashChart">
+                <template #header>
+                  <p class="font-medium">
+                    Grafik Kas Harian
+                  </p>
+                </template>
+                <AdminBarChart
+                  :labels="dailyCashChart.labels"
+                  :datasets="dailyCashChart.datasets"
+                  :height="220"
+                />
+              </UCard>
+
+              <UCard v-if="cashflowChart">
+                <template #header>
+                  <p class="font-medium">
+                    Grafik Arus Kas
+                  </p>
+                </template>
+                <AdminBarChart
+                  :labels="cashflowChart.labels"
+                  :datasets="cashflowChart.datasets"
+                  :height="220"
+                />
+              </UCard>
+
+              <UCard v-if="costRecapChart">
+                <template #header>
+                  <p class="font-medium">
+                    Grafik Rekap Biaya per Akun
+                  </p>
+                </template>
+                <AdminBarChart
+                  :labels="costRecapChart.labels"
+                  :datasets="costRecapChart.datasets"
+                  :height="240"
+                />
+              </UCard>
+
+              <UCard v-if="monitoringChart">
+                <template #header>
+                  <p class="font-medium">
+                    Grafik Monitoring per Bulan
+                  </p>
+                </template>
+                <AdminBarChart
+                  :labels="monitoringChart.labels"
+                  :datasets="monitoringChart.datasets"
+                  :height="260"
+                />
+              </UCard>
+
+              <UCard v-if="bankInterestChart">
+                <template #header>
+                  <p class="font-medium">
+                    Grafik Rekap Bunga Bank
+                  </p>
+                </template>
+                <AdminBarChart
+                  :labels="bankInterestChart.labels"
+                  :datasets="bankInterestChart.datasets"
+                  :height="220"
+                />
+              </UCard>
+            </div>
+          </div>
         </template>
       </div>
     </template>
