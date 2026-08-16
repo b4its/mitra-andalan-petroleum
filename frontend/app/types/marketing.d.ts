@@ -279,9 +279,9 @@ export interface OfferingLetterPurchaseOrdersResponse {
 }
 
 export type CustomerName
-  = | 'CV. Maju Jaya Abadi'
-    | 'PT. Bina Karya Sentosa'
-    | 'PT. Sumber Rejeki Mandiri'
+  = | 'CV. Kaltim Jaya Abadi'
+    | 'PT. Surya Tambang Energi'
+    | 'PT. Borneo Energi Utama'
 
 export type Location = 'Jakarta'
 

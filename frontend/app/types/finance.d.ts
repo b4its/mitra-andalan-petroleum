@@ -112,18 +112,18 @@ export interface FinanceDeliveryOrders {
 }
 
 export type CustomerName
-  = | 'PT. Bina Karya Sentosa'
-    | 'CV. Maju Jaya Abadi'
-    | 'PT. Sumber Rejeki Mandiri'
+  = | 'PT. Surya Tambang Energi'
+    | 'CV. Kaltim Jaya Abadi'
+    | 'PT. Borneo Energi Utama'
 
-export type PoNumber = 'PO/2025/VI/101' | 'PO/2025/VI/100' | 'PO/2025/VI/102'
+export type PoNumber = 'PO/2026/VI/101' | 'PO/2026/VI/100' | 'PO/2026/VI/102'
 
 export type Status = 'created' | 'document_returned'
 
 export type TransportName
-  = | 'CV. Angkutan Cepat'
-    | 'PT. Transport Logistik'
-    | 'PT. Distribusi Mandiri'
+  = | 'CV. Tiga Putra Transport'
+    | 'PT. Armada Kaltim Sejahtera'
+    | 'PT. Borneo Distribusi Logistik'
 
 export interface Invoices {
   id: string
@@ -139,9 +139,9 @@ export interface Invoices {
 }
 
 export type CustomerName
-  = | 'PT. Bina Karya Sentosa'
-    | 'CV. Maju Jaya Abadi'
-    | 'PT. Sumber Rejeki Mandiri'
+  = | 'PT. Surya Tambang Energi'
+    | 'CV. Kaltim Jaya Abadi'
+    | 'PT. Borneo Energi Utama'
 
 export type DeadlineStatus = 'overdue' | 'on_time' | 'due_soon'
 
