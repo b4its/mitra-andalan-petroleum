@@ -7,6 +7,8 @@ const { get } = useApi()
 
 const dateFrom = ref('')
 const dateTo = ref('')
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 const { data: cashflow, refresh, pending } = await useAsyncData(
   'accounting-cashflow',
@@ -18,6 +20,15 @@ const { data: cashflow, refresh, pending } = await useAsyncData(
   },
   { default: () => null, server: false }
 )
+
+const filteredOperating = computed(() => {
+  if (!cashflow.value) return []
+  if (!debouncedSearch.value) return cashflow.value.operating.items
+  const q = debouncedSearch.value.toLowerCase()
+  return cashflow.value.operating.items.filter((item: Record<string, unknown>) =>
+    Object.values(item).some(v => String(v).toLowerCase().includes(q))
+  )
+})
 
 const columns: TableColumn<CashflowItem>[] = [
   {
@@ -76,6 +87,12 @@ definePageMeta({ layout: 'accounting' })
         <section class="flex flex-col lg:gap-4">
           <UCard>
             <div class="flex flex-wrap items-end gap-3">
+              <UInput
+                v-model="search"
+                icon="i-lucide-search"
+                placeholder="Cari deskripsi, kategori..."
+                class="w-64"
+              />
               <UFormField label="Dari Tanggal">
                 <UInput v-model="dateFrom" type="date" />
               </UFormField>
@@ -146,7 +163,7 @@ definePageMeta({ layout: 'accounting' })
                 </div>
               </template>
               <UTable
-                :data="cashflow.operating.items"
+                :data="filteredOperating"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0',

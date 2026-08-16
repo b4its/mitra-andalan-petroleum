@@ -9,6 +9,8 @@ const { toCSV, toExcel, toPDF } = useExport()
 
 const dateFrom = ref('')
 const dateTo = ref('')
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 const exportColumns: ExportColumn<DailyCashRow>[] = [
   { header: 'Tanggal', accessor: (row: DailyCashRow) => formatDate(row.entry_date) },
@@ -41,6 +43,15 @@ const { data, refresh, pending } = await useAsyncData(
   },
   { default: () => null, server: false }
 )
+
+const filteredData = computed(() => {
+  if (!data.value) return []
+  if (!debouncedSearch.value) return data.value.rows
+  const q = debouncedSearch.value.toLowerCase()
+  return data.value.rows.filter((item: Record<string, unknown>) =>
+    Object.values(item).some(v => String(v).toLowerCase().includes(q))
+  )
+})
 
 const columns: TableColumn<DailyCashRow>[] = [
   {
@@ -116,6 +127,12 @@ definePageMeta({ layout: 'accounting' })
           <UCard>
             <div class="flex flex-col gap-3">
               <div class="flex flex-wrap items-end gap-3">
+                <UInput
+                  v-model="search"
+                  icon="i-lucide-search"
+                  placeholder="Cari deskripsi, akun..."
+                  class="w-64"
+                />
                 <UFormField label="Dari Tanggal">
                   <UInput v-model="dateFrom" type="date" />
                 </UFormField>
@@ -198,7 +215,7 @@ definePageMeta({ layout: 'accounting' })
 
             <UCard>
               <UTable
-                :data="data.rows"
+                :data="filteredData"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0',

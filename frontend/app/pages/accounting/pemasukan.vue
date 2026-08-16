@@ -11,6 +11,8 @@ const entryModalOpen = ref(false)
 
 const dateFrom = ref('')
 const dateTo = ref('')
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 const exportColumns: ExportColumn<AccountingIncomeExpenseRow>[] = [
   { header: 'Tanggal', accessor: (row: AccountingIncomeExpenseRow) => formatDate(row.entry_date) },
@@ -35,6 +37,7 @@ const { data: rows, refresh, pending } = await useAsyncData(
     const params: Record<string, string | number> = { page: 1, page_size: 50 }
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
+    if (debouncedSearch.value) params.search = debouncedSearch.value
     const res = await get<{ items: AccountingIncomeExpenseRow[], total: number }>(
       '/accounting/income',
       params
@@ -124,6 +127,12 @@ definePageMeta({ layout: 'accounting' })
           <UCard>
             <div class="flex flex-col gap-3">
               <div class="flex flex-wrap items-end gap-3">
+                <UInput
+                  v-model="search"
+                  icon="i-lucide-search"
+                  placeholder="Cari nomor jurnal, deskripsi..."
+                  class="w-64"
+                />
                 <UFormField label="Dari Tanggal">
                   <UInput v-model="dateFrom" type="date" />
                 </UFormField>

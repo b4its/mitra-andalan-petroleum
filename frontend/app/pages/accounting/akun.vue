@@ -9,6 +9,7 @@ const toast = useToast()
 const loading = ref(false)
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
+const typeFilter = ref('')
 const { toCSV, toExcel, toPDF } = useExport()
 
 const exportColumns: ExportColumn<AccountingAccount>[] = [
@@ -47,13 +48,15 @@ const { data: accounts, refresh, pending } = await useAsyncData(
       include_inactive: true
     }
     if (debouncedSearch.value) params.search = debouncedSearch.value
+    if (typeFilter.value) params.type = typeFilter.value
     const res = await get<AccountingAccount[]>('/accounting/accounts', params)
     return res
   },
-  { default: () => [], watch: [debouncedSearch], server: false }
+  { default: () => [], watch: [debouncedSearch, typeFilter], server: false }
 )
 
-const typeOptions: { label: string, value: AccountType, color: string }[] = [
+const typeOptions: { label: string, value: AccountType | '', color: string }[] = [
+  { label: 'Semua Jenis', value: '', color: 'neutral' },
   { label: 'Aset', value: 'asset', color: 'info' },
   { label: 'Kewajiban', value: 'liability', color: 'warning' },
   { label: 'Ekuitas', value: 'equity', color: 'primary' },
@@ -117,6 +120,50 @@ const columns: TableColumn<AccountingAccount>[] = [
 
 const modalOpen = ref(false)
 const editingId = ref<string | null>(null)
+const detailModalOpen = ref(false)
+const detailLoading = ref(false)
+const detailData = ref<Record<string, unknown> | null>(null)
+
+interface AccountDetail {
+  id: string
+  code: string
+  name: string
+  type: string
+  description: string | null
+  is_active: boolean
+  total_debit: number
+  total_credit: number
+  balance: number
+  journal_count: number
+  recent_journals: Array<{
+    id: string
+    entry_number: string
+    entry_date: string
+    description: string
+    debit: number
+    credit: number
+  }>
+}
+
+async function openDetail(account: AccountingAccount) {
+  detailLoading.value = true
+  detailModalOpen.value = true
+  try {
+    const data = await get<AccountDetail>(`/accounting/accounts/${account.id}/detail`)
+    detailData.value = data as unknown as Record<string, unknown>
+  } catch {
+    toast.add({
+      title: 'Gagal',
+      description: 'Gagal memuat detail akun',
+      icon: 'i-lucide-alert-triangle',
+      color: 'error'
+    })
+    detailModalOpen.value = false
+  } finally {
+    detailLoading.value = false
+  }
+}
+
 const form = reactive({
   code: '',
   name: '',
@@ -224,6 +271,13 @@ definePageMeta({ layout: 'accounting' })
                 placeholder="Cari kode atau nama akun..."
                 class="w-64"
               />
+              <USelect
+                v-model="typeFilter"
+                :items="typeOptions"
+                value-key="value"
+                placeholder="Filter jenis"
+                class="w-40"
+              />
             </div>
             <div class="flex flex-wrap justify-end gap-2">
               <UDropdownMenu
@@ -278,15 +332,26 @@ definePageMeta({ layout: 'accounting' })
               }"
             >
               <template #actions-cell="{ row }">
-                <UButton
-                  icon="i-lucide-pencil"
-                  size="sm"
-                  color="neutral"
-                  variant="ghost"
-                  @click="openEdit(row.original)"
-                >
-                  Edit
-                </UButton>
+                <div class="flex items-center gap-1">
+                  <UButton
+                    icon="i-lucide-eye"
+                    size="sm"
+                    color="primary"
+                    variant="ghost"
+                    @click="openDetail(row.original)"
+                  >
+                    Detail
+                  </UButton>
+                  <UButton
+                    icon="i-lucide-pencil"
+                    size="sm"
+                    color="neutral"
+                    variant="ghost"
+                    @click="openEdit(row.original)"
+                  >
+                    Edit
+                  </UButton>
+                </div>
               </template>
             </UTable>
           </UCard>
@@ -336,6 +401,130 @@ definePageMeta({ layout: 'accounting' })
                   @click="modalOpen = false"
                 >
                   Batal
+                </UButton>
+              </div>
+            </template>
+          </UModal>
+
+          <UModal v-model:open="detailModalOpen" :ui="{ content: 'max-w-4xl' }">
+            <template #title>
+              <h3 class="font-semibold">
+                Detail Akun
+              </h3>
+            </template>
+
+            <template #body>
+              <div v-if="detailLoading" class="space-y-3">
+                <USkeleton v-for="i in 5" :key="i" class="h-8 rounded-lg" />
+              </div>
+              <div v-else-if="detailData" class="space-y-6">
+                <!-- Info Akun -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <UCard :ui="{ body: 'py-3' }">
+                    <p class="text-xs text-neutral-500">
+                      Kode
+                    </p>
+                    <p class="text-lg font-bold">
+                      {{ detailData.code }}
+                    </p>
+                  </UCard>
+                  <UCard :ui="{ body: 'py-3' }">
+                    <p class="text-xs text-neutral-500">
+                      Nama Akun
+                    </p>
+                    <p class="text-lg font-bold truncate">
+                      {{ detailData.name }}
+                    </p>
+                  </UCard>
+                  <UCard :ui="{ body: 'py-3' }">
+                    <p class="text-xs text-neutral-500">
+                      Jenis
+                    </p>
+                    <UBadge variant="soft" :color="typeColor(detailData.type as string)" class="capitalize mt-1">
+                      {{ typeLabel(detailData.type as string) }}
+                    </UBadge>
+                  </UCard>
+                  <UCard :ui="{ body: 'py-3' }">
+                    <p class="text-xs text-neutral-500">
+                      Status
+                    </p>
+                    <UBadge variant="soft" :color="detailData.is_active ? 'success' : 'neutral'" class="mt-1">
+                      {{ detailData.is_active ? 'Aktif' : 'Nonaktif' }}
+                    </UBadge>
+                  </UCard>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <UCard color="info" variant="subtle" :ui="{ body: 'py-3' }">
+                    <p class="text-xs text-neutral-500">
+                      Total Debit
+                    </p>
+                    <p class="text-xl font-bold">
+                      {{ formatCurrency(detailData.total_debit as number) }}
+                    </p>
+                  </UCard>
+                  <UCard color="warning" variant="subtle" :ui="{ body: 'py-3' }">
+                    <p class="text-xs text-neutral-500">
+                      Total Kredit
+                    </p>
+                    <p class="text-xl font-bold">
+                      {{ formatCurrency(detailData.total_credit as number) }}
+                    </p>
+                  </UCard>
+                  <UCard color="primary" variant="subtle" :ui="{ body: 'py-3' }">
+                    <p class="text-xs text-neutral-500">
+                      Saldo
+                    </p>
+                    <p class="text-xl font-bold">
+                      {{ formatCurrency(detailData.balance as number) }}
+                    </p>
+                  </UCard>
+                </div>
+
+                <div v-if="detailData.description" class="text-sm">
+                  <span class="font-medium">Deskripsi:</span>
+                  {{ detailData.description }}
+                </div>
+
+                <!-- Recent Journals -->
+                <div>
+                  <div class="flex items-center justify-between mb-3">
+                    <p class="text-sm font-medium">
+                      Jurnal Terkait ({{ detailData.journal_count }} baris)
+                    </p>
+                  </div>
+                  <UTable
+                    v-if="(detailData.recent_journals as Array<unknown>).length > 0"
+                    :data="detailData.recent_journals as Array<Record<string, unknown>>"
+                    :columns="[
+                      { accessorKey: 'entry_number', header: 'Nomor Jurnal' },
+                      { accessorKey: 'entry_date',
+                        header: 'Tanggal',
+                        cell: ({ row }) => formatDate(row.getValue('entry_date') as string) },
+                      { accessorKey: 'description', header: 'Deskripsi' },
+                      { accessorKey: 'debit',
+                        header: 'Debit',
+                        cell: ({ row }) => formatCurrency(row.getValue('debit') as number) },
+                      { accessorKey: 'credit',
+                        header: 'Kredit',
+                        cell: ({ row }) => formatCurrency(row.getValue('credit') as number) }
+                    ]"
+                  />
+                  <p v-else class="text-sm text-neutral-500">
+                    Belum ada jurnal untuk akun ini.
+                  </p>
+                </div>
+              </div>
+            </template>
+
+            <template #footer>
+              <div class="flex justify-end">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  @click="detailModalOpen = false"
+                >
+                  Tutup
                 </UButton>
               </div>
             </template>

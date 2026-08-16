@@ -7,6 +7,8 @@ const { get } = useApi()
 
 const dateFrom = ref('')
 const dateTo = ref('')
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 const { data: ledgers, refresh, pending } = await useAsyncData(
   'accounting-ledger-all',
@@ -26,6 +28,15 @@ const { data: ledgers, refresh, pending } = await useAsyncData(
 async function onSearch() {
   await refresh()
 }
+
+const filteredData = computed(() => {
+  if (!ledgers.value) return []
+  if (!debouncedSearch.value) return ledgers.value
+  const q = debouncedSearch.value.toLowerCase()
+  return ledgers.value.filter((item: Record<string, unknown>) =>
+    Object.values(item).some(v => String(v).toLowerCase().includes(q))
+  )
+})
 
 const expandedAccount = ref<string | null>(null)
 
@@ -186,6 +197,12 @@ definePageMeta({ layout: 'accounting' })
         <section class="flex flex-col lg:gap-4">
           <UCard>
             <div class="flex flex-wrap items-end gap-3">
+              <UInput
+                v-model="search"
+                icon="i-lucide-search"
+                placeholder="Cari nomor jurnal, deskripsi..."
+                class="w-64"
+              />
               <UFormField label="Dari Tanggal">
                 <UInput v-model="dateFrom" type="date" />
               </UFormField>
@@ -227,7 +244,7 @@ definePageMeta({ layout: 'accounting' })
             </div>
             <template v-else>
               <UTable
-                :data="ledgers"
+                :data="filteredData"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0',

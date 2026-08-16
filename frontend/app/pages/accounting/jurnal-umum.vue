@@ -15,6 +15,7 @@ const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
 const dateFrom = ref('')
 const dateTo = ref('')
+const accountFilter = ref('')
 
 const { toCSV, toExcel, toPDF } = useExport()
 
@@ -52,13 +53,14 @@ const { data: journals, refresh, pending: pendingJournals } = await useAsyncData
     if (debouncedSearch.value) params.search = debouncedSearch.value
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
+    if (accountFilter.value) params.account_id = accountFilter.value
     const res = await get<{ items: AccountingJournal[] }>(
       '/accounting/journal',
       params
     )
     return res.items
   },
-  { default: () => [], watch: [debouncedSearch, dateFrom, dateTo], server: false }
+  { default: () => [], watch: [debouncedSearch, dateFrom, dateTo, accountFilter], server: false }
 )
 
 const { data: accounts, pending: pendingAccounts } = await useAsyncData(
@@ -278,6 +280,13 @@ definePageMeta({ layout: 'accounting' })
                 icon="i-lucide-search"
                 placeholder="Cari nomor atau deskripsi..."
                 class="w-64"
+              />
+              <USelect
+                v-model="accountFilter"
+                :items="accountItems"
+                value-key="value"
+                placeholder="Semua Akun"
+                class="w-56"
               />
               <UFormField label="Dari Tanggal">
                 <UInput v-model="dateFrom" type="date" />

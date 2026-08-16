@@ -7,6 +7,8 @@ const { toCSV, toExcel, toPDF } = useExport()
 
 const dateFrom = ref('')
 const dateTo = ref('')
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 const expandedGroups = ref<Set<string>>(new Set())
 
 const exportColumns: ExportColumn<CostRecapRow>[] = [
@@ -37,6 +39,20 @@ const { data, refresh, pending } = await useAsyncData(
   },
   { default: () => null, server: false }
 )
+
+const filteredGroups = computed(() => {
+  if (!data.value) return []
+  if (!debouncedSearch.value) return data.value.groups
+  const q = debouncedSearch.value.toLowerCase()
+  return data.value.groups
+    .map(group => ({
+      ...group,
+      items: group.items.filter((item: Record<string, unknown>) =>
+        Object.values(item).some(v => String(v).toLowerCase().includes(q))
+      )
+    }))
+    .filter(group => group.items.length > 0)
+})
 
 const totalCost = computed(() => data.value?.total_cost ?? 0)
 
@@ -77,6 +93,12 @@ definePageMeta({ layout: 'accounting' })
           <UCard>
             <div class="flex flex-col gap-3">
               <div class="flex flex-wrap items-end gap-3">
+                <UInput
+                  v-model="search"
+                  icon="i-lucide-search"
+                  placeholder="Cari deskripsi, akun..."
+                  class="w-64"
+                />
                 <UFormField label="Dari Tanggal">
                   <UInput v-model="dateFrom" type="date" />
                 </UFormField>
@@ -128,7 +150,7 @@ definePageMeta({ layout: 'accounting' })
 
             <div class="flex flex-col gap-3">
               <UCard
-                v-for="group in data.groups"
+                v-for="group in filteredGroups"
                 :key="group.account_code"
               >
                 <template #header>
@@ -176,7 +198,7 @@ definePageMeta({ layout: 'accounting' })
             </div>
 
             <p
-              v-if="!data.groups.length"
+              v-if="!filteredGroups.length"
               class="py-6 text-center text-sm text-neutral-500"
             >
               Belum ada data biaya

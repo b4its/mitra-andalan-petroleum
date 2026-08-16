@@ -5,6 +5,8 @@ const { get } = useApi()
 
 const dateFrom = ref('')
 const dateTo = ref('')
+const search = ref('')
+const debouncedSearch = refDebounced(search, 300)
 
 const { data: neraca, refresh, pending } = await useAsyncData(
   'accounting-neraca',
@@ -21,6 +23,14 @@ const isBalanced = computed(() => {
   if (!neraca.value) return true
   return Math.abs(neraca.value.total_assets - (neraca.value.total_liabilities + neraca.value.total_equity)) < 1
 })
+
+function filterAccounts(accounts: Array<{ account_code: string, account_name: string, balance: number }>) {
+  if (!debouncedSearch.value) return accounts
+  const q = debouncedSearch.value.toLowerCase()
+  return accounts.filter(a =>
+    a.account_code.toLowerCase().includes(q) || a.account_name.toLowerCase().includes(q)
+  )
+}
 
 definePageMeta({ layout: 'accounting' })
 </script>
@@ -50,6 +60,12 @@ definePageMeta({ layout: 'accounting' })
         <section class="flex flex-col lg:gap-4">
           <UCard>
             <div class="flex flex-wrap items-end gap-3">
+              <UInput
+                v-model="search"
+                icon="i-lucide-search"
+                placeholder="Cari kode atau nama akun..."
+                class="w-64"
+              />
               <UFormField label="Dari Tanggal">
                 <UInput v-model="dateFrom" type="date" />
               </UFormField>
@@ -100,7 +116,7 @@ definePageMeta({ layout: 'accounting' })
                 </template>
                 <div class="flex flex-col divide-y divide-default">
                   <div
-                    v-for="acc in neraca.assets.accounts"
+                    v-for="acc in filterAccounts(neraca.assets.accounts)"
                     :key="acc.account_id"
                     class="flex items-center justify-between py-2 text-sm"
                   >
@@ -123,7 +139,7 @@ definePageMeta({ layout: 'accounting' })
                 </template>
                 <div class="flex flex-col divide-y divide-default">
                   <div
-                    v-for="acc in neraca.liabilities.accounts"
+                    v-for="acc in filterAccounts(neraca.liabilities.accounts)"
                     :key="acc.account_id"
                     class="flex items-center justify-between py-2 text-sm"
                   >
@@ -146,7 +162,7 @@ definePageMeta({ layout: 'accounting' })
                 </template>
                 <div class="flex flex-col divide-y divide-default">
                   <div
-                    v-for="acc in neraca.equity.accounts"
+                    v-for="acc in filterAccounts(neraca.equity.accounts)"
                     :key="acc.account_id"
                     class="flex items-center justify-between py-2 text-sm"
                   >
