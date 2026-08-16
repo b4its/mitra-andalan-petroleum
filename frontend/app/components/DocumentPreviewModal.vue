@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import * as pdfjsLib from 'pdfjs-dist'
+
 const props = defineProps<{
   open: boolean
   title?: string
@@ -12,13 +14,47 @@ const emit = defineEmits<{
 const pdfUrl = ref<string | null>(null)
 const loadingPdf = ref(false)
 const pdfError = ref('')
+const pages = ref<Array<{ dataUrl: string, width: number, height: number }>>([])
+
+// Konfigurasi worker pdfjs (tanpa unduhan eksternal)
+// @ts-expect-error — di Nuxt client bundle path worker tersedia di node_modules
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString()
+
+async function renderPdfToCanvas(dataUrl: string) {
+  const doc = await pdfjsLib.getDocument({ data: atob(dataUrl.split(',')[1]!) }).promise
+  const rendered: Array<{ dataUrl: string, width: number, height: number }> = []
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i)
+    const baseViewport = page.getViewport({ scale: 1 })
+    const scale = Math.min(2.2, 1400 / baseViewport.width)
+    const viewport = page.getViewport({ scale })
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.floor(viewport.width)
+    canvas.height = Math.floor(viewport.height)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) continue
+    await page.render({ canvasContext: ctx, viewport }).promise
+    rendered.push({
+      dataUrl: canvas.toDataURL('image/png'),
+      width: canvas.width,
+      height: canvas.height
+    })
+  }
+  return rendered
+}
 
 async function build() {
   if (!props.buildPdf) return
   loadingPdf.value = true
   pdfError.value = ''
+  pages.value = []
   try {
-    pdfUrl.value = await props.buildPdf()
+    const dataUrl = await props.buildPdf()
+    pdfUrl.value = dataUrl
+    pages.value = await renderPdfToCanvas(dataUrl)
   } catch (err) {
     pdfError.value = err instanceof Error ? err.message : 'Gagal membuat preview'
   } finally {
@@ -31,6 +67,7 @@ watch(
   (open) => {
     if (open) {
       pdfUrl.value = null
+      pages.value = []
       build()
     }
   }
@@ -78,12 +115,30 @@ function onClose() {
           </UButton>
         </div>
 
-        <iframe
-          v-else-if="pdfUrl"
-          :src="pdfUrl"
-          class="w-full h-full min-h-[60vh] rounded-lg border border-default"
-          title="Preview Dokumen"
-        />
+        <!-- Preview hanya visual (tanpa toolbar print/download) -->
+        <div
+          v-else-if="pages.length"
+          class="flex-1 min-h-0 overflow-auto rounded-lg border border-default bg-neutral-100 dark:bg-neutral-900 p-4"
+        >
+          <div class="flex flex-col items-center gap-4">
+            <div
+              v-for="(page, index) in pages"
+              :key="index"
+              class="shadow-lg rounded-md bg-white overflow-hidden"
+            >
+              <img
+                :src="page.dataUrl"
+                :style="{
+                  width: '100%',
+                  maxWidth: '720px',
+                  display: 'block',
+                  height: 'auto'
+                }"
+                :alt="`Halaman ${index + 1}`"
+              >
+            </div>
+          </div>
+        </div>
 
         <div v-else class="flex flex-col items-center justify-center py-20 gap-3">
           <UIcon name="i-lucide-file-question" class="size-8 text-muted" />
