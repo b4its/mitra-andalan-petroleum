@@ -338,10 +338,12 @@ watch(
         }
         // Auto-fill daftar item (products) dari PO Transportir — semua item tersedia, user pilih mana yang diantar
         const ptProducts = (pt.details as Partial<PoTransportirDetails>).products || []
-        doDetailsTransport.products = ptProducts.map((p: { name?: string, qty?: number }) => ({
+        doDetailsTransport.products = ptProducts.map((p: { name?: string, qty?: number, delivered?: boolean, delivered_at?: string }) => ({
           name: p.name || 'Solar',
           qty: p.qty || 0,
-          selected: false
+          selected: Boolean(p.delivered),
+          delivered: Boolean(p.delivered),
+          delivered_at: p.delivered_at || undefined
         }))
         if (ptProducts.length > 0) {
           const firstProduct = ptProducts[0]
@@ -372,9 +374,10 @@ async function onFormSubmit() {
       ...doFooter
     }
 
-    // Hitung total dari item yang dipilih (banyak item yang diantar)
+    // Hitung total dari item yang dipilih (banyak item yang diantar) — exclude item yang sudah pernah diantar
     const selectedProducts = (doData.products || []).filter(
-      (p: { selected?: boolean }) => p.selected
+      (p: { selected?: boolean, delivered?: boolean }) =>
+        p.selected && !p.delivered
     )
     const totalSelected = selectedProducts.length
       ? selectedProducts.reduce(

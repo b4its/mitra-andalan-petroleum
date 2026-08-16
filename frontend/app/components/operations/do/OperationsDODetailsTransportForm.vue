@@ -82,14 +82,37 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
         <label
           v-for="(product, index) in state.products"
           :key="index"
-          class="flex items-center gap-3 rounded-lg border border-default px-3 py-2 cursor-pointer hover:bg-elevated/50"
+          class="flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer hover:bg-elevated/50"
+          :class="product.delivered
+            ? 'border-default bg-elevated/40 opacity-60 cursor-not-allowed'
+            : 'border-default'"
         >
-          <UCheckbox v-model="product.selected" />
+          <UCheckbox
+            v-model="product.selected"
+            :disabled="Boolean(product.delivered)"
+            :model-value="product.delivered ? true : product.selected"
+          />
           <div class="min-w-0">
-            <p class="text-sm font-medium truncate">{{ product.name }}</p>
-            <p class="text-xs text-muted">{{ product.qty || 0 }} Liter</p>
+            <p class="text-sm font-medium truncate" :class="product.delivered ? 'line-through text-muted' : ''">
+              {{ product.name }}
+            </p>
+            <p class="text-xs text-muted">
+              {{ product.qty || 0 }} Liter
+              <span
+                v-if="product.delivered"
+                class="ml-1 rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success"
+              >
+                Sudah Diantar
+              </span>
+              <span
+                v-else-if="product.delivered_at"
+                class="ml-1 text-[10px]"
+              >
+                · {{ product.delivered_at }}
+              </span>
+            </p>
           </div>
-          <span class="ml-auto text-sm font-semibold">
+          <span class="ml-auto text-sm font-semibold" :class="product.delivered ? 'text-muted' : ''">
             {{ product.qty ? `${Number(product.qty).toLocaleString()} L` : '-' }}
           </span>
         </label>
