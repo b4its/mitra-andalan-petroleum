@@ -127,7 +127,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDOHeaderState>) {
             :ui="{ content: 'min-w-fit' }"
             class="w-full"
             searchable
-            searchable-placeholder="Cari nomor PO Transportir..."
+            :search-input="{ placeholder: 'Cari nomor PO Transportir...' }"
           >
             <template #item-label="{ item }">
               {{ item.label }}

@@ -419,7 +419,7 @@ definePageMeta({ layout: 'accounting' })
                   value-key="value"
                   multiple
                   searchable
-                  searchable-placeholder="Cari akun..."
+                  :search-input="{ placeholder: 'Cari akun...' }"
                   placeholder="Semua Akun"
                   class="w-64"
                 />

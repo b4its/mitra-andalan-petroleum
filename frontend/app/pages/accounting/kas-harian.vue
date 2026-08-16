@@ -148,7 +148,7 @@ definePageMeta({ layout: 'accounting' })
                   value-key="value"
                   multiple
                   searchable
-                  searchable-placeholder="Cari akun..."
+                  :search-input="{ placeholder: 'Cari akun...' }"
                   placeholder="Akun Kas/Bank"
                   class="w-64"
                 />

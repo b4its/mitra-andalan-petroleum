@@ -155,7 +155,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
             placeholder="Pilih Purchase Order Customer..."
             class="w-full"
             searchable
-            searchable-placeholder="Cari nomor PO..."
+            :search-input="{ placeholder: 'Cari nomor PO...' }"
           />
           <p v-if="selectedPOCustomer" class="text-xs text-gray-500">
             Customer: {{ selectedPOCustomer.customer_name }} &mdash; Total: {{ selectedPOCustomer.total.toLocaleString() }}
