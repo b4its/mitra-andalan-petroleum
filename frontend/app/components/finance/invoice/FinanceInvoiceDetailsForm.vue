@@ -5,8 +5,14 @@ import {
   type FinanceInvoiceDetailsState
 } from '~/types/schemas'
 
+interface PurchaseOrderOption {
+  label: string
+  value: unknown
+  customerName?: string | null
+}
+
 defineProps<{
-  purchaseOrders: any
+  purchaseOrders: PurchaseOrderOption[]
   deliveryOrderGroups: SelectMenuItem[][]
   hasPrevious: boolean | undefined
 }>()

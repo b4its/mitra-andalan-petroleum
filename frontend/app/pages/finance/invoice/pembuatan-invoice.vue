@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { StepperItem, SelectMenuItem } from '@nuxt/ui'
 import type { FinanceDeliveryOrders, InvoicePost } from '~/types/finance'
-import type { PurchaseOrdersSupplier } from '~/types/marketing'
+import type { PurchaseOrdersSupplier, Product } from '~/types/marketing'
 import type {
   FinanceInvoiceDetailsState,
   FinanceInvoiceFooterState,
@@ -30,7 +30,7 @@ const { data: poCustomer } = await useAsyncData(
       dateCreated: purchaseOrder.created_at.toString(),
       dateChanged: purchaseOrder.updated_at.toString(),
       status: purchaseOrder.status,
-      products: (purchaseOrder.details as any)?.products || []
+      products: purchaseOrder.details?.products || []
     }))
   },
   { default: () => [] }
@@ -222,9 +222,9 @@ watch(
     if (value) {
       console.log(value)
       // Konek otomatis daftar produk dari PO ke Invoice
-      const poProducts = (value as any)?.products || []
+      const poProducts = (value as { products?: Product[] })?.products || []
       if (Array.isArray(poProducts) && poProducts.length > 0) {
-        financeProducts.products = poProducts.map((p: any) => ({
+        financeProducts.products = poProducts.map((p: Product) => ({
           name: p.name || '',
           qty: p.qty ?? 1,
           unit: p.unit || '',
@@ -262,7 +262,7 @@ async function onFormSubmit() {
       ...financeFooter
     }
 
-    await post<any, InvoicePost>('/invoices', {
+    await post<unknown, InvoicePost>('/invoices', {
       customer_id:
         invoiceData.customerPurchaseInformation.customerPurchaseOrderNumber
           .customerId || '',
@@ -280,10 +280,10 @@ async function onFormSubmit() {
       description: 'Invoice berhasil dibuat',
       color: 'success'
     })
-  } catch (e: any) {
+  } catch (e: unknown) {
     toast.add({
       title: 'Gagal',
-      description: e.message,
+      description: e instanceof Error ? e.message : String(e),
       icon: 'i-lucide-alert-triangle',
       color: 'error'
     })

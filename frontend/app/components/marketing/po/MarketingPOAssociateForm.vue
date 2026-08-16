@@ -7,9 +7,16 @@ import {
   type MarketingPOAssociateState
 } from '~/types/schemas'
 
+interface ReceiverOption {
+  label: string
+  value: unknown
+  npwp?: string | null
+  address?: string | null
+}
+
 defineProps<{
   hasPrevious: boolean | undefined
-  receivers: any
+  receivers: ReceiverOption[]
 }>()
 
 const emit = defineEmits<{

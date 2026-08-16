@@ -5,8 +5,14 @@ import {
   type MarketingPOCustomerState
 } from '~/types/schemas'
 
+interface OfferingLetterOption {
+  label: string
+  value: unknown
+  olNumber?: string
+}
+
 defineProps<{
-  offeringLetters: any
+  offeringLetters: OfferingLetterOption[]
 }>()
 
 const emit = defineEmits<{

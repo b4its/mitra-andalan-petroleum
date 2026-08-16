@@ -8,8 +8,8 @@ const props = defineProps<{
 
 const { data: stats, pending } = await useAsyncData<Stat[]>('home-stats', async () => {
   const { get } = useApi()
-  const res = await get<{ stats: any[] }>('/stats/home')
-  return (res.stats || []).map((s: any) => ({
+  const res = await get<{ stats: Stat[] }>('/stats/home')
+  return (res.stats || []).map((s: Stat) => ({
     title: s.title,
     icon: s.icon,
     value: s.value,

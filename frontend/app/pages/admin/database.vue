@@ -99,10 +99,10 @@ async function downloadExport() {
       description: 'File SQL berhasil diunduh.',
       color: 'success'
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal export data SQL.',
+      description: (err as Error).message || 'Gagal export data SQL.',
       color: 'error'
     })
   } finally {
@@ -133,10 +133,10 @@ async function importSql() {
     })
     sqlFile.value = null
     confirmation.value = ''
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal import data SQL.',
+      description: (err as Error).message || 'Gagal import data SQL.',
       color: 'error'
     })
   } finally {
@@ -160,10 +160,10 @@ async function clearDatabase() {
       color: 'success'
     })
     clearConfirmation.value = ''
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal membersihkan database.',
+      description: (err as Error).message || 'Gagal membersihkan database.',
       color: 'error'
     })
   } finally {

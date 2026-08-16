@@ -253,10 +253,10 @@ async function onSubmitAdd(event: FormSubmitEvent<Schema>) {
     })
     modalOpen.value = false
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal menambahkan supplier.',
+      description: (err as Error).message || 'Gagal menambahkan supplier.',
       color: 'error'
     })
   } finally {
@@ -298,10 +298,10 @@ async function onSubmitEdit(event: FormSubmitEvent<Schema>) {
     })
     modalOpen.value = false
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal memperbarui supplier.',
+      description: (err as Error).message || 'Gagal memperbarui supplier.',
       color: 'error'
     })
   } finally {
@@ -328,10 +328,10 @@ async function confirmDelete() {
     deleteOpen.value = false
     deleteTarget.value = null
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal menghapus supplier.',
+      description: (err as Error).message || 'Gagal menghapus supplier.',
       color: 'error'
     })
   } finally {

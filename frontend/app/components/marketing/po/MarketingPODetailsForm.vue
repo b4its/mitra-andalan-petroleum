@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
+import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import {
   marketingPODetailsSchema,
   type MarketingPODetailsState
@@ -7,7 +7,7 @@ import {
 
 defineProps<{
   hasPrevious: boolean | undefined
-  offeringLetters: any
+  offeringLetters: SelectMenuItem[]
   isSupplier?: boolean
 }>()
 

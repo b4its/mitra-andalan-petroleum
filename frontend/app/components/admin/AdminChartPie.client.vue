@@ -16,20 +16,25 @@ const colorPalette = [
   'var(--ui-error)'
 ]
 
-function valueAccessor(d: any): number {
+interface ChartDatum {
+  label?: string
+  value?: number
+}
+
+function valueAccessor(d: ChartDatum): number {
   return d.value ?? 0
 }
 
-function colorAccessor(_d: any, i: number): string {
+function colorAccessor(_d: ChartDatum, i: number): string {
   return colorPalette[i % colorPalette.length] ?? 'var(--ui-primary)'
 }
 
-function tooltipTemplate(d: any): string {
+function tooltipTemplate(d: ChartDatum): string {
   return `${d.label}: ${d.value}`
 }
 
-function totalSum(arr: any[]): string {
-  return String(arr.reduce((a: number, b: any) => a + (b.value ?? 0), 0))
+function totalSum(arr: ChartDatum[]): string {
+  return String(arr.reduce((a: number, b: ChartDatum) => a + (b.value ?? 0), 0))
 }
 </script>
 

@@ -182,7 +182,7 @@ async function onSubmitAdd(event: FormSubmitEvent<AddSchema>) {
     if (event.data.signature_caption) {
       body.signature_caption = event.data.signature_caption
     }
-    const created = await post<any, typeof body>('/profiles', body)
+    const created = await post<{ id: string }, typeof body>('/profiles', body)
 
     // Upload tanda tangan jika ada
     if (event.data.signature && created.id) {
@@ -226,7 +226,7 @@ async function onSubmitEdit(event: FormSubmitEvent<EditSchema>) {
     if (event.data.signature_caption) {
       body.signature_caption = event.data.signature_caption
     }
-    await put<any, typeof body>(`/profiles/${selectedUser.value.id}`, body)
+    await put<Record<string, unknown>, typeof body>(`/profiles/${selectedUser.value.id}`, body)
 
     // Upload tanda tangan baru jika ada
     if (event.data.signature) {

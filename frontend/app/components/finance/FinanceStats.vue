@@ -8,8 +8,8 @@ const props = defineProps<{
 
 const { data: stats, pending } = await useAsyncData<Stat[]>('finance-stats', async () => {
   const { get } = useApi()
-  const res = await get<{ stats: any[] }>('/stats/finance')
-  return (res.stats || []).map((s: any) => ({
+  const res = await get<{ stats: Stat[] }>('/stats/finance')
+  return (res.stats || []).map((s: Stat) => ({
     title: s.title,
     icon: s.icon,
     value: s.value,

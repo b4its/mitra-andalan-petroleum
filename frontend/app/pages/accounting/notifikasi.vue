@@ -58,7 +58,7 @@ function navigateTo(path: string) {
   router.push(path)
 }
 
-function formatDateTime(raw: any): string {
+function formatDateTime(raw: Date | string): string {
   if (!raw) return '-'
   const d = new Date(raw)
   const dd = String(d.getDate()).padStart(2, '0')
@@ -76,10 +76,10 @@ async function markAsRead(notification: Notifications) {
     await put(`/notifications/${notification.id}`, { is_read: true })
     notification.is_read = true
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Terjadi kesalahan',
+      description: (err as Error).message || 'Terjadi kesalahan',
       color: 'error'
     })
   }
@@ -96,10 +96,10 @@ async function markAllAsRead() {
       color: 'success'
     })
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Terjadi kesalahan',
+      description: (err as Error).message || 'Terjadi kesalahan',
       color: 'error'
     })
   }

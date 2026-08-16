@@ -81,7 +81,7 @@ const rilisDanaOpen = ref(false)
 const rilisDanaTarget = ref<FinanceDoRow | null>(null)
 const rilisDanaLoading = ref(false)
 
-function openRilisDana(row: FinanceDoRow) {
+function _openRilisDana(row: FinanceDoRow) {
   rilisDanaTarget.value = row
   rilisDanaOpen.value = true
 }
@@ -115,7 +115,7 @@ const lunasOngkirOpen = ref(false)
 const lunasOngkirTarget = ref<FinanceDoRow | null>(null)
 const lunasOngkirLoading = ref(false)
 
-function openLunasOngkir(row: FinanceDoRow) {
+function _openLunasOngkir(row: FinanceDoRow) {
   lunasOngkirTarget.value = row
   lunasOngkirOpen.value = true
 }

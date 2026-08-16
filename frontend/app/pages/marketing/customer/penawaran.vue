@@ -139,7 +139,7 @@ const { post, postFile, del } = useApi()
 async function onFooterSubmit() {
   let createdId: string | null = null
   try {
-    const res = await post<any, OfferingLetterPost>('/offering-letters', {
+    const res = await post<{ id: string }, OfferingLetterPost>('/offering-letters', {
       customer_id: letterHeader.receiver,
       date: letterHeader.date,
       location: letterHeader.location,
@@ -182,11 +182,15 @@ async function onFooterSubmit() {
     })
 
     // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (createdId) {
       await del(`/offering-letters/${createdId}`).catch(() => undefined)
     }
-    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
+    toast.add({
+      title: 'Gagal',
+      description: e instanceof Error ? e.message : String(e),
+      color: 'error'
+    })
   }
 }
 

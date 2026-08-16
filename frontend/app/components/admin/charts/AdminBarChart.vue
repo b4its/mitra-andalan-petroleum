@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
+import type { ActiveElement, ChartEvent } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
@@ -43,9 +44,9 @@ const chartData = computed(() => ({
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
-  onClick: (_event: any, elements: any[]) => {
+  onClick: (_event: ChartEvent, elements: ActiveElement[]) => {
     if (!elements.length) return
-    const el = elements[0]
+    const el = elements[0]!
     const datasetIndex = el.datasetIndex
     const labelIndex = el.index
     const dataset = props.datasets[datasetIndex]

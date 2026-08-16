@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { h } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
+import type { AdminDrilldown, AdminDrilldownItem } from '~/types/admin'
 
 const props = defineProps<{
   open: boolean
@@ -27,7 +28,7 @@ const { data, pending, error, refresh } = await useAsyncData(
     `admin-drilldown-${props.metric?.key}-${props.dateFrom}-${props.dateTo}-${page.value}`,
   () => {
     if (!props.metric?.key) return Promise.resolve(null)
-    return get<any>('/stats/admin/drilldown', {
+    return get<AdminDrilldown>('/stats/admin/drilldown', {
       metric: props.metric.key,
       date_from: props.dateFrom,
       date_to: props.dateTo,
@@ -58,7 +59,7 @@ watch(
 
 // ── Search frontend ────────────────────────────────────────────
 const filteredItems = computed(() => {
-  const items: any[] = data.value?.items || []
+  const items: AdminDrilldownItem[] = data.value?.items || []
   const q = search.value.trim().toLowerCase()
   if (!q) return items
   return items.filter(
@@ -140,7 +141,7 @@ function statusBadge(status: string, group: string) {
   )
 }
 
-const columns = computed((): TableColumn<any>[] => {
+const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
   const key = props.metric?.key ?? ''
 
   // ── Customers ────────────────────────────────────────────────
@@ -545,7 +546,7 @@ const searchPlaceholder = computed(() => {
             </p>
             <UPagination
               v-model:page="page"
-              :total="data.total"
+              :total="data?.total ?? 0"
               :items-per-page="50"
             />
           </div>

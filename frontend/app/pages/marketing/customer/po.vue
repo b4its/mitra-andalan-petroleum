@@ -48,7 +48,7 @@ const offeringLetters = computed(() =>
     .filter(ol => ol.status !== 'po_received')
     .map((ol) => {
       return {
-        label: ol.customerName,
+        label: ol.customerName || '',
         value: {
           id: ol.id,
           offeringLetterNumber: ol.offeringLetterNumber,
@@ -100,13 +100,13 @@ async function onPoCustomerSubmit() {
       )
     }
 
-    const res = await post<any, PurchaseOrdersCustomerPost>(
+    const res = await post<{ id: string }, PurchaseOrdersCustomerPost>(
       '/purchase-orders',
       poPost
     )
     createdId = res.id
 
-    await put<any, { status: 'po_received' }>(
+    await put<unknown, { status: 'po_received' }>(
       `/offering-letters/${poData.selectedOfferingLetter.id}`,
       {
         status: 'po_received'
@@ -137,17 +137,21 @@ async function onPoCustomerSubmit() {
       description: 'Data Purchase Order Customer berhasil ditambahkan',
       color: 'success'
     })
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (createdId) {
       await del(`/purchase-orders/${createdId}`).catch(() => undefined)
       const olId = poCustomer.selectedOfferingLetter?.id
       if (olId) {
-        await put<any, { status: string }>(`/offering-letters/${olId}`, {
+        await put<unknown, { status: string }>(`/offering-letters/${olId}`, {
           status: previousStatus
         }).catch(() => undefined)
       }
     }
-    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
+    toast.add({
+      title: 'Gagal',
+      description: e instanceof Error ? e.message : String(e),
+      color: 'error'
+    })
   }
 }
 

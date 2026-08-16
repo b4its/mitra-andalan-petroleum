@@ -10,7 +10,7 @@ const UButton = resolveComponent('UButton')
 const table = useTemplateRef('table')
 const columnPinning = ref({ right: ['actions'] })
 const toast = useToast()
-const { get, put, post } = useApi()
+const { get, post } = useApi()
 
 const search = ref('')
 const debouncedSearch = refDebounced(search, 300)
@@ -119,10 +119,10 @@ async function onRilisDana(id: string) {
       color: 'success'
     })
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal merilis dana',
+      description: (err as Error).message || 'Gagal merilis dana',
       color: 'error'
     })
   } finally {

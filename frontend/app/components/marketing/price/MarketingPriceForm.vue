@@ -138,10 +138,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     }
     modalOpen.value = false
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal menyimpan harga.',
+      description: err instanceof Error ? err.message : 'Gagal menyimpan harga.',
       color: 'error'
     })
   } finally {
@@ -154,10 +154,10 @@ async function onDelete(price: Price) {
     await del(`/prices/${price.id}`)
     toast.add({ title: 'Berhasil', description: 'Harga berhasil dihapus.', color: 'success' })
     refresh()
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Gagal',
-      description: err.message || 'Gagal menghapus harga.',
+      description: err instanceof Error ? err.message : 'Gagal menghapus harga.',
       color: 'error'
     })
   }

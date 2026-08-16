@@ -97,10 +97,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     })
 
     router.push(`/${result.role}`)
-  } catch (err: any) {
+  } catch (err: unknown) {
     toast.add({
       title: 'Login Gagal',
-      description: err.message || 'Email atau kata sandi salah.',
+      description: (err as Error).message || 'Email atau kata sandi salah.',
       color: 'error'
     })
   } finally {

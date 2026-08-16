@@ -73,7 +73,7 @@ const offeringLetters = computed(() =>
     .filter(ol => ol.status === 'po_received')
     .map((ol) => {
       return {
-        label: ol.customerName,
+        label: ol.customerName || '',
         value: {
           id: ol.id,
           offeringLetterNumber: ol.offeringLetterNumber,
@@ -204,7 +204,7 @@ async function onFormSubmit() {
       ...letterAdditional
     }
 
-    const res = await post<any, PurchaseOrdersCustomerPost>(
+    const res = await post<unknown, PurchaseOrdersCustomerPost>(
       '/purchase-orders',
       {
         po_number: poData.po.number,
@@ -249,8 +249,12 @@ async function onFormSubmit() {
     })
 
     // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
-  } catch (e: any) {
-    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
+  } catch (e: unknown) {
+    toast.add({
+      title: 'Gagal',
+      description: e instanceof Error ? e.message : String(e),
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }

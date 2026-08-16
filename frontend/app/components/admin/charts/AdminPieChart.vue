@@ -6,6 +6,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
+import type { ActiveElement, ChartEvent, TooltipItem } from 'chart.js'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -48,9 +49,9 @@ const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   cutout: '55%',
-  onClick: (_event: any, elements: any[]) => {
+  onClick: (_event: ChartEvent, elements: ActiveElement[]) => {
     if (!elements.length) return
-    const el = elements[0]
+    const el = elements[0]!
     const index = el.index
     emit('segmentClick', {
       label: props.labels[index] ?? '',
@@ -75,7 +76,7 @@ const chartOptions = computed(() => ({
       borderColor: isDark.value ? '#334155' : '#e2e8f0',
       borderWidth: 1,
       callbacks: {
-        label: (ctx: any) => {
+        label: (ctx: TooltipItem<'doughnut'>) => {
           const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0)
           const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : '0'
           return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`

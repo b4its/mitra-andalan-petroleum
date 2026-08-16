@@ -211,7 +211,7 @@ function onDetailsSubmit() {
 
 async function onFooterSubmit() {
   try {
-    const res = await put<any, OfferingLetterPost>(
+    const res = await put<unknown, OfferingLetterPost>(
       `/offering-letters/${idOfferingLetter}`,
       {
         customer_id: letterHeader.receiver,
@@ -258,8 +258,12 @@ async function onFooterSubmit() {
     })
 
     // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
-  } catch (e: any) {
-    toast.add({ title: 'Gagal', description: e.message, color: 'error' })
+  } catch (e: unknown) {
+    toast.add({
+      title: 'Gagal',
+      description: e instanceof Error ? e.message : String(e),
+      color: 'error'
+    })
   }
 }
 

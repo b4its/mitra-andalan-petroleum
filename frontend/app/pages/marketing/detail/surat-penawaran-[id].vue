@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import logoImage from '~/assets/images/map-logo.jpeg'
+import type { Content } from 'pdfmake/interfaces'
 import type { ResUploads } from '~/types'
 import type { Customer, OfferingLetterPost } from '~/types/marketing'
 
@@ -90,7 +91,7 @@ const signatureBlock = computed(() => {
         marginTop: 2,
         alignment: 'center'
       }
-    ] as any[]
+    ] as Content[]
   }
   return [
     {
@@ -98,7 +99,7 @@ const signatureBlock = computed(() => {
       bold: true,
       marginTop: 30
     }
-  ] as any[]
+  ] as Content[]
 })
 
 const paymentMethodLabel = computed(() => {
@@ -556,7 +557,7 @@ const loadPdf = async () => {
                         alignment: 'center'
                       }
                     }
-                  ] as any[])
+                  ] as Content[])
                 : []),
               [
                 {

@@ -12,7 +12,7 @@ const { data: stats, pending } = await useAsyncData<Stats[]>(
   async () => {
     const { get } = useApi()
     const res = await get<{ stats: Stats[] }>('/stats/marketing')
-    return (res.stats || []).map((s: any) => ({
+    return (res.stats || []).map((s: Stats) => ({
       title: s.title,
       icon: s.icon,
       value: s.value,
