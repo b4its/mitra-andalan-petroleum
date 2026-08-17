@@ -55,6 +55,17 @@ const { data: accounts, refresh, pending } = await useAsyncData(
   { default: () => [], watch: [debouncedSearch, typeFilter], server: false }
 )
 
+// ── Pagination (5 per halaman) ────────────────────────────────
+const page = ref(1)
+const PAGE_SIZE = 5
+const pagedAccounts = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return accounts.value.slice(start, start + PAGE_SIZE)
+})
+watch([debouncedSearch, typeFilter], () => {
+  page.value = 1
+})
+
 const typeOptions: { label: string, value: string, color: string }[] = [
   { label: 'Semua Jenis', value: 'all', color: 'neutral' },
   { label: 'Aset', value: 'asset', color: 'info' },
@@ -321,7 +332,7 @@ definePageMeta({ layout: 'accounting' })
             </div>
             <UTable
               v-else
-              :data="accounts"
+              :data="pagedAccounts"
               :columns="columns"
               :ui="{
                 base: 'table-fixed border-separate border-spacing-0',
@@ -354,6 +365,16 @@ definePageMeta({ layout: 'accounting' })
                 </div>
               </template>
             </UTable>
+            <div
+              v-if="accounts.length > PAGE_SIZE"
+              class="flex justify-end border-t border-default pt-4 px-4"
+            >
+              <UPagination
+                v-model="page"
+                :items-per-page="PAGE_SIZE"
+                :total="accounts.length"
+              />
+            </div>
           </UCard>
 
           <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-lg' }">

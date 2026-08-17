@@ -38,6 +38,17 @@ const filteredData = computed(() => {
   )
 })
 
+// ── Pagination (5 per halaman) ────────────────────────────────
+const page = ref(1)
+const PAGE_SIZE = 5
+const pagedData = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return filteredData.value.slice(start, start + PAGE_SIZE)
+})
+watch(debouncedSearch, () => {
+  page.value = 1
+})
+
 const expandedAccount = ref<string | null>(null)
 
 function toggleExpand(accountId: string) {
@@ -244,7 +255,7 @@ definePageMeta({ layout: 'accounting' })
             </div>
             <template v-else>
               <UTable
-                :data="filteredData"
+                :data="pagedData"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0',
@@ -266,6 +277,16 @@ definePageMeta({ layout: 'accounting' })
                   </UButton>
                 </template>
               </UTable>
+              <div
+                v-if="filteredData.length > PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-4 px-4"
+              >
+                <UPagination
+                  v-model="page"
+                  :items-per-page="PAGE_SIZE"
+                  :total="filteredData.length"
+                />
+              </div>
               <p
                 v-if="ledgers.length === 0"
                 class="py-6 text-center text-sm text-neutral-500"

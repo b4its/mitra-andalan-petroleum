@@ -63,6 +63,17 @@ const { data: journals, refresh, pending: pendingJournals } = await useAsyncData
   { default: () => [], watch: [debouncedSearch, dateFrom, dateTo, accountFilters], server: false }
 )
 
+// ── Pagination (5 per halaman) ────────────────────────────────
+const page = ref(1)
+const PAGE_SIZE = 5
+const pagedJournals = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return journals.value.slice(start, start + PAGE_SIZE)
+})
+watch([debouncedSearch, dateFrom, dateTo, accountFilters], () => {
+  page.value = 1
+})
+
 const { data: accounts, pending: pendingAccounts } = await useAsyncData(
   'accounting-accounts-options',
   () => get<AccountingAccount[]>('/accounting/accounts'),
@@ -348,7 +359,7 @@ definePageMeta({ layout: 'accounting' })
             </div>
             <UTable
               v-else
-              :data="journals"
+              :data="pagedJournals"
               :columns="columns"
               :ui="{
                 base: 'table-fixed border-separate border-spacing-0',
@@ -370,6 +381,16 @@ definePageMeta({ layout: 'accounting' })
                 </UButton>
               </template>
             </UTable>
+            <div
+              v-if="journals.length > PAGE_SIZE"
+              class="flex justify-end border-t border-default pt-4 px-4"
+            >
+              <UPagination
+                v-model="page"
+                :items-per-page="PAGE_SIZE"
+                :total="journals.length"
+              />
+            </div>
           </UCard>
 
           <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-3xl' }">
