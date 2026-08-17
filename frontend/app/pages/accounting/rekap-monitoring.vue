@@ -21,6 +21,17 @@ const filteredRows = computed(() => {
   )
 })
 
+// ── Pagination (5 per halaman) ────────────────────────────────
+const page = ref(1)
+const PAGE_SIZE = 5
+const pagedRows = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return filteredRows.value.slice(start, start + PAGE_SIZE)
+})
+watch(debouncedSearch, () => {
+  page.value = 1
+})
+
 const exportColumns: ExportColumn<MonitoringRow>[] = [
   { header: 'Bulan', accessor: (row: MonitoringRow) => row.bulan },
   { header: 'Invoice', accessor: (row: MonitoringRow) => row.invoice },
@@ -219,7 +230,7 @@ definePageMeta({ layout: 'accounting' })
 
             <UCard class="overflow-x-auto">
               <UTable
-                :data="filteredRows"
+                :data="pagedRows"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0 min-w-[800px]',
@@ -229,6 +240,16 @@ definePageMeta({ layout: 'accounting' })
                   td: 'border-b border-default'
                 }"
               />
+              <div
+                v-if="filteredRows.length > PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-4 px-4"
+              >
+                <UPagination
+                  v-model="page"
+                  :items-per-page="PAGE_SIZE"
+                  :total="filteredRows.length"
+                />
+              </div>
             </UCard>
 
             <!-- Total Row -->

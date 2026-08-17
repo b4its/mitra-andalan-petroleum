@@ -30,6 +30,17 @@ const filteredOperating = computed(() => {
   )
 })
 
+// ── Pagination (5 per halaman) ────────────────────────────────
+const page = ref(1)
+const PAGE_SIZE = 5
+const pagedData = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return filteredOperating.value.slice(start, start + PAGE_SIZE)
+})
+watch(debouncedSearch, () => {
+  page.value = 1
+})
+
 const columns: TableColumn<CashflowItem>[] = [
   {
     accessorKey: 'account_code',
@@ -175,7 +186,7 @@ definePageMeta({ layout: 'accounting' })
                 </div>
               </template>
               <UTable
-                :data="filteredOperating"
+                :data="pagedData"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0',
@@ -185,6 +196,16 @@ definePageMeta({ layout: 'accounting' })
                   td: 'border-b border-default'
                 }"
               />
+              <div
+                v-if="filteredOperating.length > PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-4 px-4"
+              >
+                <UPagination
+                  v-model="page"
+                  :items-per-page="PAGE_SIZE"
+                  :total="filteredOperating.length"
+                />
+              </div>
               <p
                 v-if="!cashflow.operating.items.length"
                 class="py-6 text-center text-sm text-neutral-500"

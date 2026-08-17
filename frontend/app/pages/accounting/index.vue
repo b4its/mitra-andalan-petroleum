@@ -105,7 +105,7 @@ const { data: journals } = await useAsyncData(
   async () => {
     const params: Record<string, string | number | string[]> = {
       page: 1,
-      page_size: 10
+      page_size: 50
     }
     if (dateFrom.value) params.date_from = dateFrom.value
     if (dateTo.value) params.date_to = dateTo.value
@@ -115,6 +115,17 @@ const { data: journals } = await useAsyncData(
   },
   { default: () => [], server: false, watch: [dateFrom, dateTo, accountFilters] }
 )
+
+// ── Pagination (5 per halaman) ────────────────────────────────
+const journalPage = ref(1)
+const JOURNAL_PAGE_SIZE = 5
+const pagedJournals = computed(() => {
+  const start = (journalPage.value - 1) * JOURNAL_PAGE_SIZE
+  return journals.value.slice(start, start + JOURNAL_PAGE_SIZE)
+})
+watch([dateFrom, dateTo, accountFilters], () => {
+  journalPage.value = 1
+})
 
 // ── Bento cards ──────────────────────────────────────────────
 const cards = computed(() => [
@@ -503,7 +514,7 @@ definePageMeta({ layout: 'accounting' })
             </template>
 
             <UTable
-              :data="journals"
+              :data="pagedJournals"
               :columns="journalColumns"
               :ui="{
                 base: 'table-fixed border-separate border-spacing-0',
@@ -513,6 +524,16 @@ definePageMeta({ layout: 'accounting' })
                 td: 'border-b border-default'
               }"
             />
+            <div
+              v-if="journals.length > JOURNAL_PAGE_SIZE"
+              class="flex justify-end border-t border-default pt-4 px-4"
+            >
+              <UPagination
+                v-model="journalPage"
+                :items-per-page="JOURNAL_PAGE_SIZE"
+                :total="journals.length"
+              />
+            </div>
             <p
               v-if="!journals.length"
               class="py-6 text-center text-sm text-neutral-500"

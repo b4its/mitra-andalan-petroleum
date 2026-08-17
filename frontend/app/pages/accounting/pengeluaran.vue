@@ -56,6 +56,17 @@ const { data: rows, refresh, pending } = await useAsyncData(
   { default: () => ({ items: [], total: 0 }), watch: [debouncedSearch, dateFrom, dateTo, accountFilters], server: false }
 )
 
+// ── Pagination (5 per halaman) ────────────────────────────────
+const page = ref(1)
+const PAGE_SIZE = 5
+const pagedItems = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return (rows.value.items || []).slice(start, start + PAGE_SIZE)
+})
+watch([debouncedSearch, dateFrom, dateTo, accountFilters], () => {
+  page.value = 1
+})
+
 const totalAmount = computed(() =>
   (rows.value.items ?? []).reduce((sum, row) => sum + (row.amount || 0), 0)
 )
@@ -219,7 +230,7 @@ definePageMeta({ layout: 'accounting' })
 
             <UCard>
               <UTable
-                :data="rows.items"
+                :data="pagedItems"
                 :columns="columns"
                 :ui="{
                   base: 'table-fixed border-separate border-spacing-0',
@@ -229,6 +240,16 @@ definePageMeta({ layout: 'accounting' })
                   td: 'border-b border-default'
                 }"
               />
+              <div
+                v-if="rows.items.length > PAGE_SIZE"
+                class="flex justify-end border-t border-default pt-4 px-4"
+              >
+                <UPagination
+                  v-model="page"
+                  :items-per-page="PAGE_SIZE"
+                  :total="rows.items.length"
+                />
+              </div>
               <p
                 v-if="rows.items.length === 0"
                 class="py-6 text-center text-sm text-neutral-500"
