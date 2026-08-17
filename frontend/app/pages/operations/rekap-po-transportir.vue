@@ -96,7 +96,7 @@ watch(
   }
 )
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 })
+const pagination = ref({ pageIndex: 0, pageSize: 5 })
 
 definePageMeta({ layout: 'operations' })
 </script>

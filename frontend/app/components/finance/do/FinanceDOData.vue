@@ -139,7 +139,7 @@ function statusBadge(done: boolean, label: string, at?: string | null) {
   ])
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 })
+const pagination = ref({ pageIndex: 0, pageSize: 5 })
 
 const columns: TableColumn<FinanceDoRow>[] = [
   { accessorKey: 'deliveryOrderNumber', header: 'Nomor Delivery Order' },

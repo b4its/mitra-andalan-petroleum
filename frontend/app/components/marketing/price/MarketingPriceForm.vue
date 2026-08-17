@@ -37,6 +37,8 @@ const {
 )
 
 const search = ref('')
+const page = ref(1)
+const PAGE_SIZE = 5
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   const list = prices.value ?? []
@@ -45,6 +47,13 @@ const filtered = computed(() => {
     p.name.toLowerCase().includes(q)
     || (p.notes ?? '').toLowerCase().includes(q)
   )
+})
+const pagedData = computed(() => {
+  const start = (page.value - 1) * PAGE_SIZE
+  return filtered.value.slice(start, start + PAGE_SIZE)
+})
+watch(search, () => {
+  page.value = 1
 })
 
 const columns: TableColumn<Price>[] = [
@@ -193,7 +202,7 @@ async function onDelete(price: Price) {
   <UPageCard variant="subtle">
     <UTable
       :columns="columns"
-      :data="filtered"
+      :data="pagedData"
       :loading="pending"
       :empty-state="{
         icon: 'i-lucide-circle-off',
@@ -228,6 +237,16 @@ async function onDelete(price: Price) {
         </div>
       </template>
     </UTable>
+    <div
+      v-if="filtered.length > PAGE_SIZE"
+      class="flex justify-end border-t border-default pt-4 px-4"
+    >
+      <UPagination
+        v-model="page"
+        :items-per-page="PAGE_SIZE"
+        :total="filtered.length"
+      />
+    </div>
   </UPageCard>
 
   <UModal v-model:open="modalOpen">

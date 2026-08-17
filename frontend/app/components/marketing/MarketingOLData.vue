@@ -125,7 +125,7 @@ watch(
 
 const pagination = ref({
   pageIndex: 0,
-  pageSize: 7
+  pageSize: 5
 })
 
 const detailOpen = ref(false)

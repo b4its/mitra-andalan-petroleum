@@ -537,7 +537,7 @@ async function updateDoStatus(doId: string) {
   }
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 })
+const pagination = ref({ pageIndex: 0, pageSize: 5 })
 
 const detailOpen = ref(false)
 const detailId = ref<string | null>(null)

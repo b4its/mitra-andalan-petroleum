@@ -102,7 +102,7 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
 
 const pagination = ref({
   pageIndex: 0,
-  pageSize: 7
+  pageSize: 5
 })
 </script>
 

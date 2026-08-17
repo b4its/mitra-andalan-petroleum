@@ -114,7 +114,7 @@ const olDistValues = computed(
 const search = ref('')
 const statusFilter = ref('all')
 const page = ref(1)
-const PAGE_SIZE = 7
+const PAGE_SIZE = 5
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()

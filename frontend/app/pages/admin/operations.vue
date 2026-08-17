@@ -117,7 +117,7 @@ const doDistValues = computed(
 // ── Table: search + pagination ────────────────────────────────
 const search = ref('')
 const page = ref(1)
-const PAGE_SIZE = 7
+const PAGE_SIZE = 5
 
 // Filter tab
 const filterTab = ref<'all' | 'lunas'>('all')

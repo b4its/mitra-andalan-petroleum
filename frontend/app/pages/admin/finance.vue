@@ -137,7 +137,7 @@ const invSearch = ref('')
 const invStatusFilter = ref('all')
 const deadlineStatusFilter = ref('all')
 const invPage = ref(1)
-const PAGE_SIZE = 7
+const PAGE_SIZE = 5
 
 const invFiltered = computed(() => {
   const q = invSearch.value.trim().toLowerCase()

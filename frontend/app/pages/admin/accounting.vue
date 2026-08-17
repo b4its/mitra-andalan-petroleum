@@ -593,7 +593,7 @@ const accountColumns: TableColumn<AccountingAccount>[] = [
 const journalSearch = ref('')
 const journalStatusFilter = ref('all')
 const journalPage = ref(1)
-const PAGE_SIZE = 7
+const PAGE_SIZE = 5
 
 const totalDebit = (journal: AccountingJournal) =>
   journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0)

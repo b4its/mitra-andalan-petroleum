@@ -232,7 +232,7 @@ async function confirmDelete() {
   }
 }
 
-const pagination = ref({ pageIndex: 0, pageSize: 7 })
+const pagination = ref({ pageIndex: 0, pageSize: 5 })
 
 const columns: TableColumn<DeliveryOrderRow>[] = [
   { accessorKey: 'do_number', header: 'Nomor Delivery Order' },
