@@ -44,9 +44,9 @@ COREPACK_ENABLE_STRICT=0 npx vitest run
 docker compose exec mandalan-frontend sh -c 'cd /app && npx vitest run --exclude "**/api.test.ts"'
 ```
 
-> API contract tests (`api.test.ts`) connect to `localhost:8012` and need the
-> backend running. Run them **from the host** where the port is exposed, or
-> exclude them inside the container.
+> API contract tests (`api.test.ts`) connect to `localhost:8092` (proxy
+> frontend) and need the backend running. Run them **from the host** where the
+> port is exposed, or exclude them inside the container.
 
 **47 tests (3 files)** — utility functions (formatCurrency, formatDate,
 formatPercent, randomInt, randomFrom), Zod schemas (addCustomer, profile,

@@ -449,7 +449,7 @@ function fileIcon(mimeType: string): string {
 
 function fileUrl(url: string): string {
   // backend mengembalikan url seperti /media/folder/filename
-  // di dev mode Nuxt proxy /media → backend:8000/media
+  // di dev mode Nuxt proxy /media → backend:8012/media
   if (url.startsWith('http')) return url
   return url // /media/... sudah cukup, proxied oleh nitro devProxy
 }

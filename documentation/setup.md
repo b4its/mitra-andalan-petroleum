@@ -35,9 +35,9 @@ Service akan berjalan di:
 
 | Service | Port |
 |---------|------|
-| Backend (FastAPI) | 8000 |
-| Frontend (Nuxt) | 8080 |
-| MySQL | 3306 |
+| Backend (FastAPI) | 8012 |
+| Frontend (Nuxt) | 8092 |
+| MySQL | 3318 |
 | Swagger UI | http://localhost:8012/docs |
 | Uploaded Files | http://localhost:8012/media/... |
 
