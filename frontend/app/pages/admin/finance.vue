@@ -222,7 +222,7 @@ const deadlineStatusOptions = [
   { label: 'Semua Tenggat', value: 'all' },
   { label: 'Tepat Waktu', value: 'on_time' },
   { label: 'Segera Jatuh Tempo', value: 'due_soon' },
-  { label: 'Terlewat', value: 'overdue' }
+  { label: 'Jatuh Tempo', value: 'overdue' }
 ]
 const doFlowOptions = [
   { label: 'Semua Alur Delivery Order', value: 'all' },
