@@ -20,6 +20,7 @@ from app.models.supplier import Supplier
 from app.models.offering_letter import OfferingLetter
 from app.models.purchase_order import PurchaseOrder
 from app.models.delivery_order import DeliveryOrder
+from app.models.company import Company
 from app.models.invoice import Invoice
 from app.models.notification import Notification
 from app.models.sale import Sale
@@ -32,7 +33,7 @@ from app.models.accounting import Account, JournalEntry, JournalLine
 _CLEAR_ORDER = [
     Upload, JournalLine, JournalEntry, Notification,
     Invoice, PoTransportir, DeliveryOrder, PurchaseOrder, OfferingLetter,
-    Sale, Account, Supplier, Customer, User,
+    Sale, Account, Company, Supplier, Customer, User,
 ]
 
 
@@ -59,6 +60,7 @@ async def seed_database(db: AsyncSession, force: bool = False):
     await _seed_users(db)
     await _seed_customers(db)
     await _seed_suppliers(db)
+    await _seed_companies(db)
     await _seed_offering_letters(db)
     await _seed_purchase_orders(db)
     await _seed_po_transportir(db)
@@ -69,7 +71,108 @@ async def seed_database(db: AsyncSession, force: bool = False):
     await _seed_accounting(db)
     await _seed_signatures(db)
     await db.commit()
-    print("[seed] Selesai mengisi data contoh (5 user, 3 customer, 2 supplier, 15 OL, 10 PO, 3 PO transportir, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan).")
+    print("[seed] Selesai mengisi data contoh (5 user, 3 company, 3 customer, 2 supplier, 15 OL, 10 PO, 3 PO transportir, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan).")
+
+
+
+
+async def _seed_offering_letters(db: AsyncSession):
+    """Seed surat penawaran data untuk sistem."""
+    today = datetime.now()
+    
+    # Get customer IDs from seed
+    result = await db.execute(select(Customer))
+    customers = result.scalars().all()
+    
+    if not customers:
+        print("[seed] Warning: No customers found, skipping OL generation")
+        return
+        
+    # Create comprehensive OL records
+    ol_numbers = [
+        ("722/MAP/II-06/26", 15),
+        ("723/MAP/III-07/26", 20), 
+        ("724/MAP/IV-08/26", 25),
+        ("725/MAP/V-09/26", 30),
+        ("726/MAP/VI-10/26", 35),
+        ("727/MAP/VII-11/26", 40),
+        ("728/MAP/VIII-12/26", 45),
+        ("729/MAP/IX-01/27", 50),
+        ("730/MAP/X-02/27", 55),
+        ("731/MAP/XI-03/27", 60),
+        ("732/MAP/XII-04/27", 65),
+        ("733/MAP/I-05/27", 70),
+        ("734/MAP/II-06/27", 75),
+        ("735/MAP/III-07/27", 80),
+        ("736/MAP/IV-08/27", 85),
+    ]
+    
+    for i in range(min(15, len(customers))):
+        ol_number, days_delivery = ol_numbers[i % len(ol_numbers)]
+        customer = customers[i % len(customers)]
+        
+        ol_data = {
+            "id": str(uuid.uuid4()),
+            "offering_letter_number": ol_number,
+            "date": (today - timedelta(days=30-i)).strftime("%Y-%m-%d"),
+            "location": "Balikpapan",
+            "regarding": "Surat Penawaran Harga Bahan Bakar Minyak",
+            "customer_id": customer.id,
+            "payment_method": "kredit" if i % 2 == 0 else None,
+            "payment_term": str((i + 1) * 7 if i < 10 else 30),
+            "volume_tollerance": 0.005,
+            "purchase_order_deadline": str((i + 1) * 7 if i < 5 else 14),
+            "late_penalty_percent": 0.01,
+            "price_service_type": "Truk Tangki" if i % 2 == 0 else "Pipeline",
+            "fuel_product_name": "Bio Diesel",
+            "fuel_hpp_price": round(17450 + (i * 100)),
+            "fuel_base_price": round(17950 + (i * 100)),
+            "fuel_selling_ppkb_percent": 0.005,
+            "fuel_selling_oat_percent": 0.01,
+            "fuel_selling_ppn_percent": 0.11,
+            "fuel_selling_pph_percent": 0 if i < 10 else 0.02,
+            "terms_and_conditions": json.dumps(["Harga dapat berubah mengikuti harga keekonomian Pertamina"])
+        }
+        
+        ol = OfferingLetter(**ol_data)
+        db.add(ol)
+        
+    await db.flush()
+    print(f"[seed] Menambahkan {len(ol_numbers[:15])} surat penawaran.")
+
+
+# ── Companies ────────────────────────────────────────────────────
+
+async def _seed_companies(db: AsyncSession):
+    """Seed perusahaan data untuk sistem."""
+    companies = [
+        {
+            "id": str(uuid.uuid4()),
+            "name": "PT. Mitra Andalan Petroleum",
+            "abbreviation": "MAP",
+            "company_image": None
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "name": "PT. Pertamina Hulu Energi", 
+            "abbreviation": "PHE",
+            "company_image": None
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "name": "PT. Total E&P Indonesia",
+            "abbreviation": "TEPI", 
+            "company_image": None
+        }
+    ]
+    
+    for comp_data in companies:
+        comp = Company(**comp_data)
+        db.add(comp)
+        
+    await db.flush()
+    print(f"[seed] Menambahkan {len(companies)} perusahaan.")
+
 
 
 async def _clear_all(db: AsyncSession):
@@ -84,16 +187,61 @@ async def _clear_all(db: AsyncSession):
 # ── Users ──────────────────────────────────────────────────────
 
 async def _seed_users(db: AsyncSession):
+    """Seed user data untuk sistem."""
     users = [
-        User(name="Ahmad Fauzi", email="admin@mapetroleum.co.id", password=bcrypt.hash("admin123"), demo_password="admin123", role="admin", signature_caption="Ahmad Fauzi - Admin"),
-        User(name="Bambang Nugroho", email="ops@mapetroleum.co.id", password=bcrypt.hash("ops123"), demo_password="ops123", role="operations", signature_caption="Bambang Nugroho - Operations"),
-        User(name="Nico Pratama", email="marketing@mapetroleum.co.id", password=bcrypt.hash("marketing123"), demo_password="marketing123", role="marketing", signature_caption="Nico Pratama - Marketing"),
-        User(name="Alea Rahmawati", email="finance@mapetroleum.co.id", password=bcrypt.hash("finance123"), demo_password="finance123", role="finance", signature_caption="Alea Rahmawati - Finance"),
-        User(name="Rina Marlina", email="accounting@mapetroleum.co.id", password=bcrypt.hash("accounting123"), demo_password="accounting123", role="accounting", signature_caption="Rina Marlina - Accounting"),
+        {
+            "id": str(uuid.uuid4()),
+            "name": "Ahmad Fauzi",
+            "email": "admin@mapetroleum.co.id",
+            "password": bcrypt.hash("admin123"),
+            "demo_password": "admin123",
+            "role": "admin",
+            "signature_caption": "Ahmad Fauzi - Admin"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "name": "Bambang Nugroho", 
+            "email": "ops@mapetroleum.co.id",
+            "password": bcrypt.hash("ops123"),
+            "demo_password": "ops123",
+            "role": "operations",
+            "signature_caption": "Bambang Nugroho - Operations"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "name": "Nico Pratama",
+            "email": "marketing@mapetroleum.co.id",
+            "password": bcrypt.hash("marketing123"),
+            "demo_password": "marketing123",
+            "role": "marketing",
+            "signature_caption": "Nico Pratama - Marketing"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "name": "Alea Rahmawati",
+            "email": "finance@mapetroleum.co.id",
+            "password": bcrypt.hash("finance123"),
+            "demo_password": "finance123",
+            "role": "finance",
+            "signature_caption": "Alea Rahmawati - Finance"
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "name": "Rina Marlina",
+            "email": "accounting@mapetroleum.co.id",
+            "password": bcrypt.hash("accounting123"),
+            "demo_password": "accounting123",
+            "role": "accounting",
+            "signature_caption": "Rina Marlina - Accounting"
+        }
     ]
-    for u in users:
+    
+    for u_data in users:
+        u = User(**u_data)
         db.add(u)
+        
     await db.flush()
+    print(f"[seed] Menambahkan {len(users)} user.")
 
 
 # ── Customers ──────────────────────────────────────────────────
