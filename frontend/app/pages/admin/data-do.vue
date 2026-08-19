@@ -116,7 +116,7 @@ function openEdit(row: DeliveryOrderRow) {
   form.po_number = row.po_number ?? ''
   form.transport_name = row.transport_name ?? ''
   form.fuel_total = row.fuel_total ?? 0
-  form.status = row.status ?? 'created'
+  form.status = row.status || 'created'
   editOpen.value = true
 }
 

@@ -572,7 +572,7 @@ function openDetail(id: string, type: 'invoice' | 'do') {
                   :labels="trendLabels"
                   :datasets="[
                     {
-                      label: 'Invoice',
+                      label: 'Faktur',
                       data: invTrendData,
                       backgroundColor: 'rgba(239,68,68,0.7)'
                     }
