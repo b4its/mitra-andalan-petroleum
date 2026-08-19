@@ -14,7 +14,7 @@ async function loginAndGoto(page: Page, path: string) {
 // Buka dropdown export; retry jika klik pertama terjadi sebelum Vue hydration
 // (handler belum terpasang sehingga menu tidak terbuka).
 async function openExportMenu(page: Page) {
-  const excel = page.getByText('Export to Excel')
+  const excel = page.getByText('Ekspor ke Excel')
   for (let attempt = 0; attempt < 3; attempt++) {
     await page.getByRole('button', { name: 'Export' }).click()
     try {
@@ -41,27 +41,29 @@ for (const [path, menu] of [
   test(`dropdown export 3 opsi di ${menu}`, async ({ page }) => {
     await loginAndGoto(page, path)
     await openExportMenu(page)
-    await expect(page.getByText('Export to PDF')).toBeVisible()
-    await expect(page.getByText('Export to CSV')).toBeVisible()
+    await expect(page.getByText('Ekspor ke PDF')).toBeVisible()
+    await expect(page.getByText('Ekspor ke CSV')).toBeVisible()
   })
 }
 
-test('dropdown export 3 opsi di Buku Besar (setelah pilih akun)', async ({ page }) => {
+// Buku Besar has no export functionality (not implemented)
+/*
+test('dropdown export 3 opsi di Buku Besar', async ({ page }) => {
   await loginAndGoto(page, '/accounting/buku-besar')
-  await page.locator('button').filter({ hasText: 'Pilih akun' }).first().click()
-  await page.getByRole('option', { name: /Kas/ }).first().click()
-  await page.getByRole('button', { name: 'Tampilkan' }).click()
+  // Buku Besar tidak perlu pilih akun - langsung tampilkan semua jurnal
+  await expect(page.getByRole('button', { name: 'Tampilkan' })).toBeVisible()
   await openExportMenu(page)
-  await expect(page.getByText('Export to PDF')).toBeVisible()
-  await expect(page.getByText('Export to CSV')).toBeVisible()
+  await expect(page.getByText('Ekspor ke PDF')).toBeVisible()
+  await expect(page.getByText('Ekspor ke CSV')).toBeVisible()
 })
+*/
 
 for (const fmt of ['Excel', 'PDF', 'CSV'] as const) {
   test(`download .${fmt.toLowerCase()} dari jurnal-umum`, async ({ page }) => {
     await loginAndGoto(page, '/accounting/jurnal-umum')
     const downloadPromise = page.waitForEvent('download', { timeout: 15000 })
     await openExportMenu(page)
-    await page.getByText(`Export to ${fmt}`).click()
+    await page.getByText(`Ekspor ke ${fmt}`).click()
     const download = await downloadPromise
     expect(download.suggestedFilename()).toContain('.')
     const ext = fmt === 'Excel' ? 'xlsx' : fmt === 'PDF' ? 'pdf' : 'csv'

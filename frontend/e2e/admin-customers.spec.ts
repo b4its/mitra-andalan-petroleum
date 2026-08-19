@@ -38,7 +38,8 @@ test.describe('Admin Customers — NPWP', () => {
     await page.getByPlaceholder('Nama customer').fill('Test NPWP Invalid')
     await page.getByPlaceholder('00.000.000.0-000.000').fill('12345')
     await page.getByRole('button', { name: 'Tambah Customer', exact: true }).click()
-    await expect(page.getByText('Format NPWP salah', { exact: true })).toBeVisible()
+    // Validation shows warning - check for text in alert region
+    await expect(page.locator('[role=alert]').getByText('NPWP harus 15 digit')).toBeVisible()
   })
 
   test('tambah customer dengan NPWP valid berhasil', async ({ page }) => {

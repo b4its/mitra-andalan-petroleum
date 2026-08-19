@@ -27,8 +27,8 @@ test.describe('Admin Database Konfigurasi', () => {
   })
 
   test('halaman render kartu export, import, dan bersihkan database', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Database Konfigurasi' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Export Data SQL' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Konfigurasi Database' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Ekspor Data SQL' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Import Data SQL' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Bersihkan Database' })).toBeVisible()
   })
@@ -37,9 +37,9 @@ test.describe('Admin Database Konfigurasi', () => {
     const downloadPromise = page.waitForEvent('download', { timeout: 15000 })
     await page.getByRole('button', { name: 'Export SQL' }).click()
     await expect(
-      page.getByRole('dialog').getByText('Export data SQL?')
+      page.getByRole('dialog').getByText('Ekspor data SQL?')
     ).toBeVisible()
-    await page.getByRole('dialog').getByRole('button', { name: 'Ya, Export SQL' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ya, Ekspor SQL' }).click()
     const download = await downloadPromise
     expect(download.suggestedFilename()).toMatch(/\.sql$/)
     await expect(page.getByText('File SQL berhasil diunduh.')).toBeVisible()
@@ -67,9 +67,9 @@ test.describe('Admin Database Konfigurasi', () => {
     await page.getByPlaceholder('Ketik IMPORT SQL').fill('IMPORT SQL')
     await page.getByRole('button', { name: 'Import SQL' }).click()
     await expect(
-      page.getByRole('dialog').getByText('Import data SQL?')
+      page.getByRole('dialog').getByText('Impor data SQL?')
     ).toBeVisible()
-    await page.getByRole('dialog').getByRole('button', { name: 'Ya, Import SQL' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Ya, Impor SQL' }).click()
     await expect(page.getByText('Import selesai', { exact: true })).toBeVisible()
   })
 

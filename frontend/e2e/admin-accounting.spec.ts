@@ -44,16 +44,16 @@ test.describe('Admin Accounting page', () => {
     const exports = page.getByRole('button', { name: 'Export' })
     await expect(exports).toHaveCount(2)
     await exports.first().click()
-    await expect(page.getByText('Export to Excel')).toBeVisible()
-    await expect(page.getByText('Export to PDF')).toBeVisible()
-    await expect(page.getByText('Export to CSV')).toBeVisible()
+    await expect(page.getByText('Ekspor ke Excel')).toBeVisible()
+    await expect(page.getByText('Ekspor ke PDF')).toBeVisible()
+    await expect(page.getByText('Ekspor ke CSV')).toBeVisible()
   })
 
   test('download .xlsx dari rekap jurnal', async ({ page }) => {
     await loginAndGoto(page, '/admin/accounting')
     const downloadPromise = page.waitForEvent('download', { timeout: 15000 })
     await page.getByRole('button', { name: 'Export' }).first().click()
-    await page.getByText('Export to Excel').click()
+    await page.getByText('Ekspor ke Excel').click()
     const download = await downloadPromise
     expect(download.suggestedFilename()).toContain('.xlsx')
   })
