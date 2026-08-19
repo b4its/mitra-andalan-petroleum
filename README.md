@@ -54,7 +54,7 @@ port) dan **Ngrok** (tunnel HTTPS publik ke domain) di atas DB/Backend/Frontend.
 # 1. Siapkan env produksi
 cp .env.production.example .env.production
 #    Isi: NGROK_AUTHTOKEN, NGROK_DOMAIN (mis. mitra-andalan.ngrok-free.app
-#    atau domain custom), PUBLIC_SITE_URL, HTTP_PORT (default 8092)
+#    atau domain custom), PUBLIC_SITE_URL, HTTP_PORT (default 8093)
 
 # 2. Build & jalankan stack produksi
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
@@ -64,7 +64,8 @@ docker compose -f docker-compose.prod.yml logs -f ngrok
 ```
 
 Catatan:
-- **Akses lokal** tetap tersedia di `http://localhost:8092` (lewat nginx).
+- **Akses lokal** tetap tersedia di `http://localhost:8093` (lewat nginx) —
+  beda dari stack dev (`:8092`).
 - Ngrok membutuhkan akun: daftar gratis di https://ngrok.com, ambil token di
   dashboard, dan pilih domain (gratis `.ngrok-free.app` atau custom berbayar).
 - Stack produksi memakai project name `mandalan-prod` sehingga **bisa berjalan

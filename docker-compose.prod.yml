@@ -7,7 +7,8 @@
 #   2. docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 #   3. Buka URL ngrok yang tampil di log: docker compose logs -f ngrok
 #
-# Akses lokal tetap tersedia di http://localhost:8092 (lewat nginx).
+# Akses lokal tetap tersedia di http://localhost:8093 (lewat nginx).
+# Beda dari stack dev (frontend :8092) supaya bisa berjalan paralel tanpa tabrakan port.
 
 name: mandalan-prod
 
@@ -61,7 +62,7 @@ services:
     environment:
       NUXT_API_PROXY_TARGET: http://backend:8012/api/v1
       NUXT_MEDIA_PROXY_TARGET: http://backend:8012/media
-      NUXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8092}
+      NUXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8093}
       PORT: "3012"
     depends_on:
       backend:
@@ -73,7 +74,7 @@ services:
     container_name: mandalan-prod-nginx
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-8092}:92"
+      - "${HTTP_PORT:-8093}:92"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
