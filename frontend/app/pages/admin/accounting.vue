@@ -629,7 +629,7 @@ watch([journalSearch, journalStatusFilter], () => {
 
 const journalStatusOptions = [
   { label: 'Semua Status', value: 'all' },
-  { label: 'Posted', value: 'posted' },
+  { label: 'Dibukukan', value: 'posted' },
   { label: 'Draf', value: 'draft' },
   { label: 'Dibatalkan', value: 'void' }
 ]
