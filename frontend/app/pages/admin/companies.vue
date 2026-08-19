@@ -2,6 +2,7 @@
 import { h } from "vue"
 import * as z from "zod"
 import type { TableColumn, FormSubmitEvent } from "@nuxt/ui"
+import type { ResUploads } from "~/types"
 import type { Company, CompanyData } from "~/types/company"
 
 definePageMeta({ layout: "admin" })
@@ -110,7 +111,7 @@ type EditSchema = z.output<typeof editSchema>
 const formState = reactive<AddSchema & EditSchema>({
   name: "",
   abbreviation: "",
-  company_image: ""
+  company_image: null as unknown as string
 })
 
 async function onSubmitAdd(event: FormSubmitEvent<AddSchema>) {
@@ -231,6 +232,76 @@ const columns: TableColumn<CompanyLocal>[] = [
 ]
 
 const saving = ref(false)
+
+// ── Image upload state ────────────────────────────────────────
+const imagePreview = ref<string | null>(null)
+const filesForUpload = ref<File[] | null>(null)
+const uploadingImage = ref(false)
+
+async function onFileSelected(file: File) {
+  // Validate file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+  if (file.size > maxSize) {
+    toast.add({
+      title: "Gagal",
+      description: "Ukuran file maksimal adalah 10MB",
+      color: "error"
+    })
+    return
+  }
+  
+  // Validate file type
+  const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+  if (!validTypes.includes(file.type)) {
+    toast.add({
+      title: "Gagal",
+      description: "Format file harus JPG, PNG, atau WEBP",
+      color: "error"
+    })
+    return
+  }
+  
+  uploadingImage.value = true
+  
+  try {
+    // Convert to base64 for preview
+    const reader = new FileReader()
+    reader.onload = () => {
+      imagePreview.value = reader.result as string
+    }
+    reader.readAsDataURL(file)
+    
+    // Upload to server
+    const formData = new FormData()
+    formData.append("file", file)
+    
+    const res = await postFile<{ url: string }, FormData>(
+      "/media/upload",
+      formData
+    )
+    
+    toast.add({
+      title: "Sukses",
+      description: "Gambar berhasil diupload",
+      color: "success"
+    })
+  } catch (err) {
+    console.error(err)
+    toast.add({
+      title: "Gagal",
+      description: err instanceof Error ? err.message : "Gagal mengupload gambar",
+      color: "error"
+    })
+    imagePreview.value = null
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+function clearImage() {
+  imagePreview.value = null
+  formState.company_image = ""
+}
 </script>
 
 <template>
@@ -400,12 +471,55 @@ const saving = ref(false)
             autocomplete="off"
           />
         </UFormField>
+        
+        <!-- Logo Upload Section -->
         <UFormField name="company_image" label="Logo Perusahaan">
-          <UInput
-            v-model="formState.company_image"
-            placeholder="URL gambar atau base64"
-            autocomplete="off"
-          />
+          <div class="space-y-3">
+            <div
+              v-if="imagePreview"
+              class="relative aspect-square max-w-[200px] mx-auto rounded-lg overflow-hidden border dark:border-neutral-700"
+            >
+              <img
+                :src="imagePreview"
+                alt="Preview logo"
+                class="w-full h-full object-cover"
+              />
+              <div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
+                <UButton
+                  size="xs"
+                  color="error"
+                  variant="solid"
+                  @click="clearImage"
+                >
+                  Hapus
+                </UButton>
+                <UFileUpload
+                  v-if="!uploadingImage"
+                  v-model="filesForUpload"
+                  label="Upload File Baru"
+                  description="Maksimal 10MB (JPG, PNG, WEBP)"
+                  accept="image/jpeg,image/png,image/jpg,image/webp"
+                  @change="onFileSelected"
+                />
+                <span v-else class="text-xs text-white">
+                  Mengupload...
+                </span>
+              </div>
+            </div>
+            
+            <UFileUpload
+              v-else
+              v-model="filesForUpload"
+              label="Upload Logo Perusahaan"
+              description="Maksimal 10MB (JPG, PNG, WEBP)"
+              accept="image/jpeg,image/png,image/jpg,image/webp"
+              @change="onFileSelected"
+            />
+          </div>
+          
+          <p v-if="formState.company_image" class="mt-2 text-xs text-muted">
+            URL gambar telah diupload dari server
+          </p>
         </UFormField>
       </UForm>
 
@@ -433,12 +547,55 @@ const saving = ref(false)
             autocomplete="off"
           />
         </UFormField>
+        
+        <!-- Logo Upload Section -->
         <UFormField name="company_image" label="Logo Perusahaan">
-          <UInput
-            v-model="formState.company_image"
-            placeholder="URL gambar atau base64"
-            autocomplete="off"
-          />
+          <div class="space-y-3">
+            <div
+              v-if="imagePreview || selectedCompany?.company_image"
+              class="relative aspect-square max-w-[200px] mx-auto rounded-lg overflow-hidden border dark:border-neutral-700"
+            >
+              <img
+                :src="imagePreview || selectedCompany?.company_image"
+                alt="Preview logo"
+                class="w-full h-full object-cover"
+              />
+              <div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
+                <UButton
+                  size="xs"
+                  color="error"
+                  variant="solid"
+                  @click="clearImage"
+                >
+                  Hapus
+                </UButton>
+                <UFileUpload
+                  v-if="!uploadingImage && !imagePreview"
+                  v-model="filesForUpload"
+                  label="Upload File Baru"
+                  description="Maksimal 10MB (JPG, PNG, WEBP)"
+                  accept="image/jpeg,image/png,image/jpg,image/webp"
+                  @change="onFileSelected"
+                />
+                <span v-else-if="uploadingImage" class="text-xs text-white">
+                  Mengupload...
+                </span>
+              </div>
+            </div>
+            
+            <UFileUpload
+              v-else
+              v-model="filesForUpload"
+              label="Upload Logo Perusahaan"
+              description="Maksimal 10MB (JPG, PNG, WEBP)"
+              accept="image/jpeg,image/png,image/jpg,image/webp"
+              @change="onFileSelected"
+            />
+          </div>
+          
+          <p v-if="formState.company_image" class="mt-2 text-xs text-muted">
+            URL gambar telah diupload dari server
+          </p>
         </UFormField>
       </UForm>
     </template>
