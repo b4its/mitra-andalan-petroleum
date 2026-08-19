@@ -754,7 +754,7 @@ const journalColumns: TableColumn<AccountingJournal>[] = [
       h(
         'span',
         { class: 'text-xs text-muted capitalize' },
-        String(row.getValue('status') ?? 'posted')
+        String(statusLabel(row.getValue('status')))
       )
   }
 ]
