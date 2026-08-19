@@ -2,6 +2,7 @@
 import { h } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type { AdminDrilldown, AdminDrilldownItem } from '~/types/admin'
+import { statusLabel } from '~/utils/statusLabels'
 
 const props = defineProps<{
   open: boolean
@@ -137,7 +138,7 @@ function statusBadge(status: string, group: string) {
   return h(
     UBadge,
     { variant: 'subtle', color, class: 'capitalize' },
-    () => status?.replace(/_/g, ' ') ?? '-'
+    () => statusLabel(status) ?? '-')
   )
 }
 
