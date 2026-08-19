@@ -139,7 +139,7 @@ function statusBadge(status: string, group: string) {
     UBadge,
     { variant: 'subtle', color, class: 'capitalize' },
     () => statusLabel(status) ?? '-')
-  )
+)
 }
 
 const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
