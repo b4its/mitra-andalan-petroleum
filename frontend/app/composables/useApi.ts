@@ -22,7 +22,7 @@ function apiUrl(path: string, params?: Record<string, unknown>) {
   const url = `${API_BASE}${path}${search}`
 
   if (import.meta.server) {
-    const serverApiBase = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000/api/v1'
+    const serverApiBase = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8012/api/v1'
     return `${serverApiBase}${path}${search}`
   }
 
@@ -72,7 +72,7 @@ async function request(input: string, init?: RequestInit) {
     return await fetch(input, init)
   } catch {
     const target = import.meta.server
-      ? process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000/api/v1'
+      ? process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8012/api/v1'
       : API_BASE
     throw new Error(`Backend tidak terhubung. Pastikan API lokal berjalan di ${target}.`)
   }

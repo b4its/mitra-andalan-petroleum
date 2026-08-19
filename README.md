@@ -39,11 +39,11 @@ first-run di database kosong. Pengembangan dengan Dev Container (VS Code):
 
 | Service | URL |
 |---------|-----|
-| Backend API | http://localhost:8000 |
-| Frontend | http://localhost:8080 |
-| Swagger UI | http://localhost:8000/docs |
-| ReDoc | http://localhost:8000/redoc |
-| Uploaded Files | http://localhost:8000/media/... |
+| Backend API | http://localhost:8012 |
+| Frontend | http://localhost:8092 |
+| Swagger UI | http://localhost:8012/docs |
+| ReDoc | http://localhost:8012/redoc |
+| Uploaded Files | http://localhost:8012/media/... |
 
 ## Produksi dengan Ngrok (hosting + domain)
 
@@ -54,7 +54,7 @@ port) dan **Ngrok** (tunnel HTTPS publik ke domain) di atas DB/Backend/Frontend.
 # 1. Siapkan env produksi
 cp .env.production.example .env.production
 #    Isi: NGROK_AUTHTOKEN, NGROK_DOMAIN (mis. mitra-andalan.ngrok-free.app
-#    atau domain custom), PUBLIC_SITE_URL, HTTP_PORT (default 8080)
+#    atau domain custom), PUBLIC_SITE_URL, HTTP_PORT (default 8092)
 
 # 2. Build & jalankan stack produksi
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
@@ -64,7 +64,7 @@ docker compose -f docker-compose.prod.yml logs -f ngrok
 ```
 
 Catatan:
-- **Akses lokal** tetap tersedia di `http://localhost:8080` (lewat nginx).
+- **Akses lokal** tetap tersedia di `http://localhost:8092` (lewat nginx).
 - Ngrok membutuhkan akun: daftar gratis di https://ngrok.com, ambil token di
   dashboard, dan pilih domain (gratis `.ngrok-free.app` atau custom berbayar).
 - Stack produksi memakai project name `mandalan-prod` sehingga **bisa berjalan
@@ -120,8 +120,8 @@ Detail lengkap di `documentation/api_setup.md` dan Swagger UI `/docs`.
 | Frontend (headless) | Vitest | `cd frontend && npx vitest run` | 47 |
 | Frontend (browser/E2E) | Playwright | `cd frontend && pnpm exec playwright test` | 76 |
 
-E2E Playwright menguji aplikasi via Chromium pada `localhost:8080` (Docker)
-atau `localhost:3000` (dev): login per role, dashboard admin, halaman
+E2E Playwright menguji aplikasi via Chromium pada `localhost:8092` (Docker)
+atau `localhost:3012` (dev): login per role, dashboard admin, halaman
 marketing/operations/finance/accounting, ekspor Excel/PDF/CSV, dan audit
 console error. Lihat `documentation/testing.md` untuk detail dan tips
 anti-flaky (login wajib `waitUntil: "networkidle"`).

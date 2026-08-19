@@ -5,6 +5,6 @@ export default defineConfig({
   ...base,
   use: {
     ...base.use,
-    baseURL: 'http://localhost:3000'
+    baseURL: 'http://localhost:3012'
   }
 })

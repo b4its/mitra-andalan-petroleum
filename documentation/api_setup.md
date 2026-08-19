@@ -1,8 +1,8 @@
 # API Documentation — Mandalan API
 
-Base URL: `http://localhost:8000/api/v1`
+Base URL: `http://localhost:8012/api/v1`
 
-Interactive docs: [Swagger UI](http://localhost:8000/docs) | [ReDoc](http://localhost:8000/redoc)
+Interactive docs: [Swagger UI](http://localhost:8012/docs) | [ReDoc](http://localhost:8012/redoc)
 
 ---
 
@@ -48,7 +48,7 @@ Cek apakah server berjalan.
 ### GET /health
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/health
+curl -X GET http://localhost:8012/api/v1/health
 ```
 
 ```json
@@ -65,7 +65,7 @@ curl -X GET http://localhost:8000/api/v1/health
 ### POST /auth/login
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/auth/login \
+curl -X POST http://localhost:8012/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@mapetroleum.co.id","password":"admin123"}'
 ```
@@ -87,7 +87,7 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 ### GET /customers — List semua customer
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/customers
+curl -X GET http://localhost:8012/api/v1/customers
 ```
 
 ```json
@@ -106,7 +106,7 @@ curl -X GET http://localhost:8000/api/v1/customers
 ### GET /customers/{id} — Detail customer
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/customers/uuid-customer-1
+curl -X GET http://localhost:8012/api/v1/customers/uuid-customer-1
 ```
 
 ```json
@@ -123,7 +123,7 @@ curl -X GET http://localhost:8000/api/v1/customers/uuid-customer-1
 ### POST /customers — Tambah customer
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/customers \
+curl -X POST http://localhost:8012/api/v1/customers \
   -H "Content-Type: application/json" \
   -d '{
     "name": "PT Maju Mundur",
@@ -148,7 +148,7 @@ curl -X POST http://localhost:8000/api/v1/customers \
 ### PUT /customers/{id} — Update customer
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/customers/uuid-customer-baru \
+curl -X PUT http://localhost:8012/api/v1/customers/uuid-customer-baru \
   -H "Content-Type: application/json" \
   -d '{
     "phone": "08111111111",
@@ -170,7 +170,7 @@ curl -X PUT http://localhost:8000/api/v1/customers/uuid-customer-baru \
 ### DELETE /customers/{id} — Hapus customer
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/customers/uuid-customer-baru
+curl -X DELETE http://localhost:8012/api/v1/customers/uuid-customer-baru
 ```
 
 ```json
@@ -187,7 +187,7 @@ curl -X DELETE http://localhost:8000/api/v1/customers/uuid-customer-baru
 ### GET /suppliers — List semua supplier
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/suppliers
+curl -X GET http://localhost:8012/api/v1/suppliers
 ```
 
 ```json
@@ -208,7 +208,7 @@ curl -X GET http://localhost:8000/api/v1/suppliers
 ### GET /suppliers/{id} — Detail supplier
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/suppliers/uuid-supplier-1
+curl -X GET http://localhost:8012/api/v1/suppliers/uuid-supplier-1
 ```
 
 ```json
@@ -227,7 +227,7 @@ curl -X GET http://localhost:8000/api/v1/suppliers/uuid-supplier-1
 ### POST /suppliers — Tambah supplier
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/suppliers \
+curl -X POST http://localhost:8012/api/v1/suppliers \
   -H "Content-Type: application/json" \
   -d '{
     "name": "PT Persada Energi Nusantara",
@@ -256,7 +256,7 @@ curl -X POST http://localhost:8000/api/v1/suppliers \
 ### PUT /suppliers/{id} — Update supplier
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/suppliers/uuid-supplier-baru \
+curl -X PUT http://localhost:8012/api/v1/suppliers/uuid-supplier-baru \
   -H "Content-Type: application/json" \
   -d '{
     "email": "update@example.com",
@@ -280,7 +280,7 @@ curl -X PUT http://localhost:8000/api/v1/suppliers/uuid-supplier-baru \
 ### DELETE /suppliers/{id} — Hapus supplier
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/suppliers/uuid-supplier-baru
+curl -X DELETE http://localhost:8012/api/v1/suppliers/uuid-supplier-baru
 ```
 
 ```json
@@ -297,7 +297,7 @@ curl -X DELETE http://localhost:8000/api/v1/suppliers/uuid-supplier-baru
 ### GET /profiles — List semua user
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/profiles
+curl -X GET http://localhost:8012/api/v1/profiles
 ```
 
 ```json
@@ -316,7 +316,7 @@ curl -X GET http://localhost:8000/api/v1/profiles
 ### GET /profiles/{id} — Detail user
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/profiles/uuid-user-1
+curl -X GET http://localhost:8012/api/v1/profiles/uuid-user-1
 ```
 
 ```json
@@ -333,7 +333,7 @@ curl -X GET http://localhost:8000/api/v1/profiles/uuid-user-1
 ### POST /profiles — Tambah user
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/profiles \
+curl -X POST http://localhost:8012/api/v1/profiles \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Staff Baru",
@@ -359,7 +359,7 @@ curl -X POST http://localhost:8000/api/v1/profiles \
 ### PUT /profiles/{id} — Update user
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/profiles/uuid-user-baru \
+curl -X PUT http://localhost:8012/api/v1/profiles/uuid-user-baru \
   -H "Content-Type: application/json" \
   -d '{
     "role": "marketing",
@@ -383,7 +383,7 @@ curl -X PUT http://localhost:8000/api/v1/profiles/uuid-user-baru \
 ### DELETE /profiles/{id} — Hapus user
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/profiles/uuid-user-baru
+curl -X DELETE http://localhost:8012/api/v1/profiles/uuid-user-baru
 ```
 
 ```json
@@ -402,7 +402,7 @@ curl -X DELETE http://localhost:8000/api/v1/profiles/uuid-user-baru
 Query params: `?page=1&page_size=20`
 
 ```bash
-curl "http://localhost:8000/api/v1/offering-letters?page=1&page_size=10"
+curl "http://localhost:8012/api/v1/offering-letters?page=1&page_size=10"
 ```
 
 ```json
@@ -439,7 +439,7 @@ curl "http://localhost:8000/api/v1/offering-letters?page=1&page_size=10"
 ### GET /offering-letters/{id} — Detail
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/offering-letters/uuid-ol-1
+curl -X GET http://localhost:8012/api/v1/offering-letters/uuid-ol-1
 ```
 
 ```json
@@ -499,7 +499,7 @@ curl -X GET http://localhost:8000/api/v1/offering-letters/uuid-ol-1
 ### POST /offering-letters — Buat baru
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/offering-letters \
+curl -X POST http://localhost:8012/api/v1/offering-letters \
   -H "Content-Type: application/json" \
   -d '{
     "offering_letter_number": "723/MAP/II-06/26",
@@ -549,7 +549,7 @@ curl -X POST http://localhost:8000/api/v1/offering-letters \
 ### PUT /offering-letters/{id} — Update
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/offering-letters/uuid-ol-baru \
+curl -X PUT http://localhost:8012/api/v1/offering-letters/uuid-ol-baru \
   -H "Content-Type: application/json" \
   -d '{
     "status": "po_received",
@@ -591,7 +591,7 @@ curl -X PUT http://localhost:8000/api/v1/offering-letters/uuid-ol-baru \
 ### DELETE /offering-letters/{id} — Hapus
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/offering-letters/uuid-ol-baru
+curl -X DELETE http://localhost:8012/api/v1/offering-letters/uuid-ol-baru
 ```
 
 ```json
@@ -608,7 +608,7 @@ Mengembalikan purchase order yang terhubung ke surat penawaran (via
 `id_purchase_order`). Dipakai di rekap customer untuk menampilkan DO dari PO.
 
 ```bash
-curl http://localhost:8000/api/v1/offering-letters/uuid-ol-1/purchase-orders
+curl http://localhost:8012/api/v1/offering-letters/uuid-ol-1/purchase-orders
 ```
 
 ```json
@@ -644,7 +644,7 @@ curl http://localhost:8000/api/v1/offering-letters/uuid-ol-1/purchase-orders
 Query params: `?page=1&page_size=20&type=customer` (atau `type=supplier`)
 
 ```bash
-curl "http://localhost:8000/api/v1/purchase-orders?page=1&page_size=10&type=supplier"
+curl "http://localhost:8012/api/v1/purchase-orders?page=1&page_size=10&type=supplier"
 ```
 
 ```json
@@ -675,7 +675,7 @@ curl "http://localhost:8000/api/v1/purchase-orders?page=1&page_size=10&type=supp
 ### GET /purchase-orders/{id} — Detail
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/purchase-orders/uuid-po-1
+curl -X GET http://localhost:8012/api/v1/purchase-orders/uuid-po-1
 ```
 
 ```json
@@ -740,7 +740,7 @@ curl -X GET http://localhost:8000/api/v1/purchase-orders/uuid-po-1
 ### POST /purchase-orders — Buat baru
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/purchase-orders \
+curl -X POST http://localhost:8012/api/v1/purchase-orders \
   -H "Content-Type: application/json" \
   -d '{
     "po_number": "PO/MAP/VII-26/002",
@@ -789,7 +789,7 @@ curl -X POST http://localhost:8000/api/v1/purchase-orders \
 ### PUT /purchase-orders/{id} — Update
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/purchase-orders/uuid-po-baru \
+curl -X PUT http://localhost:8012/api/v1/purchase-orders/uuid-po-baru \
   -H "Content-Type: application/json" \
   -d '{
     "status": "approved",
@@ -825,7 +825,7 @@ curl -X PUT http://localhost:8000/api/v1/purchase-orders/uuid-po-baru \
 ### DELETE /purchase-orders/{id} — Hapus
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/purchase-orders/uuid-po-baru
+curl -X DELETE http://localhost:8012/api/v1/purchase-orders/uuid-po-baru
 ```
 
 ```json
@@ -842,7 +842,7 @@ Menandai PO supplier bahwa dana sudah dirilis oleh admin. **Hanya untuk
 supplier baru bisa dilihat (halaman Data PO Supplier di admin).
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/purchase-orders/uuid-po-supplier/rilis-dana \
+curl -X POST http://localhost:8012/api/v1/purchase-orders/uuid-po-supplier/rilis-dana \
   -H "Content-Type: application/json" -d '{}'
 ```
 
@@ -866,7 +866,7 @@ curl -X POST http://localhost:8000/api/v1/purchase-orders/uuid-po-supplier/rilis
 ### GET /delivery-orders — List (paginated)
 
 ```bash
-curl "http://localhost:8000/api/v1/delivery-orders?page=1&page_size=10"
+curl "http://localhost:8012/api/v1/delivery-orders?page=1&page_size=10"
 ```
 
 ```json
@@ -895,7 +895,7 @@ curl "http://localhost:8000/api/v1/delivery-orders?page=1&page_size=10"
 ### GET /delivery-orders/{id} — Detail
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/delivery-orders/uuid-do-1
+curl -X GET http://localhost:8012/api/v1/delivery-orders/uuid-do-1
 ```
 
 ```json
@@ -950,7 +950,7 @@ curl -X GET http://localhost:8000/api/v1/delivery-orders/uuid-do-1
 ### POST /delivery-orders — Buat baru
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/delivery-orders \
+curl -X POST http://localhost:8012/api/v1/delivery-orders \
   -H "Content-Type: application/json" \
   -d '{
     "do_number": "DO/MAP/VII-26/002",
@@ -1005,7 +1005,7 @@ curl -X POST http://localhost:8000/api/v1/delivery-orders \
 ### PUT /delivery-orders/{id} — Update
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/delivery-orders/uuid-do-baru \
+curl -X PUT http://localhost:8012/api/v1/delivery-orders/uuid-do-baru \
   -H "Content-Type: application/json" \
   -d '{
     "status": "delivered",
@@ -1042,7 +1042,7 @@ curl -X PUT http://localhost:8000/api/v1/delivery-orders/uuid-do-baru \
 ### DELETE /delivery-orders/{id} — Hapus
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/delivery-orders/uuid-do-baru
+curl -X DELETE http://localhost:8012/api/v1/delivery-orders/uuid-do-baru
 ```
 
 ```json
@@ -1059,7 +1059,7 @@ curl -X DELETE http://localhost:8000/api/v1/delivery-orders/uuid-do-baru
 ### GET /invoices — List (paginated)
 
 ```bash
-curl "http://localhost:8000/api/v1/invoices?page=1&page_size=10"
+curl "http://localhost:8012/api/v1/invoices?page=1&page_size=10"
 ```
 
 ```json
@@ -1088,7 +1088,7 @@ curl "http://localhost:8000/api/v1/invoices?page=1&page_size=10"
 ### GET /invoices/{id} — Detail
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/invoices/uuid-inv-1
+curl -X GET http://localhost:8012/api/v1/invoices/uuid-inv-1
 ```
 
 ```json
@@ -1149,7 +1149,7 @@ curl -X GET http://localhost:8000/api/v1/invoices/uuid-inv-1
 ### POST /invoices — Buat baru
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/invoices \
+curl -X POST http://localhost:8012/api/v1/invoices \
   -H "Content-Type: application/json" \
   -d '{
     "invoice_number": "INV/MAP/VII-26/003",
@@ -1210,7 +1210,7 @@ curl -X POST http://localhost:8000/api/v1/invoices \
 ### PUT /invoices/{id} — Update
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/invoices/uuid-inv-baru \
+curl -X PUT http://localhost:8012/api/v1/invoices/uuid-inv-baru \
   -H "Content-Type: application/json" \
   -d '{
     "invoice_status": "paid",
@@ -1237,7 +1237,7 @@ curl -X PUT http://localhost:8000/api/v1/invoices/uuid-inv-baru \
 ### DELETE /invoices/{id} — Hapus
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/invoices/uuid-inv-baru
+curl -X DELETE http://localhost:8012/api/v1/invoices/uuid-inv-baru
 ```
 
 ```json
@@ -1256,7 +1256,7 @@ curl -X DELETE http://localhost:8000/api/v1/invoices/uuid-inv-baru
 Query params: `?limit=5`
 
 ```bash
-curl "http://localhost:8000/api/v1/sales?limit=5"
+curl "http://localhost:8012/api/v1/sales?limit=5"
 ```
 
 ```json
@@ -1275,7 +1275,7 @@ curl "http://localhost:8000/api/v1/sales?limit=5"
 ### GET /sales/{id} — Detail
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/sales/uuid-sale-1
+curl -X GET http://localhost:8012/api/v1/sales/uuid-sale-1
 ```
 
 ```json
@@ -1292,7 +1292,7 @@ curl -X GET http://localhost:8000/api/v1/sales/uuid-sale-1
 ### POST /sales — Buat baru
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/sales \
+curl -X POST http://localhost:8012/api/v1/sales \
   -H "Content-Type: application/json" \
   -d '{
     "date": "2026-07-26",
@@ -1316,7 +1316,7 @@ curl -X POST http://localhost:8000/api/v1/sales \
 ### PUT /sales/{id} — Update
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/sales/uuid-sale-baru \
+curl -X PUT http://localhost:8012/api/v1/sales/uuid-sale-baru \
   -H "Content-Type: application/json" \
   -d '{
     "status": "completed"
@@ -1337,7 +1337,7 @@ curl -X PUT http://localhost:8000/api/v1/sales/uuid-sale-baru \
 ### DELETE /sales/{id} — Hapus
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/sales/uuid-sale-baru
+curl -X DELETE http://localhost:8012/api/v1/sales/uuid-sale-baru
 ```
 
 ```json
@@ -1354,7 +1354,7 @@ curl -X DELETE http://localhost:8000/api/v1/sales/uuid-sale-baru
 ### GET /notifications — List semua
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/notifications
+curl -X GET http://localhost:8012/api/v1/notifications
 ```
 
 ```json
@@ -1375,7 +1375,7 @@ curl -X GET http://localhost:8000/api/v1/notifications
 ### GET /notifications/{id} — Detail
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/notifications/uuid-notif-1
+curl -X GET http://localhost:8012/api/v1/notifications/uuid-notif-1
 ```
 
 ```json
@@ -1394,7 +1394,7 @@ curl -X GET http://localhost:8000/api/v1/notifications/uuid-notif-1
 ### POST /notifications — Buat baru
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/notifications \
+curl -X POST http://localhost:8012/api/v1/notifications \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Invoice Jatuh Tempo",
@@ -1422,7 +1422,7 @@ curl -X POST http://localhost:8000/api/v1/notifications \
 ### PUT /notifications/{id} — Update (misal: mark as read)
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/notifications/uuid-notif-baru \
+curl -X PUT http://localhost:8012/api/v1/notifications/uuid-notif-baru \
   -H "Content-Type: application/json" \
   -d '{
     "is_read": true
@@ -1445,7 +1445,7 @@ curl -X PUT http://localhost:8000/api/v1/notifications/uuid-notif-baru \
 ### DELETE /notifications/{id} — Hapus
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/notifications/uuid-notif-baru
+curl -X DELETE http://localhost:8012/api/v1/notifications/uuid-notif-baru
 ```
 
 ```json
@@ -1467,7 +1467,7 @@ mutasi, dan saldo akhir per akun. Bisa difilter dengan range tanggal.
 Query params: `?date_from=2026-06-01&date_to=2026-07-31`
 
 ```bash
-curl "http://localhost:8000/api/v1/accounting/ledger-all?date_from=2026-06-01&date_to=2026-07-31"
+curl "http://localhost:8012/api/v1/accounting/ledger-all?date_from=2026-06-01&date_to=2026-07-31"
 ```
 
 ```json
@@ -1509,7 +1509,7 @@ Rekap pendapatan, biaya, dan margin per bulan. Filter memakai **range
 tanggal** (`date_from`/`date_to`, default: tahun berjalan).
 
 ```bash
-curl "http://localhost:8000/api/v1/accounting/monitoring?date_from=2026-06-01&date_to=2026-07-31"
+curl "http://localhost:8012/api/v1/accounting/monitoring?date_from=2026-06-01&date_to=2026-07-31"
 ```
 
 ```json
@@ -1576,7 +1576,7 @@ Format file yang diizinkan: JPG, JPEG, PNG, GIF, BMP, WebP, SVG, PDF, DOC, DOCX,
 Upload banyak file:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/upload \
+curl -X POST http://localhost:8012/api/v1/upload \
   -F "files=@/path/to/signature.png" \
   -F "files=@/path/to/document.pdf" \
   -F "folder=documents" \
@@ -1618,7 +1618,7 @@ curl -X POST http://localhost:8000/api/v1/upload \
 Upload satu file tanpa dokumen induk:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/upload \
+curl -X POST http://localhost:8012/api/v1/upload \
   -F "files=@/path/to/document.pdf" \
   -F "folder=documents"
 ```
@@ -1646,7 +1646,7 @@ curl -X POST http://localhost:8000/api/v1/upload \
 Query params: `?document_type=ol&document_id=uuid-ol-1`
 
 ```bash
-curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
+curl "http://localhost:8012/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
 ```
 
 ```json
@@ -1670,7 +1670,7 @@ curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-
 ### GET /uploads/{id} — Detail upload
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/uploads/uuid-upload-1
+curl -X GET http://localhost:8012/api/v1/uploads/uuid-upload-1
 ```
 
 ```json
@@ -1694,7 +1694,7 @@ curl -X GET http://localhost:8000/api/v1/uploads/uuid-upload-1
 Update folder, kaitkan ke dokumen induk, atau pindahkan folder. File ikut dipindahkan di disk.
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/uploads/uuid-upload-1 \
+curl -X PUT http://localhost:8012/api/v1/uploads/uuid-upload-1 \
   -H "Content-Type: application/json" \
   -d '{
     "folder": "returned",
@@ -1724,7 +1724,7 @@ curl -X PUT http://localhost:8000/api/v1/uploads/uuid-upload-1 \
 Hapus record dan file dari disk.
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/uploads/uuid-upload-1
+curl -X DELETE http://localhost:8012/api/v1/uploads/uuid-upload-1
 ```
 
 ```json
@@ -1734,7 +1734,7 @@ curl -X DELETE http://localhost:8000/api/v1/uploads/uuid-upload-1
 }
 ```
 
-Akses file: `http://localhost:8000/media/signatures/a1b2c3d4e5f6.png`
+Akses file: `http://localhost:8012/media/signatures/a1b2c3d4e5f6.png`
 
 ---
 
@@ -1748,7 +1748,7 @@ Frontend: `marketingolfooterform` — upload signature/tanda tangan, dokumen pen
 
 ```bash
 # 1. Buat OL
-curl -X POST http://localhost:8000/api/v1/offering-letters \
+curl -X POST http://localhost:8012/api/v1/offering-letters \
   -H "Content-Type: application/json" \
   -d '{
     "offering_letter_number": "OL/2026/001",
@@ -1758,7 +1758,7 @@ curl -X POST http://localhost:8000/api/v1/offering-letters \
 # → Response: id = "uuid-ol-1"
 
 # 2. Upload signature file, kaitkan ke OL
-curl -X POST http://localhost:8000/api/v1/upload \
+curl -X POST http://localhost:8012/api/v1/upload \
   -F "files=@signature.png" \
   -F "folder=signatures" \
   -F "document_type=ol" \
@@ -1766,7 +1766,7 @@ curl -X POST http://localhost:8000/api/v1/upload \
 # → Response: [{ "url": "/media/signatures/abc.png", "document_type": "ol", "document_id": "uuid-ol-1" }]
 
 # 3. Update details OL dengan URL signature
-curl -X PUT http://localhost:8000/api/v1/offering-letters/uuid-ol-1 \
+curl -X PUT http://localhost:8012/api/v1/offering-letters/uuid-ol-1 \
   -H "Content-Type: application/json" \
   -d '{
     "details": {
@@ -1787,7 +1787,7 @@ curl -X PUT http://localhost:8000/api/v1/offering-letters/uuid-ol-1 \
 
 ```bash
 # Upload 3 file dalam 1 request
-curl -X POST http://localhost:8000/api/v1/upload \
+curl -X POST http://localhost:8012/api/v1/upload \
   -F "files=@signature.png" \
   -F "files=@dokumen-pendukung.pdf" \
   -F "files=@lampiran.jpg" \
@@ -1800,7 +1800,7 @@ curl -X POST http://localhost:8000/api/v1/upload \
 **Cek semua upload milik OL:**
 
 ```bash
-curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
+curl "http://localhost:8012/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
 # → Response: [semua upload milik OL ini]
 ```
 
@@ -1814,7 +1814,7 @@ Frontend: `marketingpocustomerform` — upload dokumen PO, lampiran customer/sup
 
 ```bash
 # 1. Buat PO
-curl -X POST http://localhost:8000/api/v1/purchase-orders \
+curl -X POST http://localhost:8012/api/v1/purchase-orders \
   -H "Content-Type: application/json" \
   -d '{
     "po_number": "PO/2026/001",
@@ -1825,7 +1825,7 @@ curl -X POST http://localhost:8000/api/v1/purchase-orders \
 # → Response: id = "uuid-po-1"
 
 # 2. Upload dokumen perusahaan + lampiran
-curl -X POST http://localhost:8000/api/v1/upload \
+curl -X POST http://localhost:8012/api/v1/upload \
   -F "files=@company-doc.pdf" \
   -F "files=@npwp.jpg" \
   -F "folder=documents" \
@@ -1833,7 +1833,7 @@ curl -X POST http://localhost:8000/api/v1/upload \
   -F "document_id=uuid-po-1"
 
 # 3. Simpan URL di details PO
-curl -X PUT http://localhost:8000/api/v1/purchase-orders/uuid-po-1 \
+curl -X PUT http://localhost:8012/api/v1/purchase-orders/uuid-po-1 \
   -H "Content-Type: application/json" \
   -d '{
     "details": {
@@ -1848,7 +1848,7 @@ curl -X PUT http://localhost:8000/api/v1/purchase-orders/uuid-po-1 \
 
 **Cek upload PO:**
 ```bash
-curl "http://localhost:8000/api/v1/uploads?document_type=po&document_id=uuid-po-1"
+curl "http://localhost:8012/api/v1/uploads?document_type=po&document_id=uuid-po-1"
 ```
 
 ---
@@ -1861,7 +1861,7 @@ Frontend: `operationdoreturnedform` — upload dokumen return, foto bukti pengir
 
 ```bash
 # 1. Buat DO
-curl -X POST http://localhost:8000/api/v1/delivery-orders \
+curl -X POST http://localhost:8012/api/v1/delivery-orders \
   -H "Content-Type: application/json" \
   -d '{
     "do_number": "DO/2026/001",
@@ -1871,7 +1871,7 @@ curl -X POST http://localhost:8000/api/v1/delivery-orders \
 # → Response: id = "uuid-do-1"
 
 # 2. Upload foto bukti (bisa banyak file)
-curl -X POST http://localhost:8000/api/v1/upload \
+curl -X POST http://localhost:8012/api/v1/upload \
   -F "files=@foto-bukti1.jpg" \
   -F "files=@foto-bukti2.jpg" \
   -F "files=@dokumen-return.pdf" \
@@ -1880,7 +1880,7 @@ curl -X POST http://localhost:8000/api/v1/upload \
   -F "document_id=uuid-do-1"
 
 # 3. Update DO dengan URL foto bukti
-curl -X PUT http://localhost:8000/api/v1/delivery-orders/uuid-do-1 \
+curl -X PUT http://localhost:8012/api/v1/delivery-orders/uuid-do-1 \
   -H "Content-Type: application/json" \
   -d '{
     "status": "document_returned",
@@ -1898,7 +1898,7 @@ curl -X PUT http://localhost:8000/api/v1/delivery-orders/uuid-do-1 \
 
 **Cek upload DO:**
 ```bash
-curl "http://localhost:8000/api/v1/uploads?document_type=do&document_id=uuid-do-1"
+curl "http://localhost:8012/api/v1/uploads?document_type=do&document_id=uuid-do-1"
 ```
 
 ---
@@ -1909,10 +1909,10 @@ Ketika dokumen induk dihapus, semua upload terkait otomatis ikut terhapus (recor
 
 ```bash
 # Hapus OL → upload milik OL itu juga terhapus
-curl -X DELETE http://localhost:8000/api/v1/offering-letters/uuid-ol-1
+curl -X DELETE http://localhost:8012/api/v1/offering-letters/uuid-ol-1
 
 # Verifikasi: upload sudah tidak ada
-curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
+curl "http://localhost:8012/api/v1/uploads?document_type=ol&document_id=uuid-ol-1"
 # → Response: []
 ```
 
@@ -1923,7 +1923,7 @@ curl "http://localhost:8000/api/v1/uploads?document_type=ol&document_id=uuid-ol-
 ### GET /stats/marketing
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/stats/marketing
+curl -X GET http://localhost:8012/api/v1/stats/marketing
 ```
 
 ```json
@@ -1940,7 +1940,7 @@ curl -X GET http://localhost:8000/api/v1/stats/marketing
 ### GET /stats/operations
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/stats/operations
+curl -X GET http://localhost:8012/api/v1/stats/operations
 ```
 
 ```json
@@ -1954,7 +1954,7 @@ curl -X GET http://localhost:8000/api/v1/stats/operations
 ### GET /stats/finance
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/stats/finance
+curl -X GET http://localhost:8012/api/v1/stats/finance
 ```
 
 ```json
@@ -1970,7 +1970,7 @@ curl -X GET http://localhost:8000/api/v1/stats/finance
 ### GET /stats/home
 
 ```bash
-curl -X GET http://localhost:8000/api/v1/stats/home
+curl -X GET http://localhost:8012/api/v1/stats/home
 ```
 
 ```json

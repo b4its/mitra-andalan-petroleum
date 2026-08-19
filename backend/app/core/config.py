@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     DEBUG: bool = False
 
-    DATABASE_URL: str = "mysql+aiomysql://mandalan:mandalan@db:3306/mandalan"
+    DATABASE_URL: str = "mysql+aiomysql://mandalan:mandalan@db:3318/mandalan"
 
     CORS_ORIGINS: list[str] = ["*"]
 

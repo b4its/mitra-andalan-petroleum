@@ -70,8 +70,8 @@ docker exec mandalan-db mysql -uroot -proot mandalan \
 
 ```bash
 # daftar tajam perbedaan kedua respons (field)
-curl -s http://localhost:8000/api/v1/profiles | python3 -m json.tool | head -8
-curl -s http://localhost:8000/api/v1/profiles/demo | python3 -m json.tool | head -8
+curl -s http://localhost:8012/api/v1/profiles | python3 -m json.tool | head -8
+curl -s http://localhost:8012/api/v1/profiles/demo | python3 -m json.tool | head -8
 ```
 
 Respons demo memiliki satu field `password` ekstra per user (plaintext dari

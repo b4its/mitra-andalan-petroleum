@@ -38,8 +38,8 @@ Service akan berjalan di:
 | Backend (FastAPI) | 8000 |
 | Frontend (Nuxt) | 8080 |
 | MySQL | 3306 |
-| Swagger UI | http://localhost:8000/docs |
-| Uploaded Files | http://localhost:8000/media/... |
+| Swagger UI | http://localhost:8012/docs |
+| Uploaded Files | http://localhost:8012/media/... |
 
 ### Hanya backend + DB (untuk development frontend lokal)
 
@@ -57,7 +57,7 @@ source env/bin/activate
 pip install -r requirements.txt
 python -m app.db.migrate   # (opsional) migrasi skema
 python -m app.db.seed      # (opsional) isi data contoh
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8012
 ```
 
 ### Manual (frontend)
@@ -73,7 +73,7 @@ pnpm dev
 ### Backend (`backend/.env`)
 
 ```env
-DATABASE_URL=mysql+aiomysql://user:password@localhost:3306/mandalan
+DATABASE_URL=mysql+aiomysql://user:password@localhost:3318/mandalan
 ```
 
 ### Frontend (`frontend/.env`)

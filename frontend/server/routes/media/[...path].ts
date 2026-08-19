@@ -1,6 +1,6 @@
 import { proxyRequest } from 'h3'
 
-const TARGET = process.env.NUXT_MEDIA_PROXY_TARGET || 'http://127.0.0.1:8000/media'
+const TARGET = process.env.NUXT_MEDIA_PROXY_TARGET || 'http://127.0.0.1:8012/media'
 
 export default defineEventHandler((event) => {
   const queryIndex = event.path.indexOf('?')

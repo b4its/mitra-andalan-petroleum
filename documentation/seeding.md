@@ -70,7 +70,7 @@ pip install -r requirements.txt
 python -m app.db.seed             # seed (hanya database kosong)
 python -m app.db.seed --force     # reseed dari nol (hapus semua data dulu)
 python -m app.db.seed --check     # verifikasi hasil seed
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8012
 ```
 
 ## Migrasi skema (sebelum seed)
@@ -150,7 +150,7 @@ Hasil yang diharapkan: `5 / 3 / 2 / 15 / 10 / 15 / 15`.
 
 ### Cek via UI
 
-1. Buka `http://localhost:8080`, login dengan salah satu akun default
+1. Buka `http://localhost:8092`, login dengan salah satu akun default
    (mis. `admin@mapetroleum.co.id` / `admin123`).
 2. Halaman login menampilkan daftar akun demo lengkap dengan passwordnya
    (endpoint `/api/v1/profiles/demo`, lihat `demo-login.md`).

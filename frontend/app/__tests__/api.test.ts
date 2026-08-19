@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-const API = process.env.API_BASE_URL || 'http://localhost:8080/api/v1'
+const API = process.env.API_BASE_URL || 'http://localhost:8092/api/v1'
 
 async function login(email: string, password: string) {
   const res = await fetch(`${API}/auth/login`, {

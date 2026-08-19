@@ -7,7 +7,7 @@
 #   2. docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 #   3. Buka URL ngrok yang tampil di log: docker compose logs -f ngrok
 #
-# Akses lokal tetap tersedia di http://localhost:8080 (lewat nginx).
+# Akses lokal tetap tersedia di http://localhost:8092 (lewat nginx).
 
 name: mandalan-prod
 
@@ -16,6 +16,7 @@ services:
     image: mysql:8.0
     container_name: mandalan-prod-db
     restart: unless-stopped
+    command: ["mysqld", "--port=3318"]
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_USER: ${MYSQL_USER:-mandalan}
@@ -38,14 +39,14 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "app.db.boot"]
     environment:
-      DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-mandalan}:${MYSQL_PASSWORD:-mandalan}@db:3306/${MYSQL_DATABASE:-mandalan}
+      DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-mandalan}:${MYSQL_PASSWORD:-mandalan}@db:3318/${MYSQL_DATABASE:-mandalan}
     volumes:
       - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs', timeout=3)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8012/docs', timeout=3)"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -58,9 +59,10 @@ services:
     container_name: mandalan-prod-frontend
     restart: unless-stopped
     environment:
-      NUXT_API_PROXY_TARGET: http://backend:8000/api/v1
-      NUXT_MEDIA_PROXY_TARGET: http://backend:8000/media
-      NUXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8080}
+      NUXT_API_PROXY_TARGET: http://backend:8012/api/v1
+      NUXT_MEDIA_PROXY_TARGET: http://backend:8012/media
+      NUXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8092}
+      PORT: "3012"
     depends_on:
       backend:
         condition: service_healthy
@@ -71,7 +73,7 @@ services:
     container_name: mandalan-prod-nginx
     restart: unless-stopped
     ports:
-      - "${HTTP_PORT:-8080}:80"
+      - "${HTTP_PORT:-8092}:92"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
@@ -89,7 +91,7 @@ services:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?NGROK_AUTHTOKEN wajib diisi di .env.production}
     command:
       - "http"
-      - "nginx:80"
+      - "nginx:92"
       - "--domain=${NGROK_DOMAIN:?NGROK_DOMAIN wajib diisi di .env.production}"
       - "--log=stdout"
     depends_on:

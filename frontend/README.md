@@ -37,7 +37,7 @@ pnpm install
 
 ## Development Server
 
-Start the development server on `http://localhost:3000`:
+Start the development server on `http://localhost:3012`:
 
 ```bash
 pnpm dev
@@ -67,13 +67,13 @@ pnpm exec vitest run
 ```
 
 ### Playwright (E2E browser)
-Membutuhkan backend (`localhost:8000`) dan frontend berjalan, plus Chromium.
+Membutuhkan backend (`localhost:8012`) dan frontend berjalan, plus Chromium.
 
 ```bash
-# Server Docker (http://localhost:8080) — default config
+# Server Docker (http://localhost:8092) — default config
 pnpm exec playwright test
 
-# Nuxt dev server (http://localhost:3000)
+# Nuxt dev server (http://localhost:3012)
 pnpm exec playwright test --config=playwright.local.ts
 
 # Chromium jika tidak terdeteksi otomatis:

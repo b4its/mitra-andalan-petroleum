@@ -56,7 +56,7 @@ async def main() -> None:
     print("[boot] Seeder selesai.")
 
     print("[boot] Memulai server uvicorn...")
-    os.execvp("uvicorn", ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"])
+    os.execvp("uvicorn", ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8012"])
 
 
 if __name__ == "__main__":

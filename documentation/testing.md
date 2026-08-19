@@ -44,7 +44,7 @@ COREPACK_ENABLE_STRICT=0 npx vitest run
 docker compose exec mandalan-frontend sh -c 'cd /app && npx vitest run --exclude "**/api.test.ts"'
 ```
 
-> API contract tests (`api.test.ts`) connect to `localhost:8000` and need the
+> API contract tests (`api.test.ts`) connect to `localhost:8012` and need the
 > backend running. Run them **from the host** where the port is exposed, or
 > exclude them inside the container.
 
@@ -60,8 +60,8 @@ password, marketingOLHeader), dummy account integrity, dan API contract tests
 E2E tests menggunakan Playwright + Chromium (system browser).
 
 ### Prerequisites
-- Frontend berjalan di `http://localhost:8080` (via Docker) atau `http://localhost:3000` (dev lokal)
-- Backend berjalan di `http://localhost:8000`
+- Frontend berjalan di `http://localhost:8092` (via Docker) atau `http://localhost:3012` (dev lokal)
+- Backend berjalan di `http://localhost:8012`
 - Chromium terinstall di host (Arch: `sudo pacman -S chromium`)
 
 ### Running tests (from host)
@@ -71,8 +71,8 @@ COREPACK_ENABLE_STRICT=0 pnpm exec playwright test
 ```
 
 Konfigurasi dual:
-- `playwright.config.ts` — baseURL `http://localhost:8080` (server Docker)
-- `playwright.local.ts` — baseURL `http://localhost:3000` (Nuxt dev server)
+- `playwright.config.ts` — baseURL `http://localhost:8092` (server Docker)
+- `playwright.local.ts` — baseURL `http://localhost:3012` (Nuxt dev server)
 - Jalankan dengan config lokal: `pnpm exec playwright test --config=playwright.local.ts`
 - Jika Chromium tidak terdeteksi otomatis:
   `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm exec playwright test`
