@@ -56,7 +56,7 @@
 #   Host:       localhost:3318 (via nginx) atau 127.0.0.1:3318
 #   Database:   mandalan
 #   User:       root
-#   Password:   example123
+#   Password:   root
 #   SSL Mode:   DISABLED (development only)
 #
 # ────────────────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ help: ## Tampilkan daftar perintah dan informasi akses aplikasi
 	@echo "   Local Host:      http://localhost:8092"
 	@echo ""
 	@echo "💾 DATABASE:"
-	@echo "   localhost:3318 | User: root | Pass: example123 | DB: mandalan"
+	@echo "   localhost:3318 | User: root | Pass: root | DB: mandalan"
 	@echo ""
 	@echo "📋 PERINTAH YANG TERSEDIA:"
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -122,13 +122,13 @@ db: ## Akses MySQL database (docker exec atau mysql CLI lokal)
 	@echo "   Host:     localhost:3318"
 	@echo "   Database: mandalan"
 	@echo "   User:     root"
-	@echo "   Password: example123"
+	@echo "   Password: root"
 	@echo ""
 	@echo "🔧 Cara 1: Docker exec shell interaktif (direkomendasikan):"
 	@echo "   make db-shell"
 	@echo ""
 	@echo "🔧 Cara 2: MySQL CLI lokal:"
-	@echo "   mysql -h 127.0.0.1 -P 3318 -u root -pexample123 mandalan"
+	@echo "   mysql -h 127.0.0.1 -P 3318 -u root -proot mandalan"
 	@echo ""
 	@echo "🔧 Cara 3: Jalankan query sekali saja tanpa shell:"
 	@echo "   make sql-cli"
@@ -139,13 +139,13 @@ db: ## Akses MySQL database (docker exec atau mysql CLI lokal)
 	@echo "   SELECT do_number, status FROM delivery_orders ORDER BY created_at DESC LIMIT 10;"
 
 db-shell: ## Masuk ke MySQL shell via docker exec
-	docker exec -it mandalan-db mysql -uroot -pexample123 mandalan
+	docker exec -it mandalan-db mysql -uroot -proot mandalan
 
 mysql-shell: ## Alias untuk db-shell
 	$(MAKE) db-shell
 
 sql-cli: ## Jalankan MySQL shell sekali saja (tanpa -it)
-	docker exec mandalan-db mysql -uroot -pexample123 mandalan -e "SELECT version();"
+	docker exec mandalan-db mysql -uroot -proot mandalan -e "SELECT version();"
 
 clean: ## Hapus containers dan volumes
 	docker compose --profile full down --volumes --remove-orphans
