@@ -234,7 +234,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
       <div class="flex w-full gap-4">
         <UFormField
           name="pricePrePaid"
-          label="Pre Paid"
+          label="Terbayar"
           class="w-full"
           required
         >
