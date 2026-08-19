@@ -109,6 +109,12 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
   informasiTambahan: ['Harga dapat berubah mengikuti harga keekonomian Pertamina']
 })
 
+// Auto-fill offeror data from logged-in user's profile
+if (user.value?.signature || user.value?.signatureCaption) {
+  letterFooter.offeror.name = user.value.name || 'Pengguna'
+  // Note: User must have uploaded signature in their profile for PDF generation
+}
+
 const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: '1 - 14',
   offeror: {
@@ -172,25 +178,11 @@ async function onFooterSubmit() {
         ...letterHeader,
         ...letterOfferDetails,
         ...letterFooter,
-        offeror: { ...letterFooter.offeror, signature: undefined }
       }
     })
     createdId = res.id
     console.log(res)
 
-    const signature = letterFooter.offeror.signature
-    if (!signature) {
-      throw new Error('Tanda tangan belum diunggah')
-    }
-
-    const resUpload = await postFile<ResUploads[]>('/upload', {
-      files: [signature],
-      folder: 'marketing',
-      document_type: 'ol',
-      document_id: res.id
-    })
-
-    console.log(resUpload)
 
     toast.add({
       title: 'Sukses',

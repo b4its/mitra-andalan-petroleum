@@ -1,0 +1,41 @@
+--- a/frontend/app/pages/marketing/customer/penawaran.vue
++++ b/frontend/app/pages/marketing/customer/penawaran.vue
+@@ -109,6 +109,15 @@ const letterFooter = reactive<MarketingOLFooterState>({
+   })
+ })
+ 
++// Auto-fill offeror data from logged-in user's profile
++if (user.value?.signature || user.value?.signatureCaption) {
++  letterFooter.offeror.name = user.value.name || 'Pengguna'
++  // Note: User must have uploaded signature in their profile for PDF generation
++}
++
+ const stepper = useTemplateRef('stepper')
+@@ -170,10 +179,8 @@ async function onFooterSubmit() {
+       details: {
+         ...letterHeader,
+         ...letterOfferDetails,
+-        ...letterFooter,
+-        offeror: { ...letterFooter.offeror, signature: undefined }
+-      }
++        ...letterFooter
++      },
+     })
+     createdId = res.id
+     console.log(res)
+ 
+-    const signature = letterFooter.offeror.signature
+-    if (!signature) {
+-      throw new Error('Tanda tangan belum diunggah')
+-    }
+-
+-    const resUpload = await postFile<ResUploads[]>('/upload', {
+-      files: [signature],
+-      folder: 'marketing',
+-      document_type: 'ol',
+-      document_id: res.id
+-    })
+-
+-    console.log(resUpload)
+-
+     toast.add({

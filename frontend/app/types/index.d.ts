@@ -12,6 +12,8 @@ export interface AuthUser {
   password: string
   role: Role
   token: string
+  signature?: string
+  signatureCaption?: string
   loggedInAt: string
 }
 
