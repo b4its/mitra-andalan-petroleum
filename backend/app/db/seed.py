@@ -31,9 +31,25 @@ from app.models.accounting import Account, JournalEntry, JournalLine
 
 # ── Urutan hapus data (FK-safe: child dulu, parent belakangan) ──
 _CLEAR_ORDER = [
-    Upload, JournalLine, JournalEntry, Notification,
-    Invoice, DeliveryOrder, PoTransportir, PurchaseOrder, OfferingLetter,
-    Sale, Account, Company, Supplier, Customer, User,
+    # Level 1: Deep nested children (delete first)
+    Upload,
+    JournalLine, JournalEntry, Notification,
+    Invoice,
+    
+    # Level 2: Children of PO Transportir
+    DeliveryOrder,  # Must come before PoTransportir!
+    
+    # Level 3: PO Transportir & Purchase Orders  
+    PoTransportir, PurchaseOrder,
+    
+    # Level 4: Top-level documents
+    OfferingLetter,
+    
+    # Level 5: Financials & Reference Data
+    Sale, Account,
+    
+    # Level 6: Core entities (delete last)
+    Company, Supplier, Customer, User,
 ]
 
 
@@ -176,15 +192,30 @@ async def _seed_companies(db: AsyncSession):
 
 
 async def _clear_all(db: AsyncSession):
-    """Hapus semua data dari tabel yang dikenal (FK-safe)."""
-    for model in _CLEAR_ORDER:
-        rows = await db.execute(select(model))
-        for row in rows.scalars().all():
-            await db.delete(row)
-    await db.flush()
+    """Hapus semua data dengan DISABLE_FOREIGN_KEY_CHECKS untuk menghindari FK violation."""
+    
+    # Disable foreign key checks
+    await db.execute("SET FOREIGN_KEY_CHECKS=0")
+    
+    try:
+        # Delete all data directly without checking FKs
+        for model in reversed(_CLEAR_ORDER):  # Reverse order when inserting later
+            result = await db.execute(select(model))
+            rows = result.scalars().all()
+            if rows:
+                print(f"[seed] Clearing {model.__tablename__}... ({len(rows)} rows)")
+                for row in rows:
+                    await db.delete(row)
+        
+        await db.flush()
+        print("[seed] ✅ All tables cleared successfully (FK checks disabled)")
+        
+    finally:
+        # Re-enable foreign key checks
+        await db.execute("SET FOREIGN_KEY_CHECKS=1")
 
 
-# ── Users ──────────────────────────────────────────────────────
+
 
 async def _seed_users(db: AsyncSession):
     """Seed user data untuk sistem."""
