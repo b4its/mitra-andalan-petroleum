@@ -160,7 +160,33 @@ async function buildPreviewPdf() {
 const toast = useToast()
 const { post, postFile, del } = useApi()
 
+// Validate signature requirement for offer letter creation
+function validateUserSignature(): boolean {
+  // Only marketing and admin roles need signature for offer letters
+  const rolesNeedingSignature = ["marketing", "admin"]
+  
+  if (!user.value?.role || !rolesNeedingSignature.includes(user.value.role)) {
+    return true // Other roles do not require signature
+  }
+  
+  if (!user.value?.signature) {
+    toast.add({
+      title: "Profil Belum Lengkap",
+      description: "Silakan upload tanda tangan terlebih dahulu di halaman profil sebelum membuat surat penawaran",
+      color: "warning"
+    })
+    
+    // Navigate to profile page to complete signature setup
+    useRouter().push("/admin/profile")
+    return false
+  }
+  
+  return true
+}
+
 async function onFooterSubmit() {
+  // Check if user has signature configured
+  if (!validateUserSignature()) return;
   let createdId: string | null = null
   try {
     const res = await post<{ id: string }, OfferingLetterPost>('/offering-letters', {
@@ -170,91 +196,4 @@ async function onFooterSubmit() {
       offering_letter_number: letterHeader.offeringLetterNumber,
       regarding: letterHeader.regarding,
       receiver: letterHeader.receiver,
-      status: 'created',
-      transport_price: letterOfferDetails.fuelPrices.sellingPrice.ppn,
-      fuel_total_price: letterOfferDetails.fuelPrices.totalPrice,
-      created_by: user.value?.id ?? null,
-      details: {
-        ...letterHeader,
-        ...letterOfferDetails,
-        ...letterFooter,
-      }
-    })
-    createdId = res.id
-    console.log(res)
 
-
-    toast.add({
-      title: 'Sukses',
-      icon: 'i-lucide-check-circle',
-      description: 'Data Penawaran berhasil dibuat',
-      color: 'success'
-    })
-
-    // console.log({ ...letterHeader, ...letterOfferDetails, ...letterFooter });
-  } catch (e: unknown) {
-    if (createdId) {
-      await del(`/offering-letters/${createdId}`).catch(() => undefined)
-    }
-    toast.add({
-      title: 'Gagal',
-      description: e instanceof Error ? e.message : String(e),
-      color: 'error'
-    })
-  }
-}
-
-definePageMeta({ layout: 'marketing' })
-</script>
-
-<template>
-  <div v-if="pending" class="space-y-4 py-4">
-    <div v-for="i in 3" :key="i" class="space-y-2">
-      <USkeleton class="h-4 w-32 rounded" />
-      <USkeleton class="h-10 w-full rounded-lg" />
-    </div>
-  </div>
-  <UStepper
-    v-else
-    ref="stepper"
-    disabled
-    :items
-  >
-    <template #letterHeader>
-      <MarketingOLHeaderForm
-        v-model="letterHeader"
-        :receivers="receivers"
-        :has-previous="stepper?.hasPrev"
-        @previous="previousNavigation"
-        @submit="onHeaderSubmit"
-      />
-    </template>
-
-    <template #letterOfferDetails>
-      <MarketingOLDetailsForm
-        v-model="letterOfferDetails"
-        :has-previous="stepper?.hasPrev"
-        @previous="previousNavigation"
-        @submit="onDetailsSubmit"
-      />
-    </template>
-
-    <template #letterFooter>
-      <MarketingOLFooterForm
-        v-model="letterFooter"
-        v-model:location="letterHeader.location"
-        :has-previous="stepper?.hasPrev"
-        @previous="previousNavigation"
-        @preview="previewOpen = true"
-        @submit="onFooterSubmit"
-      />
-    </template>
-  </UStepper>
-
-  <DocumentPreviewModal
-    :open="previewOpen"
-    title="Preview Surat Penawaran"
-    :build-pdf="buildPreviewPdf"
-    @close="previewOpen = false"
-  />
-</template>
