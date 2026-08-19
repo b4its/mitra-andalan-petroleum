@@ -161,6 +161,15 @@ const links = [
           }
         },
         {
+          label: 'Aktivitas',
+          icon: 'i-lucide-history',
+          to: '/admin/activities',
+          exact: true,
+          onSelect: () => {
+            open.value = false
+          }
+        },
+        {
           label: 'Konfigurasi Database',
           to: '/admin/database',
           exact: true,
