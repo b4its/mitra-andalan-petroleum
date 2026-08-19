@@ -180,7 +180,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
       {
         accessorKey: 'status',
         header: 'Peran',
-        cell: ({ row }) => statusBadge(row.getValue('status') ?? '', 'user')
+        cell: ({ row }) => statusBadge(statusLabel(row.getValue('status')) ?? '', 'user')
       },
       {
         accessorKey: 'created_at',
@@ -206,7 +206,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
         accessorKey: 'status',
         header: 'Status',
         cell: ({ row }) =>
-          statusBadge(row.getValue('status') ?? '', 'offering_letter')
+          statusBadge(statusLabel(row.getValue('status')) ?? '', 'offering_letter')
       },
       {
         accessorKey: 'created_at',
@@ -235,7 +235,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
         accessorKey: 'status',
         header: 'Status',
         cell: ({ row }) =>
-          statusBadge(row.getValue('status') ?? '', 'purchase_order')
+          statusBadge(statusLabel(row.getValue('status')) ?? '', 'purchase_order')
       },
       {
         accessorKey: 'created_at',
@@ -261,7 +261,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
         accessorKey: 'status',
         header: 'Status',
         cell: ({ row }) =>
-          statusBadge(row.getValue('status') ?? '', 'delivery_order')
+          statusBadge(statusLabel(row.getValue('status')) ?? '', 'delivery_order')
       },
       {
         accessorKey: 'created_at',
@@ -293,7 +293,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
       {
         accessorKey: 'status',
         header: 'Status Bayar',
-        cell: ({ row }) => statusBadge(row.getValue('status') ?? '', 'invoice')
+        cell: ({ row }) => statusBadge(statusLabel(row.getValue('status')) ?? '', 'invoice')
       },
       {
         accessorKey: 'created_at',
@@ -317,7 +317,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
       {
         accessorKey: 'status',
         header: 'Status',
-        cell: ({ row }) => statusBadge(row.getValue('status') ?? '', 'sale')
+        cell: ({ row }) => statusBadge(statusLabel(row.getValue('status')) ?? '', 'sale')
       },
       {
         accessorKey: 'created_at',
@@ -338,7 +338,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
         accessorKey: 'status',
         header: 'Tipe',
         cell: ({ row }) =>
-          statusBadge(row.getValue('status') ?? '', 'notification')
+          statusBadge(statusLabel(row.getValue('status')) ?? '', 'notification')
       },
       {
         accessorKey: 'created_at',
@@ -362,7 +362,7 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
           h(
             UBadge,
             { variant: 'soft', color: 'neutral' },
-            () => row.getValue('status') ?? '-'
+            () => statusLabel(row.getValue('status')) ?? '-'
           )
       },
       {
@@ -389,9 +389,9 @@ const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) =>
-        row.getValue('status')
+        statusLabel(row.getValue('status'))
           ? h(UBadge, { variant: 'subtle', color: 'neutral' }, () =>
-              row.getValue('status')
+              statusLabel(row.getValue('status'))
             )
           : '-'
     },
