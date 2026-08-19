@@ -135,12 +135,12 @@ const statusColors: Record<
 function statusBadge(status: string, group: string) {
   const map = statusColors[group] || {}
   const color = map[status] ?? 'neutral'
-  return h(
-    UBadge,
+  return h(UBadge,
     { variant: 'subtle', color, class: 'capitalize' },
-    () => statusLabel(status) ?? '-')
-)
+    () => statusLabel(status) ?? '-'
+  )
 }
+
 
 const columns = computed((): TableColumn<AdminDrilldownItem>[] => {
   const key = props.metric?.key ?? ''
