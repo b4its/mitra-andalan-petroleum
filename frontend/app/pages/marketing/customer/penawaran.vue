@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { StepperItem } from '@nuxt/ui'
 import type { ResUploads } from '~/types'
-import type { OfferingLetterPost, Customer, OfferingLetterDetails } from '~/types/marketing'
+import type { OfferingLetterPost, Customer, CustomerPostData } from '~/types/marketing'
 import type {
   MarketingOLDetailsState,
   MarketingOLFooterState,
@@ -10,7 +10,6 @@ import type {
 import { useOfferingLetterPdf } from '~/composables/useOfferingLetterPdf'
 
 const { user } = useAuth()
-const { get } = useApi()
 const previewOpen = ref(false)
 const { buildOfferingLetterPdf } = useOfferingLetterPdf()
 
@@ -196,4 +195,143 @@ async function onFooterSubmit() {
       offering_letter_number: letterHeader.offeringLetterNumber,
       regarding: letterHeader.regarding,
       receiver: letterHeader.receiver,
+      payment_method: letterOfferDetails.paymentMethod ?? null,
+      payment_term: letterOfferDetails.paymentTerm,
+      payment_tollerance: letterOfferDetails.volumeTolerance,
+      purchase_order_deadline: letterFooter.purchaseOrderDeadline,
+      late_penalty_percent: letterOfferDetails.latePenalty,
+      price_service_type: letterOfferDetails.fuelPrices.logisticInformation,
+      fuel_product_name: letterOfferDetails.fuelPrices.productName,
+      fuel_hpp_price: letterOfferDetails.fuelPrices.hppPrice,
+      fuel_base_price: letterOfferDetails.fuelPrices.basePrice,
+      fuel_selling_ppkb_percent: letterOfferDetails.fuelPrices.percentageNum.ppkb,
+      fuel_selling_oat_percent: letterOfferDetails.fuelPrices.percentageNum.oat,
+      fuel_selling_ppn_percent: letterOfferDetails.fuelPrices.percentageNum.ppn,
+      fuel_selling_pph_percent: letterOfferDetails.fuelPrices.percentageNum.pph,
+      terms_and_conditions: letterOfferDetails.informasiTambahan
+    })
+    createdId = res.id
+    toast.add({
+      title: 'Berhasil',
+      description: 'Surat penawaran berhasil dibuat'
+    })
+    if (createdId) {
+      await navigateTo(`/marketing/detail/surat-penawaran-${createdId}`)
+    }
+  } catch (e) {
+    console.error(e)
+    toast.add({
+      title: 'Gagal',
+      description: 'Terjadi kesalahan saat membuat surat penawaran',
+      color: 'danger'
+    })
+  }
+}
 
+async function onPreviewPdf() {
+  if (!validateUserSignature()) return;
+  const pdfContent = await buildPreviewPdf()
+  if (pdfContent) {
+    previewOpen.value = true
+    const blob = new Blob([pdfContent], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    return { url }
+  }
+  return null
+}
+
+const offers = ref<{ id: string; number: string; customer: string }[]>([
+  { id: '1', number: '722/MAP/II-06/26', customer: 'PT. Surya Tambang Energi' }
+])
+</script>
+
+<template>
+  <div class="grid gap-6 py-6 px-4 md:px-8">
+    <NuxtCard class="col-span-full bg-white dark:bg-neutral-800 rounded-lg shadow-sm">
+      <NuxtCardTitle class="text-xl font-bold">Pembuatan Surat Penawaran</NuxtCardTitle>
+      <NuxtCardSeparator />
+      <NuxtCardContent class="pt-6">
+        <!-- Step Form -->
+        <ClientOnly>
+          <NuxtStepper v-slot="{ stepIndex }" :items="items" ref="stepper" orientation="vertical" class="mt-4">
+            <!-- Letter Header Step -->
+            <div v-show="stepIndex === 0" id="letterHeader" style="padding-top: 1rem;">
+              <MarketingOLHeaderForm 
+                v-model="letterHeader" 
+                @submit="onHeaderSubmit"
+              />
+              <div class="flex justify-between mt-6 pt-4 border-t">
+                <Button @click="previousNavigation" variant="outline">
+                  Previous
+                </Button>
+                <Button 
+                  :disabled="!letterHeader.date || !letterHeader.offeringLetterNumber"
+                  @click="onHeaderSubmit"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
+            <!-- Letter Offer Details Step -->
+            <div v-show="stepIndex === 1" id="letterOfferDetails" style="padding-top: 1rem;">
+              <MarketingOLDetailsForm 
+                v-model="letterOfferDetails" 
+                @submit="onDetailsSubmit"
+              />
+              <div class="flex justify-between mt-6 pt-4 border-t">
+                <Button @click="previousNavigation" variant="outline">
+                  Previous
+                </Button>
+                <Button 
+                  :disabled="!letterOfferDetails.supplyPoint"
+                  @click="onDetailsSubmit"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
+            <!-- Letter Footer Step -->
+            <div v-show="stepIndex === 2" id="letterFooter" style="padding-top: 1rem;">
+              <MarketingOLFooterForm 
+                v-model="letterFooter"
+                @submit="onFooterSubmit"
+              />
+              <div class="flex justify-between mt-6 pt-4 border-t">
+                <Button @click="previousNavigation" variant="outline">
+                  Previous
+                </Button>
+                <Button 
+                  :disabled="!letterFooter.offeror.name || !letterFooter.companyInformation.phoneNumber"
+                  @click="onPreviewPdf"
+                >
+                  Preview PDF
+                </Button>
+                <Button 
+                  :disabled="!letterFooter.offeror.name || !letterFooter.companyInformation.phoneNumber"
+                  @click="onFooterSubmit"
+                >
+                  Create & Save
+                </Button>
+              </div>
+            </div>
+          </NuxtStepper>
+          
+          <!-- Loading State -->
+          <template #fallback>
+            <div class="py-12 flex items-center justify-center">
+              <span class="animate-spin mr-2 text-primary">Loading...</span>
+            </div>
+          </template>
+        </ClientOnly>
+      </NuxtCardContent>
+    </NuxtCard>
+
+    <!-- Modal Preview PDF -->
+    <DocumentPreviewModal 
+      v-if="previewOpen" 
+      @close="previewOpen = false"
+    />
+  </div>
+</template>

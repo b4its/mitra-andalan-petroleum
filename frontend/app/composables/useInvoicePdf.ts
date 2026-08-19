@@ -15,6 +15,8 @@ export function useInvoicePdf() {
     const pdfMake = usePDFMake()
     if (!pdfMake || import.meta.server) return null
 
+    const blue = '#1688d3'
+    const borderColor = '#000000'
     const letterIds = details?.customerPurchaseInformation?.deliveryOrderNumberData || []
     const formattedLetterIds = (() => {
       const ids = letterIds
@@ -25,54 +27,89 @@ export function useInvoicePdf() {
       const numbers = ids.map((id: string) => id.split('/')[0])
       return numbers.join(',') + suffix
     })()
+    const grandTotalInWords = `${useChangeCase(
+      angkaTerbilang(details.priceSummary.grandTotal || 0),
+      'capitalCase'
+    ).value} Rupiah`
+    const termText = `${details.invoiceInformation.terms} ${details.invoiceInformation.terms === 1 ? 'Day' : 'Days'} After Delivery`
+
+    const lineLayout = {
+      hLineColor: function () {
+        return borderColor
+      },
+      vLineColor: function () {
+        return borderColor
+      },
+      paddingRight: function () {
+        return 2
+      },
+      paddingLeft: function () {
+        return 2
+      },
+      paddingBottom: function () {
+        return 1.5
+      },
+      paddingTop: function () {
+        return 1.5
+      }
+    }
+
+    const headerCell = (text: string): TableCell => ({
+      text,
+      bold: true,
+      alignment: 'center',
+      fillColor: blue,
+      color: '#ffffff'
+    })
+    const infoHeaderCell = (text: string): TableCell => ({
+      text,
+      bold: true,
+      alignment: 'center'
+    })
+    const infoValueCell = (text: string): TableCell => ({
+      text,
+      bold: true,
+      alignment: 'center',
+      verticalAlignment: 'middle',
+      margin: [0, 13, 0, 13]
+    })
 
     const tableBodyDetails: TableCell[][] = []
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < Math.max(details.products.length, 3); i++) {
       const product = details?.products[i]
-      if (product) {
-        tableBodyDetails.push([
-          {
-            text: (i + 1).toString(),
-            alignment: 'center',
-            border: [true, false, true, true]
-          },
-          {
-            text: formatNumber(product.qty || 0),
-            alignment: 'center',
-            border: [true, false, true, true]
-          },
-          {
-            text: product.unit || '',
-            alignment: 'center',
-            border: [true, false, true, true]
-          },
-          {
-            text: product.name || '',
-            alignment: 'left',
-            border: [true, false, true, true]
-          },
-          {
-            text: formatNumber(product.price || 0),
-            alignment: 'center',
-            border: [true, false, true, true]
-          },
-          {
-            text: formatNumber(product.totalPrice || 0),
-            alignment: 'center',
-            border: [true, false, true, true]
-          }
-        ])
-      } else {
-        tableBodyDetails.push([
-          { text: '', border: [true, false, true, true] },
-          { text: '', border: [true, false, true, true] },
-          { text: '', border: [true, false, true, true] },
-          { text: '', border: [true, false, true, true] },
-          { text: '', border: [true, false, true, true] },
-          { text: '', border: [true, false, true, true] }
-        ])
-      }
+      tableBodyDetails.push([
+        {
+          text: product ? (i + 1).toString() : '',
+          alignment: 'center',
+          border: [true, false, true, false]
+        },
+        {
+          text: product ? formatNumber(product.qty || 0) : '',
+          alignment: 'center',
+          border: [true, false, true, false]
+        },
+        {
+          text: product?.unit || '',
+          alignment: 'center',
+          border: [true, false, true, false]
+        },
+        {
+          text: product?.name || '',
+          alignment: 'left',
+          border: [true, false, true, false]
+        },
+        {
+          text: product ? formatNumber(product.price || 0) : '',
+          alignment: 'right',
+          border: [true, false, true, false]
+        },
+        {
+          text: product ? formatNumber(product.totalPrice || 0) : '',
+          alignment: 'right',
+          border: [true, false, true, false]
+        }
+      ])
     }
 
     return await pdfMake
@@ -83,295 +120,165 @@ export function useInvoicePdf() {
           creator: user.value?.name,
           producer: 'PT. Mitra Andalan Petroleum'
         },
-        pageMargins: [24, 15, 24, 15],
+        pageMargins: [28, 12, 28, 18],
         pageSize: 'A4',
         content: [
           {
             layout: {
               defaultBorder: false,
               paddingRight: function () {
-                return 2
+                return 1
               },
               paddingLeft: function () {
-                return 2
+                return 1
               },
               paddingBottom: function () {
-                return 1
+                return 0
               },
               paddingTop: function () {
-                return 1
-              },
-              fillColor: function () {
-                return null
+                return 0
               }
             },
             table: {
-              widths: ['15%', 'auto', 'auto'],
+              widths: [72, '*'],
               body: [
                 [
                   {
                     image: await toBase64(logoImage),
-                    width: 40,
+                    width: 47,
                     alignment: 'center',
-                    rowSpan: 4
+                    rowSpan: 4,
+                    margin: [0, 2, 0, 0]
                   },
                   {
                     text: `${details.companyInformation.name}`,
-                    style: {
-                      bold: true,
-                      fontSize: 20,
-                      color: '#14469b'
-                    },
-                    colSpan: 2
-                  },
-                  {}
+                    bold: true,
+                    fontSize: 19,
+                    color: '#14469b',
+                    margin: [0, 0, 0, 0]
+                  }
                 ],
                 [
                   {},
                   {
                     text: 'Your Trusted Partner',
-                    style: {
-                      bold: true,
-                      italics: true,
-                      fontSize: 14,
-                      color: '#ff0000'
-                    },
-                    colSpan: 2
-                  },
-                  {}
+                    bold: true,
+                    italics: true,
+                    fontSize: 11,
+                    color: '#e10600',
+                    margin: [0, 0, 0, 1]
+                  }
                 ],
                 [
                   {},
                   {
                     text: `${details.companyInformation.address}`,
-                    colSpan: 2,
-                    fontSize: 8
-                  },
-                  {}
+                    fontSize: 7.5
+                  }
                 ],
                 [
                   {},
                   {
-                    text: `${details.companyInformation.phoneNumber}`,
-                    bold: true,
-                    italics: true,
-                    fontSize: 8
-                  },
-                  {
-                    text: `Email: ${details.companyInformation.email}`,
-                    bold: true,
-                    italics: true,
-                    marginRight: 60,
-                    fontSize: 8
+                    columns: [
+                      {
+                        text: `Telp: ${details.companyInformation.phoneNumber}`,
+                        bold: true,
+                        italics: true,
+                        fontSize: 7.5,
+                        width: 145
+                      },
+                      {
+                        text: `Email: ${details.companyInformation.email}`,
+                        bold: true,
+                        italics: true,
+                        fontSize: 7.5,
+                        width: '*'
+                      }
+                    ]
                   }
                 ]
               ]
             }
           },
           {
-            layout: {
-              paddingRight: function () {
-                return 2
-              },
-              paddingLeft: function () {
-                return 2
-              },
-              paddingBottom: function (i) {
-                return [0, 1].includes(i) ? 0 : 2
-              },
-              paddingTop: function (i) {
-                return [0, 1].includes(i) ? 0 : 2
-              },
-              fillColor: function (i) {
-                return [0, 2].includes(i) ? '#1d82d1' : null
-              }
+            margin: [0, 4, 0, 0],
+            table: {
+              widths: ['*'],
+              body: [[{ text: '', fillColor: blue, margin: [0, 2, 0, 2] }]]
             },
+            layout: 'noBorders'
+          },
+          {
+            text: 'INVOICE',
+            bold: true,
+            alignment: 'center',
+            fontSize: 18,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            layout: lineLayout,
             table: {
               widths: ['*', '*'],
               body: [
-                [
-                  {
-                    text: '',
-                    colSpan: 2
-                  },
-                  {}
-                ],
-                [
-                  {
-                    text: 'INVOICE',
-                    style: {
-                      bold: true,
-                      fontSize: 18,
-                      alignment: 'center'
-                    },
-                    border: [false, true, false, true],
-                    colSpan: 2
-                  },
-                  {}
-                ],
-                [
-                  {
-                    text: 'Ditagih Kepada',
-                    color: '#fff',
-                    bold: true
-                  },
-                  {
-                    text: 'Titik Pengiriman',
-                    color: '#fff',
-                    bold: true
-                  }
-                ],
+                [headerCell('Bill To'), headerCell('Delivery Point')],
                 [
                   {
                     text: `${details.billToInformation}`,
                     bold: true,
-                    lineHeight: 1.25
+                    lineHeight: 1.15,
+                    margin: [0, 1, 0, 14]
                   },
                   {
                     text: `${details.deliveryPointInformation}`,
                     bold: true,
-                    lineHeight: 1.25
+                    lineHeight: 1.15,
+                    margin: [0, 1, 0, 14]
                   }
                 ]
               ]
             }
           },
           {
-            layout: {
-              paddingRight: function () {
-                return 2
-              },
-              paddingLeft: function () {
-                return 2
-              },
-              paddingBottom: function () {
-                return 2
-              },
-              paddingTop: function () {
-                return 2
-              },
-              fillColor: function () {
-                return null
-              }
-            },
+            layout: lineLayout,
             table: {
-              widths: ['*', '*', '*'],
+              widths: ['26%', '20%', '30%', '24%'],
               body: [
                 [
-                  {
-                    text: 'No. Invoice',
-                    bold: true,
-                    alignment: 'center',
-                    border: [true, false, true, true]
-                  },
-                  {
-                    text: 'Tanggal Invoice',
-                    bold: true,
-                    alignment: 'center',
-                    border: [true, false, true, true]
-                  },
-                  {
-                    text: 'No. Delivery Order',
-                    bold: true,
-                    alignment: 'center',
-                    border: [true, false, true, true]
-                  }
+                  infoHeaderCell('Invoice No.'),
+                  infoHeaderCell('Invoice Date'),
+                  infoHeaderCell('No. DO'),
+                  infoHeaderCell('Customer PO No')
                 ],
                 [
+                  infoValueCell(`${details.invoiceInformation.invoiceNumber}`),
+                  infoValueCell(formatDate(details.invoiceInformation.invoiceDate)),
                   {
-                    text: `${details.invoiceInformation.invoiceNumber}`,
-                    verticalAlignment: 'middle',
-                    alignment: 'center'
+                    ...infoValueCell(`${formattedLetterIds}`),
+                    fontSize: 7.5,
+                    margin: [0, 6, 0, 6]
                   },
-                  {
-                    text: formatDate(details.invoiceInformation.invoiceDate),
-                    verticalAlignment: 'middle',
-                    alignment: 'center'
-                  },
-                  {
-                    text: `${formattedLetterIds}`,
-                    verticalAlignment: 'middle',
-                    alignment: 'center'
-                  }
+                  infoValueCell(`${details.customerPurchaseInformation.customerPurchaseOrderNumber.purchaseOrderNumber}`)
                 ],
                 [
-                  {
-                    text: 'No. PO Customer',
-                    bold: true,
-                    alignment: 'center',
-                    border: [true, false, true, true]
-                  },
-                  {
-                    text: 'Syarat',
-                    bold: true,
-                    alignment: 'center'
-                  },
-                  {
-                    text: 'Jatuh Tempo',
-                    bold: true,
-                    alignment: 'center'
-                  }
+                  infoHeaderCell('Terms'),
+                  infoHeaderCell('Due Date'),
+                  infoHeaderCell('Tax No (Faktur Pajak)'),
+                  infoHeaderCell('SO No')
                 ],
                 [
-                  {
-                    text: `${details.customerPurchaseInformation.customerPurchaseOrderNumber.purchaseOrderNumber}`,
-                    verticalAlignment: 'middle',
-                    alignment: 'center'
-                  },
-                  {
-                    text: `${details.invoiceInformation.terms} ${details.invoiceInformation.terms === 1 ? 'Day' : 'Days'} After Delivery`,
-                    verticalAlignment: 'middle',
-                    alignment: 'center'
-                  },
-                  {
-                    text: formatDate(details.invoiceInformation.invoiceDueDate),
-                    verticalAlignment: 'middle',
-                    alignment: 'center'
-                  }
-                ],
-                [
-                  {
-                    text: 'Tax No (Faktur Pajak)',
-                    bold: true,
-                    alignment: 'center'
-                  },
-                  {},
-                  {}
-                ],
-                [
-                  {
-                    text: `${details.customerPurchaseInformation.taxInvoiceNumber}`,
-                    verticalAlignment: 'middle',
-                    alignment: 'center',
-                    colSpan: 3
-                  },
-                  {},
-                  {}
+                  infoHeaderCell(termText),
+                  infoHeaderCell(formatDate(details.invoiceInformation.invoiceDueDate)),
+                  infoHeaderCell(`${details.customerPurchaseInformation.taxInvoiceNumber}`),
+                  infoHeaderCell(`${details.customerPurchaseInformation.salesOrderNumber || ''}`)
                 ]
               ]
             }
           },
           {
-            marginTop: 10,
-            layout: {
-              paddingRight: function () {
-                return 2
-              },
-              paddingLeft: function () {
-                return 2
-              },
-              paddingBottom: function () {
-                return 2
-              },
-              paddingTop: function () {
-                return 2
-              },
-              fillColor: function () {
-                return null
-              }
-            },
+            margin: [0, 10, 0, 0],
+            layout: lineLayout,
             table: {
-              widths: ['6%', '*', '*', '40%', '*', '*'],
+              widths: ['6%', '9%', '12%', '45%', '14%', '14%'],
               body: [
                 [
                   {
@@ -382,196 +289,85 @@ export function useInvoicePdf() {
                     rowSpan: 2
                   },
                   {
-                    text: 'JUMLAH',
+                    text: 'QUANTITY',
                     bold: true,
                     alignment: 'center',
-                    verticalAlignment: 'middle',
                     colSpan: 2
                   },
                   {},
                   {
-                    text: 'DESKRIPSI',
+                    text: 'DESCRIPTION',
                     bold: true,
                     alignment: 'center',
                     verticalAlignment: 'middle',
                     rowSpan: 2
                   },
                   {
-                    text: 'HARGA (IDR)',
+                    text: 'PRICE (IDR)',
                     bold: true,
                     alignment: 'center',
-                    verticalAlignment: 'middle',
                     colSpan: 2
                   },
                   {}
                 ],
                 [
                   {},
-                  {
-                    text: 'JML',
-                    bold: true,
-                    alignment: 'center',
-                    verticalAlignment: 'middle'
-                  },
-                  {
-                    text: 'SATUAN',
-                    bold: true,
-                    alignment: 'center',
-                    verticalAlignment: 'middle'
-                  },
+                  { text: 'QTY', bold: true, alignment: 'center' },
+                  { text: 'UNIT', bold: true, alignment: 'center' },
                   {},
-                  {
-                    text: 'SATUAN',
-                    bold: true,
-                    alignment: 'center',
-                    verticalAlignment: 'middle'
-                  },
-                  {
-                    text: 'TOTAL',
-                    bold: true,
-                    alignment: 'center',
-                    verticalAlignment: 'middle'
-                  }
-                ]
-              ]
-            }
-          },
-          {
-            layout: {
-              paddingRight: function () {
-                return 2
-              },
-              paddingLeft: function () {
-                return 2
-              },
-              paddingBottom: function () {
-                return 2
-              },
-              paddingTop: function () {
-                return 2
-              },
-              fillColor: function () {
-                return null
-              },
-              hLineWidth: function () {
-                return 0
-              }
-            },
-            table: {
-              widths: ['6%', '*', '*', '40%', '*', '*'],
-              body: tableBodyDetails
-            }
-          },
-          {
-            layout: {
-              paddingRight: function () {
-                return 2
-              },
-              paddingLeft: function () {
-                return 2
-              },
-              paddingBottom: function () {
-                return 2
-              },
-              paddingTop: function () {
-                return 2
-              },
-              fillColor: function () {
-                return null
-              }
-            },
-            table: {
-              widths: ['6%', '*', '*', '40%', '*', '*'],
-              body: [
+                  { text: 'UNIT', bold: true, alignment: 'center' },
+                  { text: 'TOTAL', bold: true, alignment: 'center' }
+                ],
+                ...tableBodyDetails,
                 [
                   {
-                    text: useChangeCase(
-                      angkaTerbilang(details.priceSummary.grandTotal),
-                      'capitalCase'
-                    ).value,
+                    text: grandTotalInWords,
                     alignment: 'center',
                     colSpan: 4
                   },
                   {},
                   {},
+                  {},
                   {
-                    text: 'Subtotal',
-                    bold: true,
-                    alignment: 'left'
+                    text: 'Sub Total',
+                    bold: true
                   },
                   {
                     text: `${formatNumber(details.priceSummary.subTotal || 0)}`,
+                    bold: true,
                     alignment: 'right'
                   }
                 ],
                 [
-                  {
-                    text: '',
-                    colSpan: 4,
-                    border: [false, false, false, false]
-                  },
+                  { text: '', colSpan: 4, border: [false, false, false, false] },
                   {},
                   {},
-                  {
-                    text: 'Pre-Paid',
-                    bold: true,
-                    alignment: 'left'
-                  },
-                  {
-                    text: `${formatNumber(details.priceSummary.prePaid || 0)}`,
-                    alignment: 'right'
-                  }
+                  {},
+                  { text: 'Pre-Paid', bold: true },
+                  { text: `${formatNumber(details.priceSummary.prePaid || 0)}`, alignment: 'right' }
                 ],
                 [
-                  {
-                    text: '',
-                    colSpan: 4,
-                    border: [false, false, false, false]
-                  },
+                  { text: '', colSpan: 4, border: [false, false, false, false] },
                   {},
                   {},
-                  {
-                    text: 'Diskon',
-                    bold: true,
-                    alignment: 'left'
-                  },
-                  {
-                    text: `${formatNumber(details.priceSummary.discount || 0)}`,
-                    alignment: 'right'
-                  }
+                  {},
+                  { text: 'Discount', bold: true },
+                  { text: `${formatNumber(details.priceSummary.discount || 0)}`, alignment: 'right' }
                 ],
                 [
-                  {
-                    text: '',
-                    colSpan: 4,
-                    border: [false, false, false, false]
-                  },
+                  { text: '', colSpan: 4, border: [false, false, false, false] },
                   {},
                   {},
-                  {
-                    text: 'PPn',
-                    bold: true,
-                    alignment: 'left'
-                  },
-                  {
-                    text: `${formatNumber(details.priceSummary.ppn || 0)}`,
-                    alignment: 'right'
-                  }
+                  {},
+                  { text: 'PPn', bold: true },
+                  { text: `${formatNumber(details.priceSummary.ppn || 0)}`, alignment: 'right' }
                 ],
                 [
-                  {
-                    text: 'Syarat dan Ketentuan:',
-                    bold: true,
-                    colSpan: 4,
-                    border: [false, false, false, false]
-                  },
+                  { text: '', colSpan: 4, border: [false, false, false, false] },
                   {},
                   {},
-                  {
-                    text: 'Total Keseluruhan',
-                    bold: true,
-                    alignment: 'left'
-                  },
+                  {},
+                  { text: 'Grand Total', bold: true },
                   {
                     text: `${formatNumber(details.priceSummary.grandTotal || 0)}`,
                     bold: true,
@@ -582,7 +378,13 @@ export function useInvoicePdf() {
             }
           },
           {
-            marginLeft: 5,
+            text: 'Term and Conditions:',
+            bold: true,
+            margin: [2, 8, 0, 0],
+            fontSize: 7.5
+          },
+          {
+            margin: [2, 1, 0, 0],
             layout: {
               defaultBorder: false,
               paddingRight: function () {
@@ -592,134 +394,74 @@ export function useInvoicePdf() {
                 return 1
               },
               paddingBottom: function () {
-                return 1
+                return 0.5
               },
               paddingTop: function () {
-                return 1
-              },
-              fillColor: function () {
-                return null
+                return 0.5
               }
             },
             table: {
-              widths: ['5%', '25%', '1%', '55%'],
+              widths: [16, 104, 5, '*'],
               body: [
                 [
+                  { text: '1.', alignment: 'center' },
+                  { text: 'All check payable to', colSpan: 3 },
+                  {},
+                  {}
+                ],
+                [
+                  { text: '' },
+                  { text: 'Bank Name', bold: true },
+                  { text: ':', bold: true },
+                  { text: `${details.paymentInformation.bankName}`, bold: true }
+                ],
+                [
+                  { text: '' },
+                  { text: 'Bank Account No', bold: true },
+                  { text: ':', bold: true },
+                  { text: `${details.paymentInformation.accountNumber}`, bold: true }
+                ],
+                [
+                  { text: '' },
+                  { text: 'Acct Name', bold: true },
+                  { text: ':', bold: true },
+                  { text: `${details.paymentInformation.accountName}`, bold: true }
+                ],
+                [
+                  { text: '2.', alignment: 'center' },
                   {
-                    text: '1.',
-                    alignment: 'center'
-                  },
-                  {
-                    text: 'Semua cek dibayarkan kepada',
+                    text: 'If payment has not been received by the stated date of payment, penalty of 2% interest per month will be imposed',
                     colSpan: 3
                   },
                   {},
                   {}
                 ],
                 [
+                  { text: '3.', alignment: 'center' },
                   {
-                    text: ''
-                  },
-                  {
-                    text: 'Nama Bank',
-                    bold: true
-                  },
-                  {
-                    text: ':',
-                    bold: true
-                  },
-                  {
-                    text: `${details.paymentInformation.bankName}`,
-                    bold: true
-                  }
-                ],
-                [
-                  {
-                    text: ''
-                  },
-                  {
-                    text: 'No. Rekening',
-                    bold: true
-                  },
-                  {
-                    text: ':',
-                    bold: true
-                  },
-                  {
-                    text: `${details.paymentInformation.accountNumber}`,
-                    bold: true
-                  }
-                ],
-                [
-                  {
-                    text: ''
-                  },
-                  {
-                    text: 'Nama Rekening',
-                    bold: true
-                  },
-                  {
-                    text: ':',
-                    bold: true
-                  },
-                  {
-                    text: `${details.paymentInformation.accountName}`,
-                    bold: true
-                  }
-                ],
-                [
-                  {
-                    text: '2.',
-                    alignment: 'center'
-                  },
-                  {
-                    text: 'Apabila pembayaran tidak diterima sampai tanggal jatuh tempo, dikenakan denda bunga 2% per bulan',
+                    text: 'Seller has the right to refuse / decline delivery if payment terms has not been met, and shall not be held responsible for any direct or indirect consequences arising thereafter',
                     colSpan: 3
                   },
                   {},
                   {}
                 ],
                 [
+                  { text: '4.', alignment: 'center' },
+                  { text: 'Goods sold are not refundable', colSpan: 3 },
+                  {},
+                  {}
+                ],
+                [
+                  { text: '5.', alignment: 'center' },
                   {
-                    text: '3.',
-                    alignment: 'center'
-                  },
-                  {
-                    text: 'Penjual berhak menolak pengiriman apabila syarat pembayaran belum dipenuhi, dan tidak bertanggung jawab atas akibat langsung maupun tidak langsung yang timbul kemudian',
+                    text: 'Invoice will be considered PAID once seller has received full amount on the stated account',
                     colSpan: 3
                   },
                   {},
                   {}
                 ],
                 [
-                  {
-                    text: '4.',
-                    alignment: 'center'
-                  },
-                  {
-                    text: 'Barang yang sudah terjual tidak dapat dikembalikan',
-                    colSpan: 3
-                  },
-                  {},
-                  {}
-                ],
-                [
-                  {
-                    text: '5.',
-                    alignment: 'center'
-                  },
-                  {
-                    text: 'Invoice dianggap LUNAS setelah penjual menerima jumlah penuh pada rekening tersebut',
-                    colSpan: 3
-                  },
-                  {},
-                  {}
-                ],
-                [
-                  {
-                    text: '6.',
-                    alignment: 'center'
-                  },
+                  { text: '6.', alignment: 'center' },
                   {
                     text: `MAP Contact Number Fin & Acct Officer : ${details.companyInformation.phoneNumber || '-'}`,
                     colSpan: 3
@@ -733,19 +475,19 @@ export function useInvoicePdf() {
           {
             text: `${details.signature.companyName}`,
             bold: true,
-            marginTop: 15,
-            marginBottom: 30
+            margin: [0, 10, 0, 48],
+            fontSize: 7.5
           },
           {
-            marginTop: 30,
             text: `${details.signature.createdBy}`,
             bold: true,
-            decoration: 'underline'
+            decoration: 'underline',
+            fontSize: 7.5
           }
         ],
         defaultStyle: {
           color: '#000000',
-          fontSize: 9
+          fontSize: 7
         }
       })
       .getDataUrl()
