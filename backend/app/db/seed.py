@@ -32,7 +32,7 @@ from app.models.accounting import Account, JournalEntry, JournalLine
 # ── Urutan hapus data (FK-safe: child dulu, parent belakangan) ──
 _CLEAR_ORDER = [
     Upload, JournalLine, JournalEntry, Notification,
-    Invoice, PoTransportir, DeliveryOrder, PurchaseOrder, OfferingLetter,
+    Invoice, DeliveryOrder, PoTransportir, PurchaseOrder, OfferingLetter,
     Sale, Account, Company, Supplier, Customer, User,
 ]
 
