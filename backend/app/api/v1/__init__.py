@@ -19,6 +19,7 @@ from app.api.v1.endpoints import (
     prices,
     po_transportir,
     companies,
+    activities,
 )
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -40,3 +41,4 @@ v1_router.include_router(admin_database.router, tags=["admin-database"])
 v1_router.include_router(companies.router, tags=["companies"])
 v1_router.include_router(prices.router, tags=["prices"])
 v1_router.include_router(po_transportir.router, tags=["po-transportir"])
+v1_router.include_router(activities.router, tags=["activities"])

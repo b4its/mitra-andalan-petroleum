@@ -12,6 +12,7 @@ from app.models.upload import Upload
 from app.models.price import Price
 from app.models.po_transportir import PoTransportir
 from app.models.accounting import Account, JournalEntry, JournalLine
+from app.models.activity import Activity
 from app.models.company import Company
 
 __all__ = [

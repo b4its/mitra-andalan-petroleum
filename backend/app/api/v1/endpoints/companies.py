@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity
 from app.models.company import Company
 from app.schemas.common import MessageResponse
 from app.schemas.company import (
@@ -46,11 +47,27 @@ async def get_company(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat perusahaan",
     description="Mendaftarkan perusahaan baru.",
 )
-async def create_company(body: CompanyCreate, db: AsyncSession = Depends(get_db)):
+async def create_company(request: Request, body: CompanyCreate, db: AsyncSession = Depends(get_db)):
     c = Company(**body.model_dump())
     db.add(c)
     await db.flush()
     await db.refresh(c)
+    
+    # Log activity
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=None,  # Can extract from JWT if available
+        actor_name="System",
+        actor_role="system",
+        action="create",
+        resource_type="company",
+        resource_id=c.id,
+        resource_name=c.name,
+        new_data=body.model_dump(),
+        details=f"Perusahaan {c.name} berhasil dibuat"
+    )
+    
     return c
 
 

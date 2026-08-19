@@ -53,6 +53,7 @@ from app.schemas.company import (
     CompanyCreate,
     CompanyUpdate,
 )
+from app.schemas.activity import ActivityResponse, ActivityFilter
 
 __all__ = [
     "BaseResponse",
@@ -93,4 +94,6 @@ __all__ = [
     "CompanyResponse",
     "CompanyCreate",
     "CompanyUpdate",
+    "ActivityResponse",
+    "ActivityFilter"
 ]
