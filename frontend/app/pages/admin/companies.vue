@@ -1,26 +1,35 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
-import type { Company, CompanyData } from '~/types/company'
+import { h } from "vue"
+import * as z from "zod"
+import type { TableColumn, FormSubmitEvent } from "@nuxt/ui"
+import type { Company, CompanyData } from "~/types/company"
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: "admin" })
 
 const toast = useToast()
 const { get, post, put, del } = useApi()
+
+// ── Tipe lokal ────────────────────────────────────────────────
+interface CompanyLocal {
+  id: string
+  name: string
+  abbreviation: string
+  company_image: string | null
+}
 
 // ── Data fetch ────────────────────────────────────────────────
 const {
   data: companies,
   pending,
   refresh
-} = await useAsyncData<Company[]>(
-  'admin-companies',
-  () => get<Company[]>('/companies'),
+} = await useAsyncData<CompanyLocal[]>(
+  "admin-companies",
+  () => get<CompanyLocal[]>("/companies"),
   { default: () => [], lazy: true }
 )
 
 // ── Search (frontend) ─────────────────────────────────────────
-const search = ref('')
+const search = ref("")
 const page = ref(1)
 const PAGE_SIZE = 8
 
@@ -30,8 +39,8 @@ const filtered = computed(() => {
   if (!q) return list
   return list.filter(
     c =>
-      c.name.toLowerCase().includes(q)
-      || c.abbreviation.toLowerCase().includes(q)
+      c.name.toLowerCase().includes(q) ||
+      c.abbreviation.toLowerCase().includes(q)
   )
 })
 
@@ -44,308 +53,455 @@ watch(search, () => {
   page.value = 1
 })
 
-// ── Modal state ───────────────────────────────────────────────
+// ── Modal states ──────────────────────────────────────────────
+type ModalMode = "view" | "add" | "edit"
 const modalOpen = ref(false)
-const editingId = ref<string | null>(null)
+const modalMode = ref<ModalMode>("add")
+const selectedCompany = ref<CompanyLocal | null>(null)
 
-function openCreateModal() {
-  editingId.value = null
-  formName.value = ''
-  formAbbreviation.value = ''
-  formCompanyImage.value = null
+function openAdd() {
+  modalMode.value = "add"
+  selectedCompany.value = null
+  formState.name = ""
+  formState.abbreviation = ""
+  formState.company_image = ""
   modalOpen.value = true
 }
 
-function openUpdateModal(company: Company) {
-  editingId.value = company.id
-  formName.value = company.name
-  formAbbreviation.value = company.abbreviation
-  formCompanyImage.value = company.company_image
+function openEdit(company: CompanyLocal) {
+  modalMode.value = "edit"
+  selectedCompany.value = company
+  formState.name = company.name
+  formState.abbreviation = company.abbreviation
+  formState.company_image = company.company_image ?? ""
   modalOpen.value = true
 }
 
-async function onSubmitForm(event: FormSubmitEvent<FormData>) {
+function openView(company: CompanyLocal) {
+  modalMode.value = "view"
+  selectedCompany.value = company
+  modalOpen.value = true
+}
+
+// ── Form schema ────────────────────────────────────────────────
+const ROLES = [
+  "admin",
+  "marketing",
+  "operations",
+  "finance",
+  "accounting"
+] as const
+
+const addSchema = z.object({
+  name: z.string().min(2, "Minimal 2 karakter"),
+  abbreviation: z.string().min(1).max(20),
+  company_image: z.string().optional()
+})
+
+const editSchema = z.object({
+  name: z.string().min(2, "Minimal 2 karakter"),
+  abbreviation: z.string().min(1).max(20),
+  company_image: z.string().optional()
+})
+
+type AddSchema = z.output<typeof addSchema>
+type EditSchema = z.output<typeof editSchema>
+
+const formState = reactive<AddSchema & EditSchema>({
+  name: "",
+  abbreviation: "",
+  company_image: ""
+})
+
+async function onSubmitAdd(event: FormSubmitEvent<AddSchema>) {
   event.preventDefault()
   try {
-    if (editingId.value) {
-      // Update
-      const payload: CompanyData = {
-        id: editingId.value,
-        name: formName.value,
-        abbreviation: formAbbreviation.value,
-        company_image: formCompanyImage.value
+    const res = await post<{ id: string }, Omit<CompanyData, "id">>(
+      "/companies",
+      {
+        name: formState.name,
+        abbreviation: formState.abbreviation,
+        company_image: formState.company_image || null
       }
-      await put(`/companies/${editingId.value}`, payload)
-      toast.add({
-        title: 'Sukses',
-        description: 'Perusahaan berhasil diperbarui'
-      })
-    } else {
-      // Create
-      const payload: Omit<CompanyData, 'id'> = {
-        name: formName.value,
-        abbreviation: formAbbreviation.value,
-        company_image: formCompanyImage.value
-      }
-      await post('/companies', payload)
-      toast.add({
-        title: 'Sukses',
-        description: 'Perusahaan baru berhasil ditambahkan'
-      })
-    }
+    )
+    toast.add({
+      title: "Sukses",
+      description: "Perusahaan baru berhasil ditambahkan.",
+      color: "success"
+    })
     modalOpen.value = false
     refresh()
-  } catch (error: any) {
-    console.error(error)
+  } catch (err) {
     toast.add({
-      title: 'Gagal',
-      description: error?.response?.data?.detail || 'Terjadi kesalahan saat menyimpan data',
-      color: 'danger'
+      title: "Gagal",
+      description: err instanceof Error ? err.message : "Gagal menambahkan perusahaan.",
+      color: "error"
     })
   }
 }
 
-async function onDelete(id: string, name: string) {
-  const confirm = await useDialog().confirm({
-    title: 'Konfirmasi Hapus',
-    message: `Apakah Anda yakin ingin menghapus perusahaan "${name}"?`,
-    actions: ['cancel', 'ok'],
-    variant: 'outline',
-    class: 'rounded-xl'
-  })
-  
-  if (!confirm.ok) return
-  
+async function onSubmitEdit(event: FormSubmitEvent<EditSchema>) {
+  event.preventDefault()
+  if (!selectedCompany.value) return
   try {
-    await del(`/companies/${id}`)
-    toast.add({
-      title: 'Sukses',
-      description: 'Perusahaan berhasil dihapus'
+    await put(`/companies/${selectedCompany.value.id}`, {
+      name: formState.name,
+      abbreviation: formState.abbreviation,
+      company_image: formState.company_image || null
     })
-    refresh()
-  } catch (error: any) {
-    console.error(error)
     toast.add({
-      title: 'Gagal',
-      description: error?.response?.data?.detail || 'Terjadi kesalahan saat menghapus data',
-      color: 'danger'
+      title: "Sukses",
+      description: "Data perusahaan berhasil diperbarui.",
+      color: "success"
+    })
+    modalOpen.value = false
+    refresh()
+  } catch (err) {
+    toast.add({
+      title: "Gagal",
+      description: err instanceof Error ? err.message : "Gagal memperbarui perusahaan.",
+      color: "error"
     })
   }
 }
 
-// ── Form fields ───────────────────────────────────────────────
-const formName = ref('')
-const formAbbreviation = ref('')
-const formCompanyImage = ref<string | null>(null)
+// ── Delete ────────────────────────────────────────────────────
+const deleteTarget = ref<CompanyLocal | null>(null)
+const deleteOpen = ref(false)
+const deleting = ref(false)
+
+function openDelete(user: CompanyLocal) {
+  deleteTarget.value = user
+  deleteOpen.value = true
+}
+
+async function confirmDelete() {
+  if (deleting.value || !deleteTarget.value) return
+  deleting.value = true
+  try {
+    await del(`/companies/${deleteTarget.value.id}`)
+    toast.add({
+      title: "Berhasil",
+      description: `Perusahaan ${deleteTarget.value.name} berhasil dihapus.`,
+      color: "success"
+    })
+    deleteOpen.value = false
+    deleteTarget.value = null
+    refresh()
+  } catch (err) {
+    toast.add({
+      title: "Gagal",
+      description: err instanceof Error ? err.message : "Gagal menghapus perusahaan.",
+      color: "error"
+    })
+  } finally {
+    deleting.value = false
+  }
+}
+
+// ── Modal title ───────────────────────────────────────────────
+const modalTitle = computed(() => {
+  if (modalMode.value === "add") return "Tambah Perusahaan Baru"
+  if (modalMode.value === "edit")
+    return `Edit Perusahaan — ${selectedCompany.value?.name ?? ""}`
+  return `Detail Perusahaan — ${selectedCompany.value?.name ?? ""}`
+})
 
 // ── Columns ───────────────────────────────────────────────────
-const columns: TableColumn<Company>[] = [
-  { accessorKey: 'name', header: 'Nama Perusahaan' },
-  { accessorKey: 'abbreviation', header: 'Singkatan' },
+const columns: TableColumn<CompanyLocal>[] = [
+  { accessorKey: "name", header: "Nama Perusahaan" },
+  { accessorKey: "abbreviation", header: "Singkatan" },
   {
-    accessorKey: 'company_image',
-    header: 'Logo',
+    accessorKey: "company_image",
+    header: "Logo",
     cell: ({ row }) => {
-      const img = row.getValue('company_image') as string | null
-      if (!img) return '-'
-      return h('div', { class: 'flex items-center gap-2' }, [
-        h('img', {
+      const img = row.getValue("company_image") as string | null
+      if (!img) return "-"
+      return h("div", { class: "flex items-center gap-2" }, [
+        h("img", {
           src: img,
-          alt: 'Company logo',
-          class: 'w-8 h-8 rounded object-cover border'
+          alt: "Company logo",
+          class: "w-8 h-8 rounded object-cover border"
         }),
-        h('span', '- logo available')
+        h("span", "- logo available")
       ])
     }
   },
-  {
-    key: 'actions',
-    header: 'Aksi',
-    cell: ({ row }) => {
-      const company = row.original
-      return h('div', { class: 'flex gap-2' }, [
-        h(Button, {
-          size: 'sm',
-          variant: 'outline',
-          onClick: () => openUpdateModal(company)
-        }, () => 'Edit'),
-        h(Button, {
-          size: 'sm',
-          variant: 'destructive-outline',
-          onClick: () => onDelete(company.id, company.name)
-        }, () => 'Hapus')
-      ])
-    }
-  }
+  { id: "actions", header: "Aksi" }
 ]
+
+const saving = ref(false)
 </script>
 
 <template>
-  <div class="grid gap-6 py-6 px-4 md:px-8">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <NuxtCardTitle class="text-2xl font-bold tracking-tight">Manajemen Perusahaan</NuxtCardTitle>
-      <Button @click="openCreateModal" size="sm">
-        Tambah Perusahaan
-      </Button>
-    </div>
-
-    <!-- Content Card -->
-    <NuxtCard class="bg-white dark:bg-neutral-800 rounded-lg shadow-sm">
-      <NuxtCardContent class="p-0">
-        <!-- Search -->
-        <div class="p-4 border-b dark:border-neutral-700">
-          <InputField
-            v-model="search"
-            placeholder="Cari nama perusahaan atau singkatan..."
-            icon="i-lucide-search"
-          />
-        </div>
-
-        <!-- Table -->
-        <div v-if="pending" class="p-12 flex items-center justify-center">
-          <span class="animate-spin mr-2 text-primary">Loading...</span>
-        </div>
-        
-        <div v-else-if="filtered.length === 0" class="p-12 text-center text-muted-foreground">
-          {{ search ? 'Tidak ada hasil untuk pencarian Anda' : 'Belum ada data perusahaan' }}
-        </div>
-
-        <div v-else class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-            <thead class="bg-gray-50 dark:bg-neutral-900">
-              <tr>
-                <th
-                  v-for="col in columns"
-                  :key="col.accessorKey || col.key"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {{ col.header }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-neutral-800 divide-y divide-gray-200 dark:divide-neutral-700">
-              <tr
-                v-for="company in paged"
-                :key="company.id"
-                class="hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
-              >
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ company.name }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ company.abbreviation }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div v-if="company.company_image" class="flex items-center gap-2">
-                    <img :src="company.company_image" class="w-8 h-8 rounded object-cover border" alt="Logo">
-                    <span class="text-xs text-muted-foreground">available</span>
-                  </div>
-                  <div v-else class="text-sm text-muted-foreground">-</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex gap-2">
-                    <button
-                      @click="openUpdateModal(company)"
-                      class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      @click="onDelete(company.id, company.name)"
-                      class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination footer -->
-        <div v-if="paged.length > 0" class="p-4 border-t dark:border-neutral-700 flex justify-end">
-          <div class="flex items-center gap-2">
-            <button
-              :disabled="page === 1"
-              @click="page--"
-              class="px-3 py-1 border rounded disabled:opacity-50 dark:border-neutral-700"
-            >
-              Previous
-            </button>
-            <span class="text-sm">{{ page }} / {{ Math.ceil(filtered.length / PAGE_SIZE) }}</span>
-            <button
-              :disabled="page >= Math.ceil(filtered.length / PAGE_SIZE)"
-              @click="page++"
-              class="px-3 py-1 border rounded disabled:opacity-50 dark:border-neutral-700"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </NuxtCardContent>
-    </NuxtCard>
-
-    <!-- Modal Create/Update -->
-    <dialog v-if="modalOpen" class="m-0 rounded-xl overflow-hidden w-[90%] max-w-lg backdrop:bg-black/50" role="dialog" aria-modal="true">
-      <form
-        @submit="onSubmitForm"
-        class="flex flex-col bg-white dark:bg-neutral-800 shadow-xl"
+  <UDashboardPanel id="admin-companies">
+    <template #header>
+      <UDashboardNavbar
+        title="Manajemen Perusahaan"
+        :ui="{ right: 'gap-2' }"
       >
-        <div class="flex items-center justify-between px-6 py-4 border-b dark:border-neutral-700">
-          <h3 class="text-lg font-semibold">
-            {{ editingId ? 'Edit Perusahaan' : 'Tambah Perusahaan Baru' }}
-          </h3>
-          <button
-            type="button"
-            @click="modalOpen = false"
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+        <template #right>
+          <UButton
+            icon="i-lucide-refresh-cw"
+            color="neutral"
+            variant="ghost"
+            @click="refresh()"
+          />
+        </template>
+      </UDashboardNavbar>
+    </template>
+
+    <template #body>
+      <div class="space-y-5 p-4 lg:p-6">
+        <!-- Toolbar: filter + aksi -->
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-end gap-3">
+            <UInput
+              v-model="search"
+              icon="i-lucide-search"
+              placeholder="Cari nama perusahaan atau singkatan..."
+              class="w-72"
+            />
+          </div>
+          <div class="flex flex-wrap justify-end gap-2">
+            <UButton icon="i-lucide-plus" color="primary" @click="openAdd">
+              Tambah Perusahaan
+            </UButton>
+          </div>
+        </div>
+
+        <!-- Skeleton -->
+        <div v-if="pending" class="space-y-3">
+          <USkeleton v-for="i in 5" :key="i" class="h-12 rounded-lg" />
+        </div>
+
+        <!-- Tabel -->
+        <UCard v-else>
+          <UTable :data="paged" :columns="columns">
+            <template #actions-cell="{ row }">
+              <div class="flex items-center gap-2">
+                <UButton
+                  icon="i-lucide-eye"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  aria-label="Lihat detail"
+                  @click="openView(row.original)"
+                />
+                <UButton
+                  icon="i-lucide-pencil"
+                  size="xs"
+                  color="primary"
+                  variant="ghost"
+                  aria-label="Ubah perusahaan"
+                  @click="openEdit(row.original)"
+                />
+                <UButton
+                  icon="i-lucide-trash-2"
+                  size="xs"
+                  color="error"
+                  variant="ghost"
+                  aria-label="Hapus perusahaan"
+                  @click="openDelete(row.original)"
+                />
+              </div>
+            </template>
+          </UTable>
+          <UEmpty
+            v-if="!paged.length && !pending"
+            icon="i-lucide-building-2"
+            title="Tidak ada perusahaan"
+            description="Belum ada perusahaan yang cocok dengan pencarian."
+          />
+          <div
+            class="flex items-center justify-between border-t border-default px-2 pt-3 mt-2"
           >
-            ✕
-          </button>
-        </div>
+            <span class="text-xs text-muted">
+              {{ filtered.length }} perusahaan{{
+                search ? " ditemukan" : ""
+              }}
+            </span>
+            <UPagination
+              v-if="filtered.length > PAGE_SIZE"
+              v-model:page="page"
+              :total="filtered.length"
+              :items-per-page="PAGE_SIZE"
+            />
+          </div>
+        </UCard>
+      </div>
+    </template>
+  </UDashboardPanel>
 
-        <div class="p-6 space-y-4">
-          <div>
-            <label for="name" class="block text-sm font-medium mb-1">Nama Perusahaan *</label>
-            <input
-              id="name"
-              v-model="formName"
-              type="text"
-              required
-              class="w-full px-3 py-2 border rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Contoh: PT. Mitra Andalan Petroleum"
-            />
-          </div>
-          
-          <div>
-            <label for="abbreviation" class="block text-sm font-medium mb-1">Singkatan *</label>
-            <input
-              id="abbreviation"
-              v-model="formAbbreviation"
-              type="text"
-              required
-              maxlength="20"
-              class="w-full px-3 py-2 border rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Contoh: MAP"
-            />
-          </div>
-          
-          <div>
-            <label for="companyImage" class="block text-sm font-medium mb-1">Logo Perusahaan</label>
-            <input
-              id="companyImage"
-              v-model="formCompanyImage"
-              type="url"
-              class="w-full px-3 py-2 border rounded-lg dark:bg-neutral-700 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="URL gambar logo (base64 atau URL eksternal)"
-            />
-            <p class="mt-1 text-xs text-muted-foreground">Format: base64 atau URL HTTPS</p>
-          </div>
-        </div>
+  <!-- ── Modal Add / Edit / View ── -->
+  <UModal v-model:open="modalOpen" :ui="{ content: 'max-w-xl' }">
+    <template #title>
+      {{ modalTitle }}
+    </template>
 
-        <div class="flex justify-end gap-3 px-6 py-4 border-t dark:border-neutral-700">
-          <Button type="button" variant="outline" @click="modalOpen = false">Batal</Button>
-          <Button type="submit">{{ editingId ? 'Simpan Perubahan' : 'Tambahkan' }}</Button>
+    <template #body>
+      <!-- VIEW mode -->
+      <div
+        v-if="modalMode === 'view' && selectedCompany"
+        class="space-y-4"
+      >
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Nama
+            </p>
+            <p class="font-medium">{{ selectedCompany.name }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Singkatan
+            </p>
+            <p class="font-medium">{{ selectedCompany.abbreviation }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Logo
+            </p>
+            <p class="font-medium">
+              {{
+                selectedCompany.company_image
+                  ? "Tersedia"
+                  : "Tidak tersedia"
+              }}
+            </p>
+          </div>
         </div>
-      </form>
-    </dialog>
-  </div>
+      </div>
+
+      <!-- ADD mode -->
+      <UForm
+        v-else-if="modalMode === 'add'"
+        id="form-add-company"
+        :schema="addSchema"
+        :state="formState"
+        class="space-y-4"
+        @submit="onSubmitAdd"
+      >
+        <UFormField name="name" label="Nama Perusahaan" required>
+          <UInput
+            v-model="formState.name"
+            placeholder="Contoh: PT. Mitra Andalan Petroleum"
+            autocomplete="off"
+          />
+        </UFormField>
+        <UFormField name="abbreviation" label="Singkatan" required>
+          <UInput
+            v-model="formState.abbreviation"
+            maxlength="20"
+            placeholder="Contoh: MAP"
+            autocomplete="off"
+          />
+        </UFormField>
+        <UFormField name="company_image" label="Logo Perusahaan">
+          <UInput
+            v-model="formState.company_image"
+            placeholder="URL gambar atau base64"
+            autocomplete="off"
+          />
+        </UFormField>
+      </UForm>
+
+      <!-- EDIT mode -->
+      <UForm
+        v-else-if="modalMode === 'edit'"
+        id="form-edit-company"
+        :schema="editSchema"
+        :state="formState"
+        class="space-y-4"
+        @submit="onSubmitEdit"
+      >
+        <UFormField name="name" label="Nama Perusahaan" required>
+          <UInput
+            v-model="formState.name"
+            placeholder="Contoh: PT. Mitra Andalan Petroleum"
+            autocomplete="off"
+          />
+        </UFormField>
+        <UFormField name="abbreviation" label="Singkatan" required>
+          <UInput
+            v-model="formState.abbreviation"
+            maxlength="20"
+            placeholder="Contoh: MAP"
+            autocomplete="off"
+          />
+        </UFormField>
+        <UFormField name="company_image" label="Logo Perusahaan">
+          <UInput
+            v-model="formState.company_image"
+            placeholder="URL gambar atau base64"
+            autocomplete="off"
+          />
+        </UFormField>
+      </UForm>
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <UButton
+          v-if="modalMode === 'edit'"
+          color="primary"
+          :loading="saving"
+          form="form-edit-company"
+          type="submit"
+        >
+          Simpan Perubahan
+        </UButton>
+
+        <UButton
+          v-else-if="modalMode === 'add'"
+          color="primary"
+          :loading="saving"
+          form="form-add-company"
+          type="submit"
+        >
+          Tambahkan
+        </UButton>
+
+        <UButton color="neutral" variant="ghost" @click="modalOpen = false">
+          {{ modalMode === "view" ? "Tutup" : "Batal" }}
+        </UButton>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- ── Modal Konfirmasi Delete ── -->
+  <UModal v-model:open="deleteOpen" :ui="{ content: 'max-w-md' }">
+    <template #title>
+      <div class="flex items-center gap-2 text-error">
+        <UIcon name="i-lucide-triangle-alert" class="size-5" />
+        Hapus Perusahaan
+      </div>
+    </template>
+    <template #body>
+      <p class="text-sm text-muted">
+        Apakah Anda yakin ingin menghapus perusahaan
+        <span class="font-semibold text-highlighted">{{
+          deleteTarget?.name
+        }}</span>? Tindakan ini tidak dapat dibatalkan.
+      </p>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <UButton color="error" :loading="deleting" @click="confirmDelete">
+          Konfirmasi Hapus
+        </UButton>
+
+        <UButton
+          color="neutral"
+          variant="ghost"
+          @click="deleteOpen = false"
+        >
+          Batal
+        </UButton>
+      </div>
+    </template>
+  </UModal>
 </template>
