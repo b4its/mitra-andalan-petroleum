@@ -48,6 +48,11 @@ from app.schemas.notification import (
 )
 from app.schemas.profile import ProfileResponse, ProfileCreate, ProfileUpdate
 from app.schemas.stats import StatsResponse
+from app.schemas.company import (
+    CompanyResponse,
+    CompanyCreate,
+    CompanyUpdate,
+)
 
 __all__ = [
     "BaseResponse",
@@ -85,4 +90,7 @@ __all__ = [
     "ProfileResponse",
     "ProfileCreate",
     "ProfileUpdate",
+    "CompanyResponse",
+    "CompanyCreate",
+    "CompanyUpdate",
 ]

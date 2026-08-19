@@ -30,7 +30,8 @@ const {
   lazy: true
 })
 
-// ── Search (frontend) ─────────────────────────────────────────
+// ── Role filter & Search (frontend) ───────────────────────
+const roleFilter = ref<string>('all')
 const search = ref('')
 const page = ref(1)
 const PAGE_SIZE = 8
@@ -38,8 +39,15 @@ const PAGE_SIZE = 8
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   const list = users.value ?? []
-  if (!q) return list
-  return list.filter(
+  
+  // First filter by role
+  let result = list.filter(
+    u => roleFilter.value === 'all' || u.role === roleFilter.value
+  )
+  
+  if (!q) return result
+  
+  return result.filter(
     u =>
       u.name.toLowerCase().includes(q)
       || u.email.toLowerCase().includes(q)
@@ -332,6 +340,21 @@ const showPassword = ref(false)
         <!-- Toolbar: filter + aksi -->
         <div class="flex flex-col gap-3">
           <div class="flex flex-wrap items-end gap-3">
+            <USelect
+              v-model="roleFilter"
+              :items="[
+                { label: 'Semua Role', value: 'all' },
+                ...[
+                  { label: 'Admin', value: 'admin' },
+                  { label: 'Marketing', value: 'marketing' },
+                  { label: 'Operations', value: 'operations' },
+                  { label: 'Finance', value: 'finance' },
+                  { label: 'Accounting', value: 'accounting' }
+                ]
+              ]"
+              placeholder="Filter Role"
+              class="w-48"
+            />
             <UInput
               v-model="search"
               icon="i-lucide-search"

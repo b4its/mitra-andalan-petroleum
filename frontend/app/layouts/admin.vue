@@ -148,6 +148,9 @@ const links = [
           label: 'Supplier',
           to: '/admin/suppliers',
           exact: true,
+        },
+        {
+          label: 'Perusahaan',n
           onSelect: () => {
             open.value = false
           }
