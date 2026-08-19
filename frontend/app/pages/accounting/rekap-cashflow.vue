@@ -25,7 +25,7 @@ const filteredOperating = computed(() => {
   if (!cashflow.value) return []
   if (!debouncedSearch.value) return cashflow.value.operating.items
   const q = debouncedSearch.value.toLowerCase()
-  return cashflow.value.operating.items.filter((item: Record<string, unknown>) =>
+  return cashflow.value.operating.items.filter((item: CashflowItem) =>
     Object.values(item).some(v => String(v).toLowerCase().includes(q))
   )
 })

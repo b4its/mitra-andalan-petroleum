@@ -26,7 +26,7 @@ const previewOpen = ref(false)
 const { buildDeliveryOrderPdf } = useDeliveryOrderPdf()
 const selectedDoId = ref('')
 const selectedPoId = ref('')
-const selectedPoTransportirId = ref('')
+const selectedPoTransportirId = ref<string | null>(null)
 const editingDoId = computed(
   () =>
     (typeof route.query.do_id === 'string' ? route.query.do_id : '')
@@ -267,8 +267,8 @@ function hydrateFormFromExistingDeliveryOrder(
     dueDate: details.dueDate || undefined,
     total: details.total || value.fuel_total || 0,
     products:
-      (details as Record<string, unknown>).selectedProducts
-      || (details as Record<string, unknown>).products
+      (details as unknown as Record<string, unknown>).selectedProducts
+      || (details as unknown as Record<string, unknown>).products
       || [],
     productInformation:
       details.productInformation || doDetailsTransport.productInformation,
@@ -362,10 +362,12 @@ watch(
         }))
         if (ptProducts.length > 0) {
           const firstProduct = ptProducts[0]
-          doDetailsTransport.total = firstProduct.qty || pt.total || value.fuelTotalQty || 0
-          doDetailsTransport.productInformation.qty = firstProduct.qty || 0
-          doDetailsTransport.productInformation.name = firstProduct.name || 'Bio Solar'
-          doAdditional.fuelReceived = firstProduct.qty || 0
+          if (firstProduct) {
+            doDetailsTransport.total = firstProduct.qty || pt.total || value.fuelTotalQty || 0
+            doDetailsTransport.productInformation.qty = firstProduct.qty || 0
+            doDetailsTransport.productInformation.name = firstProduct.name || 'Bio Solar'
+            doAdditional.fuelReceived = firstProduct.qty || 0
+          }
         }
       } else {
         selectedPoTransportirId.value = null

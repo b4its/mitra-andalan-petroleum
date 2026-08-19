@@ -1,5 +1,5 @@
 import logoImage from '~/assets/images/map-logo.jpeg'
-import type { Content } from 'pdfmake/interfaces'
+import type { Content, TableCell } from 'pdfmake/interfaces'
 import type { OfferingLetterDetails } from '~/types/marketing'
 
 /**
@@ -287,13 +287,15 @@ export function useOfferingLetterPdf() {
                 ],
                 ...(pphAmount > 0
                   ? ([
-                      { text: 'PPH', style: { bold: true } },
-                      { text: 'PPH (final)', style: { alignment: 'center' } },
-                      {
-                        text: formatCurrency(pphAmount),
-                        style: { alignment: 'center' }
-                      }
-                    ] as Content[])
+                      [
+                        { text: 'PPH', style: { bold: true } },
+                        { text: 'PPH (final)', style: { alignment: 'center' } },
+                        {
+                          text: formatCurrency(pphAmount),
+                          style: { alignment: 'center' }
+                        }
+                      ] as TableCell[]
+                    ])
                   : []),
                 [
                   {

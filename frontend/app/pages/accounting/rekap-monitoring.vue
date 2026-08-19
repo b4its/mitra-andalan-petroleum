@@ -16,7 +16,7 @@ const filteredRows = computed(() => {
   if (!data.value) return []
   if (!debouncedSearch.value) return data.value.rows
   const q = debouncedSearch.value.toLowerCase()
-  return data.value.rows.filter((row: Record<string, unknown>) =>
+  return data.value.rows.filter((row: MonitoringRow) =>
     Object.values(row).some(v => String(v).toLowerCase().includes(q))
   )
 })

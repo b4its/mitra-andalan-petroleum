@@ -66,7 +66,9 @@ watch([debouncedSearch, typeFilter], () => {
   page.value = 1
 })
 
-const typeOptions: { label: string, value: string, color: string }[] = [
+type BadgeColor = 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
+
+const typeOptions: { label: string, value: string, color: BadgeColor }[] = [
   { label: 'Semua Jenis', value: 'all', color: 'neutral' },
   { label: 'Aset', value: 'asset', color: 'info' },
   { label: 'Kewajiban', value: 'liability', color: 'warning' },

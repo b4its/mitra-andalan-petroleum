@@ -33,7 +33,7 @@ const filteredData = computed(() => {
   if (!ledgers.value) return []
   if (!debouncedSearch.value) return ledgers.value
   const q = debouncedSearch.value.toLowerCase()
-  return ledgers.value.filter((item: Record<string, unknown>) =>
+  return ledgers.value.filter((item: AccountingLedger) =>
     Object.values(item).some(v => String(v).toLowerCase().includes(q))
   )
 })

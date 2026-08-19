@@ -2,7 +2,7 @@
 const props = defineProps<{
   open: boolean
   title?: string
-  buildPdf?: () => Promise<string>
+  buildPdf?: () => Promise<string | null>
 }>()
 
 const emit = defineEmits<{
@@ -17,7 +17,6 @@ const pages = ref<Array<{ dataUrl: string, width: number, height: number }>>([])
 // Import pdfjs-dist hanya di client (SSR tidak punya DOMMatrix/canvas)
 async function renderPdfToCanvas(dataUrl: string) {
   const pdfjs = await import('pdfjs-dist')
-  // @ts-expect-error — path worker tersedia di bundle client
   pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.min.mjs',
     import.meta.url
@@ -35,7 +34,7 @@ async function renderPdfToCanvas(dataUrl: string) {
     canvas.height = Math.floor(viewport.height)
     const ctx = canvas.getContext('2d')
     if (!ctx) continue
-    await page.render({ canvasContext: ctx, viewport }).promise
+    await page.render({ canvas, viewport }).promise
     rendered.push({
       dataUrl: canvas.toDataURL('image/png'),
       width: canvas.width,
@@ -52,6 +51,7 @@ async function build() {
   pages.value = []
   try {
     const dataUrl = await props.buildPdf()
+    if (!dataUrl) throw new Error('Gagal membuat PDF')
     pdfUrl.value = dataUrl
     pages.value = await renderPdfToCanvas(dataUrl)
   } catch (err) {

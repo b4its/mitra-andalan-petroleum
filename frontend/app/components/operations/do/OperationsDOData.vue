@@ -136,6 +136,8 @@ const { data: DoData, pending, refresh } = await useAsyncData(
         status: d.status,
         // Cek apakah details sudah lengkap (ada companyInformation = dibuat via form)
         detailsLengkap: !!(d.details && d.details.companyInformation),
+        statusRilisDana: d.status_rilis_dana ?? false,
+        rilisDanaAt: d.rilis_dana_at,
         statusReadyOrder: d.status_ready_order ?? false,
         readyOrderAt: d.ready_order_at,
         statusSelesaiDikirim: d.status_selesai_dikirim ?? false,

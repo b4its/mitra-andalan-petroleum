@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BalanceSheetResponse } from '~/types/accounting'
+import type { BalanceSheetAccount, BalanceSheetResponse } from '~/types/accounting'
 
 const { get } = useApi()
 
@@ -24,7 +24,7 @@ const isBalanced = computed(() => {
   return Math.abs(neraca.value.total_assets - (neraca.value.total_liabilities + neraca.value.total_equity)) < 1
 })
 
-function filterAccounts(accounts: Array<{ account_code: string, account_name: string, balance: number }>) {
+function filterAccounts(accounts: BalanceSheetAccount[]) {
   if (!debouncedSearch.value) return accounts
   const q = debouncedSearch.value.toLowerCase()
   return accounts.filter(a =>

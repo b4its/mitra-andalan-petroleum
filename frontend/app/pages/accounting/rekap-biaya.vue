@@ -47,7 +47,7 @@ const filteredGroups = computed(() => {
   return data.value.groups
     .map(group => ({
       ...group,
-      items: group.items.filter((item: Record<string, unknown>) =>
+      items: group.items.filter((item: CostRecapRow) =>
         Object.values(item).some(v => String(v).toLowerCase().includes(q))
       )
     }))

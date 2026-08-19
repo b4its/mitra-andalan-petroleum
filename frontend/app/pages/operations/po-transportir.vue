@@ -38,10 +38,11 @@ const { data: purchaseOrderList } = await useAsyncData(
     return (res.items || []).map(po => ({
       id: po.id,
       po_number: po.po_number,
+      label: po.po_number,
       customer_name: po.customer_name || '',
       customer_id: po.customer_id || '',
       total: po.total ?? 0,
-      details: po.details || {}
+      details: (po.details || {}) as unknown as Record<string, unknown>
     }))
   },
   { default: () => [], server: false }

@@ -5,46 +5,35 @@ import {
   type OperationsPOTransportDetailsState
 } from '~/types/schemas'
 
-defineProps<{
-  hasPrevious: boolean | undefined
-  poCustomers: Array<{
-    id: string
-    po_number: string
-    customer_name: string
-    customer_id: string
-    total: number
-    details: Record<string, unknown>
-  }>
-}>()
-
-const emit = defineEmits<{
-  'submit': []
-  'previous': []
-  'select-po-customer': [value: {
-    id: string
-    po_number: string
-    customer_name: string
-    customer_id: string
-    total: number
-    details: Record<string, unknown>
-  } | null]
-}>()
-
-const state = defineModel<OperationsPOTransportDetailsState>({
-  required: true
-})
-
-const selectedPOCustomer = ref<{
+interface POCustomerOption {
+  label: string
   id: string
   po_number: string
   customer_name: string
   customer_id: string
   total: number
   details: Record<string, unknown>
-} | null>(null)
+}
+
+defineProps<{
+  hasPrevious: boolean | undefined
+  poCustomers: POCustomerOption[]
+}>()
+
+const emit = defineEmits<{
+  'submit': []
+  'previous': []
+  'select-po-customer': [value: POCustomerOption | null]
+}>()
+
+const state = defineModel<OperationsPOTransportDetailsState>({
+  required: true
+})
+
+const selectedPOCustomer = ref<POCustomerOption | undefined>(undefined)
 
 watch(selectedPOCustomer, (val) => {
-  emit('select-po-customer', val)
+  emit('select-po-customer', val ?? null)
   if (val) {
     // Pre-fill products dari PO Customer yang dipilih
     const poProducts = val.details?.products
@@ -148,9 +137,8 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
           <USelectMenu
             v-model="selectedPOCustomer"
             :items="poCustomers.map(po => ({
-              label: po.po_number,
-              value: po,
-              customer_name: po.customer_name
+              ...po,
+              label: po.po_number
             }))"
             placeholder="Pilih Purchase Order Customer..."
             class="w-full"

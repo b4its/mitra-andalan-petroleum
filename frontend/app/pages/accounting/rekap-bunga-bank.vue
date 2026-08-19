@@ -49,7 +49,7 @@ const filteredData = computed(() => {
   if (!data.value) return []
   if (!debouncedSearch.value) return data.value.rows
   const q = debouncedSearch.value.toLowerCase()
-  return data.value.rows.filter((item: Record<string, unknown>) =>
+  return data.value.rows.filter((item: BankInterestRow) =>
     Object.values(item).some(v => String(v).toLowerCase().includes(q))
   )
 })

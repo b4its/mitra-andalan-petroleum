@@ -239,7 +239,9 @@ export const operationsDODetailsTransportSchema = z.object({
       z.object({
         name: z.string().optional(),
         qty: z.coerce.number().optional(),
-        selected: z.boolean().optional()
+        selected: z.boolean().optional(),
+        delivered: z.boolean().optional(),
+        delivered_at: z.string().optional()
       })
     )
     .optional(),

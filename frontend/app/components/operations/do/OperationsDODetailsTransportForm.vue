@@ -88,9 +88,9 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
             : 'border-default'"
         >
           <UCheckbox
-            v-model="product.selected"
-            :disabled="Boolean(product.delivered)"
             :model-value="product.delivered ? true : product.selected"
+            :disabled="Boolean(product.delivered)"
+            @update:model-value="(v: boolean | 'indeterminate') => { if (!product.delivered && v !== 'indeterminate') product.selected = v }"
           />
           <div class="min-w-0">
             <p class="text-sm font-medium truncate" :class="product.delivered ? 'line-through text-muted' : ''">
