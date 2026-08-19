@@ -148,9 +148,14 @@ const links = [
           label: 'Supplier',
           to: '/admin/suppliers',
           exact: true,
+          onSelect: () => {
+            open.value = false
+          }
         },
         {
-          label: 'Perusahaan',n
+          label: 'Perusahaan',
+          to: '/admin/companies',
+          exact: true,
           onSelect: () => {
             open.value = false
           }
