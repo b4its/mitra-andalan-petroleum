@@ -65,7 +65,7 @@
 #   python -m app.db.seed [--force] [--check]
 #   uvicorn app.main:app --host 0.0.0.0 --port 8012
 
-.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli
+.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli show-ip _wait-backend _show-access-info
 
 help: ## Tampilkan daftar perintah dan informasi akses aplikasi
 	@echo "Mitra Andalan Petroleum — Build & Run System"
@@ -87,9 +87,11 @@ doctor: ## Periksa prasyarat (make, docker, docker compose plugin)
 	@docker compose version >/dev/null 2>&1 || { echo "ERROR: plugin 'docker compose' (v2) tidak tersedia."; exit 1; }
 	@echo "Semua prasyarat OK."
 
-up: ## Jalankan semua service (db, backend, frontend) — seed otomatis
+up: ## Jalankan semua service (db, backend, frontend) — seed otomatis & tampilkan IP/port
 	docker compose --profile full up -d
 	@$(MAKE) _wait-backend
+	@echo ""
+	@$(MAKE) _show_access_info
 
 down: ## Hentikan semua service
 	docker compose --profile full down
@@ -153,6 +155,50 @@ clean: ## Hapus containers dan volumes
 restart: ## Restart semua containers
 	docker compose --profile full restart
 
+_build: ## Build ulang images
+	docker compose --profile full build
+
+_show_access_info: ## (internal) Tampilkan IP dan port yang digunakan setelah services start
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ MANDALAN APPLICATION STARTED!"
+	@echo "=========================================="
+	@echo ""
+	@echo "📌 PRODUCTION URL (Live Deployment):"
+	@echo "   Domain Utama: https://mandalan.mapetroleum.co.id"
+	@echo "   SSL: Let's Encrypt aktif"
+	@echo ""
+	@echo "🐛 LOCAL HOSTING:"
+	@echo "   Frontend UI:    http://localhost:8092"
+	@echo "   Backend API:    http://localhost:8012"
+	@echo "   Database MySQL: localhost:3318"
+	@echo "   Nginx Proxy:    localhost:92"
+	@echo ""
+	@echo "🔧 Container IP Addresses (Internal Docker Network):"
+	@echo "   -----------------------------------"
+	@printf "   %-15s %-16s\n" "Service:" "IP Address:"
+	@for name in mandalan-db mandalan-backend mandalan-frontend mandalan-nginx; do \
+		ip=$$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $$name 2>/dev/null); \
+		if [ -n "$$ip" ]; then \
+			printf "   %-15s %-16s\n" "$${name#mandalan-}:" "$$ip"; \
+		fi; \
+	done
+	@echo ""
+	@echo "🔑 DEMO CREDENTIALS:"
+	@echo "   Admin:        admin@mapetroleum.co.id / admin123"
+	@echo "   Marketing:    marketing@mapetroleum.co.id / marketing123"
+	@echo "   Operations:   ops@mapetroleum.co.id / ops123"
+	@echo "   Finance:      finance@mapetroleum.co.id / finance123"
+	@echo "   Accounting:   accounting@mapetroleum.co.id / accounting123"
+	@echo ""
+	@echo "💾 DATABASE CONNECTION:"
+	@echo "   Host:     localhost:3318 | User: root | Password: root"
+	@echo "   Database: mandalan"
+	@echo ""
+	@echo "=========================================="
+	@echo "Happy coding! 🚀"
+	@echo "=========================================="
+
 _wait-backend: ## (internal) Tunggu sampai backend sehat
 	@echo "Menunggu backend sehat..."
 	@i=0; until [ $$i -ge 90 ]; do \
@@ -163,3 +209,6 @@ _wait-backend: ## (internal) Tunggu sampai backend sehat
 	echo "ERROR: backend tidak sehat dalam 180 detik. Log backend:"; \
 	docker logs mandalan-backend --tail 50; \
 	exit 1
+
+show-ip: ## Tampilkan IP dan port yang digunakan
+	@$(MAKE) _show_access_info
