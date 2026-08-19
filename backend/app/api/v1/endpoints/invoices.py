@@ -88,7 +88,7 @@ async def get_invoice(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
     if not inv:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     cn = await _get_customer_name(db, inv.customer_id)
     return _to_response(inv, cn)
 
@@ -121,7 +121,7 @@ async def update_invoice(id: str, body: InvoiceUpdate, db: AsyncSession = Depend
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
     if not inv:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     for key, val in body.model_dump(exclude_unset=True).items():
         if key == "details":
             val = _details_to_str(val)
@@ -151,7 +151,7 @@ async def delete_invoice(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
     if not inv:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "invoice", Upload.document_id == id)
     )
@@ -161,4 +161,4 @@ async def delete_invoice(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(inv)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)

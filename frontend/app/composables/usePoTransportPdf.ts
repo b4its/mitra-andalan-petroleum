@@ -56,7 +56,7 @@ export function usePoTransportPdf() {
       { text: `${formatCurrency(ppn)}`, alignment: 'center' }
     ])
     tableBodyDetails.push([
-      { text: 'Grand Total', bold: true, alignment: 'center', colSpan: 6 },
+      { text: 'Total Keseluruhan', bold: true, alignment: 'center', colSpan: 6 },
       {}, {}, {}, {}, {},
       { text: `${formatCurrency(grandTotal)}`, alignment: 'center' }
     ])
@@ -175,7 +175,7 @@ export function usePoTransportPdf() {
               body: [
                 [
                   { text: '1.' },
-                  { text: 'Loading' },
+                  { text: 'Pemuatan' },
                   { text: ':' },
                   { text: d.loadingInformation || '', marginLeft: -5 }
                 ],
@@ -187,7 +187,7 @@ export function usePoTransportPdf() {
                 ],
                 [
                   { text: '3.' },
-                  { text: 'Terms of Payment' },
+                  { text: 'Syarat Pembayaran' },
                   { text: ':' },
                   { text: d.termsOfPayment || '', marginLeft: -5 }
                 ],
@@ -199,7 +199,7 @@ export function usePoTransportPdf() {
                 ],
                 [
                   { text: '5.' },
-                  { text: 'Contact Person', colSpan: 3 },
+                  { text: 'Kontak Person', colSpan: 3 },
                   {},
                   {}
                 ]
@@ -263,7 +263,7 @@ export function usePoTransportPdf() {
               widths: ['auto', 'auto', 'auto'],
               body: [
                 [
-                  { text: 'Address' },
+                  { text: 'Alamat' },
                   { text: ':' },
                   { text: `Jl Belatuk 63, Temindung Permai Samarinda, Indonesia` }
                 ]

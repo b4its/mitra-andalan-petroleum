@@ -114,7 +114,7 @@ const selectRange = (range: {
             {{ df.format(selected.start) }}
           </template>
         </template>
-        <template v-else> Pick a date </template>
+        <template v-else> Pilih tanggal </template>
       </span>
 
       <template #trailing>

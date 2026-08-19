@@ -159,7 +159,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
         <USelect
           v-model="state.paymentMethod"
           :items="[
-            { label: 'Cash', value: 'cash' },
+            { label: 'Tunai', value: 'cash' },
             { label: 'Kredit', value: 'kredit' }
           ]"
           value-key="value"
@@ -178,11 +178,11 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
           v-model="state.cashMethod"
           :items="[
             {
-              label: 'Cash Before Delivery (CBD)',
+              label: 'Tunai Sebelum Pengiriman (CBD)',
               value: 'cash_before_delivery'
             },
             {
-              label: 'Cash After Delivery (CAD)',
+              label: 'Tunai Setelah Pengiriman (CAD)',
               value: 'cash_after_delivery'
             }
           ]"
@@ -247,7 +247,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
 
       <USeparator />
 
-      <p>Person In Charge</p>
+      <p>Penanggung Jawab</p>
 
       <div class="flex w-full gap-4">
         <UFormField name="personName" label="Nama" required>

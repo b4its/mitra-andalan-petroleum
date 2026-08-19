@@ -62,7 +62,7 @@ async def get_profile(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.id == id))
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     return user
 
 
@@ -76,7 +76,7 @@ async def get_profile(id: str, db: AsyncSession = Depends(get_db)):
 async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(User).where(User.email == body.email))
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email already exists")
+        raise HTTPException(status_code=400, detail="Email sudah terdaftar")
     data = body.model_dump()
     data["password"] = bcrypt.hash(data["password"])
     data["demo_password"] = body.password
@@ -97,7 +97,7 @@ async def update_profile(id: str, body: ProfileUpdate, db: AsyncSession = Depend
     result = await db.execute(select(User).where(User.id == id))
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     data = body.model_dump(exclude_unset=True)
     if "password" in data:
         data["password"] = bcrypt.hash(data["password"])
@@ -119,7 +119,7 @@ async def delete_profile(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.id == id))
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     await db.delete(user)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)

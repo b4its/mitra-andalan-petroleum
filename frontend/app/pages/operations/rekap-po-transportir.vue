@@ -68,12 +68,7 @@ const columns: TableColumn<PoTransportirs>[] = [
           document_returned: 'warning' as const,
           completed: 'success' as const
         }[row.getValue('status') as string] ?? 'neutral'
-      const label
-        = {
-          created: 'PO Telah Dibuat',
-          document_returned: 'PO Dikembalikan',
-          completed: 'PO Selesai'
-        }[row.getValue('status') as string] ?? row.getValue('status')
+      const label = statusLabel(row.getValue('status') as string)
       return h(UBadge, { variant: 'subtle', color: color }, label)
     }
   },

@@ -211,12 +211,12 @@ export function useInvoicePdf() {
                 ],
                 [
                   {
-                    text: 'Bill To',
+                    text: 'Ditagih Kepada',
                     color: '#fff',
                     bold: true
                   },
                   {
-                    text: 'Delivery Point',
+                    text: 'Titik Pengiriman',
                     color: '#fff',
                     bold: true
                   }
@@ -259,13 +259,13 @@ export function useInvoicePdf() {
               body: [
                 [
                   {
-                    text: 'Invoice No.',
+                    text: 'No. Invoice',
                     bold: true,
                     alignment: 'center',
                     border: [true, false, true, true]
                   },
                   {
-                    text: 'Invoice Date',
+                    text: 'Tanggal Invoice',
                     bold: true,
                     alignment: 'center',
                     border: [true, false, true, true]
@@ -296,18 +296,18 @@ export function useInvoicePdf() {
                 ],
                 [
                   {
-                    text: 'Customer Purchase Order No',
+                    text: 'No. PO Customer',
                     bold: true,
                     alignment: 'center',
                     border: [true, false, true, true]
                   },
                   {
-                    text: 'Terms',
+                    text: 'Syarat',
                     bold: true,
                     alignment: 'center'
                   },
                   {
-                    text: 'Due Date',
+                    text: 'Jatuh Tempo',
                     bold: true,
                     alignment: 'center'
                   }
@@ -382,7 +382,7 @@ export function useInvoicePdf() {
                     rowSpan: 2
                   },
                   {
-                    text: 'QUANTITY',
+                    text: 'JUMLAH',
                     bold: true,
                     alignment: 'center',
                     verticalAlignment: 'middle',
@@ -390,14 +390,14 @@ export function useInvoicePdf() {
                   },
                   {},
                   {
-                    text: 'DESCRIPTION',
+                    text: 'DESKRIPSI',
                     bold: true,
                     alignment: 'center',
                     verticalAlignment: 'middle',
                     rowSpan: 2
                   },
                   {
-                    text: 'PRICE (IDR)',
+                    text: 'HARGA (IDR)',
                     bold: true,
                     alignment: 'center',
                     verticalAlignment: 'middle',
@@ -408,20 +408,20 @@ export function useInvoicePdf() {
                 [
                   {},
                   {
-                    text: 'QTY',
+                    text: 'JML',
                     bold: true,
                     alignment: 'center',
                     verticalAlignment: 'middle'
                   },
                   {
-                    text: 'UNIT',
+                    text: 'SATUAN',
                     bold: true,
                     alignment: 'center',
                     verticalAlignment: 'middle'
                   },
                   {},
                   {
-                    text: 'UNIT',
+                    text: 'SATUAN',
                     bold: true,
                     alignment: 'center',
                     verticalAlignment: 'middle'
@@ -495,7 +495,7 @@ export function useInvoicePdf() {
                   {},
                   {},
                   {
-                    text: 'Sub Total',
+                    text: 'Subtotal',
                     bold: true,
                     alignment: 'left'
                   },
@@ -560,7 +560,7 @@ export function useInvoicePdf() {
                 ],
                 [
                   {
-                    text: 'Term and Conditions:',
+                    text: 'Syarat dan Ketentuan:',
                     bold: true,
                     colSpan: 4,
                     border: [false, false, false, false]
@@ -568,7 +568,7 @@ export function useInvoicePdf() {
                   {},
                   {},
                   {
-                    text: 'Grand Total',
+                    text: 'Total Keseluruhan',
                     bold: true,
                     alignment: 'left'
                   },
@@ -610,7 +610,7 @@ export function useInvoicePdf() {
                     alignment: 'center'
                   },
                   {
-                    text: 'All check payable to',
+                    text: 'Semua cek dibayarkan kepada',
                     colSpan: 3
                   },
                   {},
@@ -621,7 +621,7 @@ export function useInvoicePdf() {
                     text: ''
                   },
                   {
-                    text: 'Bank Name',
+                    text: 'Nama Bank',
                     bold: true
                   },
                   {
@@ -638,7 +638,7 @@ export function useInvoicePdf() {
                     text: ''
                   },
                   {
-                    text: 'Bank Account No',
+                    text: 'No. Rekening',
                     bold: true
                   },
                   {
@@ -655,7 +655,7 @@ export function useInvoicePdf() {
                     text: ''
                   },
                   {
-                    text: 'Acct Name',
+                    text: 'Nama Rekening',
                     bold: true
                   },
                   {
@@ -673,7 +673,7 @@ export function useInvoicePdf() {
                     alignment: 'center'
                   },
                   {
-                    text: 'If payment has no been received by the stated date of payment, penalty of 2% interest per month will be imposed',
+                    text: 'Apabila pembayaran tidak diterima sampai tanggal jatuh tempo, dikenakan denda bunga 2% per bulan',
                     colSpan: 3
                   },
                   {},
@@ -685,7 +685,7 @@ export function useInvoicePdf() {
                     alignment: 'center'
                   },
                   {
-                    text: 'Seller has the right to refuse / decline delivery if payment terms has not been met, and shall not be held responsible for any direct or indirect consequences arising thereafter',
+                    text: 'Penjual berhak menolak pengiriman apabila syarat pembayaran belum dipenuhi, dan tidak bertanggung jawab atas akibat langsung maupun tidak langsung yang timbul kemudian',
                     colSpan: 3
                   },
                   {},
@@ -697,7 +697,7 @@ export function useInvoicePdf() {
                     alignment: 'center'
                   },
                   {
-                    text: 'Goods sold are not refundable',
+                    text: 'Barang yang sudah terjual tidak dapat dikembalikan',
                     colSpan: 3
                   },
                   {},
@@ -709,7 +709,7 @@ export function useInvoicePdf() {
                     alignment: 'center'
                   },
                   {
-                    text: 'Invoice will be considered PAID once seller has received full amount on the stated account',
+                    text: 'Invoice dianggap LUNAS setelah penjual menerima jumlah penuh pada rekening tersebut',
                     colSpan: 3
                   },
                   {},

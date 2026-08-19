@@ -96,7 +96,7 @@ async def get_offering_letter_purchase_orders(
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
     if not ol:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
 
     pos = (await db.execute(select(PurchaseOrder))).scalars().all()
     customers_by_id = {}
@@ -182,7 +182,7 @@ async def get_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(stmt)
     row = result.one_or_none()
     if not row:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     ol, customer_name = row
     return _to_response(ol, customer_name)
 
@@ -232,7 +232,7 @@ async def update_offering_letter(id: str, body: OfferingLetterUpdate, db: AsyncS
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
     if not ol:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     data = body.model_dump(exclude_unset=True)
     if "customer_id" in data and data["customer_id"]:
         cust = await db.execute(select(Customer).where(Customer.id == data["customer_id"]))
@@ -267,7 +267,7 @@ async def delete_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
     if not ol:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "ol", Upload.document_id == id)
     )
@@ -277,4 +277,4 @@ async def delete_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(ol)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)

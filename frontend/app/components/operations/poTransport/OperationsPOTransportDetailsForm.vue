@@ -309,7 +309,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportDetailsState>) {
 
         <UFormField
           name="priceGrandTotal"
-          label="Grand Total"
+          label="Total Keseluruhan"
           class="w-full"
           required
         >

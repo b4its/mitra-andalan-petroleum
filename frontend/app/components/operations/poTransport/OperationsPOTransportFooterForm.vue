@@ -90,7 +90,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportFooterState>) {
     <UPageCard variant="soft">
       <p>Informasi Tambahan PO Transportir</p>
 
-      <UFormField name="loadingInformation" label="Loading" required>
+      <UFormField name="loadingInformation" label="Memuat" required>
         <UInput
           v-model="state.loadingInformation"
           type="text"
@@ -98,7 +98,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportFooterState>) {
         />
       </UFormField>
 
-      <UFormField name="discharge" label="Discharge" required>
+      <UFormField name="discharge" label="Bongkar" required>
         <UTextarea
           v-model="state.discharge"
           class="w-full"
@@ -107,7 +107,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsPOTransportFooterState>) {
         />
       </UFormField>
 
-      <UFormField name="receiver" label="Terms of Payment" required>
+      <UFormField name="receiver" label="Syarat Pembayaran" required>
         <UInput v-model="state.termsOfPayment" type="text" autocomplete="off" />
       </UFormField>
 

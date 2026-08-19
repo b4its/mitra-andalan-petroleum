@@ -132,7 +132,7 @@ async def get_account(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Account).where(Account.id == id))
     account = result.scalar_one_or_none()
     if not account:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     return account
 
 
@@ -162,7 +162,7 @@ async def update_account(id: str, body: AccountUpdate, db: AsyncSession = Depend
     result = await db.execute(select(Account).where(Account.id == id))
     account = result.scalar_one_or_none()
     if not account:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     data = body.model_dump(exclude_unset=True)
     if "code" in data and data["code"] != account.code:
         exists = await db.execute(
@@ -186,7 +186,7 @@ async def delete_account(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Account).where(Account.id == id))
     account = result.scalar_one_or_none()
     if not account:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     lines = await db.execute(select(JournalLine).where(JournalLine.account_id == id))
     if lines.scalars().first():
         raise HTTPException(
@@ -195,7 +195,7 @@ async def delete_account(id: str, db: AsyncSession = Depends(get_db)):
         )
     await db.delete(account)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)
 
 
 @router.get(
@@ -207,7 +207,7 @@ async def get_account_detail(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Account).where(Account.id == id))
     account = result.scalar_one_or_none()
     if not account:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
 
     # Total debit/credit
     agg = await db.execute(
@@ -319,7 +319,7 @@ async def get_journal(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(JournalEntry).where(JournalEntry.id == id))
     entry = result.scalar_one_or_none()
     if not entry:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     return _entry_to_response(entry, await _fetch_lines(db, id))
 
 
@@ -363,7 +363,7 @@ async def update_journal(id: str, body: JournalEntryUpdate, db: AsyncSession = D
     result = await db.execute(select(JournalEntry).where(JournalEntry.id == id))
     entry = result.scalar_one_or_none()
     if not entry:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
 
     data = body.model_dump(exclude_unset=True)
     lines_data = body.lines
@@ -403,10 +403,10 @@ async def delete_journal(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(JournalEntry).where(JournalEntry.id == id))
     entry = result.scalar_one_or_none()
     if not entry:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     await db.delete(entry)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)
 
 
 # ── Buku Besar (General Ledger) ────────────────────────────────
@@ -510,7 +510,7 @@ async def get_ledger(
 ):
     account = (await db.execute(select(Account).where(Account.id == account_id))).scalar_one_or_none()
     if not account:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     return await _ledger_for_account(db, account, date_from, date_to)
 
 

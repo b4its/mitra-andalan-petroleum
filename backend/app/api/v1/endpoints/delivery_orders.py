@@ -183,7 +183,7 @@ async def get_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     cn = await _get_customer_name(db, do.customer_id)
     potrans_number = None
     if do.id_po_transportir:
@@ -275,7 +275,7 @@ async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSes
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     for key, val in body.model_dump(exclude_unset=True).items():
         if key == "details":
             val = _details_to_str(val)
@@ -304,7 +304,7 @@ async def rilis_dana(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if do.status_rilis_dana:
         raise HTTPException(status_code=400, detail="Dana sudah dirilis sebelumnya")
     now_wita = datetime.now(WITA)
@@ -333,7 +333,7 @@ async def ready_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if do.status_ready_order:
         raise HTTPException(status_code=400, detail="Pengantaran sudah disiapkan sebelumnya")
     now_wita = datetime.now(WITA)
@@ -362,7 +362,7 @@ async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if not do.status_ready_order:
         raise HTTPException(status_code=400, detail="Pengantaran belum disiapkan")
     if do.status_selesai_dikirim:
@@ -463,7 +463,7 @@ async def lunas_ongkir(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if not do.status_selesai_dikirim:
         raise HTTPException(status_code=400, detail="Pengiriman belum ditandai selesai oleh Operations")
     if do.status_lunas_ongkir:
@@ -502,7 +502,7 @@ async def delete_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "do", Upload.document_id == id)
     )
@@ -512,4 +512,4 @@ async def delete_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(do)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)

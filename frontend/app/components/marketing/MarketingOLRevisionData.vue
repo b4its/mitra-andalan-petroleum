@@ -81,11 +81,7 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
         under_revision: 'warning' as const,
         po_received: 'success' as const
       }[row.getValue('status') as string]
-      const status = {
-        created: 'Penawaran Telah Dibuat',
-        under_revision: 'Penawaran Dalam Revisi',
-        po_received: 'Purchase Order Diterima'
-      }[row.getValue('status') as string]
+      const status = statusLabel(row.getValue('status') as string)
       return h(
         UBadge,
         { class: 'capitalize', variant: 'soft', color },

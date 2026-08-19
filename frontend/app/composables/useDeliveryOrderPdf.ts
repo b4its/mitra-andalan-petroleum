@@ -172,7 +172,7 @@ export function useDeliveryOrderPdf() {
                     border: [true, false, false, false]
                   },
                   {
-                    text: 'NO. Purchase Order Cust.',
+                    text: 'NO. PO Customer',
                     bold: true
                   },
                   {

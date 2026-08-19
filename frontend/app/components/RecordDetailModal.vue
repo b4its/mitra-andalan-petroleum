@@ -397,39 +397,20 @@ function fmtSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-// ── Status maps ───────────────────────────────────────────────
-const olStatusLabel: Record<string, string> = {
-  created: 'Dibuat',
-  under_revision: 'Revisi',
-  po_received: 'Purchase Order Diterima'
-}
+// ── Status colors ──────────────────────────────────────────────
 const olStatusColor: Record<string, 'info' | 'warning' | 'success'> = {
   created: 'info',
   under_revision: 'warning',
   po_received: 'success'
 }
-const doStatusLabel: Record<string, string> = {
-  created: 'Dibuat',
-  document_returned: 'Dokumen Kembali'
-}
 const doStatusColor: Record<string, 'info' | 'success'> = {
   created: 'info',
   document_returned: 'success'
-}
-const invStatusLabel: Record<string, string> = {
-  unpaid: 'Belum Lunas',
-  paid: 'Lunas',
-  overdue: 'Jatuh Tempo'
 }
 const invStatusColor: Record<string, 'warning' | 'success' | 'error'> = {
   unpaid: 'warning',
   paid: 'success',
   overdue: 'error'
-}
-const deadlineLabel: Record<string, string> = {
-  on_time: 'Tepat Waktu',
-  due_soon: 'Segera',
-  overdue: 'Terlewat'
 }
 const deadlineColor: Record<string, 'info' | 'warning' | 'error'> = {
   on_time: 'info',
@@ -514,7 +495,7 @@ async function downloadFile(upload: RecordUpload) {
                 :color="olStatusColor[data.status] ?? 'neutral'"
                 variant="subtle"
               >
-                {{ olStatusLabel[data.status] ?? data.status }}
+                {{ statusLabel(data.status) }}
               </UBadge>
             </div>
             <div>
@@ -731,7 +712,7 @@ async function downloadFile(upload: RecordUpload) {
                     variant="subtle"
                     class="ml-auto"
                   >
-                    {{ doStatusLabel[doItem.status] ?? doItem.status }}
+                    {{ statusLabel(doItem.status) }}
                   </UBadge>
                 </div>
 
@@ -830,7 +811,7 @@ async function downloadFile(upload: RecordUpload) {
                 :color="doStatusColor[data.status] ?? 'neutral'"
                 variant="subtle"
               >
-                {{ doStatusLabel[data.status] ?? data.status }}
+                {{ statusLabel(data.status) }}
               </UBadge>
             </div>
             <div>
@@ -1168,7 +1149,7 @@ async function downloadFile(upload: RecordUpload) {
                 variant="subtle"
               >
                 {{
-                  invStatusLabel[data.invoice_status] ?? data.invoice_status
+                  statusLabel(data.invoice_status)
                 }}
               </UBadge>
             </div>
@@ -1189,7 +1170,7 @@ async function downloadFile(upload: RecordUpload) {
                 variant="subtle"
               >
                 {{
-                  deadlineLabel[data.deadline_status] ?? data.deadline_status
+                  statusLabel(data.deadline_status)
                 }}
               </UBadge>
             </div>

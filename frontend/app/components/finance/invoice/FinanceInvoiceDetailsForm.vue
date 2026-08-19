@@ -42,7 +42,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
     @submit="onSubmit"
   >
     <UPageCard variant="soft">
-      <p>Invoice Information</p>
+      <p>Informasi Invoice</p>
 
       <div class="flex w-full gap-4">
         <UFormField name="invoiceNumber" label="Nomor Invoice" required>
@@ -75,7 +75,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
       <div class="flex w-full gap-4">
         <UFormField
           name="invoiceDate"
-          label="Invoice Date"
+          label="Tanggal Invoice"
           required
           class="flex-1"
         >
@@ -89,7 +89,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
 
         <UFormField
           name="invoiceDueDate"
-          label="Invoice Due Date"
+          label="Jatuh Tempo Invoice"
           required
           class="flex-1"
         >
@@ -104,12 +104,12 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
 
       <USeparator />
 
-      <p>Customer Purchase Information</p>
+      <p>Informasi Pembelian Customer</p>
 
       <div class="flex w-full gap-4">
         <!-- <UFormField
           name="customerPurchaseOrderNumber"
-          label="Customer Purchase Order No"
+          label="No. PO Customer"
           required
         >
           <UInput
@@ -161,7 +161,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceDetailsState>) {
 
       <UFormField
         name="deliveryOrderNumberData"
-        label="Delivery Order Number"
+        label="Nomor Delivery Order"
         required
       >
         <USelectMenu

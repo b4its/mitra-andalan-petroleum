@@ -21,7 +21,7 @@ async def login(body: LoginRequest, db=Depends(get_db)):
     result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
     if not user or not bcrypt.verify(body.password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        raise HTTPException(status_code=401, detail="Email atau kata sandi tidak valid")
     return LoginResponse(
         id=user.id,
         name=user.name,

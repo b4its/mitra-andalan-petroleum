@@ -185,7 +185,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
 
               <UFormField
                 :name="`products.${index}.qty`"
-                label="Qty"
+                label="Jumlah"
                 class="w-full"
                 required
               >
@@ -194,7 +194,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPODetailsState>) {
 
               <UFormField
                 :name="`products.${index}.unit`"
-                label="Unit"
+                label="Satuan"
                 class="w-full"
                 required
               >

@@ -140,11 +140,6 @@ watch([search, statusFilter], () => {
   page.value = 1
 })
 
-const statusLabel: Record<string, string> = {
-  created: 'Dibuat',
-  under_revision: 'Dalam Revisi',
-  po_received: 'Purchase Order Customer Diterima'
-}
 const statusColor: Record<string, string> = {
   created: 'info',
   under_revision: 'warning',
@@ -155,7 +150,7 @@ const statusOptions = [
   { label: 'Semua Status', value: 'all' },
   { label: 'Dibuat', value: 'created' },
   { label: 'Dalam Revisi', value: 'under_revision' },
-  { label: 'Purchase Order Customer Diterima', value: 'po_received' }
+  { label: 'PO Customer Diterima', value: 'po_received' }
 ]
 
 const columns: TableColumn<ApiOfferingLetter>[] = [
@@ -181,7 +176,7 @@ const columns: TableColumn<ApiOfferingLetter>[] = [
       return h(
         UBadge,
         { variant: 'subtle', color: statusColor[s] ?? 'neutral' },
-        () => statusLabel[s] ?? s
+        () => statusLabel(s)
       )
     }
   },

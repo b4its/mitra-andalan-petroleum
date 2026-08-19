@@ -46,7 +46,7 @@ def _ensure_dir(path: Path):
 def _safe_folder(folder: str) -> str:
     folder = (folder or "general").strip().strip("/")
     if not folder or not re.fullmatch(r"[A-Za-z0-9_-]+", folder):
-        raise HTTPException(status_code=400, detail="folder may only contain letters, numbers, underscore, and dash")
+        raise HTTPException(status_code=400, detail="Nama folder hanya boleh berisi huruf, angka, garis bawah, dan garis pisah")
     return folder
 
 
@@ -60,15 +60,15 @@ async def _process_single_file(file: UploadFile, folder: str, document_type: str
     folder = _safe_folder(folder)
     ext = Path(file.filename or "").suffix.lower()
     if not ext:
-        raise HTTPException(status_code=400, detail="File must have an extension")
+        raise HTTPException(status_code=400, detail="File harus memiliki ekstensi")
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"File type {ext} not allowed")
 
     content = await file.read()
     if not content:
-        raise HTTPException(status_code=400, detail="File cannot be empty")
+        raise HTTPException(status_code=400, detail="File tidak boleh kosong")
     if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File too large (max 50MB)")
+        raise HTTPException(status_code=400, detail="File terlalu besar (maks 50MB)")
 
     target_dir = MEDIA_DIR / folder
     _ensure_dir(target_dir)
@@ -115,7 +115,7 @@ async def upload_files(
     if document_type and document_type not in DOCUMENT_TYPES:
         raise HTTPException(status_code=400, detail=f"document_type must be one of {DOCUMENT_TYPES}")
     if (document_type and not document_id) or (document_id and not document_type):
-        raise HTTPException(status_code=400, detail="Both document_type and document_id must be provided together")
+        raise HTTPException(status_code=400, detail="Harus menyertakan document_type dan document_id sekaligus")
 
     results = []
     try:
@@ -159,7 +159,7 @@ async def get_upload(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Upload).where(Upload.id == id))
     upload = result.scalar_one_or_none()
     if not upload:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     return upload
 
 
@@ -178,7 +178,7 @@ async def update_upload(id: str, body: UploadUpdate, db: AsyncSession = Depends(
     result = await db.execute(select(Upload).where(Upload.id == id))
     upload = result.scalar_one_or_none()
     if not upload:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
 
     old_path = None
     if body.folder is not None and body.folder != upload.folder:
@@ -209,11 +209,11 @@ async def delete_upload(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Upload).where(Upload.id == id))
     upload = result.scalar_one_or_none()
     if not upload:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     _delete_file(upload)
     await db.delete(upload)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)
 
 
 @router.get(
@@ -225,7 +225,7 @@ async def convert_docx_to_pdf(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Upload).where(Upload.id == id))
     upload = result.scalar_one_or_none()
     if not upload:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
 
     ext = Path(upload.original_filename).suffix.lower()
     if ext not in (".doc", ".docx"):

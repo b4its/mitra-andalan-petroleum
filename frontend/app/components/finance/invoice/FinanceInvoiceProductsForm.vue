@@ -110,7 +110,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
 
           <UFormField
             :name="`products.${index}.qty`"
-            label="Qty"
+            label="Jumlah"
             class="w-full"
             required
           >
@@ -119,7 +119,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
 
           <UFormField
             :name="`products.${index}.unit`"
-            label="Unit"
+            label="Satuan"
             class="w-full"
             required
           >
@@ -185,7 +185,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
 
       <USeparator />
 
-      <p>Price Summary</p>
+      <p>Ringkasan Harga</p>
 
       <div class="flex w-full gap-4">
         <UFormField
@@ -254,7 +254,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
 
         <UFormField
           name="priceDiscount"
-          label="Discount"
+          label="Diskon"
           class="w-full"
           required
         >
@@ -276,7 +276,7 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceProductsState>) {
       <div class="flex w-full gap-4">
         <UFormField
           name="priceGrandTotal"
-          label="Grand Total"
+          label="Total Keseluruhan"
           class="w-full"
           required
         >

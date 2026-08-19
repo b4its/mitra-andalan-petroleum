@@ -114,7 +114,7 @@ async def get_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     cn, sn = await _resolve_names(db, po)
     return _to_response(po, cn, sn)
 
@@ -168,7 +168,7 @@ async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSes
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     for key, val in body.model_dump(exclude_unset=True).items():
         if key == "details":
             val = _details_to_str(val)
@@ -190,7 +190,7 @@ async def rilis_dana_purchase_order(id: str, db: AsyncSession = Depends(get_db))
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if po.type != "supplier":
         raise HTTPException(status_code=400, detail="Rilis dana hanya untuk PO supplier")
     now = datetime.now()
@@ -220,7 +220,7 @@ async def delete_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "po", Upload.document_id == id)
     )
@@ -230,4 +230,4 @@ async def delete_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(po)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)

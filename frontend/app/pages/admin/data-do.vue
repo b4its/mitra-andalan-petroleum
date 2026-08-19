@@ -62,10 +62,6 @@ const customerItems = computed(() =>
   customers.value.map((c: CustomerOption) => ({ label: c.name, value: c.id }))
 )
 
-const statusLabel: Record<string, string> = {
-  created: 'Dibuat',
-  document_returned: 'Dokumen Kembali'
-}
 const statusColor: Record<string, string> = {
   created: 'info',
   document_returned: 'success'
@@ -255,7 +251,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
           color: statusColor[row.original.status] ?? 'neutral',
           class: 'text-xs'
         },
-        () => statusLabel[row.original.status] ?? row.original.status
+        () => statusLabel(row.original.status)
       )
   },
   {

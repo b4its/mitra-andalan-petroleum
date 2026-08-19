@@ -48,14 +48,14 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
           />
         </UFormField>
 
-        <UFormField name="details" label="Details">
+        <UFormField name="details" label="Rincian">
           <UInput v-model="state.details" type="text" autocomplete="off" />
         </UFormField>
       </div>
 
       <USeparator />
 
-      <p>Delivery</p>
+      <p>Pengiriman</p>
 
       <UFormField name="distanceKm" label="Jarak KM" required>
         <UInputNumber
@@ -99,7 +99,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
 
       <USeparator />
 
-      <p>Forwarder</p>
+      <p>Ekspedisi</p>
 
       <UFormField name="trucking" label="Trucking" required>
         <UInput
@@ -111,10 +111,10 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
 
       <USeparator />
 
-      <p>Signed</p>
+      <p>Tanda Tangan</p>
 
       <div class="flex w-full gap-4">
-        <UFormField name="createdBy" label="Created By" required>
+        <UFormField name="createdBy" label="Dibuat Oleh" required>
           <UInput
             v-model="state.signed.createdBy"
             type="text"
@@ -122,7 +122,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingPOAdditionalState>) {
           />
         </UFormField>
 
-        <UFormField name="approvedBy" label="Approved By">
+        <UFormField name="approvedBy" label="Disetujui Oleh">
           <UInput
             v-model="state.signed.approvedBy"
             type="text"

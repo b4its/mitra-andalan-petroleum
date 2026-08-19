@@ -55,7 +55,7 @@ export function useOfferingLetterPdf() {
       const cashMethod = details.cashMethod
       const term = details.paymentTerm || ''
       if (method === 'cash') {
-        const cashLabel = cashMethod === 'cash_before_delivery' ? 'Cash Before Delivery' : 'Cash After Delivery'
+        const cashLabel = cashMethod === 'cash_before_delivery' ? 'Tunai Sebelum Pengiriman' : 'Tunai Setelah Pengiriman'
         return `${cashLabel} — ${term}`
       }
       return `Kredit — ${term}`
@@ -154,7 +154,7 @@ export function useOfferingLetterPdf() {
                 ],
                 [
                   { text: '3.' },
-                  { text: 'Custody Transfer' },
+                  { text: 'Serah Terima' },
                   { text: ':' },
                   { text: `${details?.custodyTransfer}` }
                 ],
@@ -196,7 +196,7 @@ export function useOfferingLetterPdf() {
                 ],
                 [
                   { text: '10.' },
-                  { text: 'Person In Charge' },
+                  { text: 'Penanggung Jawab' },
                   { text: ':' },
                   { text: `${details?.personInCharge.name} - ${details?.personInCharge.phoneNumber}` }
                 ],
@@ -335,7 +335,7 @@ export function useOfferingLetterPdf() {
             marginLeft: 15,
             columns: [
               { text: '***', width: 'auto', marginRight: 3, bold: true },
-              { text: 'B50 / B40 if stock still available' }
+              { text: 'B50 / B40 jika stok masih tersedia' }
             ]
           },
           ...(details?.informasiTambahan?.filter(Boolean) || []).map(
@@ -386,12 +386,12 @@ export function useOfferingLetterPdf() {
               widths: ['auto', 'auto', 'auto'],
               body: [
                 [
-                  { text: 'Address' },
+                  { text: 'Alamat' },
                   { text: ':' },
                   { text: `${details?.companyInformation.address}` }
                 ],
                 [
-                  { text: 'Phone' },
+                  { text: 'Telepon' },
                   { text: ':' },
                   { text: `${details?.companyInformation.phoneNumber}` }
                 ],

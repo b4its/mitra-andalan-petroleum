@@ -614,15 +614,10 @@ const columns: TableColumn<DoRow>[] = [
         draft: 'warning',
         document_returned: 'success'
       }
-      const labelMap: Record<string, string> = {
-        created: 'Dibuat',
-        draft: 'Draf',
-        document_returned: 'Dokumen Kembali'
-      }
       return h(
         UBadge,
         { variant: 'soft', color: colorMap[s] ?? 'neutral' },
-        () => labelMap[s] ?? s
+        () => statusLabel(s)
       )
     }
   },

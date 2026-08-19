@@ -77,10 +77,10 @@ function onSubmit(_event: FormSubmitEvent<FinanceInvoiceHeaderState>) {
 
       <USeparator />
 
-      <p>Bill To & Delivery Point</p>
+      <p>Ditagih Kepada &amp; Titik Pengiriman</p>
 
       <div class="flex w-full gap-4">
-        <UFormField name="billTo" label="Bill To" required>
+        <UFormField name="billTo" label="Ditagih Kepada" required>
           <UTextarea
             v-model="state.billToInformation"
             class="w-full"

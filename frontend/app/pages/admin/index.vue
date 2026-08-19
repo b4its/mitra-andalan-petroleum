@@ -586,11 +586,7 @@ const activityColumns: TableColumn<AdminActivity>[] = [
         po_received: 'success' as const
       }[row.getValue('subtitle') as string]
 
-      const status = {
-        created: 'Penawaran Telah Dibuat',
-        under_revision: 'Penawaran Dalam Revisi',
-        po_received: 'Purchase Order Diterima'
-      }[row.getValue('subtitle') as string]
+      const status = statusLabel(row.getValue('subtitle') as string)
 
       return h(
         UBadge,

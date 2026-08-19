@@ -71,7 +71,7 @@ async def get_notification(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Notification).where(Notification.id == id))
     n = result.scalar_one_or_none()
     if not n:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     name = await _get_user_name(db, n.sender_id)
     return _to_response(n, name)
 
@@ -102,7 +102,7 @@ async def update_notification(id: str, body: NotificationUpdate, db: AsyncSessio
     result = await db.execute(select(Notification).where(Notification.id == id))
     n = result.scalar_one_or_none()
     if not n:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     for key, val in body.model_dump(exclude_unset=True).items():
         setattr(n, key, val)
     await db.flush()
@@ -121,7 +121,7 @@ async def delete_notification(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Notification).where(Notification.id == id))
     n = result.scalar_one_or_none()
     if not n:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     await db.delete(n)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)

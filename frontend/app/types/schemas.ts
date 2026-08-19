@@ -2,14 +2,14 @@ import * as z from 'zod'
 
 export const addCustomerSchema = z.object({
   name: z.string().min(2, 'Too short'),
-  email: z.email('Invalid email')
+  email: z.email('Email tidak valid')
 })
 
 export type AddCustomerState = z.infer<typeof addCustomerSchema>
 
 export const profileSchema = z.object({
   name: z.string().min(2, 'Too short'),
-  email: z.email('Invalid email'),
+  email: z.email('Email tidak valid'),
   username: z.string().min(2, 'Too short'),
   avatar: z.string().optional(),
   bio: z.string().optional()
@@ -18,8 +18,8 @@ export const profileSchema = z.object({
 export type ProfileState = z.infer<typeof profileSchema>
 
 export const passwordSchema = z.object({
-  current: z.string().min(8, 'Must be at least 8 characters'),
-  new: z.string().min(8, 'Must be at least 8 characters')
+  current: z.string().min(8, 'Minimal 8 karakter'),
+  new: z.string().min(8, 'Minimal 8 karakter')
 })
 
 export type PasswordState = z.infer<typeof passwordSchema>

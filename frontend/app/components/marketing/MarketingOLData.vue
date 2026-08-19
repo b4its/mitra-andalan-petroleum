@@ -86,12 +86,7 @@ const columns: TableColumn<MarketingOfferingLetterOverview>[] = [
         do_completed: 'primary' as const
       }[row.getValue('status') as string]
 
-      const status = {
-        created: 'Penawaran Telah Dibuat',
-        under_revision: 'Penawaran Dalam Revisi',
-        po_received: 'Purchase Order Diterima',
-        do_completed: 'Delivery Order Selesai'
-      }[row.getValue('status') as string]
+      const status = statusLabel(row.getValue('status') as string)
 
       return h(
         UBadge,
@@ -150,13 +145,7 @@ const doStatusBadge = (status: string) => {
       document_returned: 'warning' as const,
       completed: 'success' as const
     }[status] ?? 'neutral'
-  const label
-    = {
-      created: 'Dibuat',
-      document_returned: 'Dokumen Dikembalikan',
-      completed: 'Selesai'
-    }[status] ?? status
-  return h(UBadge, { variant: 'soft', color }, () => label)
+  return h(UBadge, { variant: 'soft', color }, () => statusLabel(status))
 }
 
 const poStatusBadge = (status: string) => {
@@ -166,13 +155,7 @@ const poStatusBadge = (status: string) => {
       under_revision: 'warning' as const,
       po_received: 'success' as const
     }[status] ?? 'neutral'
-  const label
-    = {
-      created: 'Dibuat',
-      under_revision: 'Dalam Revisi',
-      po_received: 'Purchase Order Diterima'
-    }[status] ?? status
-  return h(UBadge, { variant: 'soft', color }, () => label)
+  return h(UBadge, { variant: 'soft', color }, () => statusLabel(status))
 }
 
 async function openDeliveryOrders(id: string) {

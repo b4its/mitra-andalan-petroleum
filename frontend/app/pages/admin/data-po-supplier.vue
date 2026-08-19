@@ -73,15 +73,10 @@ const columns: TableColumn<PoSupplierRow>[] = [
         under_revision: 'warning',
         po_received: 'success'
       }
-      const labelMap: Record<string, string> = {
-        created: 'Dibuat',
-        under_revision: 'Dalam Revisi',
-        po_received: 'PO Diterima'
-      }
       return h(UBadge, {
         variant: 'soft',
         color: colorMap[s] || 'neutral'
-      }, () => labelMap[s] || s)
+      }, () => statusLabel(s))
     }
   },
   {

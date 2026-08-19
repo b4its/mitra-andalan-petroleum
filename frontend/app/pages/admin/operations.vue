@@ -155,11 +155,6 @@ watch([search, filterTab, statusFilter], () => {
 })
 
 // ── Status helpers ────────────────────────────────────────────
-const doStatusLabel: Record<string, string> = {
-  created: 'Dibuat',
-  draft: 'Draf',
-  document_returned: 'Dokumen Kembali'
-}
 const doStatusColor: Record<string, string> = {
   created: 'info',
   draft: 'warning',
@@ -212,7 +207,7 @@ const columns: TableColumn<AdminDeliveryOrderRow>[] = [
       return h(
         UBadge,
         { variant: 'soft', color: doStatusColor[s] ?? 'neutral' },
-        () => doStatusLabel[s] ?? s
+        () => statusLabel(s)
       )
     }
   },

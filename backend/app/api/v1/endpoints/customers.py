@@ -35,7 +35,7 @@ async def get_customer(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Customer).where(Customer.id == id))
     c = result.scalar_one_or_none()
     if not c:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     return c
 
 
@@ -64,7 +64,7 @@ async def update_customer(id: str, body: CustomerUpdate, db: AsyncSession = Depe
     result = await db.execute(select(Customer).where(Customer.id == id))
     c = result.scalar_one_or_none()
     if not c:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     for key, val in body.model_dump(exclude_unset=True).items():
         setattr(c, key, val)
     await db.flush()
@@ -82,7 +82,7 @@ async def delete_customer(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Customer).where(Customer.id == id))
     c = result.scalar_one_or_none()
     if not c:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     await db.delete(c)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)

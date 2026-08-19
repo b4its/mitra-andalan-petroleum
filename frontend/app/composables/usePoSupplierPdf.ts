@@ -24,10 +24,10 @@ export function usePoSupplierPdf() {
     const tableBodyDetails: TableCell[][] = [
       [
         { text: 'No', bold: true, alignment: 'center', border: [true, false, true, true] },
-        { text: 'Product', bold: true, alignment: 'center', border: [true, false, true, true] },
-        { text: 'Qty', bold: true, alignment: 'center', border: [true, false, true, true] },
-        { text: 'Unit', bold: true, alignment: 'center', border: [true, false, true, true] },
-        { text: 'Unit Price', bold: true, alignment: 'center', border: [true, false, true, true] },
+        { text: 'Produk', bold: true, alignment: 'center', border: [true, false, true, true] },
+        { text: 'Jml', bold: true, alignment: 'center', border: [true, false, true, true] },
+        { text: 'Satuan', bold: true, alignment: 'center', border: [true, false, true, true] },
+        { text: 'Harga Satuan', bold: true, alignment: 'center', border: [true, false, true, true] },
         { text: 'Total', bold: true, alignment: 'center', border: [true, false, true, true] }
       ]
     ]
@@ -74,7 +74,7 @@ export function usePoSupplierPdf() {
     tableBodyDetails.push([{}, {}, {}, {}, {}, {}])
     tableBodyDetails.push([
       {},
-      { text: 'Transfer Detail :', bold: true },
+      { text: 'Detail Transfer :', bold: true },
       {},
       {},
       {},
@@ -152,7 +152,7 @@ export function usePoSupplierPdf() {
               widths: ['*', '*'],
               body: [
                 [
-                  { text: 'To', colSpan: 2, bold: true },
+                  { text: 'Kepada', colSpan: 2, bold: true },
                   {}
                 ],
                 [
@@ -280,16 +280,16 @@ export function usePoSupplierPdf() {
               widths: ['*', '*'],
               body: [
                 [
-                  { text: 'Term & Condition', bold: true, border: [true, false, true, true] },
-                  { text: 'Details', bold: true, border: [true, false, true, true] }
+                  { text: 'Syarat & Ketentuan', bold: true, border: [true, false, true, true] },
+                  { text: 'Rincian', bold: true, border: [true, false, true, true] }
                 ],
                 [
                   { text: `${details.termAndCondition}`, border: [true, false, true, true] },
                   {}
                 ],
                 [
-                  { text: 'Delivery', bold: true, border: [true, false, true, true] },
-                  { text: 'Forwarder', bold: true, border: [true, false, true, true] }
+                  { text: 'Pengiriman', bold: true, border: [true, false, true, true] },
+                  { text: 'Ekspedisi', bold: true, border: [true, false, true, true] }
                 ],
                 [
                   {
@@ -325,7 +325,7 @@ export function usePoSupplierPdf() {
                   {
                     stack: [
                       {
-                        text: 'Created By',
+                        text: 'Dibuat Oleh',
                         bold: true,
                         alignment: 'center'
                       },
@@ -339,7 +339,7 @@ export function usePoSupplierPdf() {
                   {
                     stack: [
                       {
-                        text: 'Approved By',
+                        text: 'Disetujui Oleh',
                         bold: true,
                         alignment: 'center'
                       },

@@ -93,11 +93,7 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
         paid: 'success' as const,
         overdue: 'error' as const
       }[row.getValue('invoiceStatus') as string]
-      const label = {
-        unpaid: 'Belum Lunas',
-        paid: 'Lunas',
-        overdue: 'Jatuh Tempo'
-      }[row.getValue('invoiceStatus') as string]
+      const label = statusLabel(row.getValue('invoiceStatus') as string)
       return h(
         UBadge,
         { class: 'capitalize', variant: 'soft', color },
@@ -108,23 +104,13 @@ const columns: TableColumn<FinanceInvoiceOverview>[] = [
   {
     accessorKey: 'deadlineStatus',
     header: 'Status Tenggat Waktu',
-    meta: {
-      class: {
-        th: 'text-center',
-        td: 'text-center'
-      }
-    },
     cell: ({ row }) => {
       const color = {
         on_time: 'info' as const,
         due_soon: 'warning' as const,
         overdue: 'error' as const
       }[row.getValue('deadlineStatus') as string]
-      const label = {
-        on_time: 'Tepat Waktu',
-        due_soon: 'Segera',
-        overdue: 'Terlewat'
-      }[row.getValue('deadlineStatus') as string]
+      const label = statusLabel(row.getValue('deadlineStatus') as string)
       return h(
         UBadge,
         { class: 'capitalize', variant: 'soft', color },

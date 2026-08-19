@@ -202,20 +202,10 @@ watch([doSearch, doFlowFilter], () => {
 })
 
 // ── Status helpers ────────────────────────────────────────────
-const invStatusLabel: Record<string, string> = {
-  unpaid: 'Belum Lunas',
-  paid: 'Lunas',
-  overdue: 'Jatuh Tempo'
-}
 const invStatusColor: Record<string, string> = {
   unpaid: 'warning',
   paid: 'success',
   overdue: 'error'
-}
-const deadlineLabel: Record<string, string> = {
-  on_time: 'Tepat Waktu',
-  due_soon: 'Segera Jatuh Tempo',
-  overdue: 'Terlewat'
 }
 const deadlineColor: Record<string, string> = {
   on_time: 'info',
@@ -273,7 +263,7 @@ const invColumns: TableColumn<AdminInvoiceRow>[] = [
       return h(
         UBadge,
         { variant: 'subtle', color: invStatusColor[s] ?? 'neutral' },
-        () => invStatusLabel[s] ?? s
+        () => statusLabel(s)
       )
     }
   },
@@ -285,7 +275,7 @@ const invColumns: TableColumn<AdminInvoiceRow>[] = [
       return h(
         UBadge,
         { variant: 'subtle', color: deadlineColor[s] ?? 'neutral' },
-        () => deadlineLabel[s] ?? s
+        () => statusLabel(s)
       )
     }
   },

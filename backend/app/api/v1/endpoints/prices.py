@@ -37,7 +37,7 @@ async def get_price(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Price).where(Price.id == id))
     price = result.scalar_one_or_none()
     if not price:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     return price
 
 
@@ -66,7 +66,7 @@ async def update_price(id: str, body: PriceUpdate, db: AsyncSession = Depends(ge
     result = await db.execute(select(Price).where(Price.id == id))
     price = result.scalar_one_or_none()
     if not price:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     data = body.model_dump(exclude_unset=True)
     for key, val in data.items():
         setattr(price, key, val)
@@ -85,7 +85,7 @@ async def delete_price(id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Price).where(Price.id == id))
     price = result.scalar_one_or_none()
     if not price:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Tidak ditemukan")
     await db.delete(price)
     await db.flush()
-    return MessageResponse(message="Deleted", code=200)
+    return MessageResponse(message="Dihapus", code=200)
