@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from app.utils.activity_logger import log_activity
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,17 +54,19 @@ async def create_customer(request: Request, body: CustomerCreate, db: AsyncSessi
     await db.refresh(c)
     
     # Log activity
+    actor = actor_from_request(request)
     await log_activity(
         db=db,
         request=request,
-        user_id=None,
-        actor_name="System",
-        actor_role="system",
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
         action="create",
         resource_type="customer",
         resource_id=c.id,
         resource_name=c.name,
-        new_data=body.model_dump(),
+        old_data=None,
+        new_data=model_to_dict(c),
         details=f"Customer {c.name} berhasil dibuat"
     )
     
@@ -83,26 +85,27 @@ async def update_customer(request: Request, id: str, body: CustomerUpdate, db: A
     if not c:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
     
-    old_data = {col.name: getattr(c, col.name) for col in c.__table__.columns}
-    
+    old_data = model_to_dict(c)
+
     for key, val in body.model_dump(exclude_unset=True).items():
         setattr(c, key, val)
-    
+
     await db.flush()
     await db.refresh(c)
-    
+
+    actor = actor_from_request(request)
     await log_activity(
         db=db,
         request=request,
-        user_id=None,
-        actor_name="System",
-        actor_role="system",
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
         action="update",
         resource_type="customer",
         resource_id=c.id,
         resource_name=c.name,
         old_data=old_data,
-        new_data=body.model_dump(),
+        new_data=model_to_dict(c),
         details=f"Data customer {c.name} berhasil diperbarui"
     )
     
@@ -122,17 +125,18 @@ async def delete_customer(request: Request, id: str, db: AsyncSession = Depends(
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
     
     customer_name = c.name
-    old_data = {col.name: getattr(c, col.name) for col in c.__table__.columns}
-    
+    old_data = model_to_dict(c)
+
     await db.delete(c)
     await db.flush()
-    
+
+    actor = actor_from_request(request)
     await log_activity(
         db=db,
         request=request,
-        user_id=None,
-        actor_name="System",
-        actor_role="system",
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
         action="delete",
         resource_type="customer",
         resource_id=id,

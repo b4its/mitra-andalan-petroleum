@@ -28,10 +28,15 @@ from app.models.sale import Sale
 from app.models.upload import Upload
 from app.models.po_transportir import PoTransportir
 from app.models.accounting import Account, JournalEntry, JournalLine
+from app.models.activity import Activity, ActivityType
+from app.utils.activity_logger import model_to_dict
 
 
 # ── Urutan hapus data (FK-safe: child dulu, parent belakangan) ──
 _CLEAR_ORDER = [
+    # Level 0: Activity logs third (references users/resources)
+    Activity,
+
     # Level 0: Uploads first (not referenced by others during clear)
     Upload,
     
@@ -100,10 +105,311 @@ async def seed_database(db: AsyncSession, force: bool = False):
     await _seed_sales(db)
     await _seed_accounting(db)
     await _seed_signatures(db)
+    await _seed_activities(db)
+
     await db.commit()
-    print("[seed] Selesai mengisi data contoh (5 user, 3 company, 3 customer, 2 supplier, 15 OL, 10 PO, 3 PO transportir, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan).")
+    print("[seed] Selesai mengisi data contoh (5 user, 3 company, 3 customer, 2 supplier, 15 OL, 10 PO, 3 PO transportir, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan, aktivitas).")
 
 
+async def _seed_activities(db: AsyncSession):
+    """Seed catatan aktivitas seluruh entitas sesuai konvensi sistem
+    (action create/update/delete via ActivityType, resource_type mengikuti entitas)."""
+    print("[seed] Membuat data aktivitas...")
+
+    users = (await db.execute(select(User))).scalars().all()
+    if not users:
+        print("[seed] Tidak ada user untuk atribusi aktivitas.")
+        return
+
+    companies = (await db.execute(select(Company))).scalars().all()
+    customers = (await db.execute(select(Customer))).scalars().all()
+    suppliers = (await db.execute(select(Supplier))).scalars().all()
+    offering_letters = (await db.execute(select(OfferingLetter))).scalars().all()
+    purchase_orders = (await db.execute(select(PurchaseOrder))).scalars().all()
+    po_transportirs = (await db.execute(select(PoTransportir))).scalars().all()
+    delivery_orders = (await db.execute(select(DeliveryOrder))).scalars().all()
+    invoices = (await db.execute(select(Invoice))).scalars().all()
+    notifications = (await db.execute(select(Notification))).scalars().all()
+    journal_entries = (await db.execute(select(JournalEntry))).scalars().all()
+
+    admin = users[0]
+    marketing = next((u for u in users if u.role == "marketing"), admin)
+    finance = next((u for u in users if u.role == "finance"), admin)
+    operations = next((u for u in users if u.role == "operations"), admin)
+    accounting = next((u for u in users if u.role == "accounting"), admin)
+
+    span_days = 120
+    start = datetime.now() - timedelta(days=span_days)
+    activities: list[Activity] = []
+
+    def add(actor, role, action, resource_type, resource_id, resource_name,
+            details, days_ago, hour=9, old_data=None, new_data=None) -> None:
+        old_values, new_values = Activity.serialize_changes(old_data or {}, new_data or {}, action)
+        activities.append(Activity(
+            user_id=actor.id,
+            actor_name=actor.name,
+            actor_role=role,
+            action=action,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            resource_name=resource_name,
+            old_values=old_values,
+            new_values=new_values,
+            details=details,
+            ip_address="10.0.0.1",
+            user_agent="Seeder/Mandalan 1.0",
+            created_at=start + timedelta(days=span_days - days_ago, hours=hour),
+        ))
+
+    def _safe_dict(obj, exclude: set[str] | None = None) -> dict:
+        """Snapshot kolom model untuk log, tanpa kolom sensitif."""
+        exclude = exclude or set()
+        return {
+            c.name: getattr(obj, c.name)
+            for c in obj.__table__.columns
+            if c.name not in exclude
+        }
+
+    for i, user in enumerate(users):
+        add(admin, "admin", ActivityType.CREATE.value, "user", user.id, user.name,
+            f"User {user.name} ({user.role}) ditambahkan ke sistem", 30, 9 + i,
+            new_data=_safe_dict(user, {"password", "demo_password"}))
+
+    for i, company in enumerate(companies):
+        add(admin, "admin", ActivityType.CREATE.value, "company", company.id, company.name,
+            f"Perusahaan {company.name} didaftarkan", 29, 9 + i,
+            new_data=model_to_dict(company))
+        if i == 0:
+            add(admin, "admin", ActivityType.UPDATE.value, "company", company.id, company.name,
+                f"Profil perusahaan {company.name} diperbarui", 28, 9,
+                old_data=model_to_dict(company),
+                new_data={**model_to_dict(company), "abbreviation": "MA Petroleum"})
+
+    for i, customer in enumerate(customers):
+        add(marketing, "marketing", ActivityType.CREATE.value, "customer", customer.id, customer.name,
+            f"Customer {customer.name} ditambahkan", 27, 10 + i,
+            new_data=model_to_dict(customer))
+        add(marketing, "marketing", ActivityType.UPDATE.value, "customer", customer.id, customer.name,
+            f"Data customer {customer.name} diperbarui", 26, 10 + i,
+            old_data={"name": customer.name, "phone": customer.phone},
+            new_data={"name": customer.name, "phone": (customer.phone or "") + " ext. 01",
+                      "email": customer.email, "city": customer.city})
+
+    for i, supplier in enumerate(suppliers):
+        add(admin, "admin", ActivityType.CREATE.value, "supplier", supplier.id, supplier.name,
+            f"Supplier {supplier.name} ditambahkan", 25, 9 + i,
+            new_data=model_to_dict(supplier))
+        add(admin, "admin", ActivityType.UPDATE.value, "supplier", supplier.id, supplier.name,
+            f"Data supplier {supplier.name} diperbarui", 24, 9 + i,
+            old_data={"name": supplier.name, "bank_account": supplier.bank_account},
+            new_data={"name": supplier.name, "bank_account": (supplier.bank_account or "") + "9",
+                      "phone": supplier.phone, "email": supplier.email})
+
+    for i, ol in enumerate(offering_letters):
+        add(marketing, "marketing", ActivityType.CREATE.value, "offering_letter", ol.id, ol.offering_letter_number,
+            f"Surat penawaran {ol.offering_letter_number} dibuat", 22 - i % 5, 9 + i % 8,
+            new_data=model_to_dict(ol))
+
+    for i, po in enumerate(purchase_orders):
+        add(marketing, "marketing", ActivityType.CREATE.value, "purchase_order", po.id, po.po_number,
+            f"Purchase Order {po.po_number} dibuat", 18 - i % 6, 10 + i % 8,
+            new_data=model_to_dict(po))
+        if i == 0:
+            add(admin, "admin", ActivityType.UPDATE.value, "purchase_order", po.id, po.po_number,
+                f"Dana Purchase Order {po.po_number} dirilis", 16, 9,
+                old_data={"status_rilis_dana": po.status_rilis_dana, "rilis_dana_at": None},
+                new_data={"status_rilis_dana": True, "rilis_dana_at": str(start - timedelta(days=14))})
+
+    for i, do in enumerate(delivery_orders):
+        add(operations, "operations", ActivityType.CREATE.value, "delivery_order", do.id, do.do_number,
+            f"Delivery Order {do.do_number} dibuat", 13 - i % 6, 9 + i % 8,
+            new_data=model_to_dict(do))
+
+    for i, pt in enumerate(po_transportirs):
+        add(operations, "operations", ActivityType.CREATE.value, "po_transportir", pt.id, pt.po_number,
+            f"PO Transportir {pt.po_number} dibuat", 15 - i % 4, 11 + i % 6,
+            new_data=model_to_dict(pt))
+
+    for i, note in enumerate(notifications[:5]):
+        add(finance, "finance", ActivityType.CREATE.value, "notification", note.id, note.title,
+            f"Notifikasi \"{note.title}\" dikirim", 12 - i % 5, 13 + i % 4,
+            new_data=model_to_dict(note))
+
+    for i, invoice in enumerate(invoices):
+        add(finance, "finance", ActivityType.CREATE.value, "invoice", invoice.id, invoice.invoice_number,
+            f"Invoice {invoice.invoice_number} dibuat", 8 - i % 5, 9 + i % 8,
+            new_data=model_to_dict(invoice))
+        if i == 0:
+            add(finance, "finance", ActivityType.UPDATE.value, "invoice", invoice.id, invoice.invoice_number,
+                f"Invoice {invoice.invoice_number} dilunasi", 6, 9,
+                old_data={"invoice_status": invoice.invoice_status},
+                new_data={"invoice_status": "paid"})
+
+    for i, je in enumerate(journal_entries[:10]):
+        add(accounting, "accounting", ActivityType.CREATE.value, "journal_entry", je.id, je.entry_number,
+            f"Jurnal {je.entry_number} dicatat", 5 - i % 4, 9 + i % 8,
+            new_data=model_to_dict(je))
+
+    # ── Siklus hidup tambahan (transisi status dokumen) ────────
+    for i, do in enumerate(delivery_orders):
+        add(operations, "operations", ActivityType.UPDATE.value, "delivery_order", do.id, do.do_number,
+            f"Dana Delivery Order {do.do_number} dirilis", 12 - i % 6, 10 + i % 6,
+            old_data={"status_rilis_dana": False, "rilis_dana_at": None},
+            new_data={"status_rilis_dana": True,
+                      "rilis_dana_at": str(start + timedelta(days=span_days - 12 + i % 6, hours=10 + i % 6))})
+        add(operations, "operations", ActivityType.UPDATE.value, "delivery_order", do.id, do.do_number,
+            f"Pengantaran DO {do.do_number} disiapkan", 11 - i % 6, 11 + i % 6,
+            old_data={"status_ready_order": False, "ready_order_at": None},
+            new_data={"status_ready_order": True})
+        if i % 3 == 0:
+            add(operations, "operations", ActivityType.UPDATE.value, "delivery_order", do.id, do.do_number,
+                f"Pengiriman DO {do.do_number} selesai", 10 - i % 6, 12 + i % 6,
+                old_data={"status_selesai_dikirim": False, "selesai_dikirim_at": None},
+                new_data={"status_selesai_dikirim": True})
+
+    for i, po in enumerate(purchase_orders):
+        if po.type == "supplier":
+            add(admin, "admin", ActivityType.UPDATE.value, "purchase_order", po.id, po.po_number,
+                f"Dana Purchase Order supplier {po.po_number} dirilis", 15 - i % 5, 11 + i % 5,
+                old_data={"status_rilis_dana": False, "rilis_dana_at": None},
+                new_data={"status_rilis_dana": True})
+        else:
+            add(marketing, "marketing", ActivityType.UPDATE.value, "purchase_order", po.id, po.po_number,
+                f"Purchase Order {po.po_number} direvisi", 14 - i % 5, 10 + i % 5,
+                old_data={"status": po.status},
+                new_data={"status": "under_revision", "total": po.total})
+
+    for i, inv in enumerate(invoices[1:6]):
+        add(finance, "finance", ActivityType.UPDATE.value, "invoice", inv.id, inv.invoice_number,
+            f"Invoice {inv.invoice_number} dilunasi", 7 - i % 4, 10 + i % 7,
+            old_data={"invoice_status": inv.invoice_status, "deadline_status": inv.deadline_status},
+            new_data={"invoice_status": "paid", "deadline_status": "on_time"})
+
+    # ── Riwayat harian rutin (bulk) ─────────────────────────────
+    # Aktivitas operasional harian dari semua role untuk memperkaya
+    # halaman aktivitas hingga ribuan record.
+    actors_cycle = [
+        (admin, "admin"),
+        (marketing, "marketing"),
+        (operations, "operations"),
+        (finance, "finance"),
+        (accounting, "accounting"),
+    ]
+    fuel_products = ["Solar Industri (B35)", "Bio Diesel (B35)", "Pertamax", "Pertalite"]
+    customer_names = [c.name for c in customers] or ["PT. Surya Tambang Energi"]
+    supplier_names = [s.name for s in suppliers] or ["PT. Persada Energi Nusantara"]
+    transport_names = ["PT. Armada Kaltim Sejahtera", "CV. Tiga Putra Transport", "PT. Borneo Distribusi Logistik"]
+
+    day_count = 90
+    for day in range(1, day_count + 1):
+        for a_i, (actor, role) in enumerate(actors_cycle):
+            hour = 8 + (day + a_i) % 9
+            fuel = fuel_products[(day + a_i) % len(fuel_products)]
+            ordinal = (day + a_i) % 7
+            amount = 15_000_000 + ((day + a_i) % 30) * 1_000_000
+
+            if ordinal == 0:
+                # Update harga produk
+                price = 17450 + ((day + a_i) % 40) * 25
+                add(actor, role, ActivityType.UPDATE.value, "price",
+                    f"PRC-{fuel.replace(' ', '-')}", fuel,
+                    f"Harga {fuel} diperbarui menjadi Rp {price:,}", day + 1, hour,
+                    old_data={"product_name": fuel, "price": price - 125},
+                    new_data={"product_name": fuel, "price": price})
+            elif ordinal == 1:
+                # Cek akun / chart of accounts
+                add(actor, role, ActivityType.CREATE.value, "account",
+                    f"ACC-DEMO-{day}-{a_i}", f"Akun Uji {day}.{a_i}",
+                    f"Akun uji {day}.{a_i} ditambahkan ke chart of accounts", day + 1, hour,
+                    new_data={"code": f"9-{day:03d}{a_i}", "name": f"Akun Uji {day}.{a_i}",
+                              "type": "expense", "is_active": True})
+            elif ordinal == 2:
+                # Upload lampiran dokumen
+                add(actor, role, ActivityType.CREATE.value, "upload",
+                    f"UPL-DEMO-{day}-{a_i}", f"lampiran-{day}.pdf",
+                    f"File lampiran-{day}.pdf di-upload", day + 1, hour,
+                    new_data={"original_filename": f"lampiran-{day}.pdf", "folder": "general",
+                              "mime_type": "application/pdf", "size": 1024 * 50})
+            elif ordinal == 3:
+                # Penjualan harian
+                add(actor, role, ActivityType.CREATE.value, "sale",
+                    f"SALE-DEMO-{day}-{a_i}", f"Penjualan #{day + a_i}",
+                    f"Penjualan #{day + a_i} sebesar Rp {amount:,}", day, hour,
+                    new_data={"amount": amount, "status": "paid", "email": actor.email})
+            elif ordinal == 4:
+                # Notifikasi dibaca
+                add(actor, role, ActivityType.UPDATE.value, "notification",
+                    f"NTF-DEMO-{day}-{a_i}", f"Notifikasi {day + a_i}",
+                    f"Notifikasi {day + a_i} ditandai sudah dibaca", day, hour,
+                    old_data={"title": f"Notifikasi {day + a_i}", "is_read": False},
+                    new_data={"title": f"Notifikasi {day + a_i}", "is_read": True})
+            elif ordinal == 5:
+                # Data customer dikunjungi/diperbarui
+                cname = customer_names[(day + a_i) % len(customer_names)]
+                add(actor, role, ActivityType.UPDATE.value, "customer",
+                    f"CST-DEMO-{day}-{a_i}", cname,
+                    f"Kunjungan/sales call dengan {cname}", day, hour,
+                    old_data={"name": cname, "phone": "0541-741231"},
+                    new_data={"name": cname, "phone": "0541-741231", "last_contact": str(start.date() + timedelta(days=span_days - day))})
+            else:
+                # Supplier / transportir dikontak
+                sname = supplier_names[(day + a_i) % len(supplier_names)]
+                if a_i % 2 == 0:
+                    add(actor, role, ActivityType.UPDATE.value, "supplier",
+                        f"SUP-DEMO-{day}-{a_i}", sname,
+                        f"Data kontak supplier {sname} diperbarui", day, hour,
+                        old_data={"name": sname, "phone": "0541-746912"},
+                        new_data={"name": sname, "phone": "0541-746912", "email": f"kontak{day}@supplier.co.id"})
+                else:
+                    tname = transport_names[(day + a_i) % len(transport_names)]
+                    add(actor, role, ActivityType.UPDATE.value, "po_transportir",
+                        f"PTR-DEMO-{day}-{a_i}", tname,
+                        f"Jadwal armada {tname} diperbarui", day, hour,
+                        old_data={"transport_name": tname, "schedule": "08:00"},
+                        new_data={"transport_name": tname, "schedule": "09:30"})
+
+            # Satu aktivitas tambahan per hari per role (paruh kedua)
+            second = (day * 3 + a_i * 5) % 6
+            if second == 0:
+                add(actor, role, ActivityType.CREATE.value, "offering_letter",
+                    f"OL-DEMO-{day}-{a_i}", f"{day:03d}/OL/MAP/2026",
+                    f"Surat penawaran {day:03d}/OL/MAP/2026 dibuat", day, hour+1,
+                    new_data={"offering_letter_number": f"{day:03d}/OL/MAP/2026",
+                              "status": "created", "created_by": actor.id})
+            elif second == 1:
+                add(actor, role, ActivityType.UPDATE.value, "invoice",
+                    f"INV-DEMO-{day}-{a_i}", f"INV/2026/{day}",
+                    f"Invoice INV/2026/{day} ditandai lunas", day, hour+1,
+                    old_data={"invoice_status": "unpaid", "deadline_status": "due_soon"},
+                    new_data={"invoice_status": "paid", "deadline_status": "on_time"})
+            elif second == 2:
+                add(actor, role, ActivityType.CREATE.value, "purchase_order",
+                    f"PO-DEMO-{day}-{a_i}", f"PO/2026/{day}",
+                    f"Purchase Order PO/2026/{day} dibuat", day, hour+1,
+                    new_data={"po_number": f"PO/2026/{day}", "type": "customer",
+                              "status": "created", "total": amount})
+            elif second == 3:
+                add(actor, role, ActivityType.UPDATE.value, "account",
+                    f"ACC-DEMO2-{day}-{a_i}", "Bank BCA",
+                    "Saldo Bank BCA direkonsiliasi", day, hour+1,
+                    old_data={"balance": 50_000_000},
+                    new_data={"balance": 50_000_000 + ((day + a_i) % 20) * 1_000_000})
+            elif second == 4:
+                add(actor, role, ActivityType.DELETE.value, "sale",
+                    f"SALE-DEL-{day}-{a_i}", f"Penjualan batal #{day + a_i}",
+                    f"Penjualan #{day + a_i} dibatalkan", day, hour+1,
+                    old_data={"amount": amount, "status": "failed"})
+            else:
+                add(actor, role, ActivityType.CREATE.value, "upload",
+                    f"UPL2-DEMO-{day}-{a_i}", f"dokumentasi-{day}.png",
+                    f"Foto dokumentasi {day}.png di-upload", day, hour+1,
+                    new_data={"original_filename": f"dokumentasi-{day}.png",
+                              "folder": "delivery_order", "mime_type": "image/png"})
+
+    for activity in activities:
+        db.add(activity)
+    await db.flush()
+    print(f"[seed] ✅ Membuat {len(activities)} data aktivitas")
 
 
 async def _seed_offering_letters(db: AsyncSession):

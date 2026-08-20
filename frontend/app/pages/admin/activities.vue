@@ -33,6 +33,16 @@ interface PaginatedActivities {
   pages: number;
 }
 
+// ── Kolom tabel (hanya data ringkas) ──────────────────────────
+const columns: TableColumn<Activity>[] = [
+  { accessorKey: 'action', header: 'Aksi' },
+  { accessorKey: 'resource_type', header: 'Resource' },
+  { accessorKey: 'resource_name', header: 'Nama Resource' },
+  { accessorKey: 'actor_name', header: 'Actor' },
+  { accessorKey: 'created_at', header: 'Waktu' },
+  { id: 'actions', header: '' }
+]
+
 // ── Data fetch ────────────────────────────────────────────────
 const {
   data: activitiesData,
@@ -75,9 +85,11 @@ async function applyFilters() {
       params.append("resource_type", resourceTypeFilter.value);
     }
 
+
     if (actorFilter.value) {
       params.append("actor_name", actorFilter.value);
     }
+
 
     if (search.value) {
       params.append("search", search.value);
@@ -158,6 +170,12 @@ function parseJSON(jsonString: string | null): any {
   } catch {
     return jsonString;
   }
+}
+
+function copyJSON(jsonString: string | null) {
+  if (!jsonString) return
+  navigator.clipboard.writeText(prettyJSON(jsonString))
+  toast.add({ title: 'Disalin', description: 'JSON berhasil disalin', color: 'success' })
 }
 
 // Format date
@@ -256,6 +274,8 @@ const actions = ["all", "create", "update", "delete"] as const;
               </UButton>
               <UButton
                 color="neutral"
+              <UButton
+                color="neutral"
                 variant="ghost"
                 @click="
                   () => {
@@ -287,9 +307,11 @@ const actions = ["all", "create", "update", "delete"] as const;
             <template #action-cell="{ row }">
               <UBadge
                 :color="actionColors[row.original.action] ?? 'neutral'"
+                :color="actionColors[row.original.action] ?? 'neutral'"
                 variant="soft"
                 class="capitalize"
               >
+                {{ actionLabels[row.original.action] || row.original.action }}
                 {{ actionLabels[row.original.action] || row.original.action }}
               </UBadge>
             </template>
@@ -358,7 +380,7 @@ const actions = ["all", "create", "update", "delete"] as const;
             <template #actions-cell="{ row }">
               <UButton
                 icon="i-lucide-eye"
-                size="xs"
+                size="sm"
                 color="primary"
                 variant="ghost"
                 aria-label="Lihat detail"
@@ -377,15 +399,35 @@ const actions = ["all", "create", "update", "delete"] as const;
           <!-- Pagination -->
           <div
             v-if="activitiesData?.pages"
-            class="flex items-center justify-between border-t border-default px-2 pt-3 mt-2"
+            class="flex flex-wrap items-center justify-between gap-3 border-t border-default px-2 pt-3 mt-2"
           >
-            <span class="text-xs text-muted">
-              {{ activitiesData.total }} aktivitas
-            </span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-muted">
+                Menampilkan
+                <span class="font-medium text-foreground">
+                  {{ activitiesData.items.length
+                    ? ((activitiesData.page - 1) * (activitiesData.page_size ?? pageSize) + 1)
+                    : 0 }}–{{ (activitiesData.page - 1) * (activitiesData.page_size ?? pageSize) + activitiesData.items.length }}
+                </span>
+                dari
+                <span class="font-medium text-foreground">{{ activitiesData.total }}</span>
+                aktivitas
+              </span>
+
+              <USelect
+                v-model="pageSize"
+                :items="[10, 20, 50, 100].map(n => ({ label: `${n} / hal`, value: n }))"
+                class="w-28"
+                aria-label="Jumlah per halaman"
+              />
+            </div>
+
             <UPagination
               v-model:page="currentPage"
               :total="activitiesData.total"
               :items-per-page="pageSize"
+              :max-delta="2"
+              :active-button="{ color: 'primary' }"
             />
           </div>
         </UCard>
@@ -397,6 +439,7 @@ const actions = ["all", "create", "update", "delete"] as const;
   <UModal v-model:open="viewModalOpen" :ui="{ content: 'max-w-4xl' }">
     <template #title>
       <div class="flex items-center gap-2">
+        <UIcon
         <UIcon
           v-if="selectedActivity"
           :name="
@@ -465,9 +508,9 @@ const actions = ["all", "create", "update", "delete"] as const;
           </div>
         </div>
 
-        <!-- Additional Info -->
+        <!-- Details -->
         <div v-if="selectedActivity.details" class="p-4 bg-elevated rounded-lg">
-          <p class="text-xs text-muted uppercase tracking-wide mb-2">Details</p>
+          <p class="text-xs text-muted uppercase tracking-wide mb-2">Detail</p>
           <p class="text-sm">{{ selectedActivity.details }}</p>
         </div>
 

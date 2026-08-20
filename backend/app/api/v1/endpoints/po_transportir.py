@@ -1,11 +1,12 @@
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from app.models.po_transportir import PoTransportir
 from app.models.purchase_order import PurchaseOrder
 from app.models.customer import Customer
@@ -138,7 +139,7 @@ async def get_po_transportir(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat PO transportir",
     status_code=201,
 )
-async def create_po_transportir(body: PoTransportirCreate, db: AsyncSession = Depends(get_db)):
+async def create_po_transportir(request: Request, body: PoTransportirCreate, db: AsyncSession = Depends(get_db)):
     # ── Resolve PO Customer ──────────────────────────────────────
     customer_id = body.customer_id
     po_number_ref = None
@@ -173,6 +174,21 @@ async def create_po_transportir(body: PoTransportirCreate, db: AsyncSession = De
         if c_obj:
             customer_name = c_obj.name
 
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="po_transportir",
+        resource_id=po.id,
+        resource_name=po.po_number,
+        old_data=None,
+        new_data=model_to_dict(po),
+        details=f"PO Transportir {po.po_number} berhasil dibuat"
+    )
     await create_document_notification(
         db,
         title="PO Transportir Baru",
@@ -194,11 +210,14 @@ async def create_po_transportir(body: PoTransportirCreate, db: AsyncSession = De
     summary="Perbarui PO transportir",
 )
 async def update_po_transportir(
+    request: Request,
     id: str, body: PoTransportirUpdate, db: AsyncSession = Depends(get_db)
 ):
     po = await db.get(PoTransportir, id)
     if not po:
         raise HTTPException(status_code=404, detail="PO Transportir tidak ditemukan")
+
+    old_data = model_to_dict(po)
 
     if body.po_number is not None:
         po.po_number = body.po_number
@@ -217,6 +236,22 @@ async def update_po_transportir(
     if body.created_by is not None:
         po.created_by = await valid_sender_id(db, body.created_by)
 
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="po_transportir",
+        resource_id=po.id,
+        resource_name=po.po_number,
+        old_data=old_data,
+        new_data=model_to_dict(po),
+        details=f"Data PO Transportir {po.po_number} berhasil diperbarui"
+    )
+
     await db.commit()
     await db.refresh(po)
     return _to_response(po)
@@ -227,10 +262,28 @@ async def update_po_transportir(
     response_model=MessageResponse,
     summary="Hapus PO transportir",
 )
-async def delete_po_transportir(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_po_transportir(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     po = await db.get(PoTransportir, id)
     if not po:
         raise HTTPException(status_code=404, detail="PO Transportir tidak ditemukan")
+    po_name = po.po_number
+    old_data = model_to_dict(po)
     await db.delete(po)
+    await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="po_transportir",
+        resource_id=id,
+        resource_name=po_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"PO Transportir {po_name} berhasil dihapus"
+    )
     await db.commit()
     return MessageResponse(message="PO Transportir dihapus")

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from passlib.hash import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request
 from app.models.user import User
 from app.schemas.profile import (
     ProfileResponse,
@@ -14,6 +15,16 @@ from app.schemas.profile import (
 from app.schemas.common import MessageResponse
 
 router = APIRouter()
+
+
+def _safe_user_dict(user: User) -> dict:
+    """Data user untuk log aktivitas, tanpa password/demo_password."""
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+    }
 
 
 @router.get(
@@ -73,7 +84,7 @@ async def get_profile(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat user",
     description="Mendaftarkan user baru (email harus unik).",
 )
-async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)):
+async def create_profile(request: Request, body: ProfileCreate, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(User).where(User.email == body.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email sudah terdaftar")
@@ -84,6 +95,21 @@ async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)
     db.add(user)
     await db.flush()
     await db.refresh(user)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="user",
+        resource_id=user.id,
+        resource_name=user.name,
+        old_data=None,
+        new_data=_safe_user_dict(user),
+        details=f"User {user.name} ({user.role}) berhasil dibuat"
+    )
     return user
 
 
@@ -93,11 +119,12 @@ async def create_profile(body: ProfileCreate, db: AsyncSession = Depends(get_db)
     summary="Update user",
     description="Update data user/profile, termasuk `signature` dan `signature_caption` (caption tanda tangan).",
 )
-async def update_profile(id: str, body: ProfileUpdate, db: AsyncSession = Depends(get_db)):
+async def update_profile(request: Request, id: str, body: ProfileUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.id == id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = _safe_user_dict(user)
     data = body.model_dump(exclude_unset=True)
     if "password" in data:
         data["password"] = bcrypt.hash(data["password"])
@@ -106,6 +133,21 @@ async def update_profile(id: str, body: ProfileUpdate, db: AsyncSession = Depend
         setattr(user, key, val)
     await db.flush()
     await db.refresh(user)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="user",
+        resource_id=user.id,
+        resource_name=user.name,
+        old_data=old_data,
+        new_data=_safe_user_dict(user),
+        details=f"Data user {user.name} berhasil diperbarui"
+    )
     return user
 
 
@@ -115,11 +157,28 @@ async def update_profile(id: str, body: ProfileUpdate, db: AsyncSession = Depend
     summary="Hapus user",
     description="Hapus user berdasarkan ID.",
 )
-async def delete_profile(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_profile(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.id == id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = _safe_user_dict(user)
+    user_name = user.name
     await db.delete(user)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="user",
+        resource_id=id,
+        resource_name=user_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"User {user_name} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)

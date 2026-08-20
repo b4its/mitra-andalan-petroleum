@@ -3,11 +3,12 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from app.models.purchase_order import PurchaseOrder
 from app.models.customer import Customer
 from app.models.supplier import Supplier
@@ -19,11 +20,6 @@ from app.schemas.purchase_order import (
     PurchaseOrderUpdate,
 )
 from app.utils.notifications import create_document_notification, valid_sender_id
-from app.schemas.purchase_order import (
-    PurchaseOrderResponse,
-    PurchaseOrderCreate,
-    PurchaseOrderUpdate,
-)
 
 router = APIRouter()
 
@@ -126,7 +122,7 @@ async def get_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat purchase order",
     description="Membuat PO baru. PO tidak membuat DO otomatis; DO dibuat dari PO di modul Operations (id_purchase_order).",
 )
-async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = Depends(get_db)):
+async def create_purchase_order(request: Request, body: PurchaseOrderCreate, db: AsyncSession = Depends(get_db)):
     if body.customer_id:
         c = await db.execute(select(Customer).where(Customer.id == body.customer_id))
         if not c.scalar_one_or_none():
@@ -144,6 +140,21 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
     db.add(po)
     await db.flush()
     await db.refresh(po)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="purchase_order",
+        resource_id=po.id,
+        resource_name=po.po_number,
+        old_data=None,
+        new_data=model_to_dict(po),
+        details=f"Purchase Order {po.po_number} ({po.type}) berhasil dibuat"
+    )
     cn, sn = await _resolve_names(db, po)
     party = cn if po.type == "customer" else sn
 
@@ -164,17 +175,33 @@ async def create_purchase_order(body: PurchaseOrderCreate, db: AsyncSession = De
     response_model=PurchaseOrderResponse,
     summary="Update purchase order",
 )
-async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSession = Depends(get_db)):
+async def update_purchase_order(request: Request, id: str, body: PurchaseOrderUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(po)
     for key, val in body.model_dump(exclude_unset=True).items():
         if key == "details":
             val = _details_to_str(val)
         setattr(po, key, val)
     await db.flush()
     await db.refresh(po)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="purchase_order",
+        resource_id=po.id,
+        resource_name=po.po_number,
+        old_data=old_data,
+        new_data=model_to_dict(po),
+        details=f"Data Purchase Order {po.po_number} berhasil diperbarui"
+    )
     cn, sn = await _resolve_names(db, po)
     return _to_response(po, cn, sn)
 
@@ -186,18 +213,34 @@ async def update_purchase_order(id: str, body: PurchaseOrderUpdate, db: AsyncSes
     summary="Rilis dana PO supplier",
     description="Menandai PO supplier bahwa dana sudah dirilis oleh admin. Setelah dirilis, surat PO supplier dapat dilihat.",
 )
-async def rilis_dana_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
+async def rilis_dana_purchase_order(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if po.type != "supplier":
         raise HTTPException(status_code=400, detail="Rilis dana hanya untuk PO supplier")
+    old_data = model_to_dict(po)
     now = datetime.now()
     po.rilis_dana_at = now
     po.status_rilis_dana = True
     await db.flush()
     await db.refresh(po)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="purchase_order",
+        resource_id=po.id,
+        resource_name=po.po_number,
+        old_data=old_data,
+        new_data=model_to_dict(po),
+        details=f"Dana PO {po.po_number} telah dirilis"
+    )
     cn, sn = await _resolve_names(db, po)
     return _to_response(po, cn, sn)
 
@@ -216,11 +259,13 @@ async def _delete_upload_files(uploads: list[Upload]):
     response_model=MessageResponse,
     summary="Hapus purchase order",
 )
-async def delete_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_purchase_order(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PurchaseOrder).where(PurchaseOrder.id == id))
     po = result.scalar_one_or_none()
     if not po:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    po_name = po.po_number
+    old_data = model_to_dict(po)
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "po", Upload.document_id == id)
     )
@@ -230,4 +275,19 @@ async def delete_purchase_order(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(po)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="purchase_order",
+        resource_id=id,
+        resource_name=po_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"Purchase Order {po_name} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)

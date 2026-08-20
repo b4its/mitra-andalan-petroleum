@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from app.models.sale import Sale
 from app.schemas.sale import SaleResponse, SaleCreate, SaleUpdate
 from app.schemas.common import MessageResponse
@@ -42,11 +43,26 @@ async def get_sale(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat sale",
     description="Mencatat data penjualan baru.",
 )
-async def create_sale(body: SaleCreate, db: AsyncSession = Depends(get_db)):
+async def create_sale(request: Request, body: SaleCreate, db: AsyncSession = Depends(get_db)):
     s = Sale(**body.model_dump())
     db.add(s)
     await db.flush()
     await db.refresh(s)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="sale",
+        resource_id=s.id,
+        resource_name=s.id,
+        old_data=None,
+        new_data=model_to_dict(s),
+        details=f"Data penjualan {s.id} berhasil dicatat"
+    )
     return s
 
 
@@ -56,15 +72,31 @@ async def create_sale(body: SaleCreate, db: AsyncSession = Depends(get_db)):
     summary="Update sale",
     description="Update data penjualan.",
 )
-async def update_sale(id: str, body: SaleUpdate, db: AsyncSession = Depends(get_db)):
+async def update_sale(request: Request, id: str, body: SaleUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sale).where(Sale.id == id))
     s = result.scalar_one_or_none()
     if not s:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(s)
     for key, val in body.model_dump(exclude_unset=True).items():
         setattr(s, key, val)
     await db.flush()
     await db.refresh(s)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="sale",
+        resource_id=s.id,
+        resource_name=s.id,
+        old_data=old_data,
+        new_data=model_to_dict(s),
+        details=f"Data penjualan {s.id} berhasil diperbarui"
+    )
     return s
 
 
@@ -74,11 +106,27 @@ async def update_sale(id: str, body: SaleUpdate, db: AsyncSession = Depends(get_
     summary="Hapus sale",
     description="Hapus data penjualan.",
 )
-async def delete_sale(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_sale(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sale).where(Sale.id == id))
     s = result.scalar_one_or_none()
     if not s:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(s)
     await db.delete(s)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="sale",
+        resource_id=id,
+        resource_name=s.id,
+        old_data=old_data,
+        new_data=None,
+        details=f"Data penjualan {s.id} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)

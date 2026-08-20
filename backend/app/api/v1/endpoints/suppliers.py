@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from app.utils.activity_logger import log_activity
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,17 +54,19 @@ async def create_supplier(request: Request, body: SupplierCreate, db: AsyncSessi
     await db.refresh(s)
     
     # Log activity
+    actor = actor_from_request(request)
     await log_activity(
         db=db,
         request=request,
-        user_id=None,
-        actor_name="System",
-        actor_role="system",
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
         action="create",
         resource_type="supplier",
         resource_id=s.id,
         resource_name=s.name,
-        new_data=body.model_dump(),
+        old_data=None,
+        new_data=model_to_dict(s),
         details=f"Supplier {s.name} berhasil dibuat"
     )
     
@@ -83,26 +85,27 @@ async def update_supplier(request: Request, id: str, body: SupplierUpdate, db: A
     if not s:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
     
-    old_data = {col.name: getattr(s, col.name) for col in s.__table__.columns}
-    
+    old_data = model_to_dict(s)
+
     for key, val in body.model_dump(exclude_unset=True).items():
         setattr(s, key, val)
-    
+
     await db.flush()
     await db.refresh(s)
-    
+
+    actor = actor_from_request(request)
     await log_activity(
         db=db,
         request=request,
-        user_id=None,
-        actor_name="System",
-        actor_role="system",
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
         action="update",
         resource_type="supplier",
         resource_id=s.id,
         resource_name=s.name,
         old_data=old_data,
-        new_data=body.model_dump(),
+        new_data=model_to_dict(s),
         details=f"Data supplier {s.name} berhasil diperbarui"
     )
     
@@ -122,17 +125,18 @@ async def delete_supplier(request: Request, id: str, db: AsyncSession = Depends(
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
     
     supplier_name = s.name
-    old_data = {col.name: getattr(s, col.name) for col in s.__table__.columns}
-    
+    old_data = model_to_dict(s)
+
     await db.delete(s)
     await db.flush()
-    
+
+    actor = actor_from_request(request)
     await log_activity(
         db=db,
         request=request,
-        user_id=None,
-        actor_name="System",
-        actor_role="system",
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
         action="delete",
         resource_type="supplier",
         resource_id=id,

@@ -68,8 +68,22 @@ function newestFirst<T>(data: T, path: string): T {
 }
 
 async function request(input: string, init?: RequestInit) {
+  const headers = new Headers(init?.headers)
+  if (import.meta.client) {
+    const raw = localStorage.getItem('auth')
+    if (raw) {
+      try {
+        const { id, name, role } = JSON.parse(raw)
+        if (id) headers.set('x-user-id', id)
+        if (name) headers.set('x-user-name', name)
+        if (role) headers.set('x-user-role', role)
+      } catch {
+        /* abaikan payload auth yang korup */
+      }
+    }
+  }
   try {
-    return await fetch(input, init)
+    return await fetch(input, { ...init, headers })
   } catch {
     const target = import.meta.server
       ? process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8012/api/v1'
