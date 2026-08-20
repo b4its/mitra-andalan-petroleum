@@ -61,14 +61,14 @@ const search = ref('')
 const dateFrom = ref<string>('')
 const dateTo = ref<string>('')
 const currentPage = ref(1)
-const pageSize = 20
+const pageSize = ref(20)
 
 // ── Apply filters ─────────────────────────────────────────────
 async function applyFilters() {
   try {
     const params = new URLSearchParams({
       page: currentPage.value.toString(),
-      page_size: pageSize.toString()
+      page_size: pageSize.value.toString()
     })
 
     if (actionFilter.value !== 'all') {
@@ -112,6 +112,21 @@ watch([actionFilter, resourceTypeFilter, actorFilter], () => {
   currentPage.value = 1
 })
 
+// Fetch ulang saat halaman / ukuran halaman berubah
+watch([currentPage, pageSize], ([newPage, newPageSize], [oldPage, oldPageSize]) => {
+  if (newPageSize !== oldPageSize) {
+    if (newPage !== 1) {
+      currentPage.value = 1
+      return
+    }
+    applyFilters()
+    return
+  }
+  if (newPage !== oldPage) {
+    applyFilters()
+  }
+})
+
 // ── Action colors ─────────────────────────────────────────────
 const actionColors: Record<string, 'success' | 'info' | 'error'> = {
   create: 'success',
@@ -125,15 +140,33 @@ const actionLabels: Record<string, string> = {
   delete: 'Dihapus'
 }
 
-// ── Resource types ────────────────────────────────────────────
-const resourceTypes = Array.from(new Set(
-  activitiesData.value?.items?.map(a => a.resource_type) || []
-)).sort()
+// ── Resource types (statis sesuai seluruh entitas sistem) ─────
+const resourceTypes = [
+  'account',
+  'company',
+  'customer',
+  'delivery_order',
+  'invoice',
+  'journal_entry',
+  'notification',
+  'offering_letter',
+  'po_transportir',
+  'price',
+  'purchase_order',
+  'sale',
+  'supplier',
+  'upload',
+  'user'
+]
 
-// ── Actors ────────────────────────────────────────────────────
-const actors = Array.from(new Set(
+// ── Actors (dari data yang sudah dimuat) ──────────────────────
+const actorOptions = Array.from(new Set(
   activitiesData.value?.items?.map(a => a.actor_name) || []
 )).sort()
+
+// Actors dari filter sekarang disediakan via input teks (Pencarian Actor),
+// tidak perlu dropdown statis.
+const actors = actorOptions
 
 // ── View activity details modal ──────────────────────────────
 const viewModalOpen = ref(false)
@@ -345,15 +378,35 @@ const actions = ['all', 'create', 'update', 'delete'] as const
           <!-- Pagination -->
           <div
             v-if="activitiesData?.pages"
-            class="flex items-center justify-between border-t border-default px-2 pt-3 mt-2"
+            class="flex flex-wrap items-center justify-between gap-3 border-t border-default px-2 pt-3 mt-2"
           >
-            <span class="text-xs text-muted">
-              {{ activitiesData.total }} aktivitas
-            </span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-muted">
+                Menampilkan
+                <span class="font-medium text-foreground">
+                  {{ activitiesData.items.length
+                    ? ((activitiesData.page - 1) * (activitiesData.page_size ?? pageSize) + 1)
+                    : 0 }}–{{ (activitiesData.page - 1) * (activitiesData.page_size ?? pageSize) + activitiesData.items.length }}
+                </span>
+                dari
+                <span class="font-medium text-foreground">{{ activitiesData.total }}</span>
+                aktivitas
+              </span>
+
+              <USelect
+                v-model="pageSize"
+                :items="[10, 20, 50, 100].map(n => ({ label: `${n} / hal`, value: n }))"
+                class="w-28"
+                aria-label="Jumlah per halaman"
+              />
+            </div>
+
             <UPagination
               v-model:page="currentPage"
               :total="activitiesData.total"
               :items-per-page="pageSize"
+              :max-delta="2"
+              :active-button="{ color: 'primary' }"
             />
           </div>
         </UCard>
