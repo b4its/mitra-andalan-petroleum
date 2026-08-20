@@ -1,70 +1,91 @@
 <script setup lang="ts">
-import type { ExportColumn } from '~/composables/useExport'
-import type { CostRecapResponse, CostRecapRow } from '~/types/accounting'
+import type { ExportColumn } from "~/composables/useExport";
+import type { RangeDate } from "~/types";
+import type { CostRecapResponse, CostRecapRow } from "~/types/accounting";
 
-const { get } = useApi()
-const { toCSV, toExcel, toPDF } = useExport()
+const { get } = useApi();
+const { toCSV, toExcel, toPDF } = useExport();
 
-const dateFrom = ref('')
-const dateTo = ref('')
-const search = ref('')
-const debouncedSearch = refDebounced(search, 300)
-const expandedGroups = ref<Set<string>>(new Set())
+const range = ref<RangeDate>({
+  start: new Date(Date.now() - 30 * 86400000),
+  end: new Date(),
+});
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
+const expandedGroups = ref<Set<string>>(new Set());
 
 const exportColumns: ExportColumn<CostRecapRow>[] = [
-  { header: 'Tanggal', accessor: (row: CostRecapRow) => formatDate(row.entry_date) },
-  { header: 'Deskripsi', accessor: (row: CostRecapRow) => row.description },
-  { header: 'Akun', accessor: (row: CostRecapRow) => `${row.account_code} · ${row.account_name}` },
-  { header: 'Jumlah', accessor: (row: CostRecapRow) => row.amount },
-  { header: 'Referensi', accessor: (row: CostRecapRow) => row.reference ?? '-' }
-]
+  {
+    header: "Tanggal",
+    accessor: (row: CostRecapRow) => formatDate(row.entry_date),
+  },
+  { header: "Deskripsi", accessor: (row: CostRecapRow) => row.description },
+  {
+    header: "Akun",
+    accessor: (row: CostRecapRow) =>
+      `${row.account_code} · ${row.account_name}`,
+  },
+  { header: "Jumlah", accessor: (row: CostRecapRow) => row.amount },
+  {
+    header: "Referensi",
+    accessor: (row: CostRecapRow) => row.reference ?? "-",
+  },
+];
 
-function onExport(format: 'excel' | 'pdf' | 'csv') {
-  if (!data.value) return
-  const allRows = data.value.groups.flatMap(g => g.items)
-  const filename = `rekap-biaya-${new Date().toISOString().slice(0, 10)}`
-  const totals = [{ label: 'Total Biaya', value: data.value.total_cost }]
-  if (format === 'excel') toExcel(filename, 'Rekap Biaya', exportColumns, allRows)
-  else if (format === 'pdf') toPDF(filename, 'Rekap Biaya', exportColumns, allRows, { totals })
-  else toCSV(filename, exportColumns, allRows)
+function onExport(format: "excel" | "pdf" | "csv") {
+  if (!data.value) return;
+  const allRows = data.value.groups.flatMap((g) => g.items);
+  const filename = `rekap-biaya-${new Date().toISOString().slice(0, 10)}`;
+  const totals = [{ label: "Total Biaya", value: data.value.total_cost }];
+  if (format === "excel")
+    toExcel(filename, "Rekap Biaya", exportColumns, allRows);
+  else if (format === "pdf")
+    toPDF(filename, "Rekap Biaya", exportColumns, allRows, { totals });
+  else toCSV(filename, exportColumns, allRows);
 }
 
 const { data, refresh, pending } = await useAsyncData(
-  'accounting-cost-recap',
+  "accounting-cost-recap",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<CostRecapResponse>('/accounting/cost-recap', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<CostRecapResponse>("/accounting/cost-recap", params);
   },
-  { default: () => null, server: false }
-)
+  { default: () => null, server: false },
+);
 
 const filteredGroups = computed(() => {
-  if (!data.value) return []
-  if (!debouncedSearch.value) return data.value.groups
-  const q = debouncedSearch.value.toLowerCase()
+  if (!data.value) return [];
+  if (!debouncedSearch.value) return data.value.groups;
+  const q = debouncedSearch.value.toLowerCase();
   return data.value.groups
-    .map(group => ({
+    .map((group) => ({
       ...group,
       items: group.items.filter((item: CostRecapRow) =>
-        Object.values(item).some(v => String(v).toLowerCase().includes(q))
-      )
+        Object.values(item).some((v) => String(v).toLowerCase().includes(q)),
+      ),
     }))
-    .filter(group => group.items.length > 0)
-})
+    .filter((group) => group.items.length > 0);
+});
 
-const totalCost = computed(() => data.value?.total_cost ?? 0)
+const totalCost = computed(() => data.value?.total_cost ?? 0);
 
 function toggleGroup(code: string) {
   if (expandedGroups.value.has(code)) {
-    expandedGroups.value.delete(code)
+    expandedGroups.value.delete(code);
   } else {
-    expandedGroups.value.add(code)
+    expandedGroups.value.add(code);
   }
 }
 
-definePageMeta({ layout: 'accounting' })
+watch([debouncedSearch, range], () => {
+  refresh();
+});
+
+definePageMeta({ layout: "accounting" });
 </script>
 
 <template>
@@ -76,9 +97,7 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">
-              Rekap Biaya
-            </p>
+            <p class="text-base font-semibold">Rekap Biaya</p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Seluruh biaya (expense) yang dikelompokkan per akun
             </p>
@@ -99,28 +118,31 @@ definePageMeta({ layout: 'accounting' })
                   placeholder="Cari deskripsi, akun..."
                   class="w-64"
                 />
-                <UFormField label="Dari Tanggal">
-                  <UInput v-model="dateFrom" type="date" />
-                </UFormField>
-                <UFormField label="Sampai Tanggal">
-                  <UInput v-model="dateTo" type="date" />
-                </UFormField>
-                <UButton
-                  icon="i-lucide-search"
-                  :loading="pending"
-                  @click="() => refresh()"
-                >
-                  Tampilkan
-                </UButton>
+                <HomeDateRangePicker v-model="range" />
               </div>
               <div class="flex flex-wrap justify-end gap-2">
                 <UDropdownMenu
                   :items="[
                     { type: 'label', label: 'Ekspor Data' },
                     { type: 'separator' },
-                    { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
-                    { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
-                    { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
+                    {
+                      label: 'Ekspor ke Excel',
+                      icon: 'i-lucide-file-spreadsheet',
+                      disabled: !data,
+                      onSelect: () => onExport('excel'),
+                    },
+                    {
+                      label: 'Ekspor ke PDF',
+                      icon: 'i-lucide-file-text',
+                      disabled: !data,
+                      onSelect: () => onExport('pdf'),
+                    },
+                    {
+                      label: 'Ekspor ke CSV',
+                      icon: 'i-lucide-file-down',
+                      disabled: !data,
+                      onSelect: () => onExport('csv'),
+                    },
                   ]"
                 >
                   <UButton
@@ -143,16 +165,17 @@ definePageMeta({ layout: 'accounting' })
           <template v-else-if="data">
             <UCard color="error" variant="subtle">
               <div class="flex items-center justify-between">
-                <span class="text-sm text-neutral-500 dark:text-neutral-400">Total Biaya</span>
-                <span class="text-2xl font-bold">{{ formatCurrency(totalCost) }}</span>
+                <span class="text-sm text-neutral-500 dark:text-neutral-400"
+                  >Total Biaya</span
+                >
+                <span class="text-2xl font-bold">{{
+                  formatCurrency(totalCost)
+                }}</span>
               </div>
             </UCard>
 
             <div class="flex flex-col gap-3">
-              <UCard
-                v-for="group in filteredGroups"
-                :key="group.account_code"
-              >
+              <UCard v-for="group in filteredGroups" :key="group.account_code">
                 <template #header>
                   <button
                     class="flex items-center justify-between w-full text-left"
@@ -160,12 +183,21 @@ definePageMeta({ layout: 'accounting' })
                   >
                     <div class="flex items-center gap-2">
                       <UIcon
-                        :name="expandedGroups.has(group.account_code) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+                        :name="
+                          expandedGroups.has(group.account_code)
+                            ? 'i-lucide-chevron-down'
+                            : 'i-lucide-chevron-right'
+                        "
                         class="size-4 text-muted"
                       />
-                      <span class="font-medium">{{ group.account_code }} · {{ group.account_name }}</span>
+                      <span class="font-medium"
+                        >{{ group.account_code }} ·
+                        {{ group.account_name }}</span
+                      >
                     </div>
-                    <span class="font-bold text-error">{{ formatCurrency(group.total) }}</span>
+                    <span class="font-bold text-error">{{
+                      formatCurrency(group.total)
+                    }}</span>
                   </button>
                 </template>
 
@@ -180,12 +212,18 @@ definePageMeta({ layout: 'accounting' })
                         <p class="truncate max-w-96">
                           {{ item.description }}
                         </p>
-                        <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                        <p
+                          class="text-xs text-neutral-500 dark:text-neutral-400"
+                        >
                           {{ formatDate(item.entry_date) }}
-                          <span v-if="item.reference">· {{ item.reference }}</span>
+                          <span v-if="item.reference"
+                            >· {{ item.reference }}</span
+                          >
                         </p>
                       </div>
-                      <span class="font-medium shrink-0">{{ formatCurrency(item.amount) }}</span>
+                      <span class="font-medium shrink-0">{{
+                        formatCurrency(item.amount)
+                      }}</span>
                     </div>
                   </div>
                 </template>

@@ -1,22 +1,26 @@
 <script setup lang="ts">
-import type { Period, Range, Stat } from '~/types'
+import type { Period, RangeDate, Stat } from "~/types";
 
 const props = defineProps<{
-  period: Period
-  range: Range
-}>()
+  period: Period;
+  range: RangeDate;
+}>();
 
-const { data: stats, pending } = await useAsyncData<Stat[]>('home-stats', async () => {
-  const { get } = useApi()
-  const res = await get<{ stats: Stat[] }>('/stats/home')
-  return (res.stats || []).map((s: Stat) => ({
-    title: s.title,
-    icon: s.icon,
-    value: s.value,
-    variation: s.variation,
-    to: s.to
-  }))
-}, { watch: [() => props.period, () => props.range], default: () => [] })
+const { data: stats, pending } = await useAsyncData<Stat[]>(
+  "home-stats",
+  async () => {
+    const { get } = useApi();
+    const res = await get<{ stats: Stat[] }>("/stats/home");
+    return (res.stats || []).map((s: Stat) => ({
+      title: s.title,
+      icon: s.icon,
+      value: s.value,
+      variation: s.variation,
+      to: s.to,
+    }));
+  },
+  { watch: [() => props.period, () => props.range], default: () => [] },
+);
 </script>
 
 <template>
@@ -37,7 +41,7 @@ const { data: stats, pending } = await useAsyncData<Stat[]>('home-stats', async 
         wrapper: 'items-start',
         leading:
           'p-2.5 rounded-full bg-primary/10 ring ring-inset ring-primary/25 flex-col',
-        title: 'font-normal text-muted text-xs uppercase'
+        title: 'font-normal text-muted text-xs uppercase',
       }"
       class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg hover:z-1"
     >

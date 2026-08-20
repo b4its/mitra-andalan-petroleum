@@ -1,318 +1,324 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
-import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
-import type { ChartClickPayload } from '~/components/admin/AdminChartDetailModal.vue'
+import { h } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+import AdminBarChart from "~/components/admin/charts/AdminBarChart.vue";
+import AdminPieChart from "~/components/admin/charts/AdminPieChart.vue";
+import type { ChartClickPayload } from "~/components/admin/AdminChartDetailModal.vue";
 import type {
   AdminDeliveryOrderRow,
   AdminDrilldownMetric,
   AdminInvoiceRow,
   AdminStats,
-  Paginated
-} from '~/types/admin'
+  Paginated,
+} from "~/types/admin";
+import type { RangeDate } from "~/types";
 
-definePageMeta({ layout: 'admin' })
+definePageMeta({ layout: "admin" });
 
-const UBadge = resolveComponent('UBadge')
-const { get } = useApi()
+const UBadge = resolveComponent("UBadge");
+const { get } = useApi();
 
 // ── Chart modal state ──────────────────────────────────────────
-const chartDetailOpen = ref(false)
-const chartPayload = ref<ChartClickPayload | null>(null)
-const drillMetric = ref<AdminDrilldownMetric | null>(null)
-const drillOpen = ref(false)
+const chartDetailOpen = ref(false);
+const chartPayload = ref<ChartClickPayload | null>(null);
+const drillMetric = ref<AdminDrilldownMetric | null>(null);
+const drillOpen = ref(false);
 
 function onBarClick(p: {
-  label: string
-  datasetLabel: string
-  value: number
-  datasetIndex: number
-  labelIndex: number
+  label: string;
+  datasetLabel: string;
+  value: number;
+  datasetIndex: number;
+  labelIndex: number;
 }) {
   chartPayload.value = {
-    chartType: 'bar',
+    chartType: "bar",
     label: p.label,
     datasetLabel: p.datasetLabel,
-    value: p.value
-  }
-  chartDetailOpen.value = true
+    value: p.value,
+  };
+  chartDetailOpen.value = true;
 }
-function onPieClick(p: { label: string, value: number, index: number }) {
+function onPieClick(p: { label: string; value: number; index: number }) {
   chartPayload.value = {
-    chartType: 'pie',
+    chartType: "pie",
     segmentLabel: p.label,
-    segmentValue: p.value
-  }
-  chartDetailOpen.value = true
+    segmentValue: p.value,
+  };
+  chartDetailOpen.value = true;
 }
 function onChartViewRecords(metric: AdminDrilldownMetric) {
-  drillMetric.value = metric
-  drillOpen.value = true
+  drillMetric.value = metric;
+  drillOpen.value = true;
 }
 
 // ── Data fetch ────────────────────────────────────────────────
-const dateFrom = ref('')
-const dateTo = ref('')
+const range = ref<RangeDate>({
+  start: new Date(Date.now() - 30 * 86400000),
+  end: new Date(),
+});
 
 const { data, pending, refresh } = useAsyncData(
-  'admin-finance',
+  "admin-finance",
   async () => {
     const [stats, invResult, doResult] = await Promise.all([
-      get<AdminStats>('/stats/admin', {
-        ...(dateFrom.value ? { date_from: new Date(dateFrom.value + 'T00:00:00').toISOString() } : {}),
-        ...(dateTo.value ? { date_to: new Date(dateTo.value + 'T23:59:59').toISOString() } : {})
+      get<AdminStats>("/stats/admin", {
+        ...(range.value.start
+          ? { date_from: range.value.start.toISOString().split("T")[0] || "" }
+          : {}),
+        ...(range.value.end
+          ? { date_to: range.value.end.toISOString().split("T")[0] || "" }
+          : {}),
       }),
-      get<Paginated<AdminInvoiceRow>>('/invoices', { page: 1, page_size: 100 }),
-      get<Paginated<AdminDeliveryOrderRow>>('/delivery-orders', { page: 1, page_size: 100 })
-    ])
+      get<Paginated<AdminInvoiceRow>>("/invoices", { page: 1, page_size: 100 }),
+      get<Paginated<AdminDeliveryOrderRow>>("/delivery-orders", {
+        page: 1,
+        page_size: 100,
+      }),
+    ]);
     return {
       stats,
       invList: invResult?.items || [],
-      doList: doResult?.items || []
-    }
+      doList: doResult?.items || [],
+    };
   },
   {
     default: () => ({ stats: null, invList: [], doList: [] }),
     lazy: true,
     server: false,
-    watch: [dateFrom, dateTo]
-  }
-)
+    watch: [range],
+  },
+);
 
 // ── Stats cards ───────────────────────────────────────────────
 const invStats = computed(() => {
-  if (!data.value?.stats?.metrics) return []
-  return data.value.stats.metrics.filter(m =>
+  if (!data.value?.stats?.metrics) return [];
+  return data.value.stats.metrics.filter((m) =>
     [
-      'invoice_value',
-      'paid_value',
-      'outstanding_value',
-      'overdue_value'
-    ].includes(m.key)
-  )
-})
+      "invoice_value",
+      "paid_value",
+      "outstanding_value",
+      "overdue_value",
+    ].includes(m.key),
+  );
+});
 
 // ── Ringkasan alur DO dari sisi Finance ──────────────────────
 const doFinanceStats = computed(() => {
-  const list: AdminDeliveryOrderRow[] = data.value?.doList || []
+  const list: AdminDeliveryOrderRow[] = data.value?.doList || [];
   return {
     menunggakLunas: list.filter(
-      d => d.status_selesai_dikirim && !d.status_lunas_ongkir
+      (d) => d.status_selesai_dikirim && !d.status_lunas_ongkir,
     ).length,
-    sudahLunas: list.filter(d => d.status_lunas_ongkir).length
-  }
-})
+    sudahLunas: list.filter((d) => d.status_lunas_ongkir).length,
+  };
+});
 
 // ── Charts ────────────────────────────────────────────────────
 const trendLabels = computed(
-  () => data.value?.stats?.trends?.map(t => t.label) || []
-)
+  () => data.value?.stats?.trends?.map((t) => t.label) || [],
+);
 const invTrendData = computed(
-  () => data.value?.stats?.trends?.map(t => t.invoices) || []
-)
+  () => data.value?.stats?.trends?.map((t) => t.invoices) || [],
+);
 const invDistLabels = computed(
-  () =>
-    data.value?.stats?.distributions?.invoices?.map(d => d.label) || []
-)
+  () => data.value?.stats?.distributions?.invoices?.map((d) => d.label) || [],
+);
 const invDistValues = computed(
-  () =>
-    data.value?.stats?.distributions?.invoices?.map(d => d.value) || []
-)
+  () => data.value?.stats?.distributions?.invoices?.map((d) => d.value) || [],
+);
 const deadlineDistLabels = computed(
   () =>
-    data.value?.stats?.distributions?.invoice_deadlines?.map(
-      d => d.label
-    ) || []
-)
+    data.value?.stats?.distributions?.invoice_deadlines?.map((d) => d.label) ||
+    [],
+);
 const deadlineDistValues = computed(
   () =>
-    data.value?.stats?.distributions?.invoice_deadlines?.map(
-      d => d.value
-    ) || []
-)
+    data.value?.stats?.distributions?.invoice_deadlines?.map((d) => d.value) ||
+    [],
+);
 
 // ── Invoice table: search + pagination ────────────────────────
-const invSearch = ref('')
-const invStatusFilter = ref('all')
-const deadlineStatusFilter = ref('all')
-const invPage = ref(1)
-const PAGE_SIZE = 5
+const invSearch = ref("");
+const invStatusFilter = ref("all");
+const deadlineStatusFilter = ref("all");
+const invPage = ref(1);
+const PAGE_SIZE = 5;
 
 const invFiltered = computed(() => {
-  const q = invSearch.value.trim().toLowerCase()
-  let list: AdminInvoiceRow[] = data.value?.invList || []
+  const q = invSearch.value.trim().toLowerCase();
+  let list: AdminInvoiceRow[] = data.value?.invList || [];
 
-  if (invStatusFilter.value !== 'all') {
-    list = list.filter(inv => inv.invoice_status === invStatusFilter.value)
+  if (invStatusFilter.value !== "all") {
+    list = list.filter((inv) => inv.invoice_status === invStatusFilter.value);
   }
-  if (deadlineStatusFilter.value !== 'all') {
+  if (deadlineStatusFilter.value !== "all") {
     list = list.filter(
-      inv => inv.deadline_status === deadlineStatusFilter.value
-    )
+      (inv) => inv.deadline_status === deadlineStatusFilter.value,
+    );
   }
 
-  if (!q) return list
+  if (!q) return list;
   return list.filter(
-    inv =>
-      inv.invoice_number?.toLowerCase().includes(q)
-      || inv.customer_name?.toLowerCase().includes(q)
-      || inv.invoice_status?.toLowerCase().includes(q)
-      || inv.deadline_status?.toLowerCase().includes(q)
-  )
-})
+    (inv) =>
+      inv.invoice_number?.toLowerCase().includes(q) ||
+      inv.customer_name?.toLowerCase().includes(q) ||
+      inv.invoice_status?.toLowerCase().includes(q) ||
+      inv.deadline_status?.toLowerCase().includes(q),
+  );
+});
 const invPaged = computed(() => {
-  const start = (invPage.value - 1) * PAGE_SIZE
-  return invFiltered.value.slice(start, start + PAGE_SIZE)
-})
+  const start = (invPage.value - 1) * PAGE_SIZE;
+  return invFiltered.value.slice(start, start + PAGE_SIZE);
+});
 watch([invSearch, invStatusFilter, deadlineStatusFilter], () => {
-  invPage.value = 1
-})
+  invPage.value = 1;
+});
 
 // ── DO table: search + pagination ─────────────────────────────
-const doSearch = ref('')
-const doFlowFilter = ref('all')
-const doPage = ref(1)
+const doSearch = ref("");
+const doFlowFilter = ref("all");
+const doPage = ref(1);
 
 const doFiltered = computed(() => {
-  const q = doSearch.value.trim().toLowerCase()
-  let list: AdminDeliveryOrderRow[] = data.value?.doList || []
+  const q = doSearch.value.trim().toLowerCase();
+  let list: AdminDeliveryOrderRow[] = data.value?.doList || [];
 
-  if (doFlowFilter.value === 'menunggu_lunas')
+  if (doFlowFilter.value === "menunggu_lunas")
     list = list.filter(
-      d => d.status_selesai_dikirim && !d.status_lunas_ongkir
-    )
-  else if (doFlowFilter.value === 'lunas')
-    list = list.filter(d => d.status_lunas_ongkir)
+      (d) => d.status_selesai_dikirim && !d.status_lunas_ongkir,
+    );
+  else if (doFlowFilter.value === "lunas")
+    list = list.filter((d) => d.status_lunas_ongkir);
 
-  if (!q) return list
+  if (!q) return list;
   return list.filter(
-    d =>
-      d.do_number?.toLowerCase().includes(q)
-      || d.customer_name?.toLowerCase().includes(q)
-      || d.po_number?.toLowerCase().includes(q)
-  )
-})
+    (d) =>
+      d.do_number?.toLowerCase().includes(q) ||
+      d.customer_name?.toLowerCase().includes(q) ||
+      d.po_number?.toLowerCase().includes(q),
+  );
+});
 const doPaged = computed(() => {
-  const start = (doPage.value - 1) * PAGE_SIZE
-  return doFiltered.value.slice(start, start + PAGE_SIZE)
-})
+  const start = (doPage.value - 1) * PAGE_SIZE;
+  return doFiltered.value.slice(start, start + PAGE_SIZE);
+});
 watch([doSearch, doFlowFilter], () => {
-  doPage.value = 1
-})
+  doPage.value = 1;
+});
 
 // ── Status helpers ────────────────────────────────────────────
 const invStatusColor: Record<string, string> = {
-  unpaid: 'warning',
-  paid: 'success',
-  overdue: 'error'
-}
+  unpaid: "warning",
+  paid: "success",
+  overdue: "error",
+};
 const deadlineColor: Record<string, string> = {
-  on_time: 'info',
-  due_soon: 'warning',
-  overdue: 'error'
-}
+  on_time: "info",
+  due_soon: "warning",
+  overdue: "error",
+};
 const invStatusOptions = [
-  { label: 'Semua Pembayaran', value: 'all' },
-  { label: 'Belum Lunas', value: 'unpaid' },
-  { label: 'Lunas', value: 'paid' },
-  { label: 'Jatuh Tempo', value: 'overdue' }
-]
+  { label: "Semua Pembayaran", value: "all" },
+  { label: "Belum Lunas", value: "unpaid" },
+  { label: "Lunas", value: "paid" },
+  { label: "Jatuh Tempo", value: "overdue" },
+];
 const deadlineStatusOptions = [
-  { label: 'Semua Tenggat', value: 'all' },
-  { label: 'Tepat Waktu', value: 'on_time' },
-  { label: 'Segera Jatuh Tempo', value: 'due_soon' },
-  { label: 'Jatuh Tempo', value: 'overdue' }
-]
+  { label: "Semua Tenggat", value: "all" },
+  { label: "Tepat Waktu", value: "on_time" },
+  { label: "Segera Jatuh Tempo", value: "due_soon" },
+  { label: "Jatuh Tempo", value: "overdue" },
+];
 const doFlowOptions = [
-  { label: 'Semua Alur Delivery Order', value: 'all' },
-  { label: 'Menunggu Lunas Ongkir', value: 'menunggu_lunas' },
-  { label: 'Ongkir Lunas', value: 'lunas' }
-]
+  { label: "Semua Alur Delivery Order", value: "all" },
+  { label: "Menunggu Lunas Ongkir", value: "menunggu_lunas" },
+  { label: "Ongkir Lunas", value: "lunas" },
+];
 
 function alurBadge(done: boolean, at: string | null) {
-  return h('div', { class: 'flex flex-col gap-0.5' }, [
+  return h("div", { class: "flex flex-col gap-0.5" }, [
     h(
       UBadge,
       {
-        variant: 'subtle',
-        color: done ? 'success' : 'neutral',
-        class: 'text-xs'
+        variant: "subtle",
+        color: done ? "success" : "neutral",
+        class: "text-xs",
       },
-      () => (done ? '✓' : '-')
+      () => (done ? "✓" : "-"),
     ),
     done && at
-      ? h('span', { class: 'text-[10px] text-muted' }, formatDate(at))
-      : null
-  ])
+      ? h("span", { class: "text-[10px] text-muted" }, formatDate(at))
+      : null,
+  ]);
 }
 
 const invColumns: TableColumn<AdminInvoiceRow>[] = [
-  { accessorKey: 'invoice_number', header: 'Nomor Invoice' },
-  { accessorKey: 'customer_name', header: 'Customer' },
+  { accessorKey: "invoice_number", header: "Nomor Invoice" },
+  { accessorKey: "customer_name", header: "Customer" },
   {
-    accessorKey: 'grand_total',
-    header: 'Total Keseluruhan',
-    cell: ({ row }) => formatCurrency(row.getValue('grand_total') ?? 0)
+    accessorKey: "grand_total",
+    header: "Total Keseluruhan",
+    cell: ({ row }) => formatCurrency(row.getValue("grand_total") ?? 0),
   },
   {
-    accessorKey: 'invoice_status',
-    header: 'Status Bayar',
+    accessorKey: "invoice_status",
+    header: "Status Bayar",
     cell: ({ row }) => {
-      const s = row.getValue('invoice_status') as string
+      const s = row.getValue("invoice_status") as string;
       return h(
         UBadge,
-        { variant: 'subtle', color: invStatusColor[s] ?? 'neutral' },
-        () => statusLabel(s)
-      )
-    }
+        { variant: "subtle", color: invStatusColor[s] ?? "neutral" },
+        () => statusLabel(s),
+      );
+    },
   },
   {
-    accessorKey: 'deadline_status',
-    header: 'Tenggat',
+    accessorKey: "deadline_status",
+    header: "Tenggat",
     cell: ({ row }) => {
-      const s = row.getValue('deadline_status') as string
+      const s = row.getValue("deadline_status") as string;
       return h(
         UBadge,
-        { variant: 'subtle', color: deadlineColor[s] ?? 'neutral' },
-        () => statusLabel(s)
-      )
-    }
+        { variant: "subtle", color: deadlineColor[s] ?? "neutral" },
+        () => statusLabel(s),
+      );
+    },
   },
   {
-    accessorKey: 'created_at',
-    header: 'Dibuat',
+    accessorKey: "created_at",
+    header: "Dibuat",
     cell: ({ row }) =>
-      row.getValue('created_at') ? formatDate(row.getValue('created_at')) : '-'
+      row.getValue("created_at") ? formatDate(row.getValue("created_at")) : "-",
   },
-  { id: 'invActions', header: 'Aksi' }
-]
+  { id: "invActions", header: "Aksi" },
+];
 
 const doColumns: TableColumn<AdminDeliveryOrderRow>[] = [
-  { accessorKey: 'do_number', header: 'Nomor Delivery Order' },
-  { accessorKey: 'customer_name', header: 'Customer' },
-  { accessorKey: 'po_number', header: 'Nomor Purchase Order' },
+  { accessorKey: "do_number", header: "Nomor Delivery Order" },
+  { accessorKey: "customer_name", header: "Customer" },
+  { accessorKey: "po_number", header: "Nomor Purchase Order" },
   {
-    accessorKey: 'status_lunas_ongkir',
-    header: 'Lunas Ongkir',
+    accessorKey: "status_lunas_ongkir",
+    header: "Lunas Ongkir",
     cell: ({ row }) =>
-      alurBadge(row.original.status_lunas_ongkir, row.original.lunas_ongkir_at)
+      alurBadge(row.original.status_lunas_ongkir, row.original.lunas_ongkir_at),
   },
   {
-    accessorKey: 'fuel_total',
-    header: 'Volume (L)',
-    cell: ({ row }) => formatNumber(row.getValue('fuel_total') ?? 0)
+    accessorKey: "fuel_total",
+    header: "Volume (L)",
+    cell: ({ row }) => formatNumber(row.getValue("fuel_total") ?? 0),
   },
-  { id: 'doActions', header: 'Aksi' }
-]
+  { id: "doActions", header: "Aksi" },
+];
 
-const detailOpen = ref(false)
-const detailId = ref<string | null>(null)
-const detailType = ref<'invoice' | 'do'>('invoice')
-function openDetail(id: string, type: 'invoice' | 'do') {
-  detailId.value = id
-  detailType.value = type
-  detailOpen.value = true
+const detailOpen = ref(false);
+const detailId = ref<string | null>(null);
+const detailType = ref<"invoice" | "do">("invoice");
+function openDetail(id: string, type: "invoice" | "do") {
+  detailId.value = id;
+  detailType.value = type;
+  detailOpen.value = true;
 }
 </script>
 
@@ -356,27 +362,9 @@ function openDetail(id: string, type: 'invoice' | 'do') {
         <template v-else>
           <UCard>
             <div class="flex flex-col gap-3">
-              <p class="text-sm font-medium">
-                Filter Periode Data
-              </p>
+              <p class="text-sm font-medium">Filter Periode Data</p>
               <div class="flex flex-wrap items-end gap-3">
-                <UFormField label="Dari Tanggal">
-                  <UInput v-model="dateFrom" type="date" />
-                </UFormField>
-                <UFormField label="Sampai Tanggal">
-                  <UInput v-model="dateTo" type="date" />
-                </UFormField>
-                <UButton icon="i-lucide-search" :loading="pending" @click="() => refresh()">
-                  Terapkan
-                </UButton>
-                <UButton
-                  icon="i-lucide-rotate-ccw"
-                  color="neutral"
-                  variant="soft"
-                  @click="dateFrom = ''; dateTo = ''"
-                >
-                  Reset
-                </UButton>
+                <HomeDateRangePicker v-model="range" />
               </div>
             </div>
           </UCard>
@@ -405,17 +393,13 @@ function openDetail(id: string, type: 'invoice' | 'do') {
           <!-- Ringkasan alur DO dari sisi Finance -->
           <div class="grid gap-3 sm:grid-cols-2">
             <UCard variant="subtle" class="text-center">
-              <p class="text-xs text-muted mb-1">
-                Menunggu Lunas Ongkir
-              </p>
+              <p class="text-xs text-muted mb-1">Menunggu Lunas Ongkir</p>
               <p class="text-2xl font-bold text-warning">
                 {{ doFinanceStats.menunggakLunas }}
               </p>
             </UCard>
             <UCard variant="subtle" class="text-center">
-              <p class="text-xs text-muted mb-1">
-                Ongkir Lunas
-              </p>
+              <p class="text-xs text-muted mb-1">Ongkir Lunas</p>
               <p class="text-2xl font-bold text-success">
                 {{ doFinanceStats.sudahLunas }}
               </p>
@@ -426,9 +410,7 @@ function openDetail(id: string, type: 'invoice' | 'do') {
           <UCard>
             <template #header>
               <div class="flex items-center justify-between gap-3 flex-wrap">
-                <p class="font-medium">
-                  Data Invoice
-                </p>
+                <p class="font-medium">Data Invoice</p>
                 <div class="flex flex-wrap items-center gap-2">
                   <USelect
                     v-model="invStatusFilter"
@@ -476,9 +458,7 @@ function openDetail(id: string, type: 'invoice' | 'do') {
               v-if="invFiltered.length > PAGE_SIZE"
               class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2"
             >
-              <p class="text-xs text-muted">
-                {{ invFiltered.length }} total
-              </p>
+              <p class="text-xs text-muted">{{ invFiltered.length }} total</p>
               <UPagination
                 v-model:page="invPage"
                 :total="invFiltered.length"
@@ -534,9 +514,7 @@ function openDetail(id: string, type: 'invoice' | 'do') {
               v-if="doFiltered.length > PAGE_SIZE"
               class="flex items-center justify-between border-t border-default pt-3 px-2 mt-2"
             >
-              <p class="text-xs text-muted">
-                {{ doFiltered.length }} total
-              </p>
+              <p class="text-xs text-muted">{{ doFiltered.length }} total</p>
               <UPagination
                 v-model:page="doPage"
                 :total="doFiltered.length"
@@ -548,23 +526,19 @@ function openDetail(id: string, type: 'invoice' | 'do') {
           <!-- Grafik (penutup halaman) -->
           <div>
             <div class="mb-3 flex items-center justify-between">
-              <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+              <p
+                class="text-sm font-semibold uppercase tracking-wide text-muted"
+              >
                 Grafik
               </p>
-              <p class="text-xs text-muted">
-                Visualisasi data finance
-              </p>
+              <p class="text-xs text-muted">Visualisasi data finance</p>
             </div>
             <div class="grid gap-6 lg:grid-cols-3">
               <UCard class="lg:col-span-1">
                 <template #header>
                   <div class="flex items-center justify-between">
-                    <p class="font-medium">
-                      Tren Invoice per Periode
-                    </p>
-                    <p class="text-xs text-muted">
-                      Klik bar
-                    </p>
+                    <p class="font-medium">Tren Invoice per Periode</p>
+                    <p class="text-xs text-muted">Klik bar</p>
                   </div>
                 </template>
                 <AdminBarChart
@@ -574,8 +548,8 @@ function openDetail(id: string, type: 'invoice' | 'do') {
                     {
                       label: 'Faktur',
                       data: invTrendData,
-                      backgroundColor: 'rgba(239,68,68,0.7)'
-                    }
+                      backgroundColor: 'rgba(239,68,68,0.7)',
+                    },
                   ]"
                   @bar-click="onBarClick"
                 />
@@ -588,12 +562,8 @@ function openDetail(id: string, type: 'invoice' | 'do') {
               <UCard>
                 <template #header>
                   <div class="flex items-center justify-between">
-                    <p class="font-medium">
-                      Status Pembayaran
-                    </p>
-                    <p class="text-xs text-muted">
-                      Klik segment
-                    </p>
+                    <p class="font-medium">Status Pembayaran</p>
+                    <p class="text-xs text-muted">Klik segment</p>
                   </div>
                 </template>
                 <AdminPieChart
@@ -602,17 +572,17 @@ function openDetail(id: string, type: 'invoice' | 'do') {
                   :data="invDistValues"
                   @segment-click="onPieClick"
                 />
-                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+                <UEmpty
+                  v-else
+                  icon="i-lucide-chart-pie"
+                  title="Belum ada data"
+                />
               </UCard>
               <UCard>
                 <template #header>
                   <div class="flex items-center justify-between">
-                    <p class="font-medium">
-                      Status Tenggat
-                    </p>
-                    <p class="text-xs text-muted">
-                      Klik segment
-                    </p>
+                    <p class="font-medium">Status Tenggat</p>
+                    <p class="text-xs text-muted">Klik segment</p>
                   </div>
                 </template>
                 <AdminPieChart
@@ -622,7 +592,7 @@ function openDetail(id: string, type: 'invoice' | 'do') {
                   :background-color="[
                     'rgba(16,185,129,0.8)',
                     'rgba(245,158,11,0.8)',
-                    'rgba(239,68,68,0.8)'
+                    'rgba(239,68,68,0.8)',
                   ]"
                   @segment-click="onPieClick"
                 />

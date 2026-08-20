@@ -1,88 +1,105 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import type { CashflowResponse, CashflowItem } from '~/types/accounting'
+import { h } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+import type { CashflowResponse, CashflowItem } from "~/types/accounting";
+import type { RangeDate } from "~/types";
 
-const { get } = useApi()
+const { get } = useApi();
 
-const dateFrom = ref('')
-const dateTo = ref('')
-const search = ref('')
-const debouncedSearch = refDebounced(search, 300)
+const range = ref<RangeDate>({
+  start: new Date(Date.now() - 30 * 86400000),
+  end: new Date(),
+});
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
 
-const { data: cashflow, refresh, pending } = await useAsyncData(
-  'accounting-cashflow',
+const {
+  data: cashflow,
+  refresh,
+  pending,
+} = await useAsyncData(
+  "accounting-cashflow",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<CashflowResponse>('/accounting/cashflow', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<CashflowResponse>("/accounting/cashflow", params);
   },
-  { default: () => null, server: false }
-)
+  { default: () => null, server: false },
+);
 
 const filteredOperating = computed(() => {
-  if (!cashflow.value) return []
-  if (!debouncedSearch.value) return cashflow.value.operating.items
-  const q = debouncedSearch.value.toLowerCase()
+  if (!cashflow.value) return [];
+  if (!debouncedSearch.value) return cashflow.value.operating.items;
+  const q = debouncedSearch.value.toLowerCase();
   return cashflow.value.operating.items.filter((item: CashflowItem) =>
-    Object.values(item).some(v => String(v).toLowerCase().includes(q))
-  )
-})
+    Object.values(item).some((v) => String(v).toLowerCase().includes(q)),
+  );
+});
 
 // ── Pagination (5 per halaman) ────────────────────────────────
-const page = ref(1)
-const PAGE_SIZE = 5
+const page = ref(1);
+const PAGE_SIZE = 5;
 const pagedData = computed(() => {
-  const start = (page.value - 1) * PAGE_SIZE
-  return filteredOperating.value.slice(start, start + PAGE_SIZE)
-})
+  const start = (page.value - 1) * PAGE_SIZE;
+  return filteredOperating.value.slice(start, start + PAGE_SIZE);
+});
 watch(debouncedSearch, () => {
-  page.value = 1
-})
+  page.value = 1;
+});
 
 const columns: TableColumn<CashflowItem>[] = [
   {
-    accessorKey: 'account_code',
-    header: 'Akun',
+    accessorKey: "account_code",
+    header: "Akun",
     cell: ({ row }) => {
-      const code = row.getValue('account_code') as string
-      const name = row.getValue('account_name') as string
-      return h('div', { class: 'flex flex-col gap-0.5' }, [
-        h('span', { class: 'text-xs font-medium text-muted' }, code || '—'),
-        h('span', { class: 'text-xs text-muted' }, name || 'Alur Sistem Utama')
-      ])
-    }
+      const code = row.getValue("account_code") as string;
+      const name = row.getValue("account_name") as string;
+      return h("div", { class: "flex flex-col gap-0.5" }, [
+        h("span", { class: "text-xs font-medium text-muted" }, code || "—"),
+        h("span", { class: "text-xs text-muted" }, name || "Alur Sistem Utama"),
+      ]);
+    },
   },
   {
-    accessorKey: 'description',
-    header: 'Deskripsi',
+    accessorKey: "description",
+    header: "Deskripsi",
     cell: ({ row }) => {
-      const desc = row.getValue('description') as string
-      return h('span', { class: 'truncate block max-w-96' }, desc)
-    }
+      const desc = row.getValue("description") as string;
+      return h("span", { class: "truncate block max-w-96" }, desc);
+    },
   },
   {
-    accessorKey: 'category',
-    header: 'Kategori',
+    accessorKey: "category",
+    header: "Kategori",
     cell: ({ row }) => {
-      const cat = row.getValue('category') as string
-      return h('span', { class: 'text-xs text-muted' }, cat)
-    }
+      const cat = row.getValue("category") as string;
+      return h("span", { class: "text-xs text-muted" }, cat);
+    },
   },
   {
-    accessorKey: 'amount',
-    header: 'Jumlah',
-    meta: { class: { th: 'text-right', td: 'text-right' } },
+    accessorKey: "amount",
+    header: "Jumlah",
+    meta: { class: { th: "text-right", td: "text-right" } },
     cell: ({ row }) => {
-      const amount = Number(row.getValue('amount'))
-      const color = amount >= 0 ? 'text-success' : 'text-error'
-      return h('span', { class: `font-semibold ${color}` }, formatCurrency(amount))
-    }
-  }
-]
+      const amount = Number(row.getValue("amount"));
+      const color = amount >= 0 ? "text-success" : "text-error";
+      return h(
+        "span",
+        { class: `font-semibold ${color}` },
+        formatCurrency(amount),
+      );
+    },
+  },
+];
 
-definePageMeta({ layout: 'accounting' })
+watch([range], () => {
+  refresh();
+});
+
+definePageMeta({ layout: "accounting" });
 </script>
 
 <template>
@@ -94,9 +111,7 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">
-              Rekap Arus Kas (Cashflow)
-            </p>
+            <p class="text-base font-semibold">Rekap Arus Kas (Cashflow)</p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Laporan arus kas: operasi, investasi, dan pendanaan
             </p>
@@ -116,12 +131,8 @@ definePageMeta({ layout: 'accounting' })
                 placeholder="Cari deskripsi, kategori..."
                 class="w-64"
               />
-              <UFormField label="Dari Tanggal">
-                <UInput v-model="dateFrom" type="date" />
-              </UFormField>
-              <UFormField label="Sampai Tanggal">
-                <UInput v-model="dateTo" type="date" />
-              </UFormField>
+              <HomeDateRangePicker v-model="range" />
+
               <UButton
                 icon="i-lucide-search"
                 :loading="pending"
@@ -153,7 +164,12 @@ definePageMeta({ layout: 'accounting' })
                 <p class="text-sm text-neutral-500 dark:text-neutral-400">
                   Arus Kas Bersih
                 </p>
-                <p class="text-2xl font-bold" :class="cashflow.net_cashflow >= 0 ? 'text-success' : 'text-error'">
+                <p
+                  class="text-2xl font-bold"
+                  :class="
+                    cashflow.net_cashflow >= 0 ? 'text-success' : 'text-error'
+                  "
+                >
                   {{ formatCurrency(cashflow.net_cashflow) }}
                 </p>
               </UCard>
@@ -169,7 +185,14 @@ definePageMeta({ layout: 'accounting' })
                 <p class="text-sm text-neutral-500 dark:text-neutral-400">
                   Arus Kas Operasi
                 </p>
-                <p class="text-2xl font-bold" :class="cashflow.operating.total >= 0 ? 'text-success' : 'text-error'">
+                <p
+                  class="text-2xl font-bold"
+                  :class="
+                    cashflow.operating.total >= 0
+                      ? 'text-success'
+                      : 'text-error'
+                  "
+                >
                   {{ formatCurrency(cashflow.operating.total) }}
                 </p>
               </UCard>
@@ -180,7 +203,14 @@ definePageMeta({ layout: 'accounting' })
               <template #header>
                 <div class="flex items-center justify-between">
                   <span class="font-semibold">Arus Kas Operasi</span>
-                  <span class="font-bold text-lg" :class="cashflow.operating.total >= 0 ? 'text-success' : 'text-error'">
+                  <span
+                    class="font-bold text-lg"
+                    :class="
+                      cashflow.operating.total >= 0
+                        ? 'text-success'
+                        : 'text-error'
+                    "
+                  >
                     {{ formatCurrency(cashflow.operating.total) }}
                   </span>
                 </div>
@@ -193,7 +223,7 @@ definePageMeta({ layout: 'accounting' })
                   thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
                   tbody: '[&>tr]:last:[&>td]:border-b-0',
                   th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-                  td: 'border-b border-default'
+                  td: 'border-b border-default',
                 }"
               />
               <div
@@ -220,7 +250,9 @@ definePageMeta({ layout: 'accounting' })
                 <template #header>
                   <div class="flex items-center justify-between">
                     <span class="font-semibold">Arus Kas Investasi</span>
-                    <span class="font-bold text-lg">{{ formatCurrency(cashflow.investing.total) }}</span>
+                    <span class="font-bold text-lg">{{
+                      formatCurrency(cashflow.investing.total)
+                    }}</span>
                   </div>
                 </template>
                 <p class="py-6 text-center text-sm text-neutral-500">
@@ -231,7 +263,9 @@ definePageMeta({ layout: 'accounting' })
                 <template #header>
                   <div class="flex items-center justify-between">
                     <span class="font-semibold">Arus Kas Pendanaan</span>
-                    <span class="font-bold text-lg">{{ formatCurrency(cashflow.financing.total) }}</span>
+                    <span class="font-bold text-lg">{{
+                      formatCurrency(cashflow.financing.total)
+                    }}</span>
                   </div>
                 </template>
                 <p class="py-6 text-center text-sm text-neutral-500">

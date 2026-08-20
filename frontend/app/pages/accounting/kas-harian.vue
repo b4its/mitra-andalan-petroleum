@@ -1,124 +1,154 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import type { ExportColumn } from '~/composables/useExport'
-import type { DailyCashResponse, DailyCashRow, AccountingAccount } from '~/types/accounting'
+import { h } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+import type { ExportColumn } from "~/composables/useExport";
+import type {
+  DailyCashResponse,
+  DailyCashRow,
+  AccountingAccount,
+} from "~/types/accounting";
+import type { RangeDate } from "~/types";
 
-const { get } = useApi()
-const { toCSV, toExcel, toPDF } = useExport()
+const { get } = useApi();
+const { toCSV, toExcel, toPDF } = useExport();
 
-const dateFrom = ref('')
-const dateTo = ref('')
-const search = ref('')
-const debouncedSearch = refDebounced(search, 300)
+const range = ref<RangeDate>({
+  start: new Date(Date.now() - 30 * 86400000),
+  end: new Date(),
+});
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
 
-const accountFilters = ref<string[]>([])
+const accountFilters = ref<string[]>([]);
 const { data: accounts } = await useAsyncData(
-  'accounting-accounts-options-kas-harian',
-  () => get<AccountingAccount[]>('/accounting/accounts'),
-  { default: () => [], server: false }
-)
-const accountItems = computed(() => accounts.value.map(a => ({ label: `${a.code} · ${a.name}`, value: a.id })))
+  "accounting-accounts-options-kas-harian",
+  () => get<AccountingAccount[]>("/accounting/accounts"),
+  { default: () => [], server: false },
+);
+const accountItems = computed(() =>
+  accounts.value.map((a) => ({ label: `${a.code} · ${a.name}`, value: a.id })),
+);
 
 const exportColumns: ExportColumn<DailyCashRow>[] = [
-  { header: 'Tanggal', accessor: (row: DailyCashRow) => formatDate(row.entry_date) },
-  { header: 'Deskripsi', accessor: (row: DailyCashRow) => row.description },
-  { header: 'Akun', accessor: (row: DailyCashRow) => `${row.account_code} · ${row.account_name}` },
-  { header: 'Debit', accessor: (row: DailyCashRow) => row.debit },
-  { header: 'Kredit', accessor: (row: DailyCashRow) => row.credit },
-  { header: 'Saldo', accessor: (row: DailyCashRow) => row.balance }
-]
+  {
+    header: "Tanggal",
+    accessor: (row: DailyCashRow) => formatDate(row.entry_date),
+  },
+  { header: "Deskripsi", accessor: (row: DailyCashRow) => row.description },
+  {
+    header: "Akun",
+    accessor: (row: DailyCashRow) =>
+      `${row.account_code} · ${row.account_name}`,
+  },
+  { header: "Debit", accessor: (row: DailyCashRow) => row.debit },
+  { header: "Kredit", accessor: (row: DailyCashRow) => row.credit },
+  { header: "Saldo", accessor: (row: DailyCashRow) => row.balance },
+];
 
-function onExport(format: 'excel' | 'pdf' | 'csv') {
-  if (!data.value) return
-  const filename = `kas-harian-${new Date().toISOString().slice(0, 10)}`
+function onExport(format: "excel" | "pdf" | "csv") {
+  if (!data.value) return;
+  const filename = `kas-harian-${new Date().toISOString().slice(0, 10)}`;
   const totals = [
-    { label: 'Saldo Awal', value: data.value.opening_balance },
-    { label: 'Saldo Akhir', value: data.value.closing_balance }
-  ]
-  if (format === 'excel') toExcel(filename, 'Kas Harian', exportColumns, data.value.rows)
-  else if (format === 'pdf') toPDF(filename, 'Kas Harian', exportColumns, data.value.rows, { totals })
-  else toCSV(filename, exportColumns, data.value.rows)
+    { label: "Saldo Awal", value: data.value.opening_balance },
+    { label: "Saldo Akhir", value: data.value.closing_balance },
+  ];
+  if (format === "excel")
+    toExcel(filename, "Kas Harian", exportColumns, data.value.rows);
+  else if (format === "pdf")
+    toPDF(filename, "Kas Harian", exportColumns, data.value.rows, { totals });
+  else toCSV(filename, exportColumns, data.value.rows);
 }
 
 const { data, refresh, pending } = await useAsyncData(
-  'accounting-daily-cash',
+  "accounting-daily-cash",
   async () => {
-    const params: Record<string, string | string[]> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    if (accountFilters.value.length) params.account_ids = accountFilters.value
-    return get<DailyCashResponse>('/accounting/daily-cash', params)
+    const params: Record<string, string | string[]> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    if (accountFilters.value.length) params.account_ids = accountFilters.value;
+    return get<DailyCashResponse>("/accounting/daily-cash", params);
   },
-  { default: () => null, watch: [dateFrom, dateTo, accountFilters], server: false }
-)
+  { default: () => null, watch: [range, accountFilters], server: false },
+);
 
 const filteredData = computed(() => {
-  if (!data.value) return []
-  if (!debouncedSearch.value) return data.value.rows
-  const q = debouncedSearch.value.toLowerCase()
+  if (!data.value) return [];
+  if (!debouncedSearch.value) return data.value.rows;
+  const q = debouncedSearch.value.toLowerCase();
   return data.value.rows.filter((item: DailyCashRow) =>
-    Object.values(item).some(v => String(v).toLowerCase().includes(q))
-  )
-})
+    Object.values(item).some((v) => String(v).toLowerCase().includes(q)),
+  );
+});
 
 // ── Pagination (5 per halaman) ────────────────────────────────
-const page = ref(1)
-const PAGE_SIZE = 5
+const page = ref(1);
+const PAGE_SIZE = 5;
 const pagedData = computed(() => {
-  const start = (page.value - 1) * PAGE_SIZE
-  return filteredData.value.slice(start, start + PAGE_SIZE)
-})
-watch([debouncedSearch, dateFrom, dateTo, accountFilters], () => {
-  page.value = 1
-})
+  const start = (page.value - 1) * PAGE_SIZE;
+  return filteredData.value.slice(start, start + PAGE_SIZE);
+});
+watch([debouncedSearch, range, accountFilters], () => {
+  page.value = 1;
+});
 
 const columns: TableColumn<DailyCashRow>[] = [
   {
-    accessorKey: 'entry_date',
-    header: 'Tanggal',
-    cell: ({ row }) => formatDate(row.getValue('entry_date'))
+    accessorKey: "entry_date",
+    header: "Tanggal",
+    cell: ({ row }) => formatDate(row.getValue("entry_date")),
   },
   {
-    accessorKey: 'description',
-    header: 'Deskripsi',
+    accessorKey: "description",
+    header: "Deskripsi",
     cell: ({ row }) => {
-      const desc = row.getValue('description') as string
-      return h('span', { class: 'truncate block max-w-72' }, desc)
-    }
+      const desc = row.getValue("description") as string;
+      return h("span", { class: "truncate block max-w-72" }, desc);
+    },
   },
   {
-    accessorKey: 'account_code',
-    header: 'Akun',
-    cell: ({ row }) => `${row.original.account_code} · ${row.original.account_name}`
+    accessorKey: "account_code",
+    header: "Akun",
+    cell: ({ row }) =>
+      `${row.original.account_code} · ${row.original.account_name}`,
   },
   {
-    accessorKey: 'debit',
-    header: 'Debit (Masuk)',
-    meta: { class: { th: 'text-right', td: 'text-right' } },
+    accessorKey: "debit",
+    header: "Debit (Masuk)",
+    meta: { class: { th: "text-right", td: "text-right" } },
     cell: ({ row }) => {
-      const val = Number(row.getValue('debit'))
-      return val > 0 ? h('span', { class: 'text-success font-medium' }, formatCurrency(val)) : '-'
-    }
+      const val = Number(row.getValue("debit"));
+      return val > 0
+        ? h("span", { class: "text-success font-medium" }, formatCurrency(val))
+        : "-";
+    },
   },
   {
-    accessorKey: 'credit',
-    header: 'Kredit (Keluar)',
-    meta: { class: { th: 'text-right', td: 'text-right' } },
+    accessorKey: "credit",
+    header: "Kredit (Keluar)",
+    meta: { class: { th: "text-right", td: "text-right" } },
     cell: ({ row }) => {
-      const val = Number(row.getValue('credit'))
-      return val > 0 ? h('span', { class: 'text-error font-medium' }, formatCurrency(val)) : '-'
-    }
+      const val = Number(row.getValue("credit"));
+      return val > 0
+        ? h("span", { class: "text-error font-medium" }, formatCurrency(val))
+        : "-";
+    },
   },
   {
-    accessorKey: 'balance',
-    header: 'Saldo',
-    meta: { class: { th: 'text-right', td: 'text-right' } },
-    cell: ({ row }) => h('span', { class: 'font-semibold' }, formatCurrency(Number(row.getValue('balance'))))
-  }
-]
+    accessorKey: "balance",
+    header: "Saldo",
+    meta: { class: { th: "text-right", td: "text-right" } },
+    cell: ({ row }) =>
+      h(
+        "span",
+        { class: "font-semibold" },
+        formatCurrency(Number(row.getValue("balance"))),
+      ),
+  },
+];
 
-definePageMeta({ layout: 'accounting' })
+definePageMeta({ layout: "accounting" });
 </script>
 
 <template>
@@ -130,9 +160,7 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">
-              Kas Harian
-            </p>
+            <p class="text-base font-semibold">Kas Harian</p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Mutasi kas/bank harian dengan saldo berjalan
             </p>
@@ -163,28 +191,31 @@ definePageMeta({ layout: 'accounting' })
                   placeholder="Akun Kas/Bank"
                   class="w-64"
                 />
-                <UFormField label="Dari Tanggal">
-                  <UInput v-model="dateFrom" type="date" />
-                </UFormField>
-                <UFormField label="Sampai Tanggal">
-                  <UInput v-model="dateTo" type="date" />
-                </UFormField>
-                <UButton
-                  icon="i-lucide-search"
-                  :loading="pending"
-                  @click="() => refresh()"
-                >
-                  Tampilkan
-                </UButton>
+                <HomeDateRangePicker v-model="range" />
               </div>
               <div class="flex flex-wrap justify-end gap-2">
                 <UDropdownMenu
                   :items="[
                     { type: 'label', label: 'Ekspor Data' },
                     { type: 'separator' },
-                    { label: 'Ekspor ke Excel', icon: 'i-lucide-file-spreadsheet', disabled: !data, onSelect: () => onExport('excel') },
-                    { label: 'Ekspor ke PDF', icon: 'i-lucide-file-text', disabled: !data, onSelect: () => onExport('pdf') },
-                    { label: 'Ekspor ke CSV', icon: 'i-lucide-file-down', disabled: !data, onSelect: () => onExport('csv') }
+                    {
+                      label: 'Ekspor ke Excel',
+                      icon: 'i-lucide-file-spreadsheet',
+                      disabled: !data,
+                      onSelect: () => onExport('excel'),
+                    },
+                    {
+                      label: 'Ekspor ke PDF',
+                      icon: 'i-lucide-file-text',
+                      disabled: !data,
+                      onSelect: () => onExport('pdf'),
+                    },
+                    {
+                      label: 'Ekspor ke CSV',
+                      icon: 'i-lucide-file-down',
+                      disabled: !data,
+                      onSelect: () => onExport('csv'),
+                    },
                   ]"
                 >
                   <UButton
@@ -252,7 +283,7 @@ definePageMeta({ layout: 'accounting' })
                   thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
                   tbody: '[&>tr]:last:[&>td]:border-b-0',
                   th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-                  td: 'border-b border-default'
+                  td: 'border-b border-default',
                 }"
               />
               <div

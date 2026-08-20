@@ -1,38 +1,61 @@
 <script setup lang="ts">
-import type { BalanceSheetAccount, BalanceSheetResponse } from '~/types/accounting'
+import type { RangeDate } from "~/types";
+import type {
+  BalanceSheetAccount,
+  BalanceSheetResponse,
+} from "~/types/accounting";
 
-const { get } = useApi()
+const { get } = useApi();
 
-const dateFrom = ref('')
-const dateTo = ref('')
-const search = ref('')
-const debouncedSearch = refDebounced(search, 300)
+const range = ref<RangeDate>({
+  start: new Date(Date.now() - 30 * 86400000),
+  end: new Date(),
+});
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
 
-const { data: neraca, refresh, pending } = await useAsyncData(
-  'accounting-neraca',
+const {
+  data: neraca,
+  refresh,
+  pending,
+} = await useAsyncData(
+  "accounting-neraca",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<BalanceSheetResponse>('/accounting/balance-sheet', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<BalanceSheetResponse>("/accounting/balance-sheet", params);
   },
-  { default: () => null, server: false }
-)
+  { default: () => null, server: false },
+);
 
 const isBalanced = computed(() => {
-  if (!neraca.value) return true
-  return Math.abs(neraca.value.total_assets - (neraca.value.total_liabilities + neraca.value.total_equity)) < 1
-})
+  if (!neraca.value) return true;
+  return (
+    Math.abs(
+      neraca.value.total_assets -
+        (neraca.value.total_liabilities + neraca.value.total_equity),
+    ) < 1
+  );
+});
 
 function filterAccounts(accounts: BalanceSheetAccount[]) {
-  if (!debouncedSearch.value) return accounts
-  const q = debouncedSearch.value.toLowerCase()
-  return accounts.filter(a =>
-    a.account_code.toLowerCase().includes(q) || a.account_name.toLowerCase().includes(q)
-  )
+  if (!debouncedSearch.value) return accounts;
+  const q = debouncedSearch.value.toLowerCase();
+  return accounts.filter(
+    (a) =>
+      a.account_code.toLowerCase().includes(q) ||
+      a.account_name.toLowerCase().includes(q),
+  );
 }
 
-definePageMeta({ layout: 'accounting' })
+watch([debouncedSearch, range], () => {
+  refresh();
+});
+
+definePageMeta({ layout: "accounting" });
 </script>
 
 <template>
@@ -44,9 +67,7 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">
-              Neraca (Balance Sheet)
-            </p>
+            <p class="text-base font-semibold">Neraca (Balance Sheet)</p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Laporan posisi keuangan: Aset, Kewajiban, dan Ekuitas
             </p>
@@ -66,19 +87,7 @@ definePageMeta({ layout: 'accounting' })
                 placeholder="Cari kode atau nama akun..."
                 class="w-64"
               />
-              <UFormField label="Dari Tanggal">
-                <UInput v-model="dateFrom" type="date" />
-              </UFormField>
-              <UFormField label="Sampai Tanggal">
-                <UInput v-model="dateTo" type="date" />
-              </UFormField>
-              <UButton
-                icon="i-lucide-search"
-                :loading="pending"
-                @click="() => refresh()"
-              >
-                Tampilkan
-              </UButton>
+              <HomeDateRangePicker v-model="range" />
             </div>
           </UCard>
 
@@ -95,13 +104,23 @@ definePageMeta({ layout: 'accounting' })
             <UCard v-if="!isBalanced" color="warning" variant="soft">
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-alert-triangle" class="size-5" />
-                <span class="text-sm">Neraca tidak balance: Aset ({{ formatCurrency(neraca.total_assets) }}) &ne; Kewajiban + Ekuitas ({{ formatCurrency(neraca.total_liabilities + neraca.total_equity) }})</span>
+                <span class="text-sm"
+                  >Neraca tidak balance: Aset ({{
+                    formatCurrency(neraca.total_assets)
+                  }}) &ne; Kewajiban + Ekuitas ({{
+                    formatCurrency(
+                      neraca.total_liabilities + neraca.total_equity,
+                    )
+                  }})</span
+                >
               </div>
             </UCard>
             <UCard v-else color="success" variant="soft">
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-check-circle" class="size-5" />
-                <span class="text-sm">Neraca balance: Aset = Kewajiban + Ekuitas</span>
+                <span class="text-sm"
+                  >Neraca balance: Aset = Kewajiban + Ekuitas</span
+                >
               </div>
             </UCard>
 
@@ -111,7 +130,9 @@ definePageMeta({ layout: 'accounting' })
                 <template #header>
                   <div class="flex items-center justify-between">
                     <span class="font-semibold text-info">Aset</span>
-                    <span class="font-bold text-lg">{{ formatCurrency(neraca.assets.total) }}</span>
+                    <span class="font-bold text-lg">{{
+                      formatCurrency(neraca.assets.total)
+                    }}</span>
                   </div>
                 </template>
                 <div class="flex flex-col divide-y divide-default">
@@ -120,10 +141,17 @@ definePageMeta({ layout: 'accounting' })
                     :key="acc.account_id"
                     class="flex items-center justify-between py-2 text-sm"
                   >
-                    <span class="text-neutral-500 dark:text-neutral-400">{{ acc.account_code }} - {{ acc.account_name }}</span>
-                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                    <span class="text-neutral-500 dark:text-neutral-400"
+                      >{{ acc.account_code }} - {{ acc.account_name }}</span
+                    >
+                    <span class="font-medium">{{
+                      formatCurrency(acc.balance)
+                    }}</span>
                   </div>
-                  <div v-if="!neraca.assets.accounts.length" class="py-4 text-center text-sm text-neutral-500">
+                  <div
+                    v-if="!neraca.assets.accounts.length"
+                    class="py-4 text-center text-sm text-neutral-500"
+                  >
                     Belum ada data aset
                   </div>
                 </div>
@@ -134,7 +162,9 @@ definePageMeta({ layout: 'accounting' })
                 <template #header>
                   <div class="flex items-center justify-between">
                     <span class="font-semibold text-warning">Kewajiban</span>
-                    <span class="font-bold text-lg">{{ formatCurrency(neraca.liabilities.total) }}</span>
+                    <span class="font-bold text-lg">{{
+                      formatCurrency(neraca.liabilities.total)
+                    }}</span>
                   </div>
                 </template>
                 <div class="flex flex-col divide-y divide-default">
@@ -143,10 +173,17 @@ definePageMeta({ layout: 'accounting' })
                     :key="acc.account_id"
                     class="flex items-center justify-between py-2 text-sm"
                   >
-                    <span class="text-neutral-500 dark:text-neutral-400">{{ acc.account_code }} - {{ acc.account_name }}</span>
-                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                    <span class="text-neutral-500 dark:text-neutral-400"
+                      >{{ acc.account_code }} - {{ acc.account_name }}</span
+                    >
+                    <span class="font-medium">{{
+                      formatCurrency(acc.balance)
+                    }}</span>
                   </div>
-                  <div v-if="!neraca.liabilities.accounts.length" class="py-4 text-center text-sm text-neutral-500">
+                  <div
+                    v-if="!neraca.liabilities.accounts.length"
+                    class="py-4 text-center text-sm text-neutral-500"
+                  >
                     Belum ada data kewajiban
                   </div>
                 </div>
@@ -157,7 +194,9 @@ definePageMeta({ layout: 'accounting' })
                 <template #header>
                   <div class="flex items-center justify-between">
                     <span class="font-semibold text-primary">Ekuitas</span>
-                    <span class="font-bold text-lg">{{ formatCurrency(neraca.equity.total) }}</span>
+                    <span class="font-bold text-lg">{{
+                      formatCurrency(neraca.equity.total)
+                    }}</span>
                   </div>
                 </template>
                 <div class="flex flex-col divide-y divide-default">
@@ -166,10 +205,17 @@ definePageMeta({ layout: 'accounting' })
                     :key="acc.account_id"
                     class="flex items-center justify-between py-2 text-sm"
                   >
-                    <span class="text-neutral-500 dark:text-neutral-400">{{ acc.account_code }} - {{ acc.account_name }}</span>
-                    <span class="font-medium">{{ formatCurrency(acc.balance) }}</span>
+                    <span class="text-neutral-500 dark:text-neutral-400"
+                      >{{ acc.account_code }} - {{ acc.account_name }}</span
+                    >
+                    <span class="font-medium">{{
+                      formatCurrency(acc.balance)
+                    }}</span>
                   </div>
-                  <div v-if="!neraca.equity.accounts.length" class="py-4 text-center text-sm text-neutral-500">
+                  <div
+                    v-if="!neraca.equity.accounts.length"
+                    class="py-4 text-center text-sm text-neutral-500"
+                  >
                     Belum ada data ekuitas
                   </div>
                 </div>

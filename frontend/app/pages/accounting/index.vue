@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
+import { h } from "vue";
+import type { TableColumn } from "@nuxt/ui";
 import type {
   AccountingAccount,
   AccountingJournal,
@@ -9,361 +9,402 @@ import type {
   CashflowResponse,
   CostRecapResponse,
   MonitoringResponse,
-  BankInterestResponse
-} from '~/types/accounting'
-import AdminBarChart from '~/components/admin/charts/AdminBarChart.vue'
-import AdminPieChart from '~/components/admin/charts/AdminPieChart.vue'
+  BankInterestResponse,
+} from "~/types/accounting";
+import AdminBarChart from "~/components/admin/charts/AdminBarChart.vue";
+import AdminPieChart from "~/components/admin/charts/AdminPieChart.vue";
+import type { RangeDate } from "~/types";
 
-const { get } = useApi()
-const toast = useToast()
+const { get } = useApi();
+const toast = useToast();
 
 // ── Filter ────────────────────────────────────────────────────
-const dateFrom = ref('')
-const dateTo = ref('')
-const accountFilters = ref<string[]>([])
+const range = ref<RangeDate>({
+  start: new Date(Date.now() - 30 * 86400000),
+  end: new Date(),
+});
+const accountFilters = ref<string[]>([]);
 const { data: accountOptions } = await useAsyncData(
-  'accounting-dash-account-options',
-  () => get<AccountingAccount[]>('/accounting/accounts', { include_inactive: true }),
-  { default: () => [], server: false }
-)
+  "accounting-dash-account-options",
+  () =>
+    get<AccountingAccount[]>("/accounting/accounts", {
+      include_inactive: true,
+    }),
+  { default: () => [], server: false },
+);
 const accountItems = computed(() =>
-  accountOptions.value.map(a => ({ label: `${a.code} · ${a.name}`, value: a.id }))
-)
+  accountOptions.value.map((a) => ({
+    label: `${a.code} · ${a.name}`,
+    value: a.id,
+  })),
+);
 
 function totalDebit(journal: AccountingJournal): number {
-  return journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0)
+  return journal.lines.reduce((sum, line) => sum + (line.debit || 0), 0);
 }
 
-const { data: summary, refresh, pending } = await useAsyncData(
-  'accounting-summary',
+const {
+  data: summary,
+  refresh,
+  pending,
+} = await useAsyncData(
+  "accounting-summary",
   async () => {
-    const params: Record<string, string | number | string[]> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<AccountingSummary>('/accounting/summary', params)
+    const params: Record<string, string | number | string[]> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<AccountingSummary>("/accounting/summary", params);
   },
-  { default: () => null, server: false, watch: [dateFrom, dateTo] }
-)
+  { default: () => null, server: false, watch: [range] },
+);
 
 const { data: dailyCash } = await useAsyncData(
-  'accounting-dash-daily-cash',
+  "accounting-dash-daily-cash",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<DailyCashResponse>('/accounting/daily-cash', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<DailyCashResponse>("/accounting/daily-cash", params);
   },
-  { default: () => null, server: false, watch: [dateFrom, dateTo] }
-)
+  { default: () => null, server: false, watch: [range] },
+);
 
 const { data: cashflow } = await useAsyncData(
-  'accounting-dash-cashflow',
+  "accounting-dash-cashflow",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<CashflowResponse>('/accounting/cashflow', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<CashflowResponse>("/accounting/cashflow", params);
   },
-  { default: () => null, server: false, watch: [dateFrom, dateTo] }
-)
+  { default: () => null, server: false, watch: [range] },
+);
 
 const { data: costRecap } = await useAsyncData(
-  'accounting-dash-cost-recap',
+  "accounting-dash-cost-recap",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<CostRecapResponse>('/accounting/cost-recap', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<CostRecapResponse>("/accounting/cost-recap", params);
   },
-  { default: () => null, server: false, watch: [dateFrom, dateTo] }
-)
+  { default: () => null, server: false, watch: [range] },
+);
 
 const { data: monitoring } = await useAsyncData(
-  'accounting-dash-monitoring',
+  "accounting-dash-monitoring",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<MonitoringResponse>('/accounting/monitoring', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<MonitoringResponse>("/accounting/monitoring", params);
   },
-  { default: () => null, server: false, watch: [dateFrom, dateTo] }
-)
+  { default: () => null, server: false, watch: [range] },
+);
 
 const { data: bankInterest } = await useAsyncData(
-  'accounting-dash-bank-interest',
+  "accounting-dash-bank-interest",
   async () => {
-    const params: Record<string, string> = {}
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    return get<BankInterestResponse>('/accounting/bank-interest', params)
+    const params: Record<string, string> = {};
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    return get<BankInterestResponse>("/accounting/bank-interest", params);
   },
-  { default: () => null, server: false, watch: [dateFrom, dateTo] }
-)
+  { default: () => null, server: false, watch: [range] },
+);
 
 const { data: journals } = await useAsyncData(
-  'accounting-dash-journals',
+  "accounting-dash-journals",
   async () => {
     const params: Record<string, string | number | string[]> = {
       page: 1,
-      page_size: 50
-    }
-    if (dateFrom.value) params.date_from = dateFrom.value
-    if (dateTo.value) params.date_to = dateTo.value
-    if (accountFilters.value.length) params.account_ids = accountFilters.value
-    const res = await get<{ items: AccountingJournal[] }>('/accounting/journal', params)
-    return res.items || []
+      page_size: 50,
+    };
+    if (range.value.start)
+      params.date_from = range.value.start.toISOString().split("T")[0] || "";
+    if (range.value.end)
+      params.date_to = range.value.end.toISOString().split("T")[0] || "";
+    if (accountFilters.value.length) params.account_ids = accountFilters.value;
+    const res = await get<{ items: AccountingJournal[] }>(
+      "/accounting/journal",
+      params,
+    );
+    return res.items || [];
   },
-  { default: () => [], server: false, watch: [dateFrom, dateTo, accountFilters] }
-)
+  { default: () => [], server: false, watch: [range, accountFilters] },
+);
 
 // ── Pagination (5 per halaman) ────────────────────────────────
-const journalPage = ref(1)
-const JOURNAL_PAGE_SIZE = 5
+const journalPage = ref(1);
+const JOURNAL_PAGE_SIZE = 5;
 const pagedJournals = computed(() => {
-  const start = (journalPage.value - 1) * JOURNAL_PAGE_SIZE
-  return journals.value.slice(start, start + JOURNAL_PAGE_SIZE)
-})
-watch([dateFrom, dateTo, accountFilters], () => {
-  journalPage.value = 1
-})
+  const start = (journalPage.value - 1) * JOURNAL_PAGE_SIZE;
+  return journals.value.slice(start, start + JOURNAL_PAGE_SIZE);
+});
+watch([range, accountFilters], () => {
+  journalPage.value = 1;
+});
 
 // ── Bento cards ──────────────────────────────────────────────
 const cards = computed(() => [
   {
-    title: 'Total Pemasukan',
+    title: "Total Pemasukan",
     value: formatCurrency(summary.value?.total_income ?? 0),
-    icon: 'i-lucide-trending-up',
-    color: 'success' as const,
-    to: '/accounting/pemasukan'
+    icon: "i-lucide-trending-up",
+    color: "success" as const,
+    to: "/accounting/pemasukan",
   },
   {
-    title: 'Total Pengeluaran',
+    title: "Total Pengeluaran",
     value: formatCurrency(summary.value?.total_expense ?? 0),
-    icon: 'i-lucide-trending-down',
-    color: 'error' as const,
-    to: '/accounting/pengeluaran'
+    icon: "i-lucide-trending-down",
+    color: "error" as const,
+    to: "/accounting/pengeluaran",
   },
   {
-    title: 'Laba Bersih',
+    title: "Laba Bersih",
     value: formatCurrency(summary.value?.net_income ?? 0),
-    icon: 'i-lucide-wallet',
-    color: 'primary' as const,
-    to: '/accounting/jurnal-umum'
+    icon: "i-lucide-wallet",
+    color: "primary" as const,
+    to: "/accounting/jurnal-umum",
   },
   {
-    title: 'Saldo Kas & Bank',
+    title: "Saldo Kas & Bank",
     value: formatCurrency(summary.value?.cash_balance ?? 0),
-    icon: 'i-lucide-circle-dollar-sign',
-    color: 'info' as const,
-    to: '/accounting/buku-besar'
-  }
-])
+    icon: "i-lucide-circle-dollar-sign",
+    color: "info" as const,
+    to: "/accounting/buku-besar",
+  },
+]);
 
 const countCards = computed(() => [
   {
-    title: 'Jumlah Jurnal',
+    title: "Jumlah Jurnal",
     value: summary.value?.journal_count ?? 0,
-    icon: 'i-lucide-book-open'
+    icon: "i-lucide-book-open",
   },
   {
-    title: 'Jumlah Akun',
+    title: "Jumlah Akun",
     value: summary.value?.account_count ?? 0,
-    icon: 'i-lucide-list-tree'
+    icon: "i-lucide-list-tree",
   },
   {
-    title: 'Pemasukan',
+    title: "Pemasukan",
     value: summary.value?.income_count ?? 0,
-    icon: 'i-lucide-arrow-down-to-line'
+    icon: "i-lucide-arrow-down-to-line",
   },
   {
-    title: 'Pengeluaran',
+    title: "Pengeluaran",
     value: summary.value?.expense_count ?? 0,
-    icon: 'i-lucide-arrow-up-from-line'
-  }
-])
+    icon: "i-lucide-arrow-up-from-line",
+  },
+]);
 
 // ── Grafik ───────────────────────────────────────────────────
-const incomeExpenseLabels = ['Pemasukan', 'Pengeluaran']
+const incomeExpenseLabels = ["Pemasukan", "Pengeluaran"];
 const incomeExpenseValues = computed(() => {
-  const s = summary.value
-  return s ? [s.total_income, s.total_expense] : []
-})
+  const s = summary.value;
+  return s ? [s.total_income, s.total_expense] : [];
+});
 
 const typeLabels: Record<string, string> = {
-  asset: 'Aset',
-  liability: 'Kewajiban',
-  equity: 'Ekuitas',
-  revenue: 'Pendapatan',
-  expense: 'Beban'
-}
+  asset: "Aset",
+  liability: "Kewajiban",
+  equity: "Ekuitas",
+  revenue: "Pendapatan",
+  expense: "Beban",
+};
 const typeColors: Record<string, string> = {
-  asset: 'rgba(59,130,246,0.8)',
-  liability: 'rgba(245,158,11,0.8)',
-  equity: 'rgba(16,185,129,0.8)',
-  revenue: 'rgba(16,185,129,0.8)',
-  expense: 'rgba(239,68,68,0.8)'
-}
+  asset: "rgba(59,130,246,0.8)",
+  liability: "rgba(245,158,11,0.8)",
+  equity: "rgba(16,185,129,0.8)",
+  revenue: "rgba(16,185,129,0.8)",
+  expense: "rgba(239,68,68,0.8)",
+};
 
 const accountDistLabels = computed(() => {
-  const list: AccountingAccount[] = accountOptions.value || []
-  const map = new Map<string, number>()
-  for (const acc of list) map.set(acc.type, (map.get(acc.type) || 0) + 1)
-  return [...map.keys()].map(k => typeLabels[k] ?? k)
-})
+  const list: AccountingAccount[] = accountOptions.value || [];
+  const map = new Map<string, number>();
+  for (const acc of list) map.set(acc.type, (map.get(acc.type) || 0) + 1);
+  return [...map.keys()].map((k) => typeLabels[k] ?? k);
+});
 const accountDistValues = computed(() => {
-  const list: AccountingAccount[] = accountOptions.value || []
-  const map = new Map<string, number>()
-  for (const acc of list) map.set(acc.type, (map.get(acc.type) || 0) + 1)
-  return [...map.values()]
-})
+  const list: AccountingAccount[] = accountOptions.value || [];
+  const map = new Map<string, number>();
+  for (const acc of list) map.set(acc.type, (map.get(acc.type) || 0) + 1);
+  return [...map.values()];
+});
 const accountDistColors = computed(() => {
-  const list: AccountingAccount[] = accountOptions.value || []
-  const map = new Map<string, number>()
-  for (const acc of list) map.set(acc.type, (map.get(acc.type) || 0) + 1)
-  return [...map.keys()].map(k => typeColors[k] ?? 'rgba(100,116,139,0.8)')
-})
+  const list: AccountingAccount[] = accountOptions.value || [];
+  const map = new Map<string, number>();
+  for (const acc of list) map.set(acc.type, (map.get(acc.type) || 0) + 1);
+  return [...map.keys()].map((k) => typeColors[k] ?? "rgba(100,116,139,0.8)");
+});
 
 const cashflowChart = computed(() => {
-  const c = cashflow.value
-  if (!c) return null
+  const c = cashflow.value;
+  if (!c) return null;
   return {
-    labels: ['Operasi', 'Investasi', 'Pendanaan'],
+    labels: ["Operasi", "Investasi", "Pendanaan"],
     datasets: [
       {
-        label: 'Arus Kas',
+        label: "Arus Kas",
         data: [c.operating.total, c.investing.total, c.financing.total],
         backgroundColor: [
-          c.operating.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)',
-          c.investing.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)',
-          c.financing.total >= 0 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)'
-        ]
-      }
-    ]
-  }
-})
+          c.operating.total >= 0
+            ? "rgba(16,185,129,0.8)"
+            : "rgba(239,68,68,0.8)",
+          c.investing.total >= 0
+            ? "rgba(16,185,129,0.8)"
+            : "rgba(239,68,68,0.8)",
+          c.financing.total >= 0
+            ? "rgba(16,185,129,0.8)"
+            : "rgba(239,68,68,0.8)",
+        ],
+      },
+    ],
+  };
+});
 
 const costRecapChart = computed(() => {
-  const groups = costRecap.value?.groups || []
-  if (!groups.length) return null
-  const top = [...groups].sort((a, b) => b.total - a.total).slice(0, 8)
+  const groups = costRecap.value?.groups || [];
+  if (!groups.length) return null;
+  const top = [...groups].sort((a, b) => b.total - a.total).slice(0, 8);
   return {
-    labels: top.map(g => `${g.account_code} · ${g.account_name}`),
+    labels: top.map((g) => `${g.account_code} · ${g.account_name}`),
     datasets: [
       {
-        label: 'Total Biaya',
-        data: top.map(g => g.total),
-        backgroundColor: 'rgba(239,68,68,0.8)'
-      }
-    ]
-  }
-})
+        label: "Total Biaya",
+        data: top.map((g) => g.total),
+        backgroundColor: "rgba(239,68,68,0.8)",
+      },
+    ],
+  };
+});
 
 const monitoringChart = computed(() => {
-  const rows = monitoring.value?.rows || []
-  if (!rows.length) return null
+  const rows = monitoring.value?.rows || [];
+  if (!rows.length) return null;
   return {
-    labels: rows.map(r => r.bulan),
+    labels: rows.map((r) => r.bulan),
     datasets: [
       {
-        label: 'Penghasilan',
-        data: rows.map(r => r.penghasilan),
-        backgroundColor: 'rgba(16,185,129,0.8)'
+        label: "Penghasilan",
+        data: rows.map((r) => r.penghasilan),
+        backgroundColor: "rgba(16,185,129,0.8)",
       },
       {
-        label: 'Operasional',
-        data: rows.map(r => r.operasional),
-        backgroundColor: 'rgba(239,68,68,0.8)'
+        label: "Operasional",
+        data: rows.map((r) => r.operasional),
+        backgroundColor: "rgba(239,68,68,0.8)",
       },
       {
-        label: 'Margin Kotor',
-        data: rows.map(r => r.gross_margin),
-        backgroundColor: 'rgba(59,130,246,0.8)'
-      }
-    ]
-  }
-})
+        label: "Margin Kotor",
+        data: rows.map((r) => r.gross_margin),
+        backgroundColor: "rgba(59,130,246,0.8)",
+      },
+    ],
+  };
+});
 
 const bankInterestChart = computed(() => {
-  const b = bankInterest.value
-  if (!b) return null
+  const b = bankInterest.value;
+  if (!b) return null;
   return {
-    labels: ['Pokok Pinjaman', 'Total Bunga', 'Total Pembayaran'],
+    labels: ["Pokok Pinjaman", "Total Bunga", "Total Pembayaran"],
     datasets: [
       {
-        label: 'Nominal',
+        label: "Nominal",
         data: [b.total_principal, b.total_interest, b.total_paid],
         backgroundColor: [
-          'rgba(59,130,246,0.8)',
-          'rgba(245,158,11,0.8)',
-          'rgba(16,185,129,0.8)'
-        ]
-      }
-    ]
-  }
-})
+          "rgba(59,130,246,0.8)",
+          "rgba(245,158,11,0.8)",
+          "rgba(16,185,129,0.8)",
+        ],
+      },
+    ],
+  };
+});
 
 const dailyCashChart = computed(() => {
-  const d = dailyCash.value
-  if (!d) return null
+  const d = dailyCash.value;
+  if (!d) return null;
   return {
-    labels: ['Saldo Awal', 'Total Masuk', 'Total Keluar', 'Saldo Akhir'],
+    labels: ["Saldo Awal", "Total Masuk", "Total Keluar", "Saldo Akhir"],
     datasets: [
       {
-        label: 'Nominal',
-        data: [d.opening_balance, d.total_debit, d.total_credit, d.closing_balance],
+        label: "Nominal",
+        data: [
+          d.opening_balance,
+          d.total_debit,
+          d.total_credit,
+          d.closing_balance,
+        ],
         backgroundColor: [
-          'rgba(100,116,139,0.8)',
-          'rgba(16,185,129,0.8)',
-          'rgba(239,68,68,0.8)',
-          'rgba(59,130,246,0.8)'
-        ]
-      }
-    ]
-  }
-})
+          "rgba(100,116,139,0.8)",
+          "rgba(16,185,129,0.8)",
+          "rgba(239,68,68,0.8)",
+          "rgba(59,130,246,0.8)",
+        ],
+      },
+    ],
+  };
+});
 
 // ── Tabel ────────────────────────────────────────────────────
 const journalColumns: TableColumn<AccountingJournal>[] = [
-  { accessorKey: 'entry_number', header: 'Nomor Jurnal' },
+  { accessorKey: "entry_number", header: "Nomor Jurnal" },
   {
-    accessorKey: 'entry_date',
-    header: 'Tanggal',
+    accessorKey: "entry_date",
+    header: "Tanggal",
     cell: ({ row }) =>
-      row.getValue('entry_date') ? formatDate(row.getValue('entry_date')) : '-'
+      row.getValue("entry_date") ? formatDate(row.getValue("entry_date")) : "-",
   },
   {
-    accessorKey: 'description',
-    header: 'Deskripsi',
+    accessorKey: "description",
+    header: "Deskripsi",
     cell: ({ row }) => {
-      const desc = row.getValue('description') as string
-      return h('div', { class: 'flex flex-col gap-0.5 min-w-0' }, [
-        h('span', { class: 'truncate max-w-64' }, desc),
+      const desc = row.getValue("description") as string;
+      return h("div", { class: "flex flex-col gap-0.5 min-w-0" }, [
+        h("span", { class: "truncate max-w-64" }, desc),
         h(
-          'span',
-          { class: 'text-xs text-muted' },
-          row.original.lines.map(l => l.account_code).join(', ')
-        )
-      ])
-    }
+          "span",
+          { class: "text-xs text-muted" },
+          row.original.lines.map((l) => l.account_code).join(", "),
+        ),
+      ]);
+    },
   },
   {
-    accessorKey: 'amount',
-    header: 'Nominal',
-    meta: { class: { th: 'text-right', td: 'text-right' } },
-    cell: ({ row }) => formatCurrency(totalDebit(row.original))
-  }
-]
+    accessorKey: "amount",
+    header: "Nominal",
+    meta: { class: { th: "text-right", td: "text-right" } },
+    cell: ({ row }) => formatCurrency(totalDebit(row.original)),
+  },
+];
 
 function onError(err: unknown) {
   toast.add({
-    title: 'Gagal',
-    description: err instanceof Error ? err.message : 'Terjadi kesalahan',
-    icon: 'i-lucide-alert-triangle',
-    color: 'error'
-  })
+    title: "Gagal",
+    description: err instanceof Error ? err.message : "Terjadi kesalahan",
+    icon: "i-lucide-alert-triangle",
+    color: "error",
+  });
 }
 
-definePageMeta({ layout: 'accounting' })
+definePageMeta({ layout: "accounting" });
 </script>
 
 <template>
@@ -375,9 +416,7 @@ definePageMeta({ layout: 'accounting' })
         </template>
         <template #title>
           <div>
-            <p class="text-base font-semibold">
-              Akuntansi
-            </p>
+            <p class="text-base font-semibold">Akuntansi</p>
             <p class="text-xs text-neutral-500 dark:text-neutral-400">
               Rekap pemasukan, pengeluaran, dan jurnal umum
             </p>
@@ -414,16 +453,10 @@ definePageMeta({ layout: 'accounting' })
           <!-- Filter -->
           <UCard>
             <div class="flex flex-col gap-3">
-              <p class="text-sm font-medium">
-                Filter Data Accounting
-              </p>
+              <p class="text-sm font-medium">Filter Data Accounting</p>
               <div class="flex flex-wrap items-end gap-3">
-                <UFormField label="Dari Tanggal">
-                  <UInput v-model="dateFrom" type="date" />
-                </UFormField>
-                <UFormField label="Sampai Tanggal">
-                  <UInput v-model="dateTo" type="date" />
-                </UFormField>
+                <HomeDateRangePicker v-model="range" />
+
                 <USelectMenu
                   v-model="accountFilters"
                   :items="accountItems"
@@ -434,24 +467,6 @@ definePageMeta({ layout: 'accounting' })
                   placeholder="Semua Akun"
                   class="w-64"
                 />
-                <UButton
-                  icon="i-lucide-search"
-                  @click="refresh().catch(onError)"
-                >
-                  Terapkan Filter
-                </UButton>
-                <UButton
-                  icon="i-lucide-rotate-ccw"
-                  color="neutral"
-                  variant="soft"
-                  @click="
-                    dateFrom = '';
-                    dateTo = '';
-                    accountFilters = []
-                  "
-                >
-                  Reset
-                </UButton>
               </div>
             </div>
           </UCard>
@@ -521,7 +536,7 @@ definePageMeta({ layout: 'accounting' })
                 thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
                 tbody: '[&>tr]:last:[&>td]:border-b-0',
                 th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-                td: 'border-b border-default'
+                td: 'border-b border-default',
               }"
             />
             <div
@@ -549,33 +564,25 @@ definePageMeta({ layout: 'accounting' })
             </template>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">
-                  Saldo Awal
-                </p>
+                <p class="text-sm text-muted">Saldo Awal</p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(dailyCash.opening_balance) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">
-                  Total Masuk
-                </p>
+                <p class="text-sm text-muted">Total Masuk</p>
                 <p class="text-xl font-bold text-success">
                   {{ formatCurrency(dailyCash.total_debit) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">
-                  Total Keluar
-                </p>
+                <p class="text-sm text-muted">Total Keluar</p>
                 <p class="text-xl font-bold text-error">
                   {{ formatCurrency(dailyCash.total_credit) }}
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
-                <p class="text-sm text-muted">
-                  Saldo Akhir
-                </p>
+                <p class="text-sm text-muted">Saldo Akhir</p>
                 <p class="text-xl font-bold">
                   {{ formatCurrency(dailyCash.closing_balance) }}
                 </p>
@@ -586,7 +593,9 @@ definePageMeta({ layout: 'accounting' })
           <!-- Grafik -->
           <div>
             <div class="mb-3 flex items-center justify-between">
-              <p class="text-sm font-semibold uppercase tracking-wide text-muted">
+              <p
+                class="text-sm font-semibold uppercase tracking-wide text-muted"
+              >
                 Grafik
               </p>
               <p class="text-xs text-muted">
@@ -609,12 +618,16 @@ definePageMeta({ layout: 'accounting' })
                       data: incomeExpenseValues,
                       backgroundColor: [
                         'rgba(16,185,129,0.8)',
-                        'rgba(239,68,68,0.8)'
-                      ]
-                    }
+                        'rgba(239,68,68,0.8)',
+                      ],
+                    },
                   ]"
                 />
-                <UEmpty v-else icon="i-lucide-chart-bar" title="Belum ada data" />
+                <UEmpty
+                  v-else
+                  icon="i-lucide-chart-bar"
+                  title="Belum ada data"
+                />
               </UCard>
 
               <UCard>
@@ -627,7 +640,11 @@ definePageMeta({ layout: 'accounting' })
                   :data="accountDistValues"
                   :background-color="accountDistColors"
                 />
-                <UEmpty v-else icon="i-lucide-chart-pie" title="Belum ada data" />
+                <UEmpty
+                  v-else
+                  icon="i-lucide-chart-pie"
+                  title="Belum ada data"
+                />
               </UCard>
 
               <UCard v-if="cashflowChart">
