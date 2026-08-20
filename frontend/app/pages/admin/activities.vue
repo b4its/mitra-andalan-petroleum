@@ -272,8 +272,7 @@ const actions = ["all", "create", "update", "delete"] as const;
               <UButton color="primary" @click="applyFilters">
                 Terapkan Filter
               </UButton>
-              <UButton
-                color="neutral"
+
               <UButton
                 color="neutral"
                 variant="ghost"
@@ -306,7 +305,6 @@ const actions = ["all", "create", "update", "delete"] as const;
           <UTable :data="activitiesData?.items ?? []">
             <template #action-cell="{ row }">
               <UBadge
-                :color="actionColors[row.original.action] ?? 'neutral'"
                 :color="actionColors[row.original.action] ?? 'neutral'"
                 variant="soft"
                 class="capitalize"
