@@ -2,7 +2,7 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from app.utils.activity_logger import log_activity
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -195,7 +195,7 @@ async def get_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat offering letter",
     description="Membuat surat penawaran baru. Field `details` bisa diisi dengan form data dari frontend (supplyPoint, fuelPrices, personInCharge, dll).",
 )
-async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = Depends(get_db)):
+async def create_offering_letter(request: Request, body: OfferingLetterCreate, db: AsyncSession = Depends(get_db)):
     customer_name = ""
     if body.customer_id:
         customer = await db.execute(select(Customer).where(Customer.id == body.customer_id))
@@ -212,6 +212,21 @@ async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = 
     db.add(ol)
     await db.flush()
     await db.refresh(ol)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="offering_letter",
+        resource_id=ol.id,
+        resource_name=ol.offering_letter_number,
+        old_data=None,
+        new_data=model_to_dict(ol),
+        details=f"Surat penawaran {ol.offering_letter_number} berhasil dibuat"
+    )
     await create_document_notification(
         db,
         title="Surat Penawaran Baru Dibuat",
@@ -229,11 +244,12 @@ async def create_offering_letter(body: OfferingLetterCreate, db: AsyncSession = 
     summary="Update offering letter",
     description="Update field tertentu pada surat penawaran (status, details, dll).",
 )
-async def update_offering_letter(id: str, body: OfferingLetterUpdate, db: AsyncSession = Depends(get_db)):
+async def update_offering_letter(request: Request, id: str, body: OfferingLetterUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
     if not ol:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(ol)
     data = body.model_dump(exclude_unset=True)
     if "customer_id" in data and data["customer_id"]:
         cust = await db.execute(select(Customer).where(Customer.id == data["customer_id"]))
@@ -245,6 +261,21 @@ async def update_offering_letter(id: str, body: OfferingLetterUpdate, db: AsyncS
         setattr(ol, key, val)
     await db.flush()
     await db.refresh(ol)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="offering_letter",
+        resource_id=ol.id,
+        resource_name=ol.offering_letter_number,
+        old_data=old_data,
+        new_data=model_to_dict(ol),
+        details=f"Data surat penawaran {ol.offering_letter_number} berhasil diperbarui"
+    )
     customer = await db.execute(select(Customer).where(Customer.id == ol.customer_id))
     c = customer.scalar_one_or_none()
     return _to_response(ol, c.name if c else "")
@@ -264,11 +295,13 @@ async def _delete_upload_files(uploads: list[Upload]):
     summary="Hapus offering letter",
     description="Menghapus surat penawaran berdasarkan ID. Upload terkait juga ikut terhapus.",
 )
-async def delete_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_offering_letter(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OfferingLetter).where(OfferingLetter.id == id))
     ol = result.scalar_one_or_none()
     if not ol:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    ol_name = ol.offering_letter_number
+    old_data = model_to_dict(ol)
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "ol", Upload.document_id == id)
     )
@@ -278,4 +311,19 @@ async def delete_offering_letter(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(ol)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="offering_letter",
+        resource_id=id,
+        resource_name=ol_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"Surat penawaran {ol_name} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)

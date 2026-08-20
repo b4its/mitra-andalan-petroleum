@@ -1,11 +1,12 @@
 import json
 from datetime import date, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, func, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from app.models.accounting import Account, JournalEntry, JournalLine
 from app.schemas.common import PaginatedResponse
 from app.schemas.accounting import (
@@ -95,6 +96,25 @@ async def _next_entry_number(db: AsyncSession, entry_date: date) -> str:
     return f"{prefix}-{count + 1:04d}"
 
 
+def _journal_to_dict(entry: JournalEntry, lines) -> dict:
+    return {
+        "entry_number": entry.entry_number,
+        "entry_date": str(entry.entry_date),
+        "description": entry.description,
+        "reference": entry.reference,
+        "status": entry.status,
+        "lines": [
+            {
+                "account_id": l.get("account_id") if isinstance(l, dict) else l.account_id,
+                "description": l.get("description") if isinstance(l, dict) else l.description,
+                "debit": l.get("debit") if isinstance(l, dict) else l.debit,
+                "credit": l.get("credit") if isinstance(l, dict) else l.credit,
+            }
+            for l in lines
+        ],
+    }
+
+
 # ── Accounts (Chart of Accounts) ───────────────────────────────
 
 @router.get(
@@ -142,7 +162,7 @@ async def get_account(id: str, db: AsyncSession = Depends(get_db)):
     status_code=201,
     summary="Buat akun baru",
 )
-async def create_account(body: AccountCreate, db: AsyncSession = Depends(get_db)):
+async def create_account(request: Request, body: AccountCreate, db: AsyncSession = Depends(get_db)):
     exists = await db.execute(select(Account).where(Account.code == body.code))
     if exists.scalar_one_or_none():
         raise HTTPException(status_code=400, detail=f"Kode akun {body.code} sudah digunakan")
@@ -150,6 +170,21 @@ async def create_account(body: AccountCreate, db: AsyncSession = Depends(get_db)
     db.add(account)
     await db.flush()
     await db.refresh(account)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="account",
+        resource_id=account.id,
+        resource_name=account.name,
+        old_data=None,
+        new_data=model_to_dict(account),
+        details=f"Akun {account.code} - {account.name} ({account.type}) berhasil dibuat"
+    )
     return account
 
 
@@ -158,11 +193,12 @@ async def create_account(body: AccountCreate, db: AsyncSession = Depends(get_db)
     response_model=AccountResponse,
     summary="Update akun",
 )
-async def update_account(id: str, body: AccountUpdate, db: AsyncSession = Depends(get_db)):
+async def update_account(request: Request, id: str, body: AccountUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Account).where(Account.id == id))
     account = result.scalar_one_or_none()
     if not account:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(account)
     data = body.model_dump(exclude_unset=True)
     if "code" in data and data["code"] != account.code:
         exists = await db.execute(
@@ -174,6 +210,21 @@ async def update_account(id: str, body: AccountUpdate, db: AsyncSession = Depend
         setattr(account, key, val)
     await db.flush()
     await db.refresh(account)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="account",
+        resource_id=account.id,
+        resource_name=account.name,
+        old_data=old_data,
+        new_data=model_to_dict(account),
+        details=f"Akun {account.code} berhasil diperbarui"
+    )
     return account
 
 
@@ -182,7 +233,7 @@ async def update_account(id: str, body: AccountUpdate, db: AsyncSession = Depend
     response_model=MessageResponse,
     summary="Hapus akun",
 )
-async def delete_account(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_account(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Account).where(Account.id == id))
     account = result.scalar_one_or_none()
     if not account:
@@ -193,8 +244,25 @@ async def delete_account(id: str, db: AsyncSession = Depends(get_db)):
             status_code=400,
             detail="Akun tidak dapat dihapus karena sudah dipakai di jurnal. Nonaktifkan saja.",
         )
+    a_name = account.name
+    old_data = model_to_dict(account)
     await db.delete(account)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="account",
+        resource_id=id,
+        resource_name=a_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"Akun {a_name} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)
 
 
@@ -330,7 +398,7 @@ async def get_journal(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat jurnal umum",
     description="Membuat jurnal dengan minimal 2 baris. Total debit harus sama dengan total credit.",
 )
-async def create_journal(body: JournalEntryCreate, db: AsyncSession = Depends(get_db)):
+async def create_journal(request: Request, body: JournalEntryCreate, db: AsyncSession = Depends(get_db)):
     entry_number = await _next_entry_number(db, body.entry_date)
     entry = JournalEntry(
         entry_number=entry_number,
@@ -351,6 +419,21 @@ async def create_journal(body: JournalEntryCreate, db: AsyncSession = Depends(ge
         ))
     await db.flush()
     await db.refresh(entry)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="journal_entry",
+        resource_id=entry.id,
+        resource_name=entry.entry_number,
+        old_data=None,
+        new_data=_journal_to_dict(entry, body.lines),
+        details=f"Jurnal {entry.entry_number} ({len(body.lines)} baris) berhasil dibuat"
+    )
     return _entry_to_response(entry, await _fetch_lines(db, entry.id))
 
 
@@ -359,11 +442,22 @@ async def create_journal(body: JournalEntryCreate, db: AsyncSession = Depends(ge
     response_model=JournalEntryResponse,
     summary="Update jurnal umum",
 )
-async def update_journal(id: str, body: JournalEntryUpdate, db: AsyncSession = Depends(get_db)):
+async def update_journal(request: Request, id: str, body: JournalEntryUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(JournalEntry).where(JournalEntry.id == id))
     entry = result.scalar_one_or_none()
     if not entry:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+
+    old_lines = await _fetch_lines(db, id)
+    old_data = _journal_to_dict(entry, [
+        {
+            "account_id": l.account_id,
+            "description": l.description,
+            "debit": l.debit,
+            "credit": l.credit,
+        }
+        for l in old_lines
+    ])
 
     data = body.model_dump(exclude_unset=True)
     lines_data = body.lines
@@ -391,6 +485,21 @@ async def update_journal(id: str, body: JournalEntryUpdate, db: AsyncSession = D
 
     await db.flush()
     await db.refresh(entry)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="journal_entry",
+        resource_id=entry.id,
+        resource_name=entry.entry_number,
+        old_data=old_data,
+        new_data=_journal_to_dict(entry, lines_data) if lines_data is not None else None,
+        details=f"Jurnal {entry.entry_number} berhasil diperbarui"
+    )
     return _entry_to_response(entry, await _fetch_lines(db, id))
 
 
@@ -399,13 +508,39 @@ async def update_journal(id: str, body: JournalEntryUpdate, db: AsyncSession = D
     response_model=MessageResponse,
     summary="Hapus jurnal umum",
 )
-async def delete_journal(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_journal(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(JournalEntry).where(JournalEntry.id == id))
     entry = result.scalar_one_or_none()
     if not entry:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_lines = await _fetch_lines(db, id)
+    old_data = _journal_to_dict(entry, [
+        {
+            "account_id": l.account_id,
+            "description": l.description,
+            "debit": l.debit,
+            "credit": l.credit,
+        }
+        for l in old_lines
+    ])
+    entry_number = entry.entry_number
     await db.delete(entry)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="journal_entry",
+        resource_id=id,
+        resource_name=entry_number,
+        old_data=old_data,
+        new_data=None,
+        details=f"Jurnal {entry_number} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)
 
 

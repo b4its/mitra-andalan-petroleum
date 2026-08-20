@@ -29,6 +29,7 @@ from app.models.upload import Upload
 from app.models.po_transportir import PoTransportir
 from app.models.accounting import Account, JournalEntry, JournalLine
 from app.models.activity import Activity, ActivityType
+from app.utils.activity_logger import model_to_dict
 
 
 # ── Urutan hapus data (FK-safe: child dulu, parent belakangan) ──
@@ -125,8 +126,10 @@ async def _seed_activities(db: AsyncSession):
     suppliers = (await db.execute(select(Supplier))).scalars().all()
     offering_letters = (await db.execute(select(OfferingLetter))).scalars().all()
     purchase_orders = (await db.execute(select(PurchaseOrder))).scalars().all()
+    po_transportirs = (await db.execute(select(PoTransportir))).scalars().all()
     delivery_orders = (await db.execute(select(DeliveryOrder))).scalars().all()
     invoices = (await db.execute(select(Invoice))).scalars().all()
+    notifications = (await db.execute(select(Notification))).scalars().all()
     journal_entries = (await db.execute(select(JournalEntry))).scalars().all()
 
     admin = users[0]
@@ -157,47 +160,94 @@ async def _seed_activities(db: AsyncSession):
             created_at=start + timedelta(days=30 - days_ago, hours=hour),
         ))
 
+    def _safe_dict(obj, exclude: set[str] | None = None) -> dict:
+        """Snapshot kolom model untuk log, tanpa kolom sensitif."""
+        exclude = exclude or set()
+        return {
+            c.name: getattr(obj, c.name)
+            for c in obj.__table__.columns
+            if c.name not in exclude
+        }
+
     for i, user in enumerate(users):
         add(admin, "admin", ActivityType.CREATE.value, "user", user.id, user.name,
-            f"User {user.name} ({user.role}) ditambahkan ke sistem", 30, 9 + i)
+            f"User {user.name} ({user.role}) ditambahkan ke sistem", 30, 9 + i,
+            new_data=_safe_dict(user, {"password", "demo_password"}))
 
     for i, company in enumerate(companies):
         add(admin, "admin", ActivityType.CREATE.value, "company", company.id, company.name,
-            f"Perusahaan {company.name} didaftarkan", 29, 9 + i)
+            f"Perusahaan {company.name} didaftarkan", 29, 9 + i,
+            new_data=model_to_dict(company))
+        if i == 0:
+            add(admin, "admin", ActivityType.UPDATE.value, "company", company.id, company.name,
+                f"Profil perusahaan {company.name} diperbarui", 28, 9,
+                old_data=model_to_dict(company),
+                new_data={**model_to_dict(company), "abbreviation": "MA Petroleum"})
 
     for i, customer in enumerate(customers):
         add(marketing, "marketing", ActivityType.CREATE.value, "customer", customer.id, customer.name,
-            f"Customer {customer.name} ditambahkan", 27, 10 + i)
+            f"Customer {customer.name} ditambahkan", 27, 10 + i,
+            new_data=model_to_dict(customer))
         add(marketing, "marketing", ActivityType.UPDATE.value, "customer", customer.id, customer.name,
             f"Data customer {customer.name} diperbarui", 26, 10 + i,
-            old_data={"name": customer.name}, new_data={"name": customer.name + " (updated)"})
+            old_data={"name": customer.name, "phone": customer.phone},
+            new_data={"name": customer.name, "phone": (customer.phone or "") + " ext. 01",
+                      "email": customer.email, "city": customer.city})
 
     for i, supplier in enumerate(suppliers):
         add(admin, "admin", ActivityType.CREATE.value, "supplier", supplier.id, supplier.name,
-            f"Supplier {supplier.name} ditambahkan", 25, 9 + i)
+            f"Supplier {supplier.name} ditambahkan", 25, 9 + i,
+            new_data=model_to_dict(supplier))
         add(admin, "admin", ActivityType.UPDATE.value, "supplier", supplier.id, supplier.name,
             f"Data supplier {supplier.name} diperbarui", 24, 9 + i,
-            old_data={"name": supplier.name}, new_data={"name": supplier.name + " (updated)"})
+            old_data={"name": supplier.name, "bank_account": supplier.bank_account},
+            new_data={"name": supplier.name, "bank_account": (supplier.bank_account or "") + "9",
+                      "phone": supplier.phone, "email": supplier.email})
 
     for i, ol in enumerate(offering_letters):
         add(marketing, "marketing", ActivityType.CREATE.value, "offering_letter", ol.id, ol.offering_letter_number,
-            f"Surat penawaran {ol.offering_letter_number} dibuat", 22 - i % 5, 9 + i % 8)
+            f"Surat penawaran {ol.offering_letter_number} dibuat", 22 - i % 5, 9 + i % 8,
+            new_data=model_to_dict(ol))
 
     for i, po in enumerate(purchase_orders):
         add(marketing, "marketing", ActivityType.CREATE.value, "purchase_order", po.id, po.po_number,
-            f"Purchase Order {po.po_number} dibuat", 18 - i % 6, 10 + i % 8)
+            f"Purchase Order {po.po_number} dibuat", 18 - i % 6, 10 + i % 8,
+            new_data=model_to_dict(po))
+        if i == 0:
+            add(admin, "admin", ActivityType.UPDATE.value, "purchase_order", po.id, po.po_number,
+                f"Dana Purchase Order {po.po_number} dirilis", 16, 9,
+                old_data={"status_rilis_dana": po.status_rilis_dana, "rilis_dana_at": None},
+                new_data={"status_rilis_dana": True, "rilis_dana_at": str(start - timedelta(days=14))})
 
     for i, do in enumerate(delivery_orders):
         add(operations, "operations", ActivityType.CREATE.value, "delivery_order", do.id, do.do_number,
-            f"Delivery Order {do.do_number} dibuat", 13 - i % 6, 9 + i % 8)
+            f"Delivery Order {do.do_number} dibuat", 13 - i % 6, 9 + i % 8,
+            new_data=model_to_dict(do))
+
+    for i, pt in enumerate(po_transportirs):
+        add(operations, "operations", ActivityType.CREATE.value, "po_transportir", pt.id, pt.po_number,
+            f"PO Transportir {pt.po_number} dibuat", 15 - i % 4, 11 + i % 6,
+            new_data=model_to_dict(pt))
+
+    for i, note in enumerate(notifications[:5]):
+        add(finance, "finance", ActivityType.CREATE.value, "notification", note.id, note.title,
+            f"Notifikasi \"{note.title}\" dikirim", 12 - i % 5, 13 + i % 4,
+            new_data=model_to_dict(note))
 
     for i, invoice in enumerate(invoices):
         add(finance, "finance", ActivityType.CREATE.value, "invoice", invoice.id, invoice.invoice_number,
-            f"Invoice {invoice.invoice_number} dibuat", 8 - i % 5, 9 + i % 8)
+            f"Invoice {invoice.invoice_number} dibuat", 8 - i % 5, 9 + i % 8,
+            new_data=model_to_dict(invoice))
+        if i == 0:
+            add(finance, "finance", ActivityType.UPDATE.value, "invoice", invoice.id, invoice.invoice_number,
+                f"Invoice {invoice.invoice_number} dilunasi", 6, 9,
+                old_data={"invoice_status": invoice.invoice_status},
+                new_data={"invoice_status": "paid"})
 
     for i, je in enumerate(journal_entries[:10]):
         add(accounting, "accounting", ActivityType.CREATE.value, "journal_entry", je.id, je.entry_number,
-            f"Jurnal {je.entry_number} dicatat", 5 - i % 4, 9 + i % 8)
+            f"Jurnal {je.entry_number} dicatat", 5 - i % 4, 9 + i % 8,
+            new_data=model_to_dict(je))
 
     for activity in activities:
         db.add(activity)

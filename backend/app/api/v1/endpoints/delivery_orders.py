@@ -4,11 +4,12 @@ from datetime import datetime, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from app.models.delivery_order import DeliveryOrder
 from app.models.customer import Customer
 from app.models.offering_letter import OfferingLetter
@@ -200,7 +201,7 @@ async def get_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat delivery order",
     description="Membuat DO baru. Jika id_purchase_order diberikan, data PO (po_number, customer, fuel_total) otomatis diambil dari PO.",
 )
-async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = Depends(get_db)):
+async def create_delivery_order(request: Request, body: DeliveryOrderCreate, db: AsyncSession = Depends(get_db)):
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
 
@@ -253,6 +254,21 @@ async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = De
     db.add(do)
     await db.flush()
     await db.refresh(do)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="delivery_order",
+        resource_id=do.id,
+        resource_name=do.do_number,
+        old_data=None,
+        new_data=model_to_dict(do),
+        details=f"Delivery Order {do.do_number} berhasil dibuat"
+    )
     cn = await _get_customer_name(db, do.customer_id)
     await _sync_offering_letters(db, do.id_purchase_order, do.po_number, do.id)
     await create_document_notification(
@@ -271,11 +287,12 @@ async def create_delivery_order(body: DeliveryOrderCreate, db: AsyncSession = De
     response_model=DeliveryOrderResponse,
     summary="Update delivery order",
 )
-async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSession = Depends(get_db)):
+async def update_delivery_order(request: Request, id: str, body: DeliveryOrderUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(do)
     for key, val in body.model_dump(exclude_unset=True).items():
         if key == "details":
             val = _details_to_str(val)
@@ -289,6 +306,21 @@ async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSes
             do.po_number = po.po_number
     await db.flush()
     await db.refresh(do)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="delivery_order",
+        resource_id=do.id,
+        resource_name=do.do_number,
+        old_data=old_data,
+        new_data=model_to_dict(do),
+        details=f"Data Delivery Order {do.do_number} berhasil diperbarui"
+    )
     cn = await _get_customer_name(db, do.customer_id)
     await _sync_offering_letters(db, do.id_purchase_order, do.po_number, do.id)
     return _to_response(do, cn)
@@ -300,18 +332,34 @@ async def update_delivery_order(id: str, body: DeliveryOrderUpdate, db: AsyncSes
     summary="Rilis Dana",
     description="Finance: tandai rilis dana. DO akan muncul di Operations.",
 )
-async def rilis_dana(id: str, db: AsyncSession = Depends(get_db)):
+async def rilis_dana(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if do.status_rilis_dana:
         raise HTTPException(status_code=400, detail="Dana sudah dirilis sebelumnya")
+    old_data = model_to_dict(do)
     now_wita = datetime.now(WITA)
     do.rilis_dana_at = now_wita
     do.status_rilis_dana = True
     await db.flush()
     await db.refresh(do)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="delivery_order",
+        resource_id=do.id,
+        resource_name=do.do_number,
+        old_data=old_data,
+        new_data=model_to_dict(do),
+        details=f"Dana Delivery Order {do.do_number} telah dirilis"
+    )
     cn = await _get_customer_name(db, do.customer_id)
     await create_document_notification(
         db,
@@ -329,18 +377,34 @@ async def rilis_dana(id: str, db: AsyncSession = Depends(get_db)):
     summary="Siapkan Pengantaran",
     description="Operations: tandai pengantaran sudah disiapkan.",
 )
-async def ready_order(id: str, db: AsyncSession = Depends(get_db)):
+async def ready_order(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
     if do.status_ready_order:
         raise HTTPException(status_code=400, detail="Pengantaran sudah disiapkan sebelumnya")
+    old_data = model_to_dict(do)
     now_wita = datetime.now(WITA)
     do.ready_order_at = now_wita
     do.status_ready_order = True
     await db.flush()
     await db.refresh(do)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="delivery_order",
+        resource_id=do.id,
+        resource_name=do.do_number,
+        old_data=old_data,
+        new_data=model_to_dict(do),
+        details=f"Pengantaran DO {do.do_number} telah disiapkan"
+    )
     cn = await _get_customer_name(db, do.customer_id)
     await create_document_notification(
         db,
@@ -358,7 +422,7 @@ async def ready_order(id: str, db: AsyncSession = Depends(get_db)):
     summary="Selesai Dikirim",
     description="Operations: konfirmasi pengiriman selesai. Item yang diantar ditandai 'delivered' pada PO Transportir; jika semua item diantar, PO Transportir berstatus completed. PO Supplier terkait dicatat end-to-end sampai ke customer.",
 )
-async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
+async def selesai_dikirim(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
@@ -367,6 +431,7 @@ async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Pengantaran belum disiapkan")
     if do.status_selesai_dikirim:
         raise HTTPException(status_code=400, detail="Pengiriman sudah ditandai selesai")
+    old_data = model_to_dict(do)
     now_wita = datetime.now(WITA)
     do.selesai_dikirim_at = now_wita
     do.status_selesai_dikirim = True
@@ -442,6 +507,21 @@ async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
 
     await db.flush()
     await db.refresh(do)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="delivery_order",
+        resource_id=do.id,
+        resource_name=do.do_number,
+        old_data=old_data,
+        new_data=model_to_dict(do),
+        details=f"Pengiriman DO {do.do_number} telah selesai dikirim"
+    )
     cn = await _get_customer_name(db, do.customer_id)
     await create_document_notification(
         db,
@@ -459,7 +539,7 @@ async def selesai_dikirim(id: str, db: AsyncSession = Depends(get_db)):
     summary="Lunas Ongkir",
     description="Admin/Finance: tandai pelunasan ongkir. Tersedia setelah Operations menandai pengiriman selesai (status_selesai_dikirim).",
 )
-async def lunas_ongkir(id: str, db: AsyncSession = Depends(get_db)):
+async def lunas_ongkir(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
@@ -468,11 +548,27 @@ async def lunas_ongkir(id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Pengiriman belum ditandai selesai oleh Operations")
     if do.status_lunas_ongkir:
         raise HTTPException(status_code=400, detail="Ongkir sudah dilunasi sebelumnya")
+    old_data = model_to_dict(do)
     now_wita = datetime.now(WITA)
     do.lunas_ongkir_at = now_wita
     do.status_lunas_ongkir = True
     await db.flush()
     await db.refresh(do)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="delivery_order",
+        resource_id=do.id,
+        resource_name=do.do_number,
+        old_data=old_data,
+        new_data=model_to_dict(do),
+        details=f"Ongkir DO {do.do_number} telah dilunasi"
+    )
     cn = await _get_customer_name(db, do.customer_id)
     await create_document_notification(
         db,
@@ -498,11 +594,13 @@ async def _delete_upload_files(uploads: list[Upload]):
     response_model=MessageResponse,
     summary="Hapus delivery order",
 )
-async def delete_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_delivery_order(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(DeliveryOrder).where(DeliveryOrder.id == id))
     do = result.scalar_one_or_none()
     if not do:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    do_name = do.do_number
+    old_data = model_to_dict(do)
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "do", Upload.document_id == id)
     )
@@ -512,4 +610,19 @@ async def delete_delivery_order(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(do)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="delivery_order",
+        resource_id=id,
+        resource_name=do_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"Delivery Order {do_name} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)

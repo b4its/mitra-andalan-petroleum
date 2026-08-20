@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.notification import (
@@ -83,11 +84,26 @@ async def get_notification(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat notification",
     description="Membuat notifikasi baru.",
 )
-async def create_notification(body: NotificationCreate, db: AsyncSession = Depends(get_db)):
+async def create_notification(request: Request, body: NotificationCreate, db: AsyncSession = Depends(get_db)):
     n = Notification(**body.model_dump())
     db.add(n)
     await db.flush()
     await db.refresh(n)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="notification",
+        resource_id=n.id,
+        resource_name=n.title,
+        old_data=None,
+        new_data=model_to_dict(n),
+        details=f"Notifikasi {n.title} berhasil dibuat"
+    )
     name = await _get_user_name(db, n.sender_id)
     return _to_response(n, name)
 
@@ -98,15 +114,31 @@ async def create_notification(body: NotificationCreate, db: AsyncSession = Depen
     summary="Update notification",
     description="Update notifikasi (read status, dll).",
 )
-async def update_notification(id: str, body: NotificationUpdate, db: AsyncSession = Depends(get_db)):
+async def update_notification(request: Request, id: str, body: NotificationUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Notification).where(Notification.id == id))
     n = result.scalar_one_or_none()
     if not n:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(n)
     for key, val in body.model_dump(exclude_unset=True).items():
         setattr(n, key, val)
     await db.flush()
     await db.refresh(n)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="notification",
+        resource_id=n.id,
+        resource_name=n.title,
+        old_data=old_data,
+        new_data=model_to_dict(n),
+        details=f"Notifikasi {n.title} berhasil diperbarui"
+    )
     name = await _get_user_name(db, n.sender_id)
     return _to_response(n, name)
 
@@ -117,11 +149,28 @@ async def update_notification(id: str, body: NotificationUpdate, db: AsyncSessio
     summary="Hapus notification",
     description="Hapus notifikasi.",
 )
-async def delete_notification(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_notification(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Notification).where(Notification.id == id))
     n = result.scalar_one_or_none()
     if not n:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    n_title = n.title
+    old_data = model_to_dict(n)
     await db.delete(n)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="notification",
+        resource_id=id,
+        resource_name=n_title,
+        old_data=old_data,
+        new_data=None,
+        details=f"Notifikasi {n_title} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)

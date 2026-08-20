@@ -2,7 +2,7 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from app.utils.activity_logger import log_activity
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -101,13 +101,28 @@ async def get_invoice(id: str, db: AsyncSession = Depends(get_db)):
     summary="Buat invoice",
     description="Membuat invoice baru. Field `details` untuk data form frontend (products, paymentStatus, dll).",
 )
-async def create_invoice(body: InvoiceCreate, db: AsyncSession = Depends(get_db)):
+async def create_invoice(request: Request, body: InvoiceCreate, db: AsyncSession = Depends(get_db)):
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
     inv = Invoice(**data)
     db.add(inv)
     await db.flush()
     await db.refresh(inv)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="create",
+        resource_type="invoice",
+        resource_id=inv.id,
+        resource_name=inv.invoice_number,
+        old_data=None,
+        new_data=model_to_dict(inv),
+        details=f"Invoice {inv.invoice_number} berhasil dibuat"
+    )
     cn = await _get_customer_name(db, inv.customer_id)
     return _to_response(inv, cn)
 
@@ -118,17 +133,33 @@ async def create_invoice(body: InvoiceCreate, db: AsyncSession = Depends(get_db)
     summary="Update invoice",
     description="Update invoice (status, details, dll).",
 )
-async def update_invoice(id: str, body: InvoiceUpdate, db: AsyncSession = Depends(get_db)):
+async def update_invoice(request: Request, id: str, body: InvoiceUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
     if not inv:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    old_data = model_to_dict(inv)
     for key, val in body.model_dump(exclude_unset=True).items():
         if key == "details":
             val = _details_to_str(val)
         setattr(inv, key, val)
     await db.flush()
     await db.refresh(inv)
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="invoice",
+        resource_id=inv.id,
+        resource_name=inv.invoice_number,
+        old_data=old_data,
+        new_data=model_to_dict(inv),
+        details=f"Data invoice {inv.invoice_number} berhasil diperbarui"
+    )
     cn = await _get_customer_name(db, inv.customer_id)
     return _to_response(inv, cn)
 
@@ -148,11 +179,13 @@ async def _delete_upload_files(uploads: list[Upload]):
     summary="Hapus invoice",
     description="Hapus invoice berdasarkan ID. Upload terkait juga ikut terhapus.",
 )
-async def delete_invoice(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_invoice(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Invoice).where(Invoice.id == id))
     inv = result.scalar_one_or_none()
     if not inv:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    inv_name = inv.invoice_number
+    old_data = model_to_dict(inv)
     upl_result = await db.execute(
         select(Upload).where(Upload.document_type == "invoice", Upload.document_id == id)
     )
@@ -162,4 +195,19 @@ async def delete_invoice(id: str, db: AsyncSession = Depends(get_db)):
         await db.delete(u)
     await db.delete(inv)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="invoice",
+        resource_id=id,
+        resource_name=inv_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"Invoice {inv_name} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)

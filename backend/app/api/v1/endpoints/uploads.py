@@ -4,12 +4,13 @@ import re
 import subprocess
 import tempfile
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.utils.activity_logger import log_activity, actor_from_request, model_to_dict
 from app.models.upload import Upload
 from app.schemas.upload import UploadResponse, UploadUpdate
 from app.schemas.common import MessageResponse
@@ -105,6 +106,7 @@ async def _process_single_file(file: UploadFile, folder: str, document_type: str
     description="Upload satu atau banyak file (max 50MB per file). Kaitkan ke dokumen dengan `document_type` (ol/po/do/invoice/profile) dan `document_id`. `profile` dipakai untuk tanda tangan user aplikasi.",
 )
 async def upload_files(
+    request: Request,
     files: list[UploadFile] = File(..., description="Satu atau banyak file"),
     folder: str = Form("general"),
     document_type: str | None = Form(None),
@@ -122,6 +124,21 @@ async def upload_files(
         for file in files:
             upload = await _process_single_file(file, folder, document_type, document_id, db)
             results.append(upload)
+        actor = actor_from_request(request)
+        await log_activity(
+            db=db,
+            request=request,
+            user_id=actor["user_id"],
+            actor_name=actor["actor_name"],
+            actor_role=actor["actor_role"],
+            action="create",
+            resource_type="upload",
+            resource_id=results[0].id if results else None,
+            resource_name=", ".join(u.original_filename for u in results),
+            old_data=None,
+            new_data=[model_to_dict(u) for u in results] if results else {},
+            details=f"{len(results)} file berhasil di-upload ke {folder}"
+        )
     except Exception:
         for upload in results:
             _delete_file(upload)
@@ -169,7 +186,7 @@ async def get_upload(id: str, db: AsyncSession = Depends(get_db)):
     summary="Update upload",
     description="Update metadata upload (folder, document_type, document_id).",
 )
-async def update_upload(id: str, body: UploadUpdate, db: AsyncSession = Depends(get_db)):
+async def update_upload(request: Request, id: str, body: UploadUpdate, db: AsyncSession = Depends(get_db)):
     if body.document_type and body.document_type not in DOCUMENT_TYPES:
         raise HTTPException(status_code=400, detail=f"document_type must be one of {DOCUMENT_TYPES}")
     if body.folder is not None:
@@ -179,6 +196,8 @@ async def update_upload(id: str, body: UploadUpdate, db: AsyncSession = Depends(
     upload = result.scalar_one_or_none()
     if not upload:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+
+    old_data = model_to_dict(upload)
 
     old_path = None
     if body.folder is not None and body.folder != upload.folder:
@@ -196,6 +215,22 @@ async def update_upload(id: str, body: UploadUpdate, db: AsyncSession = Depends(
         _ensure_dir(new_dir)
         old_path.rename(MEDIA_DIR / upload.folder / upload.stored_filename)
 
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="update",
+        resource_type="upload",
+        resource_id=upload.id,
+        resource_name=upload.original_filename,
+        old_data=old_data,
+        new_data=model_to_dict(upload),
+        details=f"Upload {upload.original_filename} berhasil diperbarui"
+    )
+
     return upload
 
 
@@ -205,14 +240,31 @@ async def update_upload(id: str, body: UploadUpdate, db: AsyncSession = Depends(
     summary="Hapus upload",
     description="Hapus file upload dari disk dan database.",
 )
-async def delete_upload(id: str, db: AsyncSession = Depends(get_db)):
+async def delete_upload(request: Request, id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Upload).where(Upload.id == id))
     upload = result.scalar_one_or_none()
     if not upload:
         raise HTTPException(status_code=404, detail="Tidak ditemukan")
+    u_name = upload.original_filename
+    old_data = model_to_dict(upload)
     _delete_file(upload)
     await db.delete(upload)
     await db.flush()
+    actor = actor_from_request(request)
+    await log_activity(
+        db=db,
+        request=request,
+        user_id=actor["user_id"],
+        actor_name=actor["actor_name"],
+        actor_role=actor["actor_role"],
+        action="delete",
+        resource_type="upload",
+        resource_id=id,
+        resource_name=u_name,
+        old_data=old_data,
+        new_data=None,
+        details=f"Upload {u_name} berhasil dihapus"
+    )
     return MessageResponse(message="Dihapus", code=200)
 
 

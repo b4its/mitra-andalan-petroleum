@@ -9,6 +9,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.activity import Activity, ActivityType
 
 
+def model_to_dict(obj: Any) -> dict:
+    """Konversi model SQLAlchemy menjadi dict semua kolom (JSON-safe)."""
+    if obj is None:
+        return {}
+    return {
+        col.name: getattr(obj, col.name)
+        for col in obj.__table__.columns
+    }
+
+
+def actor_from_request(request: Optional[Request]) -> dict:
+    """Ambil identitas aktor dari header request (jika dikirim frontend), fallback ke System."""
+    if request is None:
+        return {"user_id": None, "actor_name": "System", "actor_role": "system"}
+    return {
+        "user_id": request.headers.get("x-user-id") or None,
+        "actor_name": request.headers.get("x-user-name") or "System",
+        "actor_role": request.headers.get("x-user-role") or "system",
+    }
+
+
 async def log_activity(
     db: AsyncSession,
     request: Optional[Request] = None,
