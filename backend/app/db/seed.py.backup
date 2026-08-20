@@ -12,7 +12,6 @@ from pathlib import Path
 
 from passlib.hash import bcrypt
 from sqlalchemy import select
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -32,38 +31,25 @@ from app.models.accounting import Account, JournalEntry, JournalLine
 
 # ── Urutan hapus data (FK-safe: child dulu, parent belakangan) ──
 _CLEAR_ORDER = [
-    # Level 0: Uploads first (not referenced by others during clear)
+    # Level 1: Deep nested children (delete first)
     Upload,
+    JournalLine, JournalEntry, Notification,
+    Invoice,
     
-    # Level 1: Accounting chain
-    JournalLine,              # Child of JournalEntry
-    JournalEntry,             # Can have journal lines
+    # Level 2: Children of PO Transportir
+    DeliveryOrder,  # Must come before PoTransportir!
     
-    # Level 2: Documents with FKs
-    Invoice,                  # May have accounting entries
-    Notification,             # Independent
+    # Level 3: PO Transportir & Purchase Orders  
+    PoTransportir, PurchaseOrder,
     
-    # Level 3: Document hierarchy (DEEP nesting)
-    DeliveryOrder,            # FK to: po_transportir, purchase_order, CUSTOMER
-    PurchaseOrder,            # FK to: offering_letter, customer
-    PoTransportir,            # FK to: purchase_order
-    OfferingLetter,           # FK to: customer
+    # Level 4: Top-level documents
+    OfferingLetter,
     
-    # Level 4: Business records  
-    Sale,                     # Independent sales
+    # Level 5: Financials & Reference Data
+    Sale, Account,
     
-    # Level 5: Financial structure
-    Account,                  # Chart of accounts
-    
-    # Level 6: External entities
-    Company,                  # Internal company data
-    Supplier,                 # Suppliers
-    
-    # Level 7: Customers (MUST BE AFTER delivery_orders!)
-    Customer,                 # Referenced by delivery_orders, purchase_orders, offering_letters
-    
-    # Level 8: Users (delete LAST)
-    User                      # Referenced by EVERYTHING
+    # Level 6: Core entities (delete last)
+    Company, Supplier, Customer, User,
 ]
 
 
@@ -206,30 +192,27 @@ async def _seed_companies(db: AsyncSession):
 
 
 async def _clear_all(db: AsyncSession):
-    """Clear all data with FK constraints temporarily disabled."""
+    """Hapus semua data dengan DISABLE_FOREIGN_KEY_CHECKS untuk menghindari FK violation."""
     
-    print("[seed] Clearing all data...")
-    
-    # Disable foreign key checks to avoid constraint violations during bulk delete
-    await db.execute(text("SET FOREIGN_KEY_CHECKS=0"))
+    # Disable foreign key checks
+    await db.execute("SET FOREIGN_KEY_CHECKS=0")
     
     try:
-        for model in _CLEAR_ORDER:  # Forward order is fine with FK disabled
+        # Delete all data directly without checking FKs
+        for model in reversed(_CLEAR_ORDER):  # Reverse order when inserting later
             result = await db.execute(select(model))
             rows = result.scalars().all()
             if rows:
-                print(f"[seed] Deleting {model.__tablename__} ({len(rows)} records)")
+                print(f"[seed] Clearing {model.__tablename__}... ({len(rows)} rows)")
                 for row in rows:
                     await db.delete(row)
         
-        # Flush changes
         await db.flush()
+        print("[seed] ✅ All tables cleared successfully (FK checks disabled)")
         
     finally:
         # Re-enable foreign key checks
-        await db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
-        
-        print("[seed] ✅ All data cleared successfully!")
+        await db.execute("SET FOREIGN_KEY_CHECKS=1")
 
 
 

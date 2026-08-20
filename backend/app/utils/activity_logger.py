@@ -1,12 +1,18 @@
+from __future__ import annotations
+
+from typing import Optional, Dict, Any
+import sys
+
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.activity import Activity, ActivityType
 
 
 async def log_activity(
     db: AsyncSession,
-    request: Request | None = None,
-    user_id: str | None = None,
+    request: Optional[Request] = None,
+    user_id: Optional[str] = None,
     actor_name: str = "System",
     actor_role: str = "system",
     action: str = "unknown",

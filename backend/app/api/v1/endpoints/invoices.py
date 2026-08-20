@@ -1,8 +1,8 @@
 import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from app.utils.activity_logger import log_activity, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from app.utils.activity_logger import log_activity
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
