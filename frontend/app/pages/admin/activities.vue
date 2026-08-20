@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
+import type { TableColumn } from '@nuxt/ui'
 
 definePageMeta({ layout: 'admin' })
 
@@ -32,6 +32,16 @@ interface PaginatedActivities {
   pages: number
 }
 
+// ── Kolom tabel (hanya data ringkas) ──────────────────────────
+const columns: TableColumn<Activity>[] = [
+  { accessorKey: 'action', header: 'Aksi' },
+  { accessorKey: 'resource_type', header: 'Resource' },
+  { accessorKey: 'resource_name', header: 'Nama Resource' },
+  { accessorKey: 'actor_name', header: 'Actor' },
+  { accessorKey: 'created_at', header: 'Waktu' },
+  { id: 'actions', header: '' }
+]
+
 // ── Data fetch ────────────────────────────────────────────────
 const {
   data: activitiesData,
@@ -60,31 +70,31 @@ async function applyFilters() {
       page: currentPage.value.toString(),
       page_size: pageSize.toString()
     })
-    
+
     if (actionFilter.value !== 'all') {
       params.append('action', actionFilter.value)
     }
-    
+
     if (resourceTypeFilter.value !== 'all') {
       params.append('resource_type', resourceTypeFilter.value)
     }
-    
+
     if (actorFilter.value) {
       params.append('actor_name', actorFilter.value)
     }
-    
+
     if (search.value) {
       params.append('search', search.value)
     }
-    
+
     if (dateFrom.value) {
       params.append('from_date', dateFrom.value)
     }
-    
+
     if (dateTo.value) {
       params.append('to_date', dateTo.value)
     }
-    
+
     const res = await get<PaginatedActivities>(`/activities?${params.toString()}`)
     activitiesData.value = res
   } catch (error: any) {
@@ -103,7 +113,7 @@ watch([actionFilter, resourceTypeFilter, actorFilter], () => {
 })
 
 // ── Action colors ─────────────────────────────────────────────
-const actionColors: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
+const actionColors: Record<string, 'success' | 'info' | 'error'> = {
   create: 'success',
   update: 'info',
   delete: 'error'
@@ -134,21 +144,27 @@ function openViewDetail(activity: Activity) {
   viewModalOpen.value = true
 }
 
-// Parse JSON safely
-function parseJSON(jsonString: string | null): any {
-  if (!jsonString) return null
+// Parse JSON safely & pretty-print
+function prettyJSON(jsonString: string | null): string {
+  if (!jsonString) return ''
   try {
-    return JSON.parse(jsonString)
+    return JSON.stringify(JSON.parse(jsonString), null, 2)
   } catch {
     return jsonString
   }
+}
+
+function copyJSON(jsonString: string | null) {
+  if (!jsonString) return
+  navigator.clipboard.writeText(prettyJSON(jsonString))
+  toast.add({ title: 'Disalin', description: 'JSON berhasil disalin', color: 'success' })
 }
 
 // Format date
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleString('id-ID', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
@@ -241,14 +257,14 @@ const actions = ['all', 'create', 'update', 'delete'] as const
             </div>
 
             <div class="flex gap-2 ml-auto">
-              <UButton 
-                color="primary" 
+              <UButton
+                color="primary"
                 @click="applyFilters"
               >
                 Terapkan Filter
               </UButton>
-              <UButton 
-                color="neutral" 
+              <UButton
+                color="neutral"
                 variant="ghost"
                 @click="() => {
                   actionFilter = 'all'
@@ -275,65 +291,46 @@ const actions = ['all', 'create', 'update', 'delete'] as const
           <UTable :data="activitiesData?.items ?? []" :columns="columns">
             <template #action-cell="{ row }">
               <UBadge
-                :color="actionColors[row.action] ?? 'neutral'"
+                :color="actionColors[row.original.action] ?? 'neutral'"
                 variant="soft"
                 class="capitalize"
               >
-                {{ actionLabels[row.action] || row.action }}
+                {{ actionLabels[row.original.action] || row.original.action }}
               </UBadge>
             </template>
 
             <template #resource-type-cell="{ row }">
-              <span class="font-mono text-sm">{{ row.resource_type }}</span>
+              <span class="font-mono text-sm">{{ row.original.resource_type }}</span>
+            </template>
+
+            <template #resource-name-cell="{ row }">
+              <span class="text-sm">{{ row.original.resource_name || '-' }}</span>
             </template>
 
             <template #actor-name-cell="{ row }">
               <div class="flex items-center gap-2">
-                <UBadge :color="row.actor_role === 'admin' ? 'error' : 'info'">
-                  {{ row.actor_role }}
+                <UBadge color="info" variant="soft" class="capitalize">
+                  {{ row.original.actor_role }}
                 </UBadge>
-                <span>{{ row.actor_name }}</span>
+                <span class="text-sm">{{ row.original.actor_name }}</span>
               </div>
-            </template>
-
-            <template #changes-cell="{ row }">
-              <div class="flex items-center gap-2">
-                <span v-if="row.old_values && row.new_values" class="text-xs">
-                  <UIcon name="i-lucide-diff" class="w-4 h-4" />
-                  Diubah
-                </span>
-                <span v-else-if="row.new_values" class="text-xs text-success">
-                  <UIcon name="i-lucide-plus" class="w-4 h-4" />
-                  Baru
-                </span>
-                <span v-else-if="row.old_values" class="text-xs text-error">
-                  <UIcon name="i-lucide-trash" class="w-4 h-4" />
-                  Dihapus
-                </span>
-              </div>
-            </template>
-
-            <template #ip-address-cell="{ row }">
-              <span v-if="row.ip_address" class="font-mono text-xs text-muted">
-                {{ row.ip_address }}
-              </span>
-              <span v-else class="text-muted">-</span>
             </template>
 
             <template #created-at-cell="{ row }">
-              <span class="text-sm text-muted">
-                {{ formatDate(row.created_at) }}
+              <span class="text-sm text-muted whitespace-nowrap">
+                {{ formatDate(row.original.created_at) }}
               </span>
             </template>
 
             <template #actions-cell="{ row }">
               <UButton
                 icon="i-lucide-eye"
-                size="xs"
+                size="sm"
                 color="primary"
                 variant="ghost"
                 aria-label="Lihat detail"
-                @click="openViewDetail(row)"
+                :title="'Lihat detail ' + (row.original.resource_name || row.original.resource_type)"
+                @click="openViewDetail(row.original)"
               />
             </template>
           </UTable>
@@ -368,11 +365,11 @@ const actions = ['all', 'create', 'update', 'delete'] as const
   <UModal v-model:open="viewModalOpen" :ui="{ content: 'max-w-4xl' }">
     <template #title>
       <div class="flex items-center gap-2">
-        <UIcon 
+        <UIcon
           v-if="selectedActivity"
-          :name="actionColors[selectedActivity.action] === 'success' ? 'i-lucide-circle-check' : 
+          :name="actionColors[selectedActivity.action] === 'success' ? 'i-lucide-circle-check' :
                  actionColors[selectedActivity.action] === 'info' ? 'i-lucide-pencil' : 'i-lucide-trash'"
-          :class="`w-6 h-6 ${actionColors[selectedActivity.action] === 'success' ? 'text-success' : 
+          :class="`w-6 h-6 ${actionColors[selectedActivity.action] === 'success' ? 'text-success' :
                    actionColors[selectedActivity.action] === 'info' ? 'text-info' : 'text-error'}`"
         />
         <span>Detail Aktivitas</span>
@@ -409,42 +406,53 @@ const actions = ['all', 'create', 'update', 'delete'] as const
           </div>
         </div>
 
-        <!-- Additional Info -->
+        <!-- Details -->
         <div v-if="selectedActivity.details" class="p-4 bg-elevated rounded-lg">
-          <p class="text-xs text-muted uppercase tracking-wide mb-2">Details</p>
+          <p class="text-xs text-muted uppercase tracking-wide mb-2">Detail</p>
           <p class="text-sm">{{ selectedActivity.details }}</p>
         </div>
 
-        <!-- Old Values -->
-        <div v-if="selectedActivity.old_values" class="p-4 bg-elevated rounded-lg">
-          <div class="flex items-center justify-between mb-2">
-            <p class="text-xs text-muted uppercase tracking-wide">Nilai Sebelum (Old)</p>
-            <UButton
-              size="xs"
-              variant="ghost"
-              icon="i-lucide-copy"
-              @click="navigator.clipboard.writeText(selectedActivity.old_values || '')"
-            >
-              Copy
-            </UButton>
+        <!-- JSON Data Lama & Baru -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="p-4 bg-elevated rounded-lg border border-error/20">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs text-muted uppercase tracking-wide">JSON Data Lama (Old)</p>
+              <UButton
+                size="xs"
+                variant="ghost"
+                icon="i-lucide-copy"
+                :disabled="!selectedActivity.old_values"
+                @click="copyJSON(selectedActivity.old_values)"
+              >
+                Copy
+              </UButton>
+            </div>
+            <pre
+              v-if="selectedActivity.old_values"
+              class="text-xs bg-neutral-900 dark:bg-neutral-950 p-3 rounded overflow-x-auto text-white max-h-72 overflow-y-auto"
+            >{{ prettyJSON(selectedActivity.old_values) }}</pre>
+            <p v-else class="text-xs text-muted italic">Tidak ada data lama (aksi {{ actionLabels[selectedActivity.action] || selectedActivity.action }})</p>
           </div>
-          <pre class="text-xs bg-neutral-900 dark:bg-neutral-950 p-3 rounded overflow-x-auto text-white">{{ selectedActivity.old_values }}</pre>
-        </div>
 
-        <!-- New Values -->
-        <div v-if="selectedActivity.new_values" class="p-4 bg-elevated rounded-lg">
-          <div class="flex items-center justify-between mb-2">
-            <p class="text-xs text-muted uppercase tracking-wide">Nilai Setelah (New)</p>
-            <UButton
-              size="xs"
-              variant="ghost"
-              icon="i-lucide-copy"
-              @click="navigator.clipboard.writeText(selectedActivity.new_values || '')"
-            >
-              Copy
-            </UButton>
+          <div class="p-4 bg-elevated rounded-lg border border-success/20">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs text-muted uppercase tracking-wide">JSON Data Baru (New)</p>
+              <UButton
+                size="xs"
+                variant="ghost"
+                icon="i-lucide-copy"
+                :disabled="!selectedActivity.new_values"
+                @click="copyJSON(selectedActivity.new_values)"
+              >
+                Copy
+              </UButton>
+            </div>
+            <pre
+              v-if="selectedActivity.new_values"
+              class="text-xs bg-neutral-900 dark:bg-neutral-950 p-3 rounded overflow-x-auto text-white max-h-72 overflow-y-auto"
+            >{{ prettyJSON(selectedActivity.new_values) }}</pre>
+            <p v-else class="text-xs text-muted italic">Tidak ada data baru</p>
           </div>
-          <pre class="text-xs bg-neutral-900 dark:bg-neutral-950 p-3 rounded overflow-x-auto text-white">{{ selectedActivity.new_values }}</pre>
         </div>
 
         <!-- Network Info -->
