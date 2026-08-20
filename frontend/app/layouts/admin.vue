@@ -1,202 +1,201 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { NavigationMenuItem } from "@nuxt/ui";
 
-const open = ref(false)
-const notificationsOpen = ref(false)
+const open = ref(false);
+const notificationsOpen = ref(false);
 
-const { unreadCount, fetchNotifications } = useNotifications()
+const { unreadCount, fetchNotifications } = useNotifications();
 
-onMounted(() => fetchNotifications())
+onMounted(() => fetchNotifications());
 
 const links = [
   [
     {
-      label: 'Dashboard',
-      icon: 'i-lucide-house',
-      to: '/admin',
+      label: "Dashboard",
+      icon: "i-lucide-house",
+      to: "/admin",
       onSelect: () => {
-        open.value = false
-      }
+        open.value = false;
+      },
     },
     {
-      label: 'Marketing',
-      icon: 'i-lucide-flag-triangle-right',
+      label: "Marketing",
+      icon: "i-lucide-flag-triangle-right",
       defaultOpen: true,
       children: [
         {
-          label: 'Rekap Keseluruhan',
-          to: '/admin/marketing',
+          label: "Rekap Keseluruhan",
+          to: "/admin/marketing",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Data Purchase Order Supplier',
-          to: '/admin/data-po-supplier',
+          label: "Data Purchase Order Supplier",
+          to: "/admin/data-po-supplier",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Halaman Marketing',
-          icon: 'i-lucide-square-arrow-out-up-right',
-          to: '/marketing',
+          label: "Halaman Marketing",
+          icon: "i-lucide-square-arrow-out-up-right",
+          to: "/marketing",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
-        }
-      ]
+            open.value = false;
+          },
+        },
+      ],
     },
     {
-      label: 'Operations',
-      icon: 'i-lucide-truck',
+      label: "Operations",
+      icon: "i-lucide-truck",
       defaultOpen: true,
       children: [
         {
-          label: 'Rekap Keseluruhan',
-          to: '/admin/operations',
+          label: "Rekap Keseluruhan",
+          to: "/admin/operations",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Data Delivery Order',
-          to: '/admin/data-do',
+          label: "Data Delivery Order",
+          to: "/admin/data-do",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
 
         {
-          label: 'Halaman Operations',
-          icon: 'i-lucide-square-arrow-out-up-right',
-          to: '/operations',
+          label: "Halaman Operations",
+          icon: "i-lucide-square-arrow-out-up-right",
+          to: "/operations",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
-        }
-      ]
+            open.value = false;
+          },
+        },
+      ],
     },
     {
-      label: 'Finance',
-      icon: 'i-lucide-receipt-text',
+      label: "Finance",
+      icon: "i-lucide-receipt-text",
       defaultOpen: true,
       children: [
         {
-          label: 'Rekap Keseluruhan',
-          to: '/admin/finance',
+          label: "Rekap Keseluruhan",
+          to: "/admin/finance",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Halaman Finance',
-          icon: 'i-lucide-square-arrow-out-up-right',
-          to: '/finance',
+          label: "Halaman Finance",
+          icon: "i-lucide-square-arrow-out-up-right",
+          to: "/finance",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
-        }
-      ]
+            open.value = false;
+          },
+        },
+      ],
     },
     {
-      label: 'Accounting',
-      icon: 'i-lucide-book-open',
+      label: "Accounting",
+      icon: "i-lucide-book-open",
       defaultOpen: true,
       children: [
         {
-          label: 'Rekap Keseluruhan',
-          to: '/admin/accounting',
+          label: "Rekap Keseluruhan",
+          to: "/admin/accounting",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Halaman Accounting',
-          icon: 'i-lucide-square-arrow-out-up-right',
-          to: '/accounting',
+          label: "Halaman Accounting",
+          icon: "i-lucide-square-arrow-out-up-right",
+          to: "/accounting",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
-        }
-      ]
+            open.value = false;
+          },
+        },
+      ],
     },
     {
-      label: 'Master Data',
-      icon: 'i-lucide-database',
+      label: "Master Data",
+      icon: "i-lucide-database",
       defaultOpen: true,
       children: [
         {
-          label: 'Customer',
-          to: '/admin/customers',
+          label: "Customer",
+          to: "/admin/customers",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Supplier',
-          to: '/admin/suppliers',
+          label: "Supplier",
+          to: "/admin/suppliers",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Perusahaan',
-          to: '/admin/companies',
+          label: "Perusahaan",
+          to: "/admin/companies",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Aktivitas',
-          icon: 'i-lucide-history',
-          to: '/admin/activities',
+          label: "Aktivitas",
+          to: "/admin/activities",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
+            open.value = false;
+          },
         },
         {
-          label: 'Konfigurasi Database',
-          to: '/admin/database',
+          label: "Konfigurasi Database",
+          to: "/admin/database",
           exact: true,
           onSelect: () => {
-            open.value = false
-          }
-        }
-      ]
+            open.value = false;
+          },
+        },
+      ],
     },
     {
-      label: 'Pengguna',
-      icon: 'i-lucide-users',
-      to: '/admin/users',
+      label: "Pengguna",
+      icon: "i-lucide-users",
+      to: "/admin/users",
       onSelect: () => {
-        open.value = false
-      }
+        open.value = false;
+      },
     },
     {
-      label: 'Profil',
-      icon: 'i-lucide-user',
-      to: '/admin/profile',
+      label: "Profil",
+      icon: "i-lucide-user",
+      to: "/admin/profile",
       onSelect: () => {
-        open.value = false
-      }
-    }
-  ]
-] satisfies NavigationMenuItem[][]
+        open.value = false;
+      },
+    },
+  ],
+] satisfies NavigationMenuItem[][];
 </script>
 
 <template>

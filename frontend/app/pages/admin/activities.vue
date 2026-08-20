@@ -67,7 +67,7 @@ const range = ref<RangeDate>({
   end: new Date(),
 });
 const currentPage = ref(1);
-const pageSize = 20;
+const pageSize = ref(20);
 
 // ── Apply filters ─────────────────────────────────────────────
 async function applyFilters() {
@@ -163,20 +163,20 @@ function openViewDetail(activity: Activity) {
 }
 
 // Parse JSON safely
-function parseJSON(jsonString: string | null): any {
-  if (!jsonString) return null;
-  try {
-    return JSON.parse(jsonString);
-  } catch {
-    return jsonString;
-  }
-}
+// function parseJSON(jsonString: string | null): any {
+//   if (!jsonString) return null;
+//   try {
+//     return JSON.parse(jsonString);
+//   } catch {
+//     return jsonString;
+//   }
+// }
 
-function copyJSON(jsonString: string | null) {
-  if (!jsonString) return
-  navigator.clipboard.writeText(prettyJSON(jsonString))
-  toast.add({ title: 'Disalin', description: 'JSON berhasil disalin', color: 'success' })
-}
+// function copyJSON(jsonString: string | null) {
+//   if (!jsonString) return
+//   navigator.clipboard.writeText(prettyJSON(jsonString))
+//   toast.add({ title: 'Disalin', description: 'JSON berhasil disalin', color: 'success' })
+// }
 
 // Format date
 function formatDate(dateString: string): string {

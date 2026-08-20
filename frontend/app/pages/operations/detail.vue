@@ -1,26 +1,45 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { NavigationMenuItem } from "@nuxt/ui";
+import type { DeliveryOrdersDetails, Details } from "~/types/operations";
 
-const route = useRoute()
-const idLetter = route.params.id
+const route = useRoute();
+const idDoLetter = route.params.id;
+const { get } = useApi();
+
+const { data: doDetails, pending } =
+  await useAsyncData<DeliveryOrdersDetails | null>(
+    "delivery-orders-details",
+    async () => {
+      const res = await get<DeliveryOrdersDetails>(
+        `/delivery-orders/${idDoLetter}`,
+      );
+      return res;
+    },
+    { default: () => null, server: false },
+  );
+const details = computed<Details | null>(
+  () => doDetails.value?.details ?? null,
+);
 
 const links = [
   [
     {
-      label: 'Detail Surat Delivery Order',
-      icon: 'i-lucide-truck',
-      to: `/operations/detail/delivery-order-${idLetter}`
-    }
-  ]
-] satisfies NavigationMenuItem[][]
+      label: "Detail Surat Delivery Order",
+      icon: "i-lucide-truck",
+      to: `/operations/detail/delivery-order-${idDoLetter}`,
+    },
+  ],
+] satisfies NavigationMenuItem[][];
 
-definePageMeta({ layout: 'operations' })
+definePageMeta({ layout: "operations" });
 </script>
 
 <template>
   <UDashboardPanel id="delivery-order" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Surat Delivery Order ${idLetter}`">
+      <UDashboardNavbar
+        :title="`Surat Delivery Order (${details?.doInformation.doNumber})`"
+      >
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

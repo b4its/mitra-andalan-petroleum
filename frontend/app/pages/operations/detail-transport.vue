@@ -1,26 +1,46 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { NavigationMenuItem } from "@nuxt/ui";
+import type { PoTransportirsDetails } from "~/types/operations";
 
-const route = useRoute()
-const idLetter = route.params.id
+const route = useRoute();
+const idPoTransportLetter = route.params.id;
+const { get } = useApi();
+
+const { data: poData, pending } =
+  await useAsyncData<PoTransportirsDetails | null>(
+    "po-transportir-details",
+    async () => {
+      const res = await get<PoTransportirsDetails>(
+        `/po-transportir/${idPoTransportLetter}`,
+      );
+      return res;
+    },
+    { default: () => null, server: false },
+  );
+
+const details = computed<PoTransportirsDetails["details"] | null>(
+  () => poData.value?.details ?? null,
+);
 
 const links = [
   [
     {
-      label: 'Detail PO Transportir',
-      icon: 'i-lucide-warehouse',
-      to: `/operations/detail-transport/po-transportir-${idLetter}`
-    }
-  ]
-] satisfies NavigationMenuItem[][]
+      label: "Detail PO Transportir",
+      icon: "i-lucide-warehouse",
+      to: `/operations/detail-transport/po-transportir-${idPoTransportLetter}`,
+    },
+  ],
+] satisfies NavigationMenuItem[][];
 
-definePageMeta({ layout: 'operations' })
+definePageMeta({ layout: "operations" });
 </script>
 
 <template>
   <UDashboardPanel id="po-transport" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`PO Transportir ${idLetter}`">
+      <UDashboardNavbar
+        :title="`PO Transportir (${details?.poTransportNumber})`"
+      >
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

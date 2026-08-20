@@ -1,99 +1,96 @@
 <script setup lang="ts">
-import { getPaginationRowModel } from '@tanstack/vue-table'
-import { h } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import type { PoTransportirs } from '~/types/operations'
+import { getPaginationRowModel } from "@tanstack/vue-table";
+import { h } from "vue";
+import type { TableColumn } from "@nuxt/ui";
+import type { PoTransportirs } from "~/types/operations";
 
-const table = useTemplateRef('table')
-const UBadge = resolveComponent('UBadge')
-const { get } = useApi()
+const table = useTemplateRef("table");
+const UBadge = resolveComponent("UBadge");
+const { get } = useApi();
 
-const search = ref('')
-const debouncedSearch = refDebounced(search, 300)
+const search = ref("");
+const debouncedSearch = refDebounced(search, 300);
 
-const {
-  data: rows,
-  pending
-} = await useAsyncData(
-  'operations-po-transportir',
+const { data: rows, pending } = await useAsyncData(
+  "operations-po-transportir",
   async () => {
-    const params: Record<string, string | number> = { page: 1, page_size: 50 }
-    if (debouncedSearch.value) params.search = debouncedSearch.value
+    const params: Record<string, string | number> = { page: 1, page_size: 50 };
+    if (debouncedSearch.value) params.search = debouncedSearch.value;
 
     const res = await get<{ items: PoTransportirs[] }>(
-      '/po-transportir',
-      params
-    )
-    return res.items || []
+      "/po-transportir",
+      params,
+    );
+    return res.items || [];
   },
-  { default: () => [], server: false, watch: [debouncedSearch] }
-)
+  { default: () => [], server: false, watch: [debouncedSearch] },
+);
 
 const columns: TableColumn<PoTransportirs>[] = [
   {
-    accessorKey: 'po_number',
-    header: 'Nomor PO Transportir',
-    cell: ({ row }) => `${row.getValue('po_number')}`
+    accessorKey: "po_number",
+    header: "Nomor PO Transportir",
+    cell: ({ row }) => `${row.getValue("po_number")}`,
   },
   {
-    accessorKey: 'date',
-    header: 'Tanggal',
+    accessorKey: "date",
+    header: "Tanggal",
     cell: ({ row }) => {
-      const date = String(row.getValue('date') || '')
-      return date ? formatDateDoc(new Date(date)) : '-'
-    }
+      const date = String(row.getValue("date") || "");
+      return date ? formatDateDoc(new Date(date)) : "-";
+    },
   },
   {
-    accessorKey: 'receiver',
-    header: 'Transportir',
-    cell: ({ row }) => row.getValue('receiver') || '-'
+    accessorKey: "receiver",
+    header: "Transportir",
+    cell: ({ row }) => row.getValue("receiver") || "-",
   },
   {
-    accessorKey: 'pic_person',
-    header: 'PIC',
-    cell: ({ row }) => row.getValue('pic_person') || '-'
+    accessorKey: "pic_person",
+    header: "PIC",
+    cell: ({ row }) => row.getValue("pic_person") || "-",
   },
   {
-    accessorKey: 'total',
-    header: 'Total',
-    cell: ({ row }) => formatCurrency(row.getValue('total') as number)
+    accessorKey: "total",
+    header: "Total",
+    cell: ({ row }) => formatCurrency(row.getValue("total") as number),
   },
   {
-    accessorKey: 'status',
-    header: 'Status',
+    accessorKey: "status",
+    header: "Status",
     cell: ({ row }) => {
-      const color
-        = {
-          created: 'info' as const,
-          document_returned: 'warning' as const,
-          completed: 'success' as const
-        }[row.getValue('status') as string] ?? 'neutral'
-      const label = statusLabel(row.getValue('status') as string)
-      return h(UBadge, { variant: 'subtle', color: color }, label)
-    }
+      const color =
+        {
+          created: "info" as const,
+          document_returned: "warning" as const,
+          completed: "success" as const,
+        }[row.getValue("status") as string] ?? "neutral";
+      const label = statusLabel(row.getValue("status") as string);
+      return h(UBadge, { variant: "subtle", color: color }, label);
+    },
   },
-  { id: 'actions', header: 'Aksi' }
-]
+  { id: "actions", header: "Aksi" },
+];
 
-const statusFilter = ref('all')
+const statusFilter = ref("all");
 
 watch(
   () => statusFilter.value,
   (newVal) => {
-    if (!table?.value?.tableApi) return
-    const statusColumn = table.value.tableApi.getColumn('status')
-    if (!statusColumn) return
-    if (newVal === 'all') {
-      statusColumn.setFilterValue(undefined)
+    if (!table?.value?.tableApi) return;
+    const statusColumn = table.value.tableApi.getColumn("status");
+    if (!statusColumn) return;
+    if (newVal === "all") {
+      statusColumn.setFilterValue(undefined);
     } else {
-      statusColumn.setFilterValue(newVal)
+      statusColumn.setFilterValue(newVal);
     }
-  }
-)
+  },
+);
 
-const pagination = ref({ pageIndex: 0, pageSize: 5 })
+const pagination = ref({ pageIndex: 0, pageSize: 5 });
 
-definePageMeta({ layout: 'operations' })
+definePageMeta({ layout: "operations" });
 </script>
 
 <template>
@@ -129,11 +126,11 @@ definePageMeta({ layout: 'operations' })
               { label: 'Semua Status', value: 'all' },
               { label: 'PO Telah Dibuat', value: 'created' },
               { label: 'PO Dikembalikan', value: 'document_returned' },
-              { label: 'PO Selesai', value: 'completed' }
+              { label: 'PO Selesai', value: 'completed' },
             ]"
             :ui="{
               trailingIcon:
-                'group-data-[state=open]:rotate-180 transition-transform duration-200'
+                'group-data-[state=open]:rotate-180 transition-transform duration-200',
             }"
             placeholder="Filter status"
             class="min-w-28"
@@ -154,16 +151,16 @@ definePageMeta({ layout: 'operations' })
             thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
             tbody: '[&>tr]:last:[&>td]:border-b-0',
             th: 'first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-            td: 'border-b border-default'
+            td: 'border-b border-default',
           }"
           :pagination-options="{
-            getPaginationRowModel: getPaginationRowModel()
+            getPaginationRowModel: getPaginationRowModel(),
           }"
         >
           <template #actions-cell="{ row }">
             <UButton
               :to="`/operations/detail-transport/po-transportir-${row.original.id}`"
-              variant="soft"
+              variant="solid"
               size="sm"
               color="primary"
               icon="i-lucide-file-text"

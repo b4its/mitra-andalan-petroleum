@@ -1,26 +1,41 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { NavigationMenuItem } from "@nuxt/ui";
+import type { InvoiceDetails, InvoiceDetailsData } from "~/types/finance";
 
-const route = useRoute()
-const idInvoice = route.params.id
+const route = useRoute();
+const invoiceId = route.params.id;
+const { get } = useApi();
+
+const { data: invoiceDetails, pending } = await useAsyncData(
+  "invoice-details",
+  async () => {
+    const res = await get<InvoiceDetails>(`/invoices/${invoiceId}`);
+    return res;
+  },
+);
+const details = computed<InvoiceDetailsData | null>(
+  () => invoiceDetails.value?.details ?? null,
+);
 
 const links = [
   [
     {
-      label: 'Detail Invoice Customer',
-      icon: 'i-lucide-receipt',
-      to: `/finance/detail/invoice-${idInvoice}`
-    }
-  ]
-] satisfies NavigationMenuItem[][]
+      label: "Detail Invoice Customer",
+      icon: "i-lucide-receipt",
+      to: `/finance/detail/invoice-${invoiceId}`,
+    },
+  ],
+] satisfies NavigationMenuItem[][];
 
-definePageMeta({ layout: 'finance' })
+definePageMeta({ layout: "finance" });
 </script>
 
 <template>
   <UDashboardPanel id="detail-invoice" :ui="{ body: 'lg:py-12' }">
     <template #header>
-      <UDashboardNavbar :title="`Invoice ${idInvoice}`">
+      <UDashboardNavbar
+        :title="`Invoice (${details?.invoiceInformation.invoiceNumber}) ${details?.billToInformation ? `| ${details.billToInformation}` : ''}`"
+      >
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
