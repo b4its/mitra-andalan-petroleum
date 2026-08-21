@@ -38,7 +38,7 @@ const profile = reactive<Partial<ProfileSchema>>({
   signature_caption: ''
 })
 
-const { data: userSignature } = await useAsyncData(
+const { data: userSignature, refresh: refreshSignatureData } = await useAsyncData(
   `profile-signature-${auth.user.value?.id ?? 'anon'}`,
   async () => {
     if (!auth.user.value?.id) return ''
@@ -48,6 +48,25 @@ const { data: userSignature } = await useAsyncData(
     return res[0]?.url || ''
   },
   { default: () => '', server: false }
+)
+
+// Preview foto baru (file yang baru dipilih) — pakai object URL
+const newSignaturePreview = ref<string>('')
+const signatureImageError = ref(false)
+
+watch(
+  () => profile.signature,
+  (file) => {
+    if (newSignaturePreview.value) {
+      URL.revokeObjectURL(newSignaturePreview.value)
+    }
+    if (file instanceof File) {
+      newSignaturePreview.value = URL.createObjectURL(file)
+    } else {
+      newSignaturePreview.value = ''
+    }
+    signatureImageError.value = false
+  }
 )
 
 // Caption tanda tangan user saat ini (penanda siapa yang menandatangani)
@@ -122,6 +141,11 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
       token: auth.user.value?.token || '',
       loggedInAt: auth.user.value?.loggedInAt || ''
     })
+
+    // Setelah simpan: preview baru menjadi "terpasang", muat ulang dari server
+    if (event.data.signature) {
+      await refreshSignatureData()
+    }
 
     toast.add({
       ...(props.showToastTitle ? { title: props.toastTitle } : {}),
@@ -209,17 +233,47 @@ function toggleShow() {
               description="Format gambar (.png, .jpg) — otomatis dijadikan barcode di dokumen marketing"
               accept="image/png,image/jpeg,image/jpg"
             />
+            <!-- Live preview: file baru yang dipilih atau tanda tangan terpasang -->
             <div
-              v-if="userSignature && !profile.signature"
+              v-if="newSignaturePreview"
+              class="mt-2 flex items-center gap-2 rounded-lg bg-elevated/50 border border-dashed border-primary/40 p-2"
+            >
+              <img
+                :src="newSignaturePreview"
+                alt="Tanda tangan baru"
+                class="h-10 w-auto max-w-40 object-contain"
+              >
+              <span class="text-xs text-muted">
+                Tanda tangan baru (belum disimpan)
+              </span>
+            </div>
+
+            <div
+              v-else-if="userSignature && !signatureImageError"
               class="mt-2 flex items-center gap-2 rounded-lg bg-elevated/50 p-2"
             >
               <img
                 :src="userSignature"
                 alt="Tanda tangan saat ini"
-                class="h-10 w-auto object-contain"
+                class="h-10 w-auto max-w-40 object-contain"
+                @error="signatureImageError = true"
               >
               <span class="text-xs text-muted">
                 Tanda tangan terpasang saat ini
+              </span>
+            </div>
+
+            <div
+              v-else
+              class="mt-2 flex items-center gap-2 rounded-lg bg-warning/10 border border-dashed border-warning/40 p-2"
+            >
+              <UIcon name="i-lucide-alert-triangle" class="size-4 text-warning" />
+              <span class="text-xs text-warning">
+                {{
+                  signatureImageError
+                    ? 'Gambar tanda tangan tidak ditemukan'
+                    : 'Belum ada tanda tangan'
+                }}
               </span>
             </div>
           </UFormField>
