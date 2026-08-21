@@ -10,6 +10,23 @@ const UButton = resolveComponent('UButton')
 const toast = useToast()
 const { get, post, put, postFile } = useApi()
 
+interface Activity {
+  id: string
+  user_id: string | null
+  actor_name: string
+  actor_role: string
+  action: string
+  resource_type: string
+  resource_id: string | null
+  resource_name: string | null
+  old_values: string | null
+  new_values: string | null
+  details: string | null
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+}
+
 // ── Tipe lokal ────────────────────────────────────────────────
 interface User {
   id: string
@@ -39,14 +56,14 @@ const PAGE_SIZE = 8
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   const list = users.value ?? []
-  
+
   // First filter by role
-  let result = list.filter(
+  const result = list.filter(
     u => roleFilter.value === 'all' || u.role === roleFilter.value
   )
-  
+
   if (!q) return result
-  
+
   return result.filter(
     u =>
       u.name.toLowerCase().includes(q)
@@ -105,6 +122,31 @@ const modalOpen = ref(false)
 const modalMode = ref<ModalMode>('add')
 const selectedUser = ref<User | null>(null)
 
+// ── User Activity Monitoring ───────────────────────────────────
+const activities = ref<Activity[]>([])
+const loadingActivities = ref(false)
+const activityPage = ref(1)
+const activityPageSize = ref(10)
+
+async function loadUserActivities(userId: string) {
+  loadingActivities.value = true
+  try {
+    const res = await get<{ items: Activity[], total: number, page: number }>(
+      `/activities?user_id=${userId}&page=${activityPage.value}&page_size=${activityPageSize.value}`
+    )
+    activities.value = res.items || []
+  } catch (error) {
+    console.error('Gagal memuat aktivitas:', error)
+    toast.add({
+      title: 'Gagal',
+      description: 'Tidak dapat memuat data aktivitas pengguna',
+      color: 'error'
+    })
+  } finally {
+    loadingActivities.value = false
+  }
+}
+
 // ── Form schema ───────────────────────────────────────────────
 const ROLES = [
   'admin',
@@ -161,7 +203,11 @@ function openAdd() {
 function openView(user: User) {
   modalMode.value = 'view'
   selectedUser.value = user
-  modalOpen.value = true
+  activityPage.value = 1
+  activities.value = []
+  loadUserActivities(user.id).then(() => {
+    modalOpen.value = true
+  })
 }
 
 function openEdit(user: User) {
@@ -262,6 +308,29 @@ async function onSubmitEdit(event: FormSubmitEvent<EditSchema>) {
   } finally {
     saving.value = false
   }
+}
+
+// ── Activity helpers ──────────────────────────────────────────
+const actionColor: Record<string, 'success' | 'info' | 'error'> = {
+  create: 'success',
+  update: 'info',
+  delete: 'error'
+}
+
+const actionLabel: Record<string, string> = {
+  create: 'Dibuat',
+  update: 'Diubah',
+  delete: 'Dihapus'
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 
 // ── Delete ────────────────────────────────────────────────────
@@ -491,6 +560,98 @@ const showPassword = ref(false)
             >
               {{ selectedUser.signature_caption }}
             </p>
+          </div>
+
+          <!-- Activity Monitoring Section -->
+          <div class="col-span-2 mt-4 pt-4 border-t">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-semibold">
+                Aktivitas Pengguna
+              </h4>
+              <UBadge
+                :color="actionColor[activities.length > 0 ? 'create' : 'info']"
+                variant="soft"
+                size="xs"
+              >
+                {{ activities.length }} aktivitas
+              </UBadge>
+            </div>
+
+            <div v-if="loadingActivities" class="space-y-2">
+              <USkeleton v-for="i in 5" :key="i" class="h-12 rounded" />
+            </div>
+
+            <div v-else-if="activities.length === 0" class="text-sm text-muted py-4 text-center">
+              <UIcon name="i-lucide-infinity" class="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>Belum ada aktivitas tercatat</p>
+            </div>
+
+            <div v-else class="overflow-x-auto rounded-lg border">
+              <table class="w-full text-sm">
+                <thead class="bg-muted">
+                  <tr>
+                    <th class="px-4 py-2 text-left font-medium">
+                      Aksi
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium">
+                      Resource
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium">
+                      Waktu
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="activity in activities"
+                    :key="activity.id"
+                    class="border-t hover:bg-muted/50"
+                  >
+                    <td class="px-4 py-2">
+                      <UBadge
+                        :color="actionColor[activity.action || 'info']"
+                        variant="soft"
+                        size="xs"
+                        class="capitalize"
+                      >
+                        {{ actionLabel[activity.action] || activity.action }}
+                      </UBadge>
+                    </td>
+                    <td class="px-4 py-2 font-mono text-xs">
+                      {{ activity.resource_type }}
+                      <span v-if="activity.resource_name" class="text-muted ml-1">
+                        ({{ activity.resource_name }})
+                      </span>
+                    </td>
+                    <td class="px-4 py-2 text-xs text-muted">
+                      {{ formatDate(activity.created_at) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="activities.length > 0" class="mt-3 flex justify-end gap-2">
+              <UButton
+                size="xs"
+                variant="ghost"
+                :disabled="activityPage === 1"
+                @click="activityPage--"
+              >
+                ← Sebelumnya
+              </UButton>
+              <span class="text-xs text-muted self-center">
+                Halaman {{ activityPage }}
+              </span>
+              <UButton
+                size="xs"
+                variant="ghost"
+                @click="activityPage++"
+              >
+                Berikutnya →
+              </UButton>
+            </div>
           </div>
         </div>
       </div>

@@ -39,8 +39,6 @@ const columns: TableColumn<Activity>[] = [
   { accessorKey: 'actor_name', header: 'Nama' },
   { accessorKey: 'actor_role', header: 'Peran' },
   { accessorKey: 'resource_type', header: 'Resource Type' },
-  { accessorKey: 'action', header: 'Aksi' },
-  { accessorKey: 'created_at', header: 'Waktu' },
   { id: 'actions', header: '' }
 ]
 
@@ -70,10 +68,6 @@ const range = ref<RangeDate>({
 const currentPage = ref(1)
 const pageSize = ref(20)
 
-// User filter for monitoring
-const userFilter = ref<string>('all')
-const selectedUserId = ref<string>('')
-
 // ── Apply filters ─────────────────────────────────────────────
 async function applyFilters() {
   try {
@@ -92,10 +86,6 @@ async function applyFilters() {
 
     if (actorFilter.value) {
       params.append('actor_name', actorFilter.value)
-    }
-
-    if (userFilter.value && userFilter.value !== 'all') {
-      params.append('user_id', userFilter.value)
     }
 
     if (search.value) {
@@ -133,7 +123,7 @@ async function applyFilters() {
 }
 
 // Reset pagination on filter change
-watch([actionFilter, resourceTypeFilter, actorFilter, userFilter], () => {
+watch([actionFilter, resourceTypeFilter, actorFilter], () => {
   currentPage.value = 1
 })
 
@@ -291,32 +281,13 @@ const actions = ['all', 'create', 'update', 'delete'] as const
             </div>
 
             <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
-              <label class="text-xs text-muted uppercase tracking-wide">Filter by User</label>
+              <label class="text-xs text-muted uppercase tracking-wide">Pencarian Actor</label>
               <UInput
                 v-model="actorFilter"
                 placeholder="Cari nama actor..."
                 icon="i-lucide-user"
                 class="w-full"
               />
-              <UButton
-                v-if="actorFilter"
-                size="xs"
-                variant="ghost"
-                color="neutral"
-                icon="i-lucide-x"
-                @click="actorFilter = ''; applyFilters()"
-              />
-            </div>
-
-            <div class="flex flex-col gap-1 w-36">
-              <label class="text-xs text-muted uppercase tracking-wide">Aksi</label>
-              <UButton
-                color="primary"
-                size="sm"
-                @click="selectedUserId = actorFilter; applyFilters()"
-              >
-                Monitor
-              </UButton>
             </div>
           </div>
 
@@ -390,23 +361,6 @@ const actions = ['all', 'create', 'update', 'delete'] as const
               <span class="font-mono text-sm">{{
                 row.original.resource_type
               }}</span>
-            </template>
-
-            <template #action-cell="{ row }">
-              <UBadge
-                :color="row.original.action === 'create' ? 'success'
-                  : row.original.action === 'update' ? 'info' : 'error'"
-                variant="soft"
-                class="capitalize"
-              >
-                {{ row.original.action }}
-              </UBadge>
-            </template>
-
-            <template #created-at-cell="{ row }">
-              <span class="text-xs text-muted">
-                {{ formatDate(row.original.created_at) }}
-              </span>
             </template>
 
             <template #actions-cell="{ row }">
