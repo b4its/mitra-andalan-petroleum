@@ -13,6 +13,13 @@
 #    SSL: Let's Encrypt certificate aktif
 #    Akses via domain ini untuk semua halaman dan API
 #
+# 🚀 HOSTING NGROK (Hosting + Public URL otomatis):
+#    Stack: MySQL + Backend + Frontend + Nginx + Ngrok.
+#    Setiap perintah make akan menampilkan URL publik ngrok yang aktif,
+#    misal: `make prod` -> URL https://<domain>.ngrok-free.dev (+ /login, /admin).
+#    Siapkan dulu: cp .env.production.example .env.production
+#    lalu isi NGROK_AUTHTOKEN (+ NGROK_DOMAIN bila mau domain tetap).
+#
 # 🐛 LOCAL HOSTING (Development):
 #    Frontend UI:     http://localhost:8092
 #    Backend API:     http://localhost:8012
@@ -65,7 +72,7 @@
 #   python -m app.db.seed [--force] [--check]
 #   uvicorn app.main:app --host 0.0.0.0 --port 8012
 
-.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli show-ip prod help-prod prod-build prod-up prod-down prod-down-all prod-logs prod-ps prod-ngrok-url prod-backend-test test test-backend test-frontend frontend-typecheck frontend-lint _wait-backend _show-access-info
+.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli show-ip prod help-prod prod-build prod-up prod-down prod-down-all prod-logs prod-ps prod-ngrok-url prod-backend-test test test-backend test-frontend frontend-typecheck frontend-lint _wait-backend _show-access-info _show-prod-access _resolve-public-url
 
 help: ## Tampilkan daftar perintah dan informasi akses aplikasi
 	@echo "Mitra Andalan Petroleum — Build & Run System"
@@ -73,6 +80,9 @@ help: ## Tampilkan daftar perintah dan informasi akses aplikasi
 	@echo "🌐 APLIKASI DAPAT DIAKSES:"
 	@echo "   Production URL:  https://mandalan.mapetroleum.co.id"
 	@echo "   Local Host:      http://localhost:8092"
+	@echo ""
+	@echo "🚀 HOSTING NGROK (Production):"
+	@$(MAKE) --no-print-directory _show-prod-access
 	@echo ""
 	@echo "💾 DATABASE:"
 	@echo "   localhost:3318 | User: root | Pass: root | DB: mandalan"
@@ -92,6 +102,8 @@ up: ## Jalankan semua service (db, backend, frontend) — seed otomatis & tampil
 	@$(MAKE) _wait-backend
 	@echo ""
 	@$(MAKE) _show_access_info
+	@echo ""
+	@$(MAKE) --no-print-directory _show-prod-access
 
 down: ## Hentikan semua service
 	docker compose --profile full down
@@ -100,6 +112,8 @@ build: ## Build ulang service + migrasi & seed otomatis (tunggu backend sehat)
 	docker compose --profile full up -d --build
 	@$(MAKE) _wait-backend
 	@$(MAKE) seed
+	@echo ""
+	@$(MAKE) --no-print-directory _show-prod-access
 
 seed: ## Isi database dengan data contoh (aman: hanya jika database kosong)
 	docker exec mandalan-backend python -m app.db.seed
@@ -210,8 +224,41 @@ _wait-backend: ## (internal) Tunggu sampai backend sehat
 	docker logs mandalan-backend --tail 50; \
 	exit 1
 
-show-ip: ## Tampilkan IP dan port yang digunakan
+show-ip: ## Tampilkan IP/port + URL publik (prod ngrok) yang dipakai
 	@$(MAKE) _show_access_info
+	@echo ""
+	@$(MAKE) _show-prod-access
+
+# ── RESOLVE URL PUBLIK ─────────────────────────────────────────
+# Terapkan urutan: 1) PUBLIC_SITE_URL di .env.production,
+#                  2) URL ngrok yang terekam di log container,
+#                  3) fallback ke akses lokal nginx (http://localhost:8093).
+# Output: PUBLIC_URL=<url> (di-set untuk shell berikutnya).
+_public-url-error = echo "⚠️  (PUBLIC_SITE_URL tidak diset, dan container ngrok belum punya URL)" >&2
+
+_resolve-public-url: ## (internal) Cetak PUBLIC_URL untuk dipakai target lain
+	@url=$$(grep -E '^PUBLIC_SITE_URL=' .env.production 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d ' '); \
+	if [ -n "$$url" ]; then echo "PUBLIC_URL=$$url"; exit 0; fi; \
+	ngrok_url=$$(docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | tail -1 | sed 's/^url=//'); \
+	if [ -n "$$ngrok_url" ]; then echo "PUBLIC_URL=$$ngrok_url"; exit 0; fi; \
+	port=$$(grep -E '^HTTP_PORT=' .env.production 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d ' '); \
+	if [ -z "$$port" ]; then port=8093; fi; \
+	echo "PUBLIC_URL=http://localhost:$$port"
+
+_show-prod-access: ## (internal) Tampilkan URL publik + domain ngrok
+	@echo "   URL Akses Publik (Ngrok):"; \
+	domain=$$(grep -E '^NGROK_DOMAIN=' .env.production 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d ' '); \
+	ngrok_url=$$(docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | tail -1 | sed 's/^url=//'); \
+	if [ -n "$$ngrok_url" ]; then \
+		echo "      Public URL (aktif):   $$ngrok_url"; \
+		echo "      Login:                 $$ngrok_url/login"; \
+		echo "      Admin:                 $$ngrok_url/admin"; \
+		echo "      Backend (health):      $$ngrok_url/api/v1/health"; \
+	else \
+		echo "      (container ngrok belum berjalan — jalankan make prod)"; \
+	fi; \
+	if [ -n "$$domain" ]; then echo "      Domain tetap (NGROK_DOMAIN):  $$domain"; fi
+	@echo "   Akses Lokal (nginx):  http://localhost:8093"
 
 # ── PRODUCTION (Docker Compose + Nginx + Ngrok) ────────────────
 # `.env.production` menyimpan token ngrok, domain, dan URL publik.
@@ -219,11 +266,10 @@ show-ip: ## Tampilkan IP dan port yang digunakan
 
 _ENV_PROD := --env-file .env.production -f docker-compose.prod.yml
 
-help-prod: ## Informasi akses stack produksi (nginx + ngrok)
+help-prod: ## Informasi akses stack produksi (nginx + ngrok) — domain & URL publik
 	@echo "Mitra Andalan Petroleum — Production (Nginx + Ngrok)"
 	@echo ""
-	@echo "Local:  http://localhost:8093 (lewat nginx)"
-	@echo "Public: https://<domain ngrok> (lihat make prod-ngrok-url)"
+	@$(MAKE) --no-print-directory _show-prod-access
 	@echo ""
 	@echo "Perintah: prod, prod-build, prod-up, prod-down, prod-log,"
 	@echo "          prod-ps, prod-ngrok-url, prod-backend-test"
@@ -232,13 +278,17 @@ prod: ## Deploy produksi: build image + migrasi & seed otomatis + buka tunnel ng
 	@if [ ! -f .env.production ]; then echo "ERROR: .env.production belum ada. Buat dari .env.production.example"; exit 1; fi
 	docker compose $(_ENV_PROD) up -d --build
 	@echo ""
-	@$(MAKE) prod-ngrok-url
+	@$(MAKE) --no-print-directory _show-prod-access
 
 prod-build: ## Deploy produksi tanpa menunggu (build + up)
 	docker compose $(_ENV_PROD) up -d --build
+	@echo ""
+	@$(MAKE) --no-print-directory _show-prod-access
 
 prod-up: ## Jalankan ulang stack produksi tanpa rebuild
 	docker compose $(_ENV_PROD) up -d
+	@echo ""
+	@$(MAKE) --no-print-directory _show-prod-access
 
 prod-down: ## Hentikan stack produksi
 	docker compose $(_ENV_PROD) down
