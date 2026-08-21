@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { StepperItem } from '@nuxt/ui'
-import type { ResUploads } from '~/types'
-import type { OfferingLetterPost, Customer, CustomerPostData } from '~/types/marketing'
+import type {
+  OfferingLetterPost,
+  Customer,
+  OfferingLetterDetails
+} from '~/types/marketing'
 import type {
   MarketingOLDetailsState,
   MarketingOLFooterState,
@@ -9,7 +12,11 @@ import type {
 } from '~/types/schemas'
 import { useOfferingLetterPdf } from '~/composables/useOfferingLetterPdf'
 
+definePageMeta({ layout: 'marketing' })
+
 const { user } = useAuth()
+const { get, post } = useApi()
+const toast = useToast()
 const previewOpen = ref(false)
 const { buildOfferingLetterPdf } = useOfferingLetterPdf()
 
@@ -41,14 +48,12 @@ const { data: customerList, pending } = await useAsyncData<CustomerOption[]>(
 )
 
 const receivers = computed(() =>
-  customerList.value.map((receiver) => {
-    return {
-      label: receiver.name,
-      value: receiver.id,
-      npwp: receiver.npwp,
-      address: receiver.address
-    }
-  })
+  customerList.value.map(receiver => ({
+    label: receiver.name,
+    value: receiver.id,
+    npwp: receiver.npwp,
+    address: receiver.address
+  }))
 )
 
 const items: StepperItem[] = [
@@ -105,14 +110,8 @@ const letterOfferDetails = reactive<MarketingOLDetailsState>({
       pph: 0
     }
   },
-  informasiTambahan: ['Harga dapat berubah mengikuti harga keekonomian Pertamina']
+  informasiTambahan: ['Harga dapat berubah mangikuti harga keekonomian Pertamina']
 })
-
-// Auto-fill offeror data from logged-in user's profile
-if (user.value?.signature || user.value?.signatureCaption) {
-  letterFooter.offeror.name = user.value.name || 'Pengguna'
-  // Note: User must have uploaded signature in their profile for PDF generation
-}
 
 const letterFooter = reactive<MarketingOLFooterState>({
   purchaseOrderDeadline: '1 - 14',
@@ -126,6 +125,12 @@ const letterFooter = reactive<MarketingOLFooterState>({
     email: 'cs@map.co.id'
   }
 })
+
+// Auto-fill offeror data from logged-in user's profile
+if (user.value?.signature || user.value?.signatureCaption) {
+  letterFooter.offeror.name = user.value.name || 'Pengguna'
+  // Note: User must have uploaded signature in their profile for PDF generation
+}
 
 const stepper = useTemplateRef('stepper')
 
@@ -141,7 +146,19 @@ function onDetailsSubmit() {
   stepper.value?.next()
 }
 
-async function buildPreviewPdf() {
+// Precio total bahan: basePrice + semua selling price (sama perhit seperti DetailsForm)
+const fuelTotalPrice = computed(() => {
+  const fp = letterOfferDetails.fuelPrices
+  return (
+    fp.basePrice
+    + fp.sellingPrice.ppkb
+    + (fp.sellingPrice.oat ?? 0)
+    + fp.sellingPrice.ppn
+    + (fp.sellingPrice.pph ?? 0)
+  )
+})
+
+async function buildPreviewPdf(): Promise<string | null> {
   const details = {
     ...letterHeader,
     ...letterOfferDetails,
@@ -156,60 +173,57 @@ async function buildPreviewPdf() {
   )
 }
 
-const toast = useToast()
-const { post, postFile, del } = useApi()
-
 // Validate signature requirement for offer letter creation
 function validateUserSignature(): boolean {
   // Only marketing and admin roles need signature for offer letters
-  const rolesNeedingSignature = ["marketing", "admin"]
-  
+  const rolesNeedingSignature = ['marketing', 'admin']
+
   if (!user.value?.role || !rolesNeedingSignature.includes(user.value.role)) {
     return true // Other roles do not require signature
   }
-  
+
   if (!user.value?.signature) {
     toast.add({
-      title: "Profil Belum Lengkap",
-      description: "Silakan upload tanda tangan terlebih dahulu di halaman profil sebelum membuat surat penawaran",
-      color: "warning"
+      title: 'Profil Belum Lengkap',
+      description: 'Silakan upload tanda tangan terlebih dahulu di halaman profil sebelum membuat surat penawaran',
+      color: 'warning'
     })
-    
+
     // Navigate to profile page to complete signature setup
-    useRouter().push("/admin/profile")
+    useRouter().push('/admin/profile')
     return false
   }
-  
+
   return true
 }
 
 async function onFooterSubmit() {
   // Check if user has signature configured
-  if (!validateUserSignature()) return;
+  if (!validateUserSignature()) return
   let createdId: string | null = null
   try {
-    const res = await post<{ id: string }, OfferingLetterPost>('/offering-letters', {
-      customer_id: letterHeader.receiver,
-      date: letterHeader.date,
-      location: letterHeader.location,
+    const details = {
+      ...letterHeader,
+      ...letterOfferDetails,
+      ...letterFooter
+    }
+    const body: OfferingLetterPost = {
       offering_letter_number: letterHeader.offeringLetterNumber,
+      customer_id: letterHeader.receiver,
+      location: letterHeader.location,
+      date: letterHeader.date,
       regarding: letterHeader.regarding,
       receiver: letterHeader.receiver,
-      payment_method: letterOfferDetails.paymentMethod ?? null,
-      payment_term: letterOfferDetails.paymentTerm,
-      payment_tollerance: letterOfferDetails.volumeTolerance,
-      purchase_order_deadline: letterFooter.purchaseOrderDeadline,
-      late_penalty_percent: letterOfferDetails.latePenalty,
-      price_service_type: letterOfferDetails.fuelPrices.logisticInformation,
-      fuel_product_name: letterOfferDetails.fuelPrices.productName,
-      fuel_hpp_price: letterOfferDetails.fuelPrices.hppPrice,
-      fuel_base_price: letterOfferDetails.fuelPrices.basePrice,
-      fuel_selling_ppkb_percent: letterOfferDetails.fuelPrices.percentageNum.ppkb,
-      fuel_selling_oat_percent: letterOfferDetails.fuelPrices.percentageNum.oat,
-      fuel_selling_ppn_percent: letterOfferDetails.fuelPrices.percentageNum.ppn,
-      fuel_selling_pph_percent: letterOfferDetails.fuelPrices.percentageNum.pph,
-      terms_and_conditions: letterOfferDetails.informasiTambahan
-    })
+      fuel_total_price: fuelTotalPrice.value,
+      transport_price: 0,
+      status: 'created',
+      created_by: user.value?.id ?? null,
+      details: details as unknown as OfferingLetterDetails
+    }
+    const res = await post<{ id: string }, OfferingLetterPost>(
+      '/offering-letters',
+      body
+    )
     createdId = res.id
     toast.add({
       title: 'Berhasil',
@@ -222,116 +236,78 @@ async function onFooterSubmit() {
     console.error(e)
     toast.add({
       title: 'Gagal',
-      description: 'Terjadi kesalahan saat membuat surat penawaran',
-      color: 'danger'
+      description: e instanceof Error ? e.message : 'Terjadi kesalahan saat membuat surat penawaran',
+      color: 'error'
     })
   }
 }
 
-async function onPreviewPdf() {
-  if (!validateUserSignature()) return;
-  const pdfContent = await buildPreviewPdf()
-  if (pdfContent) {
-    previewOpen.value = true
-    const blob = new Blob([pdfContent], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
-    return { url }
-  }
-  return null
+function onPreviewPdf() {
+  if (!validateUserSignature()) return
+  previewOpen.value = true
 }
-
-const offers = ref<{ id: string; number: string; customer: string }[]>([
-  { id: '1', number: '722/MAP/II-06/26', customer: 'PT. Surya Tambang Energi' }
-])
 </script>
 
 <template>
-  <div class="grid gap-6 py-6 px-4 md:px-8">
-    <NuxtCard class="col-span-full bg-white dark:bg-neutral-800 rounded-lg shadow-sm">
-      <NuxtCardTitle class="text-xl font-bold">Pembuatan Surat Penawaran</NuxtCardTitle>
-      <NuxtCardSeparator />
-      <NuxtCardContent class="pt-6">
-        <!-- Step Form -->
-        <ClientOnly>
-          <NuxtStepper v-slot="{ stepIndex }" :items="items" ref="stepper" orientation="vertical" class="mt-4">
-            <!-- Letter Header Step -->
-            <div v-show="stepIndex === 0" id="letterHeader" style="padding-top: 1rem;">
-              <MarketingOLHeaderForm 
-                v-model="letterHeader" 
+  <UDashboardPanel id="marketing-customer-penawaran">
+    <template #header>
+      <UDashboardNavbar title="Pembuatan Surat Penawaran">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+      </UDashboardNavbar>
+    </template>
+
+    <template #body>
+      <div class="space-y-5 p-4">
+        <USkeleton v-if="pending" class="h-16 rounded-lg" />
+        <ClientOnly v-else>
+          <UStepper ref="stepper" disabled :items>
+            <template #letterHeader>
+              <MarketingOLHeaderForm
+                v-model="letterHeader"
+                :has-previous="stepper?.hasPrev"
+                :receivers="receivers"
+                @previous="previousNavigation"
                 @submit="onHeaderSubmit"
               />
-              <div class="flex justify-between mt-6 pt-4 border-t">
-                <Button @click="previousNavigation" variant="outline">
-                  Previous
-                </Button>
-                <Button 
-                  :disabled="!letterHeader.date || !letterHeader.offeringLetterNumber"
-                  @click="onHeaderSubmit"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            </template>
 
-            <!-- Letter Offer Details Step -->
-            <div v-show="stepIndex === 1" id="letterOfferDetails" style="padding-top: 1rem;">
-              <MarketingOLDetailsForm 
-                v-model="letterOfferDetails" 
+            <template #letterOfferDetails>
+              <MarketingOLDetailsForm
+                v-model="letterOfferDetails"
+                :has-previous="stepper?.hasPrev"
+                @previous="previousNavigation"
                 @submit="onDetailsSubmit"
               />
-              <div class="flex justify-between mt-6 pt-4 border-t">
-                <Button @click="previousNavigation" variant="outline">
-                  Previous
-                </Button>
-                <Button 
-                  :disabled="!letterOfferDetails.supplyPoint"
-                  @click="onDetailsSubmit"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            </template>
 
-            <!-- Letter Footer Step -->
-            <div v-show="stepIndex === 2" id="letterFooter" style="padding-top: 1rem;">
-              <MarketingOLFooterForm 
+            <template #letterFooter>
+              <MarketingOLFooterForm
                 v-model="letterFooter"
+                :has-previous="stepper?.hasPrev"
+                @preview="onPreviewPdf"
+                @previous="previousNavigation"
                 @submit="onFooterSubmit"
               />
-              <div class="flex justify-between mt-6 pt-4 border-t">
-                <Button @click="previousNavigation" variant="outline">
-                  Previous
-                </Button>
-                <Button 
-                  :disabled="!letterFooter.offeror.name || !letterFooter.companyInformation.phoneNumber"
-                  @click="onPreviewPdf"
-                >
-                  Preview PDF
-                </Button>
-                <Button 
-                  :disabled="!letterFooter.offeror.name || !letterFooter.companyInformation.phoneNumber"
-                  @click="onFooterSubmit"
-                >
-                  Create & Save
-                </Button>
-              </div>
-            </div>
-          </NuxtStepper>
-          
-          <!-- Loading State -->
+            </template>
+          </UStepper>
+
           <template #fallback>
             <div class="py-12 flex items-center justify-center">
-              <span class="animate-spin mr-2 text-primary">Loading...</span>
+              <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin text-primary" />
             </div>
           </template>
         </ClientOnly>
-      </NuxtCardContent>
-    </NuxtCard>
+      </div>
 
-    <!-- Modal Preview PDF -->
-    <DocumentPreviewModal 
-      v-if="previewOpen" 
-      @close="previewOpen = false"
-    />
-  </div>
+      <!-- Modal Preview PDF -->
+      <DocumentPreviewModal
+        :open="previewOpen"
+        title="Preview Surat Penawaran"
+        :build-pdf="buildPreviewPdf"
+        @close="previewOpen = false"
+      />
+    </template>
+  </UDashboardPanel>
 </template>
