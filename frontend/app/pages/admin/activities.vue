@@ -1,45 +1,44 @@
 <script setup lang="ts">
-import type { TableColumn, FormSubmitEvent } from "@nuxt/ui";
-import type { RangeDate } from "~/types";
+import type { TableColumn } from '@nuxt/ui'
+import type { RangeDate } from '~/types'
 
-definePageMeta({ layout: "admin" });
+definePageMeta({ layout: 'admin' })
 
-const toast = useToast();
-const { get } = useApi();
+const toast = useToast()
+const { get } = useApi()
 
 // ── Tipe lokal ────────────────────────────────────────────────
 interface Activity {
-  id: string;
-  user_id: string | null;
-  actor_name: string;
-  actor_role: string;
-  action: string;
-  resource_type: string;
-  resource_id: string | null;
-  resource_name: string | null;
-  old_values: string | null;
-  new_values: string | null;
-  details: string | null;
-  ip_address: string | null;
-  user_agent: string | null;
-  created_at: string;
+  id: string
+  user_id: string | null
+  actor_name: string
+  actor_role: string
+  action: string
+  resource_type: string
+  resource_id: string | null
+  resource_name: string | null
+  old_values: string | null
+  new_values: string | null
+  details: string | null
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
 }
 
 interface PaginatedActivities {
-  items: Activity[];
-  total: number;
-  page: number;
-  page_size: number;
-  pages: number;
+  items: Activity[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
 }
 
-// ── Kolom tabel (hanya data ringkas) ──────────────────────────
+// ── Kolom tabel (ringkas: No, Nama, Peran, Resource Type) ─────
 const columns: TableColumn<Activity>[] = [
-  { accessorKey: 'action', header: 'Aksi' },
-  { accessorKey: 'resource_type', header: 'Resource' },
-  { accessorKey: 'resource_name', header: 'Nama Resource' },
-  { accessorKey: 'actor_name', header: 'Actor' },
-  { accessorKey: 'created_at', header: 'Waktu' },
+  { id: 'no', header: 'No.' },
+  { accessorKey: 'actor_name', header: 'Nama' },
+  { accessorKey: 'actor_role', header: 'Peran' },
+  { accessorKey: 'resource_type', header: 'Resource Type' },
   { id: 'actions', header: '' }
 ]
 
@@ -47,119 +46,113 @@ const columns: TableColumn<Activity>[] = [
 const {
   data: activitiesData,
   pending,
-  refresh,
+  refresh
 } = await useAsyncData<PaginatedActivities>(
-  "admin-activities",
-  () => get<PaginatedActivities>("/activities?page=1&page_size=20"),
+  'admin-activities',
+  () => get<PaginatedActivities>('/activities?page=1&page_size=20'),
   {
     default: () => ({ items: [], total: 0, page: 1, page_size: 20, pages: 0 }),
-    lazy: true,
-  },
-);
+    lazy: true
+  }
+)
 
 // ── Filter state ──────────────────────────────────────────────
-const actionFilter = ref<"all" | "create" | "update" | "delete">("all");
-const resourceTypeFilter = ref<string>("all");
-const actorFilter = ref<string>("");
-const search = ref("");
+const actionFilter = ref<'all' | 'create' | 'update' | 'delete'>('all')
+const resourceTypeFilter = ref<string>('all')
+const actorFilter = ref<string>('')
+const search = ref('')
 const range = ref<RangeDate>({
   start: new Date(Date.now() - 30 * 86400000),
-  end: new Date(),
-});
-const currentPage = ref(1);
-const pageSize = ref(20);
+  end: new Date()
+})
+const currentPage = ref(1)
+const pageSize = ref(20)
 
 // ── Apply filters ─────────────────────────────────────────────
 async function applyFilters() {
   try {
     const params = new URLSearchParams({
       page: currentPage.value.toString(),
-      page_size: pageSize.toString(),
-    });
+      page_size: pageSize.value.toString()
+    })
 
-    if (actionFilter.value !== "all") {
-      params.append("action", actionFilter.value);
+    if (actionFilter.value !== 'all') {
+      params.append('action', actionFilter.value)
     }
 
-    if (resourceTypeFilter.value !== "all") {
-      params.append("resource_type", resourceTypeFilter.value);
+    if (resourceTypeFilter.value !== 'all') {
+      params.append('resource_type', resourceTypeFilter.value)
     }
-
 
     if (actorFilter.value) {
-      params.append("actor_name", actorFilter.value);
+      params.append('actor_name', actorFilter.value)
     }
 
-
     if (search.value) {
-      params.append("search", search.value);
+      params.append('search', search.value)
     }
 
     if (range.value.start) {
       params.append(
-        "from_date",
-        range.value.start.toISOString().split("T")[0] || "",
-      );
+        'from_date',
+        range.value.start.toISOString().split('T')[0] || ''
+      )
     }
 
     if (range.value.end) {
       params.append(
-        "to_date",
-        range.value.end.toISOString().split("T")[0] || "",
-      );
+        'to_date',
+        range.value.end.toISOString().split('T')[0] || ''
+      )
     }
 
     const res = await get<PaginatedActivities>(
-      `/activities?${params.toString()}`,
-    );
-    activitiesData.value = res;
-  } catch (error: any) {
-    console.error(error);
+      `/activities?${params.toString()}`
+    )
+    activitiesData.value = res
+  } catch (error: unknown) {
+    console.error(error)
+    const detail = (error as { response?: { data?: { detail?: string } } })
+      ?.response?.data?.detail
     toast.add({
-      title: "Gagal",
-      description:
-        error?.response?.data?.detail || "Terjadi kesalahan saat memuat data",
-      color: "error",
-    });
+      title: 'Gagal',
+      description: detail || 'Terjadi kesalahan saat memuat data',
+      color: 'error'
+    })
   }
 }
 
 // Reset pagination on filter change
 watch([actionFilter, resourceTypeFilter, actorFilter], () => {
-  currentPage.value = 1;
-});
+  currentPage.value = 1
+})
 
 // ── Action colors ─────────────────────────────────────────────
-const actionColors: Record<string, "info" | "success" | "warning" | "error"> = {
-  create: "success",
-  update: "info",
-  delete: "error",
-};
+const actionColors: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
+  create: 'success',
+  update: 'info',
+  delete: 'error'
+}
 
 const actionLabels: Record<string, string> = {
-  all: "Semua",
-  create: "Dibuat",
-  update: "Diubah",
-  delete: "Dihapus",
-};
+  all: 'Semua',
+  create: 'Dibuat',
+  update: 'Diubah',
+  delete: 'Dihapus'
+}
 
 // ── Resource types ────────────────────────────────────────────
 const resourceTypes = Array.from(
-  new Set(activitiesData.value?.items?.map((a) => a.resource_type) || []),
-).sort();
-
-// ── Actors ────────────────────────────────────────────────────
-const actors = Array.from(
-  new Set(activitiesData.value?.items?.map((a) => a.actor_name) || []),
-).sort();
+  new Set(activitiesData.value?.items?.map(a => a.resource_type) || [])
+).sort()
 
 // ── View activity details modal ──────────────────────────────
-const viewModalOpen = ref(false);
-const selectedActivity = ref<Activity | null>(null);
+const viewModalOpen = ref(false)
+const selectedActivity = ref<Activity | null>(null)
 
 function openViewDetail(activity: Activity) {
-  selectedActivity.value = activity;
-  viewModalOpen.value = true;
+  selectedActivity.value = activity
+  viewModalOpen.value = true
 }
 
 // Parse JSON safely
@@ -180,17 +173,36 @@ function openViewDetail(activity: Activity) {
 
 // Format date
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleString("id-ID", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return new Date(dateString).toLocaleString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// Copy teks to clipboard
+async function copyText(text: string | null | undefined) {
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.add({
+      title: 'Disalin',
+      description: 'Teks berhasil disalin',
+      color: 'success'
+    })
+  } catch {
+    toast.add({
+      title: 'Gagal',
+      description: 'Gagal menyalin teks',
+      color: 'error'
+    })
+  }
 }
 
 // Get actions
-const actions = ["all", "create", "update", "delete"] as const;
+const actions = ['all', 'create', 'update', 'delete'] as const
 </script>
 
 <template>
@@ -218,15 +230,13 @@ const actions = ["all", "create", "update", "delete"] as const;
           <!-- First row: main filters -->
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex flex-col gap-1">
-              <label class="text-xs text-muted uppercase tracking-wide"
-                >Tipe Aksi</label
-              >
+              <label class="text-xs text-muted uppercase tracking-wide">Tipe Aksi</label>
               <USelect
                 v-model="actionFilter"
                 :items="
                   actions.map((a) => ({
                     label: actionLabels[a] || a,
-                    value: a,
+                    value: a
                   }))
                 "
                 placeholder="Semua Aksi"
@@ -235,14 +245,12 @@ const actions = ["all", "create", "update", "delete"] as const;
             </div>
 
             <div class="flex flex-col gap-1">
-              <label class="text-xs text-muted uppercase tracking-wide"
-                >Resource Type</label
-              >
+              <label class="text-xs text-muted uppercase tracking-wide">Resource Type</label>
               <USelect
                 v-model="resourceTypeFilter"
                 :items="[
                   { label: 'Semua', value: 'all' },
-                  ...resourceTypes.map((rt) => ({ label: rt, value: rt })),
+                  ...resourceTypes.map((rt) => ({ label: rt, value: rt }))
                 ]"
                 placeholder="Semua Resource"
                 class="w-48"
@@ -250,9 +258,7 @@ const actions = ["all", "create", "update", "delete"] as const;
             </div>
 
             <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
-              <label class="text-xs text-muted uppercase tracking-wide"
-                >Pencarian Actor</label
-              >
+              <label class="text-xs text-muted uppercase tracking-wide">Pencarian Actor</label>
               <UInput
                 v-model="actorFilter"
                 placeholder="Cari nama actor..."
@@ -283,7 +289,7 @@ const actions = ["all", "create", "update", "delete"] as const;
                     actorFilter = '';
                     range = {
                       start: new Date(Date.now() - 30 * 86400000),
-                      end: new Date(),
+                      end: new Date()
                     };
                     applyFilters();
                   }
@@ -302,15 +308,29 @@ const actions = ["all", "create", "update", "delete"] as const;
 
         <!-- Table -->
         <UCard v-else>
-          <UTable :data="activitiesData?.items ?? []">
-            <template #action-cell="{ row }">
+          <UTable :data="activitiesData?.items ?? []" :columns="columns">
+            <template #no-cell="{ row }">
+              <span class="text-muted">
+                {{
+                  (activitiesData?.page - 1)
+                    * (activitiesData?.page_size ?? pageSize)
+                    + row.index
+                    + 1
+                }}
+              </span>
+            </template>
+
+            <template #actor-name-cell="{ row }">
+              <span class="font-medium">{{ row.original.actor_name }}</span>
+            </template>
+
+            <template #actor-role-cell="{ row }">
               <UBadge
-                :color="actionColors[row.original.action] ?? 'neutral'"
+                :color="row.original.actor_role === 'admin' ? 'error' : 'info'"
                 variant="soft"
                 class="capitalize"
               >
-                {{ actionLabels[row.original.action] || row.original.action }}
-                {{ actionLabels[row.original.action] || row.original.action }}
+                {{ row.original.actor_role }}
               </UBadge>
             </template>
 
@@ -320,70 +340,17 @@ const actions = ["all", "create", "update", "delete"] as const;
               }}</span>
             </template>
 
-            <template #actor-name-cell="{ row }">
-              <div class="flex items-center gap-2">
-                <UBadge
-                  :color="
-                    row.original.actor_role === 'admin' ? 'error' : 'info'
-                  "
-                >
-                  {{ row.original.actor_role }}
-                </UBadge>
-                <span>{{ row.original.actor_name }}</span>
-              </div>
-            </template>
-
-            <template #changes-cell="{ row }">
-              <div class="flex items-center gap-2">
-                <span
-                  v-if="row.original.old_values && row.original.new_values"
-                  class="text-xs"
-                >
-                  <UIcon name="i-lucide-diff" class="w-4 h-4" />
-                  Diubah
-                </span>
-                <span
-                  v-else-if="row.original.new_values"
-                  class="text-xs text-success"
-                >
-                  <UIcon name="i-lucide-plus" class="w-4 h-4" />
-                  Baru
-                </span>
-                <span
-                  v-else-if="row.original.old_values"
-                  class="text-xs text-error"
-                >
-                  <UIcon name="i-lucide-trash" class="w-4 h-4" />
-                  Dihapus
-                </span>
-              </div>
-            </template>
-
-            <template #ip-address-cell="{ row }">
-              <span
-                v-if="row.original.ip_address"
-                class="font-mono text-xs text-muted"
-              >
-                {{ row.original.ip_address }}
-              </span>
-              <span v-else class="text-muted">-</span>
-            </template>
-
-            <template #created-at-cell="{ row }">
-              <span class="text-sm text-muted">
-                {{ formatDate(row.original.created_at) }}
-              </span>
-            </template>
-
             <template #actions-cell="{ row }">
               <UButton
                 icon="i-lucide-eye"
-                size="sm"
+                size="xs"
                 color="primary"
                 variant="ghost"
                 aria-label="Lihat detail"
                 @click="openViewDetail(row.original)"
-              />
+              >
+                Detail
+              </UButton>
             </template>
           </UTable>
 
@@ -438,7 +405,6 @@ const actions = ["all", "create", "update", "delete"] as const;
     <template #title>
       <div class="flex items-center gap-2">
         <UIcon
-        <UIcon
           v-if="selectedActivity"
           :name="
             actionColors[selectedActivity.action] === 'success'
@@ -467,7 +433,9 @@ const actions = ["all", "create", "update", "delete"] as const;
         <!-- Basic Info -->
         <div class="grid grid-cols-2 gap-4 p-4 bg-elevated rounded-lg">
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Aksi</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Aksi
+            </p>
             <p class="font-medium capitalize">
               {{
                 actionLabels[selectedActivity.action] || selectedActivity.action
@@ -478,7 +446,9 @@ const actions = ["all", "create", "update", "delete"] as const;
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Resource
             </p>
-            <p class="font-medium">{{ selectedActivity.resource_type }}</p>
+            <p class="font-medium">
+              {{ selectedActivity.resource_type }}
+            </p>
           </div>
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
@@ -489,17 +459,25 @@ const actions = ["all", "create", "update", "delete"] as const;
             </p>
           </div>
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Waktu</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Waktu
+            </p>
             <p class="font-medium">
               {{ formatDate(selectedActivity.created_at) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Actor</p>
-            <p class="font-medium">{{ selectedActivity.actor_name }}</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Actor
+            </p>
+            <p class="font-medium">
+              {{ selectedActivity.actor_name }}
+            </p>
           </div>
           <div>
-            <p class="text-xs text-muted uppercase tracking-wide mb-1">Role</p>
+            <p class="text-xs text-muted uppercase tracking-wide mb-1">
+              Role
+            </p>
             <p class="font-medium capitalize">
               {{ selectedActivity.actor_role }}
             </p>
@@ -508,8 +486,12 @@ const actions = ["all", "create", "update", "delete"] as const;
 
         <!-- Details -->
         <div v-if="selectedActivity.details" class="p-4 bg-elevated rounded-lg">
-          <p class="text-xs text-muted uppercase tracking-wide mb-2">Detail</p>
-          <p class="text-sm">{{ selectedActivity.details }}</p>
+          <p class="text-xs text-muted uppercase tracking-wide mb-2">
+            Detail
+          </p>
+          <p class="text-sm">
+            {{ selectedActivity.details }}
+          </p>
         </div>
 
         <!-- Old Values -->
@@ -525,17 +507,14 @@ const actions = ["all", "create", "update", "delete"] as const;
               size="xs"
               variant="ghost"
               icon="i-lucide-copy"
-              @click="
-                navigator.clipboard.writeText(selectedActivity.old_values || '')
-              "
+              @click="copyText(selectedActivity.old_values)"
             >
               Copy
             </UButton>
           </div>
           <pre
             class="text-xs bg-neutral-900 dark:bg-neutral-950 p-3 rounded overflow-x-auto text-white"
-            >{{ selectedActivity.old_values }}</pre
-          >
+          >{{ selectedActivity.old_values }}</pre>
         </div>
 
         <!-- New Values -->
@@ -551,17 +530,14 @@ const actions = ["all", "create", "update", "delete"] as const;
               size="xs"
               variant="ghost"
               icon="i-lucide-copy"
-              @click="
-                navigator.clipboard.writeText(selectedActivity.new_values || '')
-              "
+              @click="copyText(selectedActivity.new_values)"
             >
               Copy
             </UButton>
           </div>
           <pre
             class="text-xs bg-neutral-900 dark:bg-neutral-950 p-3 rounded overflow-x-auto text-white"
-            >{{ selectedActivity.new_values }}</pre
-          >
+          >{{ selectedActivity.new_values }}</pre>
         </div>
 
         <!-- Network Info -->
