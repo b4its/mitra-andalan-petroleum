@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { h } from "vue"
-import * as z from "zod"
-import type { TableColumn, FormSubmitEvent } from "@nuxt/ui"
-import type { ResUploads } from "~/types"
-import type { Company, CompanyData } from "~/types/company"
+import { h } from 'vue'
+import * as z from 'zod'
+import type { TableColumn, FormSubmitEvent } from '@nuxt/ui'
+import type { ResUploads } from '~/types'
+import type { CompanyData } from '~/types/company'
 
-definePageMeta({ layout: "admin" })
+definePageMeta({ layout: 'admin' })
 
 const toast = useToast()
-const { get, post, put, del } = useApi()
+const { get, post, put, del, postFile } = useApi()
 
 // ── Tipe lokal ────────────────────────────────────────────────
 interface CompanyLocal {
@@ -24,13 +24,13 @@ const {
   pending,
   refresh
 } = await useAsyncData<CompanyLocal[]>(
-  "admin-companies",
-  () => get<CompanyLocal[]>("/companies"),
+  'admin-companies',
+  () => get<CompanyLocal[]>('/companies'),
   { default: () => [], lazy: true }
 )
 
 // ── Search (frontend) ─────────────────────────────────────────
-const search = ref("")
+const search = ref('')
 const page = ref(1)
 const PAGE_SIZE = 8
 
@@ -40,8 +40,8 @@ const filtered = computed(() => {
   if (!q) return list
   return list.filter(
     c =>
-      c.name.toLowerCase().includes(q) ||
-      c.abbreviation.toLowerCase().includes(q)
+      c.name.toLowerCase().includes(q)
+      || c.abbreviation.toLowerCase().includes(q)
   )
 })
 
@@ -55,52 +55,48 @@ watch(search, () => {
 })
 
 // ── Modal states ──────────────────────────────────────────────
-type ModalMode = "view" | "add" | "edit"
+type ModalMode = 'view' | 'add' | 'edit'
 const modalOpen = ref(false)
-const modalMode = ref<ModalMode>("add")
+const modalMode = ref<ModalMode>('add')
 const selectedCompany = ref<CompanyLocal | null>(null)
 
 function openAdd() {
-  modalMode.value = "add"
+  modalMode.value = 'add'
   selectedCompany.value = null
-  formState.name = ""
-  formState.abbreviation = ""
-  formState.company_image = ""
+  formState.name = ''
+  formState.abbreviation = ''
+  formState.company_image = ''
+  imagePreview.value = null
+  filesForUpload.value = null
   modalOpen.value = true
 }
 
 function openEdit(company: CompanyLocal) {
-  modalMode.value = "edit"
+  modalMode.value = 'edit'
   selectedCompany.value = company
   formState.name = company.name
   formState.abbreviation = company.abbreviation
-  formState.company_image = company.company_image ?? ""
+  formState.company_image = company.company_image ?? ''
+  imagePreview.value = null
+  filesForUpload.value = null
   modalOpen.value = true
 }
 
 function openView(company: CompanyLocal) {
-  modalMode.value = "view"
+  modalMode.value = 'view'
   selectedCompany.value = company
   modalOpen.value = true
 }
 
 // ── Form schema ────────────────────────────────────────────────
-const ROLES = [
-  "admin",
-  "marketing",
-  "operations",
-  "finance",
-  "accounting"
-] as const
-
 const addSchema = z.object({
-  name: z.string().min(2, "Minimal 2 karakter"),
+  name: z.string().min(2, 'Minimal 2 karakter'),
   abbreviation: z.string().min(1).max(20),
   company_image: z.string().optional()
 })
 
 const editSchema = z.object({
-  name: z.string().min(2, "Minimal 2 karakter"),
+  name: z.string().min(2, 'Minimal 2 karakter'),
   abbreviation: z.string().min(1).max(20),
   company_image: z.string().optional()
 })
@@ -109,16 +105,16 @@ type AddSchema = z.output<typeof addSchema>
 type EditSchema = z.output<typeof editSchema>
 
 const formState = reactive<AddSchema & EditSchema>({
-  name: "",
-  abbreviation: "",
+  name: '',
+  abbreviation: '',
   company_image: null as unknown as string
 })
 
 async function onSubmitAdd(event: FormSubmitEvent<AddSchema>) {
   event.preventDefault()
   try {
-    const res = await post<{ id: string }, Omit<CompanyData, "id">>(
-      "/companies",
+    await post<{ id: string }, Omit<CompanyData, 'id'>>(
+      '/companies',
       {
         name: formState.name,
         abbreviation: formState.abbreviation,
@@ -126,17 +122,17 @@ async function onSubmitAdd(event: FormSubmitEvent<AddSchema>) {
       }
     )
     toast.add({
-      title: "Sukses",
-      description: "Perusahaan baru berhasil ditambahkan.",
-      color: "success"
+      title: 'Sukses',
+      description: 'Perusahaan baru berhasil ditambahkan.',
+      color: 'success'
     })
     modalOpen.value = false
     refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err instanceof Error ? err.message : "Gagal menambahkan perusahaan.",
-      color: "error"
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Gagal menambahkan perusahaan.',
+      color: 'error'
     })
   }
 }
@@ -151,17 +147,17 @@ async function onSubmitEdit(event: FormSubmitEvent<EditSchema>) {
       company_image: formState.company_image || null
     })
     toast.add({
-      title: "Sukses",
-      description: "Data perusahaan berhasil diperbarui.",
-      color: "success"
+      title: 'Sukses',
+      description: 'Data perusahaan berhasil diperbarui.',
+      color: 'success'
     })
     modalOpen.value = false
     refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err instanceof Error ? err.message : "Gagal memperbarui perusahaan.",
-      color: "error"
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Gagal memperbarui perusahaan.',
+      color: 'error'
     })
   }
 }
@@ -182,18 +178,18 @@ async function confirmDelete() {
   try {
     await del(`/companies/${deleteTarget.value.id}`)
     toast.add({
-      title: "Berhasil",
+      title: 'Berhasil',
       description: `Perusahaan ${deleteTarget.value.name} berhasil dihapus.`,
-      color: "success"
+      color: 'success'
     })
     deleteOpen.value = false
     deleteTarget.value = null
     refresh()
   } catch (err) {
     toast.add({
-      title: "Gagal",
-      description: err instanceof Error ? err.message : "Gagal menghapus perusahaan.",
-      color: "error"
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Gagal menghapus perusahaan.',
+      color: 'error'
     })
   } finally {
     deleting.value = false
@@ -202,67 +198,73 @@ async function confirmDelete() {
 
 // ── Modal title ───────────────────────────────────────────────
 const modalTitle = computed(() => {
-  if (modalMode.value === "add") return "Tambah Perusahaan Baru"
-  if (modalMode.value === "edit")
-    return `Edit Perusahaan — ${selectedCompany.value?.name ?? ""}`
-  return `Detail Perusahaan — ${selectedCompany.value?.name ?? ""}`
+  if (modalMode.value === 'add') return 'Tambah Perusahaan Baru'
+  if (modalMode.value === 'edit')
+    return `Edit Perusahaan — ${selectedCompany.value?.name ?? ''}`
+  return `Detail Perusahaan — ${selectedCompany.value?.name ?? ''}`
 })
 
 // ── Columns ───────────────────────────────────────────────────
 const columns: TableColumn<CompanyLocal>[] = [
-  { accessorKey: "name", header: "Nama Perusahaan" },
-  { accessorKey: "abbreviation", header: "Singkatan" },
+  { accessorKey: 'name', header: 'Nama Perusahaan' },
+  { accessorKey: 'abbreviation', header: 'Singkatan' },
   {
-    accessorKey: "company_image",
-    header: "Logo",
+    accessorKey: 'company_image',
+    header: 'Logo',
     cell: ({ row }) => {
-      const img = row.getValue("company_image") as string | null
-      if (!img) return "-"
-      return h("div", { class: "flex items-center gap-2" }, [
-        h("img", {
+      const img = row.getValue('company_image') as string | null
+      if (!img) return '-'
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('img', {
           src: img,
-          alt: "Company logo",
-          class: "w-8 h-8 rounded object-cover border"
+          alt: 'Company logo',
+          class: 'w-8 h-8 rounded object-cover border'
         }),
-        h("span", "- logo available")
+        h('span', '- logo available')
       ])
     }
   },
-  { id: "actions", header: "Aksi" }
+  { id: 'actions', header: 'Aksi' }
 ]
 
 const saving = ref(false)
 
 // ── Image upload state ────────────────────────────────────────
 const imagePreview = ref<string | null>(null)
-const filesForUpload = ref<File[] | null>(null)
+const filesForUpload = ref<File | null>(null)
 const uploadingImage = ref(false)
+
+watch(filesForUpload, (file) => {
+  if (file && !uploadingImage.value) {
+    onFileSelected(file)
+  }
+})
 
 async function onFileSelected(file: File) {
   // Validate file size (max 10MB)
   const maxSize = 10 * 1024 * 1024 // 10MB in bytes
   if (file.size > maxSize) {
     toast.add({
-      title: "Gagal",
-      description: "Ukuran file maksimal adalah 10MB",
-      color: "error"
+      title: 'Gagal',
+      description: 'Ukuran file maksimal adalah 10MB',
+      color: 'error'
     })
     return
   }
-  
+
   // Validate file type
-  const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+  const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
   if (!validTypes.includes(file.type)) {
     toast.add({
-      title: "Gagal",
-      description: "Format file harus JPG, PNG, atau WEBP",
-      color: "error"
+      title: 'Gagal',
+      description: 'Format file harus JPG, PNG, atau WEBP',
+      color: 'error'
     })
     return
   }
-  
+
   uploadingImage.value = true
-  
+
   try {
     // Convert to base64 for preview
     const reader = new FileReader()
@@ -270,27 +272,27 @@ async function onFileSelected(file: File) {
       imagePreview.value = reader.result as string
     }
     reader.readAsDataURL(file)
-    
+
     // Upload to server
-    const formData = new FormData()
-    formData.append("file", file)
-    
-    const res = await postFile<{ url: string }, FormData>(
-      "/media/upload",
-      formData
-    )
-    
+    const res = await postFile<ResUploads[]>('/upload', {
+      files: [file],
+      folder: 'companies'
+    })
+
+    formState.company_image = res[0]?.url ?? ''
+    filesForUpload.value = null
+
     toast.add({
-      title: "Sukses",
-      description: "Gambar berhasil diupload",
-      color: "success"
+      title: 'Sukses',
+      description: 'Gambar berhasil diupload',
+      color: 'success'
     })
   } catch (err) {
     console.error(err)
     toast.add({
-      title: "Gagal",
-      description: err instanceof Error ? err.message : "Gagal mengupload gambar",
-      color: "error"
+      title: 'Gagal',
+      description: err instanceof Error ? err.message : 'Gagal mengupload gambar',
+      color: 'error'
     })
     imagePreview.value = null
   } finally {
@@ -300,7 +302,7 @@ async function onFileSelected(file: File) {
 
 function clearImage() {
   imagePreview.value = null
-  formState.company_image = ""
+  formState.company_image = ''
 }
 </script>
 
@@ -424,13 +426,17 @@ function clearImage() {
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Nama
             </p>
-            <p class="font-medium">{{ selectedCompany.name }}</p>
+            <p class="font-medium">
+              {{ selectedCompany.name }}
+            </p>
           </div>
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Singkatan
             </p>
-            <p class="font-medium">{{ selectedCompany.abbreviation }}</p>
+            <p class="font-medium">
+              {{ selectedCompany.abbreviation }}
+            </p>
           </div>
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
@@ -471,7 +477,7 @@ function clearImage() {
             autocomplete="off"
           />
         </UFormField>
-        
+
         <!-- Logo Upload Section -->
         <UFormField name="company_image" label="Logo Perusahaan">
           <div class="space-y-3">
@@ -483,7 +489,7 @@ function clearImage() {
                 :src="imagePreview"
                 alt="Preview logo"
                 class="w-full h-full object-cover"
-              />
+              >
               <div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
                 <UButton
                   size="xs"
@@ -499,24 +505,22 @@ function clearImage() {
                   label="Upload File Baru"
                   description="Maksimal 10MB (JPG, PNG, WEBP)"
                   accept="image/jpeg,image/png,image/jpg,image/webp"
-                  @change="onFileSelected"
                 />
                 <span v-else class="text-xs text-white">
                   Mengupload...
                 </span>
               </div>
             </div>
-            
+
             <UFileUpload
               v-else
               v-model="filesForUpload"
               label="Upload Logo Perusahaan"
               description="Maksimal 10MB (JPG, PNG, WEBP)"
               accept="image/jpeg,image/png,image/jpg,image/webp"
-              @change="onFileSelected"
             />
           </div>
-          
+
           <p v-if="formState.company_image" class="mt-2 text-xs text-muted">
             URL gambar telah diupload dari server
           </p>
@@ -547,7 +551,7 @@ function clearImage() {
             autocomplete="off"
           />
         </UFormField>
-        
+
         <!-- Logo Upload Section -->
         <UFormField name="company_image" label="Logo Perusahaan">
           <div class="space-y-3">
@@ -556,10 +560,10 @@ function clearImage() {
               class="relative aspect-square max-w-[200px] mx-auto rounded-lg overflow-hidden border dark:border-neutral-700"
             >
               <img
-                :src="imagePreview || selectedCompany?.company_image"
+                :src="imagePreview || selectedCompany?.company_image || ''"
                 alt="Preview logo"
                 class="w-full h-full object-cover"
-              />
+              >
               <div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
                 <UButton
                   size="xs"
@@ -575,24 +579,22 @@ function clearImage() {
                   label="Upload File Baru"
                   description="Maksimal 10MB (JPG, PNG, WEBP)"
                   accept="image/jpeg,image/png,image/jpg,image/webp"
-                  @change="onFileSelected"
                 />
                 <span v-else-if="uploadingImage" class="text-xs text-white">
                   Mengupload...
                 </span>
               </div>
             </div>
-            
+
             <UFileUpload
               v-else
               v-model="filesForUpload"
               label="Upload Logo Perusahaan"
               description="Maksimal 10MB (JPG, PNG, WEBP)"
               accept="image/jpeg,image/png,image/jpg,image/webp"
-              @change="onFileSelected"
             />
           </div>
-          
+
           <p v-if="formState.company_image" class="mt-2 text-xs text-muted">
             URL gambar telah diupload dari server
           </p>

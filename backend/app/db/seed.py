@@ -105,10 +105,23 @@ async def seed_database(db: AsyncSession, force: bool = False):
     await _seed_sales(db)
     await _seed_accounting(db)
     await _seed_signatures(db)
+    await _seed_document_uploads(db)
     await _seed_activities(db)
 
     await db.commit()
-    print("[seed] Selesai mengisi data contoh (5 user, 3 company, 3 customer, 2 supplier, 15 OL, 10 PO, 3 PO transportir, 15 DO, 15 invoice, notifikasi, penjualan, akuntansi, tanda tangan, aktivitas).")
+    print("[seed] ✅ Selesai mengisi data:")
+    print("   - 5 users")
+    print("   - 60 customers")
+    print("   - 60 suppliers")
+    print("   - 85 offering_letters")
+    print("   - 60 purchase_orders")
+    print("   - 40 po_transportirs")
+    print("   - 85 delivery_orders")
+    print("   - 60 invoices")
+    print("   - 100 sales")
+    print("   - 70+ journal entries")
+    print("   - Signatures + profiles")
+    print("   - Activities")
 
 
 async def _seed_activities(db: AsyncSession):
@@ -413,68 +426,47 @@ async def _seed_activities(db: AsyncSession):
 
 
 async def _seed_offering_letters(db: AsyncSession):
-    """Seed surat penawaran data untuk sistem."""
-    today = datetime.now()
+    """Generate 80+ surat penawaran dengan variasi realistis."""
+    print("[seed] Generating 80 offering letters...")
     
-    # Get customer IDs from seed
     result = await db.execute(select(Customer))
     customers = result.scalars().all()
     
     if not customers:
         print("[seed] Warning: No customers found, skipping OL generation")
         return
-        
-    # Create comprehensive OL records
-    ol_numbers = [
-        ("722/MAP/II-06/26", 15),
-        ("723/MAP/III-07/26", 20), 
-        ("724/MAP/IV-08/26", 25),
-        ("725/MAP/V-09/26", 30),
-        ("726/MAP/VI-10/26", 35),
-        ("727/MAP/VII-11/26", 40),
-        ("728/MAP/VIII-12/26", 45),
-        ("729/MAP/IX-01/27", 50),
-        ("730/MAP/X-02/27", 55),
-        ("731/MAP/XI-03/27", 60),
-        ("732/MAP/XII-04/27", 65),
-        ("733/MAP/I-05/27", 70),
-        ("734/MAP/II-06/27", 75),
-        ("735/MAP/III-07/27", 80),
-        ("736/MAP/IV-08/27", 85),
-    ]
     
-    for i in range(min(15, len(customers))):
-        ol_number, days_delivery = ol_numbers[i % len(ol_numbers)]
+    ol_numbers = [f"{i + 1:03d}/OL/VI/2026" for i in range(85)]
+    
+    creator_result = await db.execute(select(User).where(User.role == "marketing"))
+    marketing_user = creator_result.scalars().first()
+    
+    today = datetime.now()
+    statuses = ["created", "under_revision", "po_received"]
+    
+    for i, ol_number in enumerate(ol_numbers):
         customer = customers[i % len(customers)]
+        fuel_price = round(17450 + ((i * 150) % 2000))
+        transport_price = round(2500000 + (i * 100000))
         
-        ol_data = {
-            "id": str(uuid.uuid4()),
-            "offering_letter_number": ol_number,
-            "date": (today - timedelta(days=30-i)).strftime("%Y-%m-%d"),
-            "location": "Balikpapan",
-            "regarding": "Surat Penawaran Harga Bahan Bakar Minyak",
-            "customer_id": customer.id,
-            "payment_method": "kredit" if i % 2 == 0 else None,
-            "payment_term": str((i + 1) * 7 if i < 10 else 30),
-            "volume_tollerance": 0.005,
-            "purchase_order_deadline": str((i + 1) * 7 if i < 5 else 14),
-            "late_penalty_percent": 0.01,
-            "price_service_type": "Truk Tangki" if i % 2 == 0 else "Pipeline",
-            "fuel_product_name": "Bio Diesel",
-            "fuel_hpp_price": round(17450 + (i * 100)),
-            "fuel_base_price": round(17950 + (i * 100)),
-            "fuel_selling_ppkb_percent": 0.005,
-            "fuel_selling_oat_percent": 0.01,
-            "fuel_selling_ppn_percent": 0.11,
-            "fuel_selling_pph_percent": 0 if i < 10 else 0.02,
-            "terms_and_conditions": json.dumps(["Harga dapat berubah mengikuti harga keekonomian Pertamina"])
-        }
-        
-        ol = OfferingLetter(**ol_data)
+        ol = OfferingLetter(
+            id=str(uuid.uuid4()),
+            offering_letter_number=ol_number,
+            customer_id=customer.id,
+            location=["Balikpapan", "Samarinda", "Tenggarong", "Tarakan"][i % 4],
+            date=(today - timedelta(days=i % 90)).strftime("%Y-%m-%d"),
+            regarding="Penawaran Harga BBM Solar Industri",
+            receiver=customer.name,
+            fuel_total_price=fuel_price,
+            transport_price=transport_price,
+            status=statuses[i % len(statuses)],
+            created_by=marketing_user.id if marketing_user else None,
+            details=_ol_details(ol_number, customer.name, customer.address or "", fuel_price, transport_price)
+        )
         db.add(ol)
-        
+    
     await db.flush()
-    print(f"[seed] Menambahkan {len(ol_numbers[:15])} surat penawaran.")
+    print(f"[seed] Added {len(ol_numbers)} offering letters.")
 
 
 # ── Companies ────────────────────────────────────────────────────
@@ -601,26 +593,109 @@ async def _seed_users(db: AsyncSession):
 # ── Customers ──────────────────────────────────────────────────
 
 async def _seed_customers(db: AsyncSession):
-    customers = [
-        Customer(name="PT. Surya Tambang Energi", npwp="01.609.052.4-091.000", address="Jl. A. W. Syahrani No. 45, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-741231", phone2="0812 5617 8230", email="cs@suryatambangenergi.co.id"),
-        Customer(name="CV. Kaltim Jaya Abadi", npwp="02.104.783.2-091.000", address="Jl. Jend. Sudirman No. 88, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-426817", phone2="0813 9920 4471", email="admin@kaltimjayaabadi.co.id"),
-        Customer(name="PT. Borneo Energi Utama", npwp="02.345.219.6-091.000", address="Jl. Teuku Umar No. 12, Tenggarong", province="Kalimantan Timur", city="Tenggarong", phone="0541-661234", phone2="0821 5507 1198", email="info@borneoenergiutama.co.id"),
+    """Generate 50+ customers dengan variasi realistis."""
+    print("[seed] Generating 50 customers...")
+    base_names = [
+        "PT. Surya Tambang Energi", "CV. Kaltim Jaya Abadi", "PT. Borneo Energi Utama",
+        "CV. Mulia Gemawan", "PT. Adaro Mining", "PT. Bayan Resources", "CV. Mitra Perkasa",
+        "PT. Arutmin Indonesia", "CV. Bintang Kalimantan", "PT. Bukit Asam",
+        "PT. Indika Energy", "CV. Jaya Makmur", "PT. KPC (Kentet Coal)", "CV. Lestari Sejahtera",
+        "PT. Mega Persada", "CV. Nusa Perkasa", "PT. Oliver Global", "CV. Prima Abadi",
+        "PT. Qolbu Mandiri", "CV. Raya Sentosa", "PT. Sigma Mineral", "CV. Tani Baru",
+        "PT. Universal Energy", "CV. Victoria Sukses", "PT. Wira Usaha", "CV. Xanadu Group",
+        "PT. Yamaha Industry", "CV. Yapen Jaya", "PT. Zion Capital", "CV. Abadi Karya"
     ]
+    
+    # Extend to exactly 60 customers
+    names = base_names + [f"PT. Customer Test {i} {chr(65 + (i % 26))}" for i in range(30)]
+    
+    companies_list = [
+        ("PT. Mitra Andalan Petroleum", "MAP"),
+        ("PT. Pertamina Hulu Energi", "PHE"),
+        ("PT. Total E&P Indonesia", "TEPI")
+    ]
+    
+    cities = ["Samarinda", "Balikpapan", "Tenggarong", "Mahakam Ulu", "Passi", "Tarakan", "Bontang"]
+    provinces = ["Kalimantan Timur", "Kalimantan Utara", "Kelurahan", "Malaysia", "Brunei"]
+    
+    customers = []
+    for i, name in enumerate(names[:60]):
+        c = Customer(
+            name=name,
+            npwp=f"{i + 1:02}.{i % 100:03d}.{i % 1000:03d}-091",
+            address=f"Jl. Raya No. {100 + i}, Kelurahan {name.split()[-1]}",
+            province=provinces[i % len(provinces)],
+            city=cities[i % len(cities)],
+            phone=f"05{4 + (i % 2)}{1}-{i + 1:04d}{i + 1:02d}",
+            phone2=f"08{i + 1:02} {123 + (i % 9):04d} {456 + (i % 6):04d}",
+            email=f"contact@{name.lower().replace(' ', '').replace('.', '')}.co.id" if i < 30 else f"admin{i}@test.com",
+        )
+        customers.append(c)
+    
     for c in customers:
         db.add(c)
     await db.flush()
+    print(f"[seed] Added {len(customers)} customers.")
 
 
 # ── Suppliers ──────────────────────────────────────────────────
 
 async def _seed_suppliers(db: AsyncSession):
-    suppliers = [
-        Supplier(name="PT. Persada Energi Nusantara", npwp="01.457.812.4-091.000", address="Jl. MT Haryono No. 7, Samarinda", province="Kalimantan Timur", city="Samarinda", phone="0541-746912", phone2="0811 235 7819", email="penjualan@persadaenerginusantara.co.id", bank_name="BANK BCA", bank_account="2881306571"),
-        Supplier(name="CV. Sinar Petrolindo", npwp="02.451.963.9-091.000", address="Jl. Soekarno Hatta No. 33, Balikpapan", province="Kalimantan Timur", city="Balikpapan", phone="0542-882345", phone2="0852 4710 6653", email="cv.sinarpetrolindo@gmail.com", bank_name="BANK BRI", bank_account="002901123456789"),
+    """Generate 60+ suppliers dengan variasi realistis."""
+    print("[seed] Generating 60 suppliers...")
+    
+    # Extended supplier names - need at least 60
+    names = [
+        "PT. Persada Energi Nusantara", "CV. Sinar Petrolindo", "PT. Borneo Logistik Utama",
+        "CV. Mandiri Transports", "PT. Kalimantan Sejahtera", "CV. Nusa Transport",
+        "PT. Artha Graha Prima", "CV. Barata Jaya", "PT. Citra Mulia Perkasa", "CV. Darma Sentosa",
+        "PT. Edelweiss Group", "CV. Fauzan Logistics", "PT. Garuda Abadi", "CV. Hendra Karya",
+        "PT. Indoprima Makmur", "CV. Jasa Marga", "PT. Karyapersada Prima", "CV. Langit Biru",
+        "PT. Mitra Usaha", "CV. Negeri Baru", "PT. Ocean Shipping", "CV. Permata Indah",
+        "PT. Queen Shipping", "CV. Raya Mandiri", "PT. Satya Nugraha", "CV. Tri Utama",
+        "PT. Ujung Pandang", "CV. Ventura Global", "PT. Wangi Logistics", "CV. Xerxes Corp",
+        "PT. Yasmin Energy", "CV. Zaina Trade", "PT. Alpha Transport", "CV. Beta Services",
+        "PT. Gamma Trading", "CV. Delta Express", "PT. Epsilon Power", "CV. Zeta Logistics",
+        "PT. Eta Shipping", "CV. Theta Cargo", "PT. Iota Energy", "CV. Kappa Fuel",
+        "PT. Lambda Oil", "CV. Mu Transport", "PT. Nu Shipping", "CV. Xi Cargo",
+        "PT. Omicron Power", "CV. Pi Trading", "PT. Rho Energy", "CV. Sigma Fuel",
+        "PT. Tau Logistics", "CV. Upsilon Trade", "PT. Phi Shipping", "CV. Chi Cargo",
+        "PT. Psi Power", "CV. Omega Fuel",
+        "PT. Alpha Sinar Mandiri", "CV. Bima Sakti Logistik", "PT. Cakra Petroleum", "CV. Damai Sejahtera"
     ]
+    
+    companies_list = [
+        ("PT. Mitra Andalan Petroleum", "MAP"),
+        ("PT. Pertamina Hulu Energi", "PHE"),
+        ("PT. Total E&P Indonesia", "TEPI")
+    ]
+    
+    cities = ["Samarinda", "Balikpapan", "Tenggarong", "Mahakam Ulu", "Tarakan"]
+    provinces = ["Kalimantan Timur", "Kalimantan Utara", "Malaysia", "Brunei"]
+    
+    bank_names = ["BCA", "BRI", "BNI", "MANDIRI", "CIMB Niaga", "BTN"]
+    bank_accounts = [f"{2881306571 + i * 1000:09d}" for i in range(6)]
+    
+    suppliers = []
+    for i, name in enumerate(names[:60]):
+        s = Supplier(
+            name=name,
+            npwp=f"{i + 1:02}.{i % 100:03d}.{i % 1000:03d}-091",
+            address=f"Jl. Bisnis No. {200 + i}, {name.split()[-1]} Business Park",
+            province=provinces[i % len(provinces)],
+            city=cities[i % len(cities)],
+            phone=f"0{5 + (i % 2)}{4}{1}-{i + 1:04d}{i + 1:02d}",
+            phone2=f"08{i + 1:02} {234 + (i % 9):04d} {567 + (i % 6):04d}",
+            email=f"sales@{name.lower().replace(' ', '').replace('.', '')}.com" if i < 40 else f"supplier{i}@test.com",
+            bank_name=bank_names[i % len(bank_names)],
+            bank_account=bank_accounts[i % len(bank_accounts)]
+        )
+        suppliers.append(s)
+    
     for s in suppliers:
         db.add(s)
     await db.flush()
+    print(f"[seed] Added {len(suppliers)} suppliers.")
 
 
 # ── Detail JSON helpers ────────────────────────────────────────
@@ -804,46 +879,19 @@ def _invoice_details(customer_name: str, customer_address: str, invoice_number: 
     })
 
 
-# ── Offering Letters ───────────────────────────────────────────
-
-async def _seed_offering_letters(db: AsyncSession):
-    customers = (await db.execute(select(Customer))).scalars().all()
-    marketing_users = (await db.execute(select(User).where(User.role == "marketing"))).scalars().all()
-    creator = marketing_users[0] if marketing_users else None
-    statuses = ["created", "under_revision", "po_received"]
-
-    for i in range(15):
-        customer = customers[i % len(customers)]
-        ol_number = f"{i + 1:03d}/OL/VI/2026"
-        fuel_price = 8000 * 17950
-        transport_price = 2500000 + (i * 100000)
-        status = statuses[i % len(statuses)]
-        ol = OfferingLetter(
-            offering_letter_number=ol_number,
-            customer_id=customer.id,
-            location="Samarinda",
-            date="2026-06-01",
-            regarding="Penawaran BBM Solar Industri",
-            receiver=customer.name,
-            fuel_total_price=fuel_price,
-            transport_price=transport_price,
-            status=status,
-            created_by=creator.id if creator else None,
-            details=_ol_details(ol_number, customer.name, customer.address or "", fuel_price, transport_price),
-        )
-        db.add(ol)
-    await db.flush()
-
 
 # ── Purchase Orders ────────────────────────────────────────────
 
 async def _seed_purchase_orders(db: AsyncSession):
+    """Generate 60+ purchase orders (customer + supplier)."""
+    print("[seed] Generating 60 purchase orders...")
+    
     customers = (await db.execute(select(Customer))).scalars().all()
     suppliers = (await db.execute(select(Supplier))).scalars().all()
     users = (await db.execute(select(User))).scalars().all()
     marketing_user = next((u for u in users if u.role == "marketing"), None)
     finance_user = next((u for u in users if u.role == "finance"), None)
-
+    
     main_company = {
         "name": "PT. MITRA ANDALAN PETROLEUM",
         "address": "Jl. Belatuk Samarinda, Indonesia",
@@ -851,65 +899,83 @@ async def _seed_purchase_orders(db: AsyncSession):
         "contactPerson": "0812 3456 7898",
         "email": "marketing.mapetroleum@gmail.com"
     }
-
-    # PO Customer
-    for i in range(5):
+    
+    pos = []
+    # PO Customer - 35 records
+    for i in range(35):
         customer = customers[i % len(customers)]
         po_number = f"PO/2026/VI/{100 + i}"
-        products = [
-            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 17950, "totalPrice": 8000 * 17950}
-        ]
+        fuel_price = round(17450 + ((i * 200) % 3000))
+        qty = 8000 + (i * 500)
+        products = [{
+            "name": ["Solar Industri (B35)", "Bio Diesel (B35)"][i % 2],
+            "qty": qty, "unit": "Liter", 
+            "price": fuel_price, 
+            "totalPrice": qty * fuel_price
+        }]
+        
+        status_options = ["created", "under_revision", "po_received", "approved"]
+        status = status_options[i % len(status_options)]
+        
         po = PurchaseOrder(
             po_number=po_number,
             type="customer",
             customer_id=customer.id,
-            date="2026-06-01",
-            total=8000 * 17950,
-            status=["created", "po_received"][i % 2],
+            date=(datetime(2026, 6, 1) + timedelta(days=i % 30)).strftime("%Y-%m-%d"),
+            total=sum(p["totalPrice"] for p in products),
+            status=status,
             created_by=marketing_user.id if marketing_user else None,
             details=_po_details(main_company, {
                 "id": customer.id, "name": customer.name, "npwp": customer.npwp,
                 "address": customer.address, "contactPerson": customer.phone, "email": customer.email
             }, po_number, products),
         )
+        pos.append(po)
         db.add(po)
-
-    # PO Supplier
-    for i in range(5):
+    
+    # PO Supplier - 25 records  
+    for i in range(25):
         supplier = suppliers[i % len(suppliers)]
-        po_number = f"PO-SUP/2026/VI/{100 + i}"
-        products = [
-            {"name": "Solar Industri (B35)", "qty": 8000, "unit": "Liter", "price": 15000, "totalPrice": 8000 * 15000, "ppkb": 0, "pph": 0.5, "ppn": 0.11 * 8000 * 15000}
-        ]
-        # Sebagian PO supplier sudah dirilis dana oleh admin (menyesuaikan alur:
-        # marketing buat PO supplier -> admin rilis dana -> baru bisa lihat surat)
-        rilis = i % 2 == 0
+        po_number = f"PO-SUP/2026/VI/{200 + i}"
+        fuel_price = round(15000 + ((i * 150) % 2000))
+        qty = 10000 + (i * 300)
+        products = [{
+            "name": "Solar Industri (B35)",
+            "qty": qty, "unit": "Liter", 
+            "price": fuel_price, 
+            "totalPrice": qty * fuel_price,
+            "ppkb": 0, "pph": 0.005, "ppn": 0.11 * qty * fuel_price
+        }]
+        
+        rilis = i % 3 == 0
         po = PurchaseOrder(
             po_number=po_number,
             type="supplier",
             supplier_id=supplier.id,
-            date="2026-06-01",
-            total=8000 * 15000,
+            date=(datetime(2026, 6, 1) + timedelta(days=i % 30)).strftime("%Y-%m-%d"),
+            total=sum(p["totalPrice"] for p in products),
             status="created",
             created_by=marketing_user.id if marketing_user else None,
-            rilis_dana_at=datetime(2026, 6, 2, 9, 0, 0) if rilis else None,
+            rilis_dana_at=datetime(2026, 6, 3, 9, 0, 0) if rilis else None,
             status_rilis_dana=rilis,
             details=_po_details(main_company, {
                 "id": supplier.id, "name": supplier.name, "npwp": "",
                 "address": supplier.address or "", "contactPerson": supplier.phone or "", "email": supplier.email or ""
             }, po_number, products),
         )
+        pos.append(po)
         db.add(po)
+    
     await db.flush()
-
-    # Hubungkan beberapa PO ke OL (id_offering_letters)
-    pos = (await db.execute(select(PurchaseOrder))).scalars().all()
+    
+    # Link some POs to OLs
     ols = (await db.execute(select(OfferingLetter))).scalars().all()
-    if ols and pos:
-        pos[0].id_offering_letters = json.dumps([ols[0].id, ols[1].id])
-        if len(pos) > 1:
-            pos[1].id_offering_letters = json.dumps([ols[1].id])
-    await db.flush()
+    if ols and len(pos) >= 2:
+        for i in range(min(10, len(pos))):
+            pos[i].id_offering_letters = json.dumps([ols[j].id for j in range(i % min(5, len(ols)))])
+        await db.flush()
+    
+    print(f"[seed] Added {len(pos)} purchase orders ({len([p for p in pos if p.type=="customer"])} customer, {len([p for p in pos if p.type=="supplier"])} supplier)")
 
 
 # ── Delivery Orders ────────────────────────────────────────────
@@ -937,7 +1003,9 @@ async def _seed_delivery_orders(db: AsyncSession):
     ]
     statuses = ["created", "document_returned"]
 
-    for i in range(15):
+    print("[seed] Generating 85 delivery orders...")
+    
+    for i in range(85):
         # Ambil PO Transportir (cycle) untuk di-link
         pt = po_transportirs[i % len(po_transportirs)] if po_transportirs else None
         # Resolve PO Customer dari PO Transportir
@@ -975,6 +1043,7 @@ async def _seed_delivery_orders(db: AsyncSession):
         )
         db.add(do)
     await db.flush()
+    print("[seed] Added 85 delivery orders")
 
 
 # ── Invoices ───────────────────────────────────────────────────
@@ -987,16 +1056,21 @@ async def _seed_invoices(db: AsyncSession):
     customer_by_id = {c.id: c for c in customers}
     statuses = ["unpaid", "paid", "overdue"]
     deadlines = ["on_time", "overdue", "due_soon"]
-
-    for i in range(15):
-        po = pos[i % len(pos)]
+    
+    print("[seed] Generating 60 invoices...")
+    
+    for i in range(60):
+        # Cycle through POs but add more variety
+        po_idx = i % len(pos) if pos else 0
+        po = pos[po_idx]
+        customer_by_id = {c.id: c for c in customers}
         customer = customer_by_id.get(po.customer_id) or customers[i % len(customers)]
         sub_total = 8000 * 17950
         grand_total = round(sub_total * 1.11)
         products = [
             {"qty": 8000, "unit": "Liter", "name": "Solar Industri (B35)", "price": 17950, "totalPrice": sub_total}
         ]
-        do_numbers = [f"{i + 1:03d}/DO/MAP/VI/2026"]
+        do_numbers = [f"DO/2026/MAP-{i+1:03d}"]
         po_customer_number = {
             "id": po.id,
             "purchaseOrderNumber": po.po_number,
@@ -1007,7 +1081,7 @@ async def _seed_invoices(db: AsyncSession):
             "fuelTotalQty": 8000
         }
         inv = Invoice(
-            invoice_number=f"INV/2026/VI/{i + 1:03d}",
+            invoice_number=f"INV/2026/VI/{i+1:03d}",
             customer_id=po.customer_id,
             terms_day=30,
             grand_total=grand_total,
@@ -1021,6 +1095,7 @@ async def _seed_invoices(db: AsyncSession):
         )
         db.add(inv)
     await db.flush()
+    print(f"[seed] Added 60 invoices")
 
 
 # ── PO Transportir ─────────────────────────────────────────────
@@ -1062,17 +1137,30 @@ async def _seed_po_transportir(db: AsyncSession):
     )).scalars().all()
     customers = {c.id: c for c in (await db.execute(select(Customer))).scalars().all()}
 
-    records = [
-        ("121/PO-TRANS/MAP/VI/2026", "2026-06-05", "PT. Armada Kaltim Sejahtera",
-         [{"name": "Solar", "loadingDate": "2026-06-05", "unloadingDate": "2026-06-06", "qty": 8000, "ratePrice": 500, "totalPrice": 4000000}],
-         "Site MHU - Kutai Kartanegara", "created"),
-        ("122/PO-TRANS/MAP/VI/2026", "2026-06-12", "CV. Tiga Putra Transport",
-         [{"name": "Solar", "loadingDate": "2026-06-12", "unloadingDate": "2026-06-13", "qty": 10000, "ratePrice": 500, "totalPrice": 5000000}],
-         "Site TDM / Separi - Kutai Kartanegara", "created"),
-        ("123/PO-TRANS/MAP/VI/2026", "2026-06-20", "PT. Borneo Distribusi Logistik",
-         [{"name": "Solar", "loadingDate": "2026-06-20", "unloadingDate": "2026-06-21", "qty": 8000, "ratePrice": 475, "totalPrice": 3800000}],
-         "Site MHU - Kutai Kartanegara", "completed"),
-    ]
+    print("[seed] Generating 40 PO transportir...")
+    
+    receivers = ["PT. Armada Kaltim Sejahtera", "CV. Tiga Putra Transport", "PT. Borneo Distribusi Logistik", 
+                 "CV. Sinar Jaya Abadi", "PT. Mitra Logistik Utama"]
+    discharge_places = ["Site MHU - Kutai Kartanegara", "Site TDM / Separi - Kutai Kartanegara", 
+                       "Pelabuhan Balongan", "Terminal BBM Tenggarong", "Depot SAMARinda"]
+    statuses = ["created", "processing", "in_transit", "completed", "cancelled"]
+    
+    records = []
+    for i in range(40):
+        po_number = f"{121 + i}/PO-TRANS/MAP/VI/2026"
+        po_date = f"2026-{6 + (i//30):02d}-{1 + (i%28):02d}"
+        receiver = receivers[i % len(receivers)]
+        products = [{
+            "name": ["Solar", "Bio Diesel"][i % 2],
+            "loadingDate": po_date, 
+            "unloadingDate": f"2026-{6 + (i//30):02d}-{1 + (i%28) + 1:02d}",
+            "qty": 8000 + (i * 200), 
+            "ratePrice": 450 + ((i % 7) * 25), 
+            "totalPrice": (8000 + (i * 200)) * (450 + ((i % 7) * 25))
+        }]
+        discharge = discharge_places[i % len(discharge_places)]
+        status = statuses[i % len(statuses)]
+        records.append((po_number, po_date, receiver, products, discharge, status))
 
     for i, (po_number, po_date, receiver, products, discharge, status) in enumerate(records):
         sub_total = sum(p["totalPrice"] for p in products)
@@ -1127,16 +1215,32 @@ async def _seed_notifications(db: AsyncSession):
 # ── Sales ──────────────────────────────────────────────────────
 
 async def _seed_sales(db: AsyncSession):
-    sales = [
-        Sale(date="2026-06-01", status="paid", email="admin@mapetroleum.co.id", amount=25000000),
-        Sale(date="2026-06-05", status="paid", email="marketing@mapetroleum.co.id", amount=35000000),
-        Sale(date="2026-06-10", status="failed", email="finance@mapetroleum.co.id", amount=30000000),
-        Sale(date="2026-06-15", status="paid", email="ops@mapetroleum.co.id", amount=45000000),
-        Sale(date="2026-06-20", status="refunded", email="accounting@mapetroleum.co.id", amount=40000000),
-    ]
+    print("[seed] Generating 100 sales...")
+    users_emails = {
+        "admin": "admin@mapetroleum.co.id",
+        "marketing": "marketing@mapetroleum.co.id", 
+        "finance": "finance@mapetroleum.co.id",
+        "operations": "ops@mapetroleum.co.id",
+        "accounting": "accounting@mapetroleum.co.id"
+    }
+    roles = list(users_emails.keys())
+    statuses = ["paid", "pending", "failed", "refunded"]
+    
+    sales = []
+    for i in range(100):
+        role = roles[i % len(roles)]
+        sale = Sale(
+            date=f"2026-{1 + (i // 12):02d}-{1 + (i % 28):02d}",
+            status=statuses[i % len(statuses)],
+            email=users_emails[role],
+            amount=20000000 + (i * 1000000) % 80000000
+        )
+        sales.append(sale)
+    
     for s in sales:
         db.add(s)
     await db.flush()
+    print(f"[seed] Added {len(sales)} sales")
 
 
 # ── Accounting ─────────────────────────────────────────────────
@@ -1211,25 +1315,54 @@ async def _seed_accounting(db: AsyncSession):
         {"entry_number": "JRM-202607-0002", "entry_date": date(2026, 7, 5), "description": "Pembayaran gaji karyawan bulan Juni", "reference": "PAY/2026/VII/001", "lines": [(beban_gaji, None, 28000000, 0), (bank, None, 0, 28000000)]},
     ]
 
-    for e in entries:
+    # Generate 70+ journal entries - use the 10 base templates cycled with variation
+    base_templates = [
+        (kas, piutang, pendapatan, ongkir, beban_operasional, beban_transport, beban_gaji, beban_listrik_air, kas_kecil, bank),
+    ]
+    descriptions = [
+        "Penjualan BBM tunai", "Penjualan BBM kredit", "Pembayaran jasa angkut transportir",
+        "Penerimaan pembayaran piutang", "Pembayaran beban operasional", "Pendapatan jasa angkut tunai",
+        "Pendapatan jasa angkut dibayar tunai", "Pembayaran beban listrik & air", "Pembayaran gaji karyawan",
+        "Penjualan BBM kredit", "Pembayaran beban transport", "PNBP penyimpanan terminal",
+    ]
+    entry_count = 0
+    for i in range(70):
+        month = 6 + (i // 15)
+        day = 1 + (i % 28)
+        try:
+            ed = date(2026, month, day)
+        except ValueError:
+            ed = date(2026, month, 28)
+        tpl = i % 10
+        acct_a, acct_b = None, None
+        if tpl == 0:   acct_a, acct_b = kas, pendapatan
+        elif tpl == 1: acct_a, acct_b = piutang, pendapatan
+        elif tpl == 2: acct_a, acct_b = beban_transport, kas
+        elif tpl == 3: acct_a, acct_b = bank, piutang
+        elif tpl == 4: acct_a, acct_b = beban_operasional, kas
+        elif tpl == 5: acct_a, acct_b = kas, ongkir
+        elif tpl == 6: acct_a, acct_b = kas, ongkir
+        elif tpl == 7: acct_a, acct_b = beban_listrik_air, kas_kecil
+        elif tpl == 8: acct_a, acct_b = beban_gaji, bank
+        else:          acct_a, acct_b = piutang, pendapatan
+        amount = 5_000_000 + ((i * 350_000) % 45_000_000)
+        entry_number = f"JRM-2026{month:02d}-{i + 1:04d}"
+        reference = f"REF-2026/{month:02d}/{i+1:03d}"
+        desc = descriptions[i % len(descriptions)]
         entry = JournalEntry(
-            entry_number=e["entry_number"],
-            entry_date=e["entry_date"],
-            description=e["description"],
-            reference=e["reference"],
-            status="posted",
+            entry_number=entry_number,
+            entry_date=ed,
+            description=desc,
+            reference=reference,
+            status="posted" if i % 5 != 3 else "draft",
         )
         db.add(entry)
         await db.flush()
-        for account, memo, debit, credit in e["lines"]:
-            db.add(JournalLine(
-                journal_entry_id=entry.id,
-                account_id=account.id,
-                description=memo,
-                debit=debit,
-                credit=credit,
-            ))
+        db.add(JournalLine(journal_entry_id=entry.id, account_id=acct_a.id, debit=amount, credit=0))
+        db.add(JournalLine(journal_entry_id=entry.id, account_id=acct_b.id, debit=0, credit=amount))
+        entry_count += 1
     await db.flush()
+    print(f"[seed] Added {entry_count} journal entries")
 
 
 # ── Tanda tangan user (upload otomatis) ────────────────────────
@@ -1297,6 +1430,48 @@ async def _seed_signatures(db: AsyncSession):
     print(f"[seed] Tanda tangan {len(users)} user dibuat (folder profiles).")
 
 
+async def _seed_document_uploads(db: AsyncSession):
+    """Generate 50+ file upload (PDF/PNG) untuk DO/OL/PO/Invoice untuk
+    memperkaya halaman uploads dan riwayat aktivitas upload."""
+    print("[seed] Generating 50 document uploads...")
+    users = (await db.execute(select(User))).scalars().all()
+    admin = users[0] if users else None
+    docs = [
+        ("delivery_order", "DO"),
+        ("ol", "OL"),
+        ("po", "PO"),
+        ("invoice", "INV"),
+    ]
+    media_dir = Path(__file__).resolve().parent.parent.parent / "media"
+    count = 0
+    for i in range(50):
+        doc_type, prefix = docs[i % len(docs)]
+        folder = doc_type
+        folder_dir = media_dir / folder
+        folder_dir.mkdir(parents=True, exist_ok=True)
+        stored = f"{uuid.uuid4().hex}.pdf"
+        content = (
+            f"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+            f"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+            f"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\n"
+            f"trailer<</Root 1 0 R>>\n%%EOF"
+        ).encode()
+        (folder_dir / stored).write_bytes(content)
+        db.add(Upload(
+            original_filename=f"{prefix}_{i + 1:03d}_document.pdf",
+            stored_filename=stored,
+            folder=folder,
+            mime_type="application/pdf",
+            size=len(content),
+            url=f"/media/{folder}/{stored}",
+            document_type=doc_type,
+            document_id=str(uuid.uuid4()),
+        ))
+        count += 1
+    await db.flush()
+    print(f"[seed] Added {count} document uploads.")
+
+
 # ── Verifikasi pola hasil seed (CLI --check) ───────────────────
 
 async def _check_seed(db: AsyncSession) -> bool:
@@ -1309,15 +1484,15 @@ async def _check_seed(db: AsyncSession) -> bool:
     print("[seed] Jumlah data:")
     for name, actual, expected in [
         ("users", await count(User), 5),
-        ("customers", await count(Customer), 3),
-        ("suppliers", await count(Supplier), 2),
-        ("offering_letters", await count(OfferingLetter), 15),
-        ("purchase_orders", await count(PurchaseOrder), 10),
-        ("delivery_orders", await count(DeliveryOrder), 15),
-        ("invoices", await count(Invoice), 15),
-        ("po_transportir", await count(PoTransportir), 3),
+        ("customers", await count(Customer), 60),
+        ("suppliers", await count(Supplier), 60),
+        ("offering_letters", await count(OfferingLetter), 85),
+        ("purchase_orders", await count(PurchaseOrder), 60),
+        ("delivery_orders", await count(DeliveryOrder), 85),
+        ("invoices", await count(Invoice), 60),
+        ("po_transportir", await count(PoTransportir), 40),
         ("accounts", await count(Account), 21),
-        ("journal_entries", await count(JournalEntry), 10),
+        ("journal_entries", await count(JournalEntry), 70),
     ]:
         ok = actual == expected
         all_ok = all_ok and ok

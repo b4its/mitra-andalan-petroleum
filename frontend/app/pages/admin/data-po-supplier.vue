@@ -102,6 +102,8 @@ const columns: TableColumn<PoSupplierRow>[] = [
 
 const rilisLoading = ref(false)
 
+const pagination = ref({ pageIndex: 0, pageSize: 5 })
+
 async function onRilisDana(id: string) {
   if (rilisLoading.value) return
   rilisLoading.value = true
@@ -161,6 +163,7 @@ async function onRilisDana(id: string) {
           <UTable
             v-else
             ref="table"
+            v-model:pagination="pagination"
             :data="pos"
             :columns="columns"
             :column-pinning="columnPinning"
@@ -207,6 +210,16 @@ async function onRilisDana(id: string) {
           >
             Belum ada data Purchase Order Supplier
           </p>
+          <div class="flex justify-end border-t border-default pt-4 px-4">
+            <UPagination
+              :page="
+                (table?.tableApi?.getState().pagination.pageIndex || 0) + 1
+              "
+              :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+              :total="table?.tableApi?.getFilteredRowModel().rows.length"
+              @update:page="(p) => table?.tableApi?.setPageIndex(p - 1)"
+            />
+          </div>
         </UCard>
       </div>
     </template>

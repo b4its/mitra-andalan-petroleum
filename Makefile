@@ -65,7 +65,7 @@
 #   python -m app.db.seed [--force] [--check]
 #   uvicorn app.main:app --host 0.0.0.0 --port 8012
 
-.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli show-ip _wait-backend _show-access-info
+.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli show-ip prod help-prod prod-build prod-up prod-down prod-down-all prod-logs prod-ps prod-ngrok-url prod-backend-test test test-backend test-frontend frontend-typecheck frontend-lint _wait-backend _show-access-info
 
 help: ## Tampilkan daftar perintah dan informasi akses aplikasi
 	@echo "Mitra Andalan Petroleum — Build & Run System"
@@ -212,3 +212,67 @@ _wait-backend: ## (internal) Tunggu sampai backend sehat
 
 show-ip: ## Tampilkan IP dan port yang digunakan
 	@$(MAKE) _show_access_info
+
+# ── PRODUCTION (Docker Compose + Nginx + Ngrok) ────────────────
+# `.env.production` menyimpan token ngrok, domain, dan URL publik.
+# Lihat `.env.production.example` untuk daftar variabel yang tersedia.
+
+_ENV_PROD := --env-file .env.production -f docker-compose.prod.yml
+
+help-prod: ## Informasi akses stack produksi (nginx + ngrok)
+	@echo "Mitra Andalan Petroleum — Production (Nginx + Ngrok)"
+	@echo ""
+	@echo "Local:  http://localhost:8093 (lewat nginx)"
+	@echo "Public: https://<domain ngrok> (lihat make prod-ngrok-url)"
+	@echo ""
+	@echo "Perintah: prod, prod-build, prod-up, prod-down, prod-log,"
+	@echo "          prod-ps, prod-ngrok-url, prod-backend-test"
+
+prod: ## Deploy produksi: build image + migrasi & seed otomatis + buka tunnel ngrok
+	@if [ ! -f .env.production ]; then echo "ERROR: .env.production belum ada. Buat dari .env.production.example"; exit 1; fi
+	docker compose $(_ENV_PROD) up -d --build
+	@echo ""
+	@$(MAKE) prod-ngrok-url
+
+prod-build: ## Deploy produksi tanpa menunggu (build + up)
+	docker compose $(_ENV_PROD) up -d --build
+
+prod-up: ## Jalankan ulang stack produksi tanpa rebuild
+	docker compose $(_ENV_PROD) up -d
+
+prod-down: ## Hentikan stack produksi
+	docker compose $(_ENV_PROD) down
+
+prod-down-all: ## Hentikan stack produksi + hapus volume DB/media
+	docker compose $(_ENV_PROD) down -v --remove-orphans
+
+prod-logs: ## Ikuti log semua service produksi (termasuk ngrok)
+	docker compose $(_ENV_PROD) logs -f
+
+prod-ps: ## Status service produksi
+	docker compose $(_ENV_PROD) ps
+
+prod-ngrok-url: ## Tampilkan URL publik ngrok
+	/usr/bin/docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | tail -1 || \
+	docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | tail -1
+
+prod-backend-test: ## Jalankan pytest di container backend produksi (install pytest sementara bila perlu)
+	docker exec mandalan-prod-backend pip install -q pytest pytest-asyncio aiosqlite httpx
+	docker exec mandalan-prod-backend python -m pytest tests/ -v
+
+# ── TESTING ────────────────────────────────────────────────────
+test: ## Jalankan semua tes: pytest backend + vitest frontend
+	@$(MAKE) test-backend
+	@$(MAKE) test-frontend
+
+test-backend: ## Jalankan pytest backend (via container dev mandalan-backend, fallback ke stack prod)
+	docker exec mandalan-backend pip install -q pytest pytest-asyncio aiosqlite httpx 2>/dev/null; docker exec mandalan-backend python -m pytest tests/ -v 2>/dev/null || { docker exec mandalan-prod-backend pip install -q pytest pytest-asyncio aiosqlite httpx; docker exec mandalan-prod-backend python -m pytest tests/ -v; }
+
+test-frontend: ## Jalankan vitest frontend unit test
+	cd frontend && npx vitest run
+
+frontend-typecheck: ## Typecheck Nuxt
+	cd frontend && npx nuxt typecheck
+
+frontend-lint: ## Jalankan ESLint frontend
+	cd frontend && npx eslint .
