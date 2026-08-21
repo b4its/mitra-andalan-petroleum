@@ -30,11 +30,13 @@ const signatureCaption = ref('')
 const signatureLoading = ref(false)
 const signatureUploading = ref(false)
 const signatureFile = ref<File | null>(null)
+const signatureImageError = ref(false)
 
 async function loadSignature() {
   const userId = auth.user.value?.id
   if (!userId) return
   signatureLoading.value = true
+  signatureImageError.value = false
   try {
     const sig = await get<ProfileSignature>(`/profiles/${userId}`)
     signatureUrl.value = sig?.signature || ''
@@ -44,6 +46,10 @@ async function loadSignature() {
   } finally {
     signatureLoading.value = false
   }
+}
+
+function onSignatureImageError() {
+  signatureImageError.value = true
 }
 
 onMounted(loadSignature)
@@ -73,6 +79,7 @@ async function uploadSignature(file: File) {
       signature: url
     })
     signatureUrl.value = url
+    signatureImageError.value = false
     signatureFile.value = null
     toast.add({
       title: 'Sukses',
@@ -230,13 +237,14 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
           </div>
 
           <div
-            v-else-if="signatureUrl"
+            v-else-if="signatureUrl && !signatureImageError"
             class="flex items-center gap-4 rounded-lg bg-elevated/50 border border-default p-3"
           >
             <img
               :src="signatureUrl"
               alt="Tanda tangan profil"
-              class="h-14 w-auto object-contain"
+              class="h-14 w-auto max-w-40 object-contain"
+              @error="onSignatureImageError"
             >
             <div class="flex flex-col gap-0.5">
               <p class="text-xs font-semibold text-success">
@@ -258,11 +266,18 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
             />
             <div class="flex flex-col gap-0.5">
               <p class="text-xs font-semibold text-warning">
-                Belum ada tanda tangan di profil
+                {{
+                  signatureImageError
+                    ? 'Gambar tanda tangan tidak ditemukan'
+                    : 'Belum ada tanda tangan di profil'
+                }}
               </p>
               <p class="text-xs text-muted">
-                Upload tanda tangan di bawah untuk dapat menyelesaikan surat
-                penawaran.
+                {{
+                  signatureImageError
+                    ? 'File kemungkinan sudah dihapus. Upload ulang di bawah.'
+                    : 'Upload tanda tangan di bawah untuk dapat menyelesaikan surat penawaran.'
+                }}
               </p>
             </div>
           </div>
