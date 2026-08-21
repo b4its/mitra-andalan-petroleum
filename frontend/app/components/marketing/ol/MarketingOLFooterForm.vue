@@ -131,14 +131,6 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
         <UInput v-model="state.offeror.name" type="text" autocomplete="off" />
       </UFormField>
 
-      <UFormField name="offerorSignature" label="Tanda Tangan" required>
-        <UFileUpload
-          v-model="state.offeror.signature"
-          label="Upload File Tanda Tangan"
-          description="Format file .png dengan max 50MB"
-        />
-      </UFormField>
-
       <USeparator />
 
       <p>Informasi Perusahaan</p>
@@ -183,6 +175,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
 
       <div class="flex justify-between pt-4">
         <UButton
+          type="button"
           variant="ghost"
           color="neutral"
           leading-icon="i-lucide-arrow-left"
@@ -193,6 +186,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
 
         <div class="flex gap-2">
           <UButton
+            type="button"
             color="info"
             variant="soft"
             leading-icon="i-lucide-eye"

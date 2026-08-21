@@ -158,6 +158,17 @@ const fuelTotalPrice = computed(() => {
   )
 })
 
+// ── Tanda tangan dari profil user (image + caption) ──────────
+// Tanda tangan surat penawaran diambil dari profil user, tidak dari form.
+interface ProfileSignature {
+  signature?: string | null
+  signature_caption?: string | null
+}
+
+async function fetchProfileSignature(id: string): Promise<ProfileSignature | null> {
+  return get<ProfileSignature>(`/profiles/${id}`).catch(() => null)
+}
+
 async function buildPreviewPdf(): Promise<string | null> {
   const details = {
     ...letterHeader,
@@ -167,14 +178,21 @@ async function buildPreviewPdf(): Promise<string | null> {
   const customerName = customerList.value.find(
     c => c.id === letterHeader.receiver
   )?.name || letterFooter.companyInformation?.email || ''
+  const sig = await fetchProfileSignature(user.value?.id || '')
   return await buildOfferingLetterPdf(
     details as unknown as OfferingLetterDetails,
-    customerName
+    customerName,
+    {
+      signatureCaption: sig?.signature_caption || ''
+    }
   )
 }
 
 // Validate signature requirement for offer letter creation
-function validateUserSignature(): boolean {
+// Surat penawaran memakai tanda tangan dari profil user: user HARUS punya
+// gambar tanda tangan (signature) AND caption tanda tangan (signature_caption).
+// Losalno form tidak menabil signature lagi, jadi wajib dari profil.
+async function validateUserSignature(): Promise<boolean> {
   // Only marketing and admin roles need signature for offer letters
   const rolesNeedingSignature = ['marketing', 'admin']
 
@@ -182,15 +200,19 @@ function validateUserSignature(): boolean {
     return true // Other roles do not require signature
   }
 
-  if (!user.value?.signature) {
+  const sig = await fetchProfileSignature(user.value.id)
+  const hasImage = Boolean(sig?.signature)
+  const hasCaption = Boolean(sig?.signature_caption)
+
+  if (!hasImage || !hasCaption) {
     toast.add({
       title: 'Profil Belum Lengkap',
-      description: 'Silakan upload tanda tangan terlebih dahulu di halaman profil sebelum membuat surat penawaran',
+      description: 'Silakan upload tanda tangan AND caption tanda tangan di halaman profil sebelum membuat surat penawaran',
       color: 'warning'
     })
 
     // Navigate to profile page to complete signature setup
-    useRouter().push('/admin/profile')
+    useRouter().push(`/${user.value.role}/profile`)
     return false
   }
 
@@ -199,7 +221,7 @@ function validateUserSignature(): boolean {
 
 async function onFooterSubmit() {
   // Check if user has signature configured
-  if (!validateUserSignature()) return
+  if (!(await validateUserSignature())) return
   let createdId: string | null = null
   try {
     const details = {
@@ -242,8 +264,8 @@ async function onFooterSubmit() {
   }
 }
 
-function onPreviewPdf() {
-  if (!validateUserSignature()) return
+async function onPreviewPdf() {
+  if (!(await validateUserSignature())) return
   previewOpen.value = true
 }
 </script>

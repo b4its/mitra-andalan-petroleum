@@ -567,6 +567,7 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLDetailsState>) {
 
       <div class="flex justify-between pt-4">
         <UButton
+          type="button"
           variant="ghost"
           color="neutral"
           leading-icon="i-lucide-arrow-left"
