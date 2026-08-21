@@ -127,6 +127,18 @@ watch([actionFilter, resourceTypeFilter, actorFilter], () => {
   currentPage.value = 1
 })
 
+// Trigger filter whenever pagination changes
+watch([currentPage, pageSize], () => {
+  applyFilters()
+})
+
+// Watch for resource type filter change
+watch(resourceTypeFilter, (newVal) => {
+  if (newVal !== 'all') {
+    applyFilters()
+  }
+})
+
 // ── Action colors ─────────────────────────────────────────────
 const actionColors: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
   create: 'success',
