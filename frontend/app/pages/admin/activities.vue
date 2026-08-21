@@ -142,9 +142,20 @@ const actionLabels: Record<string, string> = {
 }
 
 // ── Resource types ────────────────────────────────────────────
-const resourceTypes = Array.from(
-  new Set(activitiesData.value?.items?.map(a => a.resource_type) || [])
-).sort()
+const resourceTypes = ref<string[]>([])
+
+async function loadResourceTypes() {
+  try {
+    const types = await get<string[]>('/activities/resource-types')
+    if (Array.isArray(types)) {
+      resourceTypes.value = [...types].sort()
+    }
+  } catch (error: unknown) {
+    console.error('Gagal memuat resource types', error)
+  }
+}
+
+await loadResourceTypes()
 
 // ── View activity details modal ──────────────────────────────
 const viewModalOpen = ref(false)

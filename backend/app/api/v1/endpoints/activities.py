@@ -73,6 +73,22 @@ async def list_activities(
 
 
 @router.get(
+    "/activities/resource-types",
+    response_model=list[str],
+    summary="List distinct resource types",
+    description="Daftar semua jenis resource yang muncul di log aktivitas."
+)
+async def list_resource_types(db: AsyncSession = Depends(get_db)):
+    """Get all distinct resource types for the filter dropdown."""
+    result = await db.execute(
+        select(Activity.resource_type)
+        .distinct()
+        .order_by(Activity.resource_type)
+    )
+    return result.scalars().all()
+
+
+@router.get(
     "/activities/{id}",
     response_model=ActivityResponse,
     summary="Detail activity",

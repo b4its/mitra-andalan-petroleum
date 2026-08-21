@@ -234,3 +234,38 @@ describe('Pagination', () => {
     expect(data.items).toEqual([])
   })
 })
+
+describe('Activities API', () => {
+  it('list activities returns paginated response', async () => {
+    const res = await fetch(`${API}/activities?page=1&page_size=20`)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data).toHaveProperty('items')
+    expect(data).toHaveProperty('total')
+    expect(data).toHaveProperty('page')
+    expect(data).toHaveProperty('page_size')
+  })
+
+  it('resource-types returns sorted array of strings', async () => {
+    const res = await fetch(`${API}/activities/resource-types`)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(Array.isArray(data)).toBe(true)
+    for (const rt of data) {
+      expect(typeof rt).toBe('string')
+    }
+    const sorted = [...data].sort()
+    expect(data).toEqual(sorted)
+  })
+
+  it('filter list activities by resource_type', async () => {
+    const res = await fetch(
+      `${API}/activities?resource_type=customer&page=1&page_size=20`
+    )
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    for (const item of data.items) {
+      expect(item.resource_type).toBe('customer')
+    }
+  })
+})
