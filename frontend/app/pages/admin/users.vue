@@ -147,6 +147,13 @@ async function loadUserActivities(userId: string) {
   }
 }
 
+// Watch for pagination changes
+watch(activityPage, () => {
+  if (selectedUser.value) {
+    loadUserActivities(selectedUser.value.id)
+  }
+})
+
 // ── Form schema ───────────────────────────────────────────────
 const ROLES = [
   'admin',
