@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
+import type { ResUploads } from '~/types'
 import {
   marketingOLFooterSchema,
   type MarketingOLFooterState
@@ -13,6 +14,82 @@ const emit = defineEmits<{
 
 const state = defineModel<MarketingOLFooterState>({ required: true })
 const location = defineModel<string>('location', { default: '' })
+
+const auth = useAuth()
+const { get, put, postFile } = useApi()
+const toast = useToast()
+
+// ── Tanda tangan dari profil user ─────────────────────────────
+interface ProfileSignature {
+  signature?: string | null
+  signature_caption?: string | null
+}
+
+const signatureUrl = ref('')
+const signatureCaption = ref('')
+const signatureLoading = ref(false)
+const signatureUploading = ref(false)
+const signatureFile = ref<File | null>(null)
+
+async function loadSignature() {
+  const userId = auth.user.value?.id
+  if (!userId) return
+  signatureLoading.value = true
+  try {
+    const sig = await get<ProfileSignature>(`/profiles/${userId}`)
+    signatureUrl.value = sig?.signature || ''
+    signatureCaption.value = sig?.signature_caption || ''
+  } catch {
+    // abaikan — form tetap bisa dipakai, validasi dilakukan saat submit
+  } finally {
+    signatureLoading.value = false
+  }
+}
+
+onMounted(loadSignature)
+
+watch(signatureFile, (file) => {
+  if (file) {
+    uploadSignature(file)
+  }
+})
+
+async function uploadSignature(file: File) {
+  const userId = auth.user.value?.id
+  if (!userId) return
+  signatureUploading.value = true
+  try {
+    const res = await postFile<ResUploads[]>('/upload', {
+      files: [file],
+      folder: 'profiles',
+      document_type: 'profile',
+      document_id: userId
+    })
+    const url = res[0]?.url
+    if (!url) {
+      throw new Error('Gambar tanda tangan gagal diunggah')
+    }
+    await put<unknown, { signature: string }>(`/profiles/${userId}`, {
+      signature: url
+    })
+    signatureUrl.value = url
+    signatureFile.value = null
+    toast.add({
+      title: 'Sukses',
+      description: 'Tanda tangan profil berhasil diperbarui',
+      color: 'success'
+    })
+  } catch (e) {
+    console.error(e)
+    toast.add({
+      title: 'Gagal',
+      description: e instanceof Error ? e.message : 'Gagal memperbarui tanda tangan',
+      color: 'error'
+    })
+  } finally {
+    signatureUploading.value = false
+  }
+}
 
 function onPreview() {
   emit('preview')
@@ -130,6 +207,84 @@ function onSubmit(_event: FormSubmitEvent<MarketingOLFooterState>) {
       <UFormField name="offerorName" label="Hormat Kami" required>
         <UInput v-model="state.offeror.name" type="text" autocomplete="off" />
       </UFormField>
+
+      <USeparator />
+
+      <!-- Tanda tangan dari profil user: tampilkan preview + bisa diganti -->
+      <div class="flex flex-col gap-3">
+        <div>
+          <p class="text-sm font-medium text-muted mb-1.5">
+            Tanda Tangan (dari Profil)
+          </p>
+          <p class="text-xs text-muted mb-2">
+            Tanda tangan diambil dari profil user. Jika belum ada, upload di
+            sini agar bisa membuat surat penawaran.
+          </p>
+
+          <div
+            v-if="signatureLoading"
+            class="flex items-center gap-2 text-xs text-muted h-14"
+          >
+            <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" />
+            Memeriksa tanda tangan profil...
+          </div>
+
+          <div
+            v-else-if="signatureUrl"
+            class="flex items-center gap-4 rounded-lg bg-elevated/50 border border-default p-3"
+          >
+            <img
+              :src="signatureUrl"
+              alt="Tanda tangan profil"
+              class="h-14 w-auto object-contain"
+            >
+            <div class="flex flex-col gap-0.5">
+              <p class="text-xs font-semibold text-success">
+                Tanda tangan sudah diunggah
+              </p>
+              <p v-if="signatureCaption" class="text-xs text-muted">
+                Caption: {{ signatureCaption }}
+              </p>
+            </div>
+          </div>
+
+          <div
+            v-else
+            class="flex items-center gap-3 rounded-lg bg-elevated/50 border border-dashed border-warning/40 p-3"
+          >
+            <UIcon
+              name="i-lucide-alert-triangle"
+              class="size-5 text-warning"
+            />
+            <div class="flex flex-col gap-0.5">
+              <p class="text-xs font-semibold text-warning">
+                Belum ada tanda tangan di profil
+              </p>
+              <p class="text-xs text-muted">
+                Upload tanda tangan di bawah untuk dapat menyelesaikan surat
+                penawaran.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <UFormField name="offerorSignature" label="Ganti Tanda Tangan">
+          <UFileUpload
+            v-model="signatureFile"
+            label="Upload / Ganti Foto Tanda Tangan"
+            description="Format gambar (.png, .jpg) — langsung tersimpan ke profil"
+            accept="image/png,image/jpeg,image/jpg"
+            :multiple="false"
+          />
+          <p
+            v-if="signatureUploading"
+            class="mt-2 flex items-center gap-2 text-xs text-muted"
+          >
+            <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" />
+            Mengunggah tanda tangan baru...
+          </p>
+        </UFormField>
+      </div>
 
       <USeparator />
 
