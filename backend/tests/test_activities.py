@@ -8,8 +8,6 @@ from tests.conftest import DB_PATH
 
 sync_engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
 
-_ACTION_NAMES = {"create": "CREATE", "update": "UPDATE", "delete": "DELETE"}
-
 
 def _insert_activity(resource_type: str, action: str = "create",
                      actor_name: str = "Ahmad Fauzi", actor_role: str = "admin") -> str:
@@ -22,7 +20,7 @@ def _insert_activity(resource_type: str, action: str = "create",
             VALUES (:id, NULL, :actor, :role, :action, :rtype, NULL, NULL, :now, :now)
         """), {
             "id": act_id, "actor": actor_name, "role": actor_role,
-            "action": _ACTION_NAMES.get(action, action), "rtype": resource_type, "now": now
+            "action": action, "rtype": resource_type, "now": now
         })
     return act_id
 
@@ -59,7 +57,7 @@ def test_list_activities_filter_by_resource_type(client: TestClient, seeded_db):
 def test_list_activities_filter_by_action(client: TestClient, seeded_db):
     _insert_activity("customer", action="create")
     _insert_activity("customer", action="delete")
-    response = client.get("/api/v1/activities?action=DELETE")
+    response = client.get("/api/v1/activities?action=delete")
     assert response.status_code == 200
     assert response.json()["total"] == 1
 

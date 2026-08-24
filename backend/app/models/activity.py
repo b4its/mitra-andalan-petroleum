@@ -24,7 +24,11 @@ class Activity(BaseModel):
     actor_name: Mapped[str] = mapped_column(String(100), comment="Name of actor/user")
     actor_role: Mapped[str] = mapped_column(String(50), comment="Role of actor")
     action: Mapped[str] = mapped_column(
-        SAEnum(ActivityType, named_constructor=True),
+        SAEnum(
+            ActivityType,
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            named_constructor=True,
+        ),
         comment="Action type: create, update, delete"
     )
     resource_type: Mapped[str] = mapped_column(String(100), comment="Resource being acted upon")
