@@ -262,7 +262,10 @@ export function useInvoicePdf() {
                     formatDate(details.invoiceInformation.invoiceDate),
                   ),
                   {
-                    ...infoValueCell(`${formattedLetterIds}`),
+                    text: `${formattedLetterIds}`,
+                    bold: true,
+                    alignment: "center",
+                    verticalAlignment: "middle",
                     fontSize: 8,
                     margin: [0, 6, 0, 6],
                   },
