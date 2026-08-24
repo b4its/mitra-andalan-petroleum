@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, Any
 
 from fastapi import Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.activity import Activity, ActivityType
@@ -81,6 +82,18 @@ async def log_activity(
         new_data or {}, 
         action
     )
+    
+    # Validasi user_id: jika header x-user-id berisi ID yang tidak ada di DB
+    # (mis. session kadaluarsa / user dihapus), setel ke None (system) agar
+    # tidak melanggar foreign key activities.user_id -> users.id dan
+    # merusak operasi bisnis utama (IntegrityError 500).
+    if user_id:
+        from app.models.user import User
+        existing = await db.execute(select(User.id).where(User.id == user_id))
+        if existing.scalar_one_or_none() is None:
+            user_id = None
+            if not actor_name or actor_name == "System":
+                actor_role = "system"
     
     # Create activity record
     activity = Activity(
