@@ -104,6 +104,11 @@ async def get_invoice(id: str, db: AsyncSession = Depends(get_db)):
 async def create_invoice(request: Request, body: InvoiceCreate, db: AsyncSession = Depends(get_db)):
     data = body.model_dump()
     data["details"] = _details_to_str(data.pop("details", None))
+    # Validasi customer_id agar FK tidak melanggar (IntegrityError 500 di MySQL)
+    if data.get("customer_id"):
+        c = await db.execute(select(Customer).where(Customer.id == data["customer_id"]))
+        if not c.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
     inv = Invoice(**data)
     db.add(inv)
     await db.flush()

@@ -249,6 +249,12 @@ async def create_delivery_order(request: Request, body: DeliveryOrderCreate, db:
         if not data.get("fuel_total"):
             data["fuel_total"] = po.total or 0
 
+    # Validasi customer_id (jika diberikan langsung) agar FK tidak melanggar
+    if data.get("customer_id"):
+        c = await db.execute(select(Customer).where(Customer.id == data["customer_id"]))
+        if not c.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
+
     do = DeliveryOrder(**data)
     db.add(do)
     await db.flush()

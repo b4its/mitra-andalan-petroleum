@@ -152,6 +152,12 @@ async def create_po_transportir(request: Request, body: PoTransportirCreate, db:
             customer_id = po.customer_id
         po_number_ref = po.po_number
 
+    # Validasi customer_id (jika diberikan langsung) agar FK tidak melanggar
+    if customer_id:
+        c = await db.execute(select(Customer).where(Customer.id == customer_id))
+        if not c.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
+
     po = PoTransportir(
         po_number=body.po_number,
         date=body.date,
