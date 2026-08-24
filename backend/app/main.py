@@ -13,6 +13,9 @@ from app.core.config import settings
 from app.core.database import engine, async_session_factory
 
 MEDIA_DIR = Path(__file__).resolve().parent.parent / "media"
+# Pastikan direktori media ada saat import (StaticFiles butuh direktori yang
+# sudah ada). lifespan tetap memanggil mkdir untuk jaga-jaga.
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 
 # Container tanpa file mime.types tidak mengenali beberapa ekstensi
 # (mis. .xlsx, .docx). Daftarkan eksplisit agar StaticFiles mengirim
@@ -103,5 +106,3 @@ app.include_router(v1_router)
 from app.api.v1.endpoints import status_translations
 app.include_router(status_translations.router, prefix="/api/v1", tags=["Status Translations"])
 app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")
-from app.api.v1.endpoints import status_translations
-app.include_router(status_translations.router, prefix="/api/v1", tags=["Status Translations"])
