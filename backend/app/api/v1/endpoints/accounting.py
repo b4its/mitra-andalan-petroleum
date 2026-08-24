@@ -1397,7 +1397,15 @@ async def get_bank_interest(
         stmt = stmt.order_by(JournalEntry.entry_date)
         result = await db.execute(stmt)
         for line, entry_number, entry_date, desc, ref in result.all():
-            total_paid += line.debit or 0
+            amount = line.debit or 0
+            total_paid += amount
+            code, name = interest_code_name.get(line.account_id, ("", ""))
+            rows.append(BankInterestRow(
+                id=line.id, entry_date=entry_date, description=desc,
+                account_code=code, account_name=name,
+                amount=amount, interest_rate=6.0, days=30,
+                interest_amount=0.0, reference=ref,
+            ))
 
     return BankInterestResponse(
         total_principal=round(total_principal, 2),
