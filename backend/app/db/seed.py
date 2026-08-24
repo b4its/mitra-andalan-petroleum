@@ -507,8 +507,22 @@ async def _clear_all(db: AsyncSession):
     
     print("[seed] Clearing all data...")
     
-    # Disable foreign key checks to avoid constraint violations during bulk delete
-    await db.execute(text("SET FOREIGN_KEY_CHECKS=0"))
+    # Disable foreign key checks to avoid constraint violations during bulk
+    # delete. Gunakan statement sesuai dialect (MySQL vs SQLite) agar tidak
+    # crash saat dijalankan di SQLite (dev/test).
+    def _fk_stmt(enable: bool) -> str | None:
+        dialect = (db.bind.dialect.name if db.bind else "") or ""
+        dialect = dialect.lower()
+        if dialect == "mysql":
+            return f"SET FOREIGN_KEY_CHECKS={1 if enable else 0}"
+        if dialect == "sqlite":
+            return f"PRAGMA foreign_keys={'ON' if enable else 'OFF'}"
+        return None
+
+    off_stmt = _fk_stmt(False)
+    on_stmt = _fk_stmt(True)
+    if off_stmt:
+        await db.execute(text(off_stmt))
     
     try:
         for model in _CLEAR_ORDER:  # Forward order is fine with FK disabled
@@ -524,7 +538,8 @@ async def _clear_all(db: AsyncSession):
         
     finally:
         # Re-enable foreign key checks
-        await db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+        if on_stmt:
+            await db.execute(text(on_stmt))
         
         print("[seed] ✅ All data cleared successfully!")
 
