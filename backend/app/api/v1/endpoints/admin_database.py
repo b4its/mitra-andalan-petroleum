@@ -176,7 +176,7 @@ async def export_database():
     tables = Base.metadata.sorted_tables
     lines = [
         "-- Mandalan full database export",
-        f"-- Generated at {datetime.utcnow().isoformat(timespec='seconds')}Z",
+        f"-- Generated at {datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}",
     ]
     fk_off = _fk_checks_sql(False)
     fk_on = _fk_checks_sql(True)
@@ -225,7 +225,7 @@ async def export_database():
     if fk_on:
         lines.append(f"{fk_on};")
     content = "\n".join(lines).encode("utf-8")
-    filename = f"mandalan-data-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.sql"
+    filename = f"mandalan-data-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.sql"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return StreamingResponse(BytesIO(content), media_type="application/sql", headers=headers)
 
