@@ -186,7 +186,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    import sys
     try:
         asyncio.run(main())
     finally:

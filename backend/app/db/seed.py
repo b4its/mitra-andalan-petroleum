@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import gc
 import json
 import math
 import struct
@@ -1095,7 +1094,7 @@ async def _seed_invoices(db: AsyncSession):
         )
         db.add(inv)
     await db.flush()
-    print(f"[seed] Added 60 invoices")
+    print("[seed] Added 60 invoices")
 
 
 # ── PO Transportir ─────────────────────────────────────────────
@@ -1451,10 +1450,10 @@ async def _seed_document_uploads(db: AsyncSession):
         folder_dir.mkdir(parents=True, exist_ok=True)
         stored = f"{uuid.uuid4().hex}.pdf"
         content = (
-            f"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
-            f"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
-            f"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\n"
-            f"trailer<</Root 1 0 R>>\n%%EOF"
+            "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+            "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+            "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\n"
+            "trailer<</Root 1 0 R>>\n%%EOF"
         ).encode()
         (folder_dir / stored).write_bytes(content)
         db.add(Upload(

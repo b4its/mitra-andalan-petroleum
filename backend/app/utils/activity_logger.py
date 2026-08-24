@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Dict, Any
-import sys
+from typing import Optional, Any
 
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession

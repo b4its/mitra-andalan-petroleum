@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict
 
 class ProfileResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

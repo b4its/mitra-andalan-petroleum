@@ -3,7 +3,6 @@ Backend API for translating status codes to Indonesian labels.
 Returns translations for all database status values.
 """
 from fastapi import APIRouter, Query
-from typing import Optional
 
 router = APIRouter(prefix="/status-translations", tags=["Status Translations"])
 

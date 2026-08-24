@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import select, func, or_
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from app.api.deps import get_db
 from app.models.activity import Activity
-from app.schemas.common import PaginatedResponse, PaginationParams
-from app.schemas.activity import ActivityResponse, ActivityFilter
+from app.schemas.common import PaginatedResponse
+from app.schemas.activity import ActivityResponse
 
 router = APIRouter()
 
