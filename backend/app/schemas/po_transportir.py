@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.common import ForeignKeyId
+
 
 class PoTransportirResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -16,8 +18,8 @@ class PoTransportirResponse(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
-    id_purchase_order: str | None = None
-    customer_id: str | None = None
+    id_purchase_order: ForeignKeyId = None
+    customer_id: ForeignKeyId = None
     customer_name: str = ""
     purchase_order_number: str | None = None
     created_at: datetime | None = None
@@ -33,8 +35,8 @@ class PoTransportirCreate(BaseModel):
     status: str = "created"
     details: dict[str, Any] | None = None
     created_by: str | None = None
-    id_purchase_order: str | None = None
-    customer_id: str | None = None
+    id_purchase_order: ForeignKeyId = None
+    customer_id: ForeignKeyId = None
 
 
 class PoTransportirUpdate(BaseModel):
@@ -46,5 +48,5 @@ class PoTransportirUpdate(BaseModel):
     status: str | None = None
     details: dict[str, Any] | None = None
     created_by: str | None = None
-    id_purchase_order: str | None = None
-    customer_id: str | None = None
+    id_purchase_order: ForeignKeyId = None
+    customer_id: ForeignKeyId = None

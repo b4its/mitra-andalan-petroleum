@@ -4,12 +4,15 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 
+from app.schemas.common import ForeignKeyId
+
+
 class InvoiceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     invoice_number: str
-    customer_id: str | None = None
+    customer_id: ForeignKeyId = None
     customer_name: str = ""
     terms_day: int = 30
     grand_total: float = 0
@@ -22,7 +25,7 @@ class InvoiceResponse(BaseModel):
 
 class InvoiceCreate(BaseModel):
     invoice_number: str
-    customer_id: str | None = None
+    customer_id: ForeignKeyId = None
     terms_day: int = 30
     grand_total: float = 0
     invoice_status: str = "unpaid"
@@ -32,7 +35,7 @@ class InvoiceCreate(BaseModel):
 
 class InvoiceUpdate(BaseModel):
     invoice_number: str | None = None
-    customer_id: str | None = None
+    customer_id: ForeignKeyId = None
     terms_day: int | None = None
     grand_total: float | None = None
     invoice_status: str | None = None

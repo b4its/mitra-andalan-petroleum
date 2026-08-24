@@ -1,9 +1,18 @@
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import Annotated, Generic, TypeVar
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, BeforeValidator, ConfigDict
 
 T = TypeVar("T")
+
+
+def _empty_str_to_none(v):
+    if isinstance(v, str) and not v.strip():
+        return None
+    return v
+
+
+ForeignKeyId = Annotated[str | None, BeforeValidator(_empty_str_to_none)]
 
 
 class TimestampMixin(BaseModel):

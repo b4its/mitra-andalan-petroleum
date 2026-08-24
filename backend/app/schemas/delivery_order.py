@@ -3,16 +3,18 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.common import ForeignKeyId
+
 
 class DeliveryOrderResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     do_number: str
-    customer_id: str | None = None
+    customer_id: ForeignKeyId = None
     customer_name: str = ""
-    id_purchase_order: str | None = None
-    id_po_transportir: str | None = None
+    id_purchase_order: ForeignKeyId = None
+    id_po_transportir: ForeignKeyId = None
     po_number: str | None = None
     po_transportir_number: str | None = None
     transport_name: str | None = None
@@ -38,9 +40,9 @@ class DeliveryOrderResponse(BaseModel):
 
 class DeliveryOrderCreate(BaseModel):
     do_number: str
-    customer_id: str | None = None
-    id_purchase_order: str | None = None
-    id_po_transportir: str | None = None
+    customer_id: ForeignKeyId = None
+    id_purchase_order: ForeignKeyId = None
+    id_po_transportir: ForeignKeyId = None
     po_number: str | None = None
     transport_name: str | None = None
     fuel_total: float = 0
@@ -51,9 +53,9 @@ class DeliveryOrderCreate(BaseModel):
 
 class DeliveryOrderUpdate(BaseModel):
     do_number: str | None = None
-    customer_id: str | None = None
-    id_purchase_order: str | None = None
-    id_po_transportir: str | None = None
+    customer_id: ForeignKeyId = None
+    id_purchase_order: ForeignKeyId = None
+    id_po_transportir: ForeignKeyId = None
     po_number: str | None = None
     transport_name: str | None = None
     fuel_total: float | None = None

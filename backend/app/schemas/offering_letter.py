@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.common import ForeignKeyId
+
 from app.schemas.purchase_order import PurchaseOrderResponse
 from app.schemas.delivery_order import DeliveryOrderResponse
 
@@ -12,7 +14,7 @@ class OfferingLetterResponse(BaseModel):
 
     id: str
     offering_letter_number: str
-    customer_id: str | None = None
+    customer_id: ForeignKeyId = None
     customer_name: str | None = None
     location: str | None = None
     date: str | None = None
@@ -29,7 +31,7 @@ class OfferingLetterResponse(BaseModel):
 
 class OfferingLetterCreate(BaseModel):
     offering_letter_number: str
-    customer_id: str | None = None
+    customer_id: ForeignKeyId = None
     location: str | None = None
     date: str | None = None
     regarding: str | None = None
@@ -43,7 +45,7 @@ class OfferingLetterCreate(BaseModel):
 
 class OfferingLetterUpdate(BaseModel):
     offering_letter_number: str | None = None
-    customer_id: str | None = None
+    customer_id: ForeignKeyId = None
     location: str | None = None
     date: str | None = None
     regarding: str | None = None
