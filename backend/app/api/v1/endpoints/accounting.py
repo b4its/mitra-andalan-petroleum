@@ -390,6 +390,26 @@ async def get_journal(id: str, db: AsyncSession = Depends(get_db)):
     return _entry_to_response(entry, await _fetch_lines(db, id))
 
 
+async def _assert_accounts_exist(db: AsyncSession, lines) -> None:
+    """Pastikan setiap account_id pada lines benar-benar ada di tabel accounts.
+
+    Mencegah IntegrityError FK (journal_lines.account_id -> accounts.id) di
+    MySQL/PostgreSQL yang akan mengembalikan 500, serta data korup (account
+    tidak ada) di SQLite yang tidak menegakkan FK.
+    """
+    ids = {line.account_id for line in lines if line.account_id}
+    if not ids:
+        return
+    result = await db.execute(select(Account.id).where(Account.id.in_(ids)))
+    found = set(result.scalars().all())
+    missing = ids - found
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Akun tidak ditemukan: {', '.join(sorted(missing))}",
+        )
+
+
 @router.post(
     "/accounting/journal",
     response_model=JournalEntryResponse,
@@ -408,6 +428,7 @@ async def create_journal(request: Request, body: JournalEntryCreate, db: AsyncSe
     )
     db.add(entry)
     await db.flush()
+    await _assert_accounts_exist(db, body.lines)
     for line in body.lines:
         db.add(JournalLine(
             journal_entry_id=entry.id,
@@ -473,6 +494,7 @@ async def update_journal(request: Request, id: str, body: JournalEntryUpdate, db
         for old in existing.scalars().all():
             await db.delete(old)
         await db.flush()
+        await _assert_accounts_exist(db, lines_data)
         for line in lines_data:
             db.add(JournalLine(
                 journal_entry_id=id,
