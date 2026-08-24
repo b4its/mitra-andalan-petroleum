@@ -40,6 +40,9 @@ venv/
 mysql_data/
 media_data/
 
+# Backend generated media uploads (dibuat saat startup)
+backend/media/
+
 # Logs
 *.log
 
