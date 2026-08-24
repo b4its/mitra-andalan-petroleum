@@ -10,9 +10,7 @@ from app.models.offering_letter import OfferingLetter
 from app.models.delivery_order import DeliveryOrder
 from app.models.invoice import Invoice
 from app.models.customer import Customer
-from app.models.delivery_order import DeliveryOrder
 from app.models.notification import Notification
-from app.models.offering_letter import OfferingLetter
 from app.models.purchase_order import PurchaseOrder
 from app.models.sale import Sale
 from app.models.supplier import Supplier
@@ -95,7 +93,12 @@ async def finance_stats(db: AsyncSession = Depends(get_db)):
     description="Statistik halaman utama: total customer, revenue, orders.",
 )
 async def home_stats(db: AsyncSession = Depends(get_db)):
-    total_customers = await _count(db, select(OfferingLetter).distinct(OfferingLetter.customer_id))
+    # Hitung customer unik dari offering letter tanpa DISTINCT ON (yang hanya
+    # didukung PostgreSQL) agar konsisten di MySQL/SQLite.
+    total_customers_result = await db.execute(
+        select(func.count(func.distinct(OfferingLetter.customer_id)))
+    )
+    total_customers = total_customers_result.scalar() or 0
     total_revenue_result = await db.execute(select(func.coalesce(func.sum(Invoice.grand_total), 0)))
     total_revenue = total_revenue_result.scalar() or 0
     total_ol = await _count(db, select(OfferingLetter))
@@ -166,12 +169,17 @@ async def _variation(db, model, where=None, aggregate=None):
     prev_start = now - timedelta(days=60)
 
     async def _measure(start, end):
-        stmt = select(model).where(model.created_at >= start, model.created_at < end)
+        # Bangun query agregat langsung dari tabel model (bukan subquery)
+        # agar tidak terjadi cartesian product antara subquery anon_1 dan
+        # tabel model (aggregate mereferensikan kolom model langsung).
+        if aggregate is None:
+            stmt = select(func.count()).select_from(model)
+        else:
+            stmt = select(aggregate)
+        stmt = stmt.where(model.created_at >= start, model.created_at < end)
         if where is not None:
             stmt = stmt.where(where)
-        if aggregate is None:
-            return await _count(db, stmt)
-        result = await db.execute(select(aggregate).select_from(stmt.subquery()))
+        result = await db.execute(stmt)
         return result.scalar() or 0
 
     current = await _measure(cur_start, now)
