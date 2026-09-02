@@ -245,7 +245,5 @@ const links = [
 
     <AdminNotificationsModal v-model:open="notificationsOpen" />
 
-    <!-- AI Assistant (analisa & prediksi) -->
-    <AiAssistant />
   </UDashboardGroup>
 </template>

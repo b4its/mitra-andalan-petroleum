@@ -198,7 +198,5 @@ const links = computed<NavigationMenuItem[][]>(() => {
       </template>
     </UDashboardPanel>
 
-    <!-- AI Assistant (analisa & prediksi) -->
-    <AiAssistant />
   </UDashboardGroup>
 </template>

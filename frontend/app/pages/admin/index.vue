@@ -619,99 +619,6 @@ const links = [
   ],
 ] satisfies NavigationMenuItem[][];
 
-// ── AI Assistant: konteks analisa halaman ──────────────────────
-const { setContext: setAiContext, clearContext: clearAiContext, open: openAi } =
-  useAiAssistant();
-
-const aiContext = computed(() => {
-  const d = data.value;
-  const acc = accounting.value;
-  const det = accountingDetail.value;
-
-  const metrics = (d?.metrics ?? []).map((m) => ({
-    key: m.key,
-    title: m.title,
-    value: m.value,
-    unit: m.unit,
-  }));
-
-  const trends = (d?.trends ?? []).map((t) => ({
-    label: t.label,
-    suratPenawaran: t.offering_letters,
-    poCustomer: t.purchase_orders,
-    deliveryOrder: t.delivery_orders,
-    invoice: t.invoices,
-    nilaiPenjualan: t.sales_amount,
-  }));
-
-  const distributions: Record<string, { label: string; value: number }[]> = {};
-  for (const key of Object.keys(d?.distributions ?? {})) {
-    distributions[key] = (d.distributions[key] || []).map((b) => ({
-      label: b.label,
-      value: b.value,
-    }));
-  }
-
-  const accountingSummary = acc
-    ? {
-        totalPemasukan: acc.total_income,
-        totalPengeluaran: acc.total_expense,
-        labaBersih: acc.net_income,
-        saldoKasBank: acc.cash_balance,
-        jumlahJurnal: acc.journal_count,
-        jumlahAkun: acc.account_count,
-      }
-    : null;
-
-  const detInfo: Record<string, unknown> = {};
-  if (det.balanceSheet) {
-    detInfo.neraca = {
-      totalAset: det.balanceSheet.total_assets,
-      totalKewajiban: det.balanceSheet.total_liabilities,
-      totalEkuitas: det.balanceSheet.total_equity,
-    };
-  }
-  if (det.cashflow) {
-    detInfo.arusKas = {
-      operasi: det.cashflow.operating.total,
-      investasi: det.cashflow.investing.total,
-      pendanaan: det.cashflow.financing.total,
-    };
-  }
-  if (det.monitoring?.rows?.length) {
-    detInfo.monitoring = det.monitoring.rows.map((r) => ({
-      bulan: r.bulan,
-      penghasilan: r.penghasilan,
-      operasional: r.operasional,
-      marginKotor: r.gross_margin,
-    }));
-  }
-
-  return JSON.stringify(
-    {
-      halaman: "Dashboard Admin - Overview Sistem",
-      rentangTanggal: { dari: d?.date_from, sampai: d?.date_to },
-      ringkasanMetrik: metrics,
-      trenDokumenPerPeriode: trends,
-      distribusi: distributions,
-      ringkasanAkuntansi: accountingSummary,
-      detailAkuntansi: detInfo,
-    },
-    null,
-    2
-  );
-});
-
-watch(
-  aiContext,
-  (val) => setAiContext(val, "Dashboard Admin"),
-  { immediate: true }
-);
-onBeforeUnmount(() => clearAiContext());
-
-function openAiAssistant() {
-  openAi();
-}
 </script>
 
 <template>
@@ -722,13 +629,6 @@ function openAiAssistant() {
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <UButton
-            icon="i-lucide-sparkles"
-            color="primary"
-            variant="soft"
-            label="Analisa AI"
-            @click="openAiAssistant"
-          />
           <UButton
             icon="i-lucide-refresh-cw"
             color="neutral"

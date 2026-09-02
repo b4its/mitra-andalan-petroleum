@@ -404,90 +404,6 @@ function onError(err: unknown) {
   });
 }
 
-// ── AI Assistant: konteks analisa halaman ──────────────────────
-const { setContext: setAiContext, clearContext: clearAiContext, open: openAi } =
-  useAiAssistant();
-
-const aiContext = computed(() => {
-  const s = summary.value;
-  const accountingSummary = s
-    ? {
-        totalPemasukan: s.total_income,
-        totalPengeluaran: s.total_expense,
-        labaBersih: s.net_income,
-        saldoKasBank: s.cash_balance,
-        jumlahJurnal: s.journal_count,
-        jumlahAkun: s.account_count,
-        jumlahPemasukan: s.income_count,
-        jumlahPengeluaran: s.expense_count,
-      }
-    : null;
-
-  const detInfo: Record<string, unknown> = {};
-  if (dailyCash.value) {
-    detInfo.kasHarian = {
-      saldoAwal: dailyCash.value.opening_balance,
-      totalMasuk: dailyCash.value.total_debit,
-      totalKeluar: dailyCash.value.total_credit,
-      saldoAkhir: dailyCash.value.closing_balance,
-    };
-  }
-  if (cashflow.value) {
-    detInfo.arusKas = {
-      operasi: cashflow.value.operating.total,
-      investasi: cashflow.value.investing.total,
-      pendanaan: cashflow.value.financing.total,
-    };
-  }
-  if (costRecap.value?.groups?.length) {
-    detInfo.rekapBiaya = costRecap.value.groups
-      .slice()
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 10)
-      .map((g) => ({
-        kodeAkun: g.account_code,
-        namaAkun: g.account_name,
-        total: g.total,
-      }));
-  }
-  if (monitoring.value?.rows?.length) {
-    detInfo.monitoring = monitoring.value.rows.map((r) => ({
-      bulan: r.bulan,
-      penghasilan: r.penghasilan,
-      operasional: r.operasional,
-      marginKotor: r.gross_margin,
-    }));
-  }
-  if (bankInterest.value) {
-    detInfo.bungaBank = {
-      pokokPinjaman: bankInterest.value.total_principal,
-      totalBunga: bankInterest.value.total_interest,
-      totalPembayaran: bankInterest.value.total_paid,
-    };
-  }
-
-  return JSON.stringify(
-    {
-      halaman: "Dashboard Accounting",
-      ringkasanAkuntansi: accountingSummary,
-      detailAkuntansi: detInfo,
-    },
-    null,
-    2
-  );
-});
-
-watch(
-  aiContext,
-  (val) => setAiContext(val, "Dashboard Accounting"),
-  { immediate: true }
-);
-onBeforeUnmount(() => clearAiContext());
-
-function openAiAssistant() {
-  openAi();
-}
-
 definePageMeta({ layout: "accounting" });
 </script>
 
@@ -507,13 +423,6 @@ definePageMeta({ layout: "accounting" });
           </div>
         </template>
         <template #right>
-          <UButton
-            icon="i-lucide-sparkles"
-            color="primary"
-            variant="soft"
-            label="Analisa AI"
-            @click="openAiAssistant"
-          />
           <UButton
             icon="i-lucide-refresh-cw"
             color="neutral"
