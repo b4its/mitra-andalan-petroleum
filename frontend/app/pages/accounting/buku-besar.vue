@@ -192,7 +192,7 @@ const detailColumns: TableColumn<AccountingLedgerRow>[] = [
       h(
         "span",
         { class: "font-semibold" },
-        formatCurrency(Number(row.getValue("balance"))),
+        formatCurrency(Number(row.getValue("balance")) || 0),
       ),
   },
 ];

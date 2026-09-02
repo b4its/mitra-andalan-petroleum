@@ -34,6 +34,15 @@ async function parseError(res: Response) {
   throw new Error(err.detail || `API error: ${res.status}`)
 }
 
+async function parseJson<T>(res: Response): Promise<T> {
+  if (res.status === 204 || res.headers.get('content-length') === '0') {
+    return undefined as T
+  }
+  const text = await res.text()
+  if (!text) return undefined as T
+  return JSON.parse(text) as T
+}
+
 interface SortableItem {
   created_at?: string | null
   dateCreated?: string | null
@@ -101,7 +110,7 @@ export function useApi() {
     if (!res.ok) {
       await parseError(res)
     }
-    return newestFirst(await res.json(), path)
+    return newestFirst(await parseJson(res), path)
   }
 
   async function put<T, U>(path: string, body: U): Promise<T> {
@@ -113,7 +122,7 @@ export function useApi() {
     if (!res.ok) {
       await parseError(res)
     }
-    return res.json()
+    return parseJson(res)
   }
 
   async function post<T, U>(path: string, body: U): Promise<T> {
@@ -125,7 +134,7 @@ export function useApi() {
     if (!res.ok) {
       await parseError(res)
     }
-    return res.json()
+    return parseJson(res)
   }
 
   async function postFile<T>(path: string, payload: Uploads): Promise<T> {
@@ -161,7 +170,7 @@ export function useApi() {
     if (!res.ok) {
       await parseError(res)
     }
-    return res.json()
+    return parseJson(res)
   }
 
   async function putFile<T>(path: string, payload: Uploads): Promise<T> {
@@ -197,7 +206,7 @@ export function useApi() {
     if (!res.ok) {
       await parseError(res)
     }
-    return res.json()
+    return parseJson(res)
   }
 
   async function del<T>(path: string): Promise<T> {
@@ -208,7 +217,7 @@ export function useApi() {
     if (!res.ok) {
       await parseError(res)
     }
-    return res.json()
+    return parseJson(res)
   }
 
   return { get, post, put, del, putFile, postFile }
