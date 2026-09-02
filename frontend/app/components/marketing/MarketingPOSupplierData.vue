@@ -92,7 +92,7 @@ function openDetail(id: string) {
         v-model="search"
         icon="i-lucide-search"
         placeholder="Cari nomor Purchase Order atau supplier..."
-        class="w-64"
+        class="w-full sm:w-64"
       />
     </div>
 

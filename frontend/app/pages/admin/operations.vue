@@ -328,14 +328,14 @@ const filterTabs = [
                     :items="doStatusOptions"
                     value-key="value"
                     size="sm"
-                    class="w-48"
+                    class="w-full sm:w-48"
                   />
                   <UInput
                     v-model="search"
                     icon="i-lucide-search"
                     placeholder="Cari nomor Delivery Order, customer..."
                     size="sm"
-                    class="w-64"
+                    class="w-full sm:w-64"
                   />
                 </div>
               </div>

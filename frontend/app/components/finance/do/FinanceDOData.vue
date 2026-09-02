@@ -186,7 +186,7 @@ const columns: TableColumn<FinanceDoRow>[] = [
         v-model="search"
         icon="i-lucide-search"
         placeholder="Cari nomor Delivery Order, Purchase Order, atau transportir..."
-        class="w-72"
+        class="w-full sm:w-72"
       />
     </div>
 

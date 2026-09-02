@@ -282,14 +282,14 @@ definePageMeta({ layout: 'accounting' })
                 v-model="search"
                 icon="i-lucide-search"
                 placeholder="Cari kode atau nama akun..."
-                class="w-64"
+                class="w-full sm:w-64"
               />
               <USelect
                 v-model="typeFilter"
                 :items="typeOptions"
                 value-key="value"
                 placeholder="Filter jenis"
-                class="w-40"
+                class="w-full sm:w-40"
               />
             </div>
             <div class="flex flex-wrap justify-end gap-2">

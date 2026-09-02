@@ -440,7 +440,7 @@ definePageMeta({ layout: "accounting" });
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <USkeleton v-for="i in 4" :key="i" class="h-24 rounded-lg" />
         </div>
-        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <USkeleton v-for="i in 4" :key="i" class="h-24 rounded-lg" />
         </div>
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -465,7 +465,7 @@ definePageMeta({ layout: "accounting" });
                   searchable
                   :search-input="{ placeholder: 'Cari akun...' }"
                   placeholder="Semua Akun"
-                  class="w-64"
+                  class="w-full sm:w-64"
                 />
               </div>
             </div>
@@ -494,7 +494,7 @@ definePageMeta({ layout: "accounting" });
             </UCard>
           </div>
 
-          <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <UCard v-for="card in countCards" :key="card.title">
               <div class="flex items-center gap-3">
                 <UIcon :name="card.icon" class="size-6 text-primary" />

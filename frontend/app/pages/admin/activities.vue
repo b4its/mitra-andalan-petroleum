@@ -263,7 +263,7 @@ const actions = ['all', 'create', 'update', 'delete'] as const
                   }))
                 "
                 placeholder="Semua Aksi"
-                class="w-40"
+                class="w-full sm:w-40"
               />
             </div>
 
@@ -276,7 +276,7 @@ const actions = ['all', 'create', 'update', 'delete'] as const
                   ...resourceTypes.map((rt) => ({ label: rt, value: rt }))
                 ]"
                 placeholder="Semua Resource"
-                class="w-48"
+                class="w-full sm:w-48"
               />
             </div>
 
@@ -454,7 +454,7 @@ const actions = ['all', 'create', 'update', 'delete'] as const
         class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
       >
         <!-- Basic Info -->
-        <div class="grid grid-cols-2 gap-4 p-4 bg-elevated rounded-lg">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-elevated rounded-lg">
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Aksi

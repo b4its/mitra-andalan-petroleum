@@ -186,7 +186,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         class="space-y-4"
         @submit="onSubmit"
       >
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField name="do_number" label="Nomor Delivery Order" required>
             <UInput
               v-model="form.do_number"
@@ -199,7 +199,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField name="transport_name" label="Nama Transportir" required>
             <UInput
               v-model="form.transport_name"
@@ -216,7 +216,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField name="product_name" label="Nama Produk" required>
             <UInput
               v-model="form.product_name"
@@ -234,7 +234,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </UFormField>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <UFormField name="driver_name" label="Nama Driver">
             <UInput
               v-model="form.driver_name"

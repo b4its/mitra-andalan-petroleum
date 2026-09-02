@@ -117,7 +117,7 @@ definePageMeta({ layout: "operations" });
             v-model="search"
             icon="i-lucide-search"
             placeholder="Cari nomor PO atau nama transportir..."
-            class="w-64"
+            class="w-full sm:w-64"
             @keyup.enter="() => {}"
           />
           <USelect

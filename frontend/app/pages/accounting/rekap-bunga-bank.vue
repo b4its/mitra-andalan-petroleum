@@ -180,7 +180,7 @@ definePageMeta({ layout: "accounting" });
                   v-model="search"
                   icon="i-lucide-search"
                   placeholder="Cari deskripsi..."
-                  class="w-64"
+                  class="w-full sm:w-64"
                 />
                 <HomeDateRangePicker v-model="range" />
               </div>

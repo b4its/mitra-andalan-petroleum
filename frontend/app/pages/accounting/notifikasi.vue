@@ -327,7 +327,7 @@ definePageMeta({ layout: 'accounting' })
               {{ selectedNotification.message }}
             </p>
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-1">
                 Pengguna

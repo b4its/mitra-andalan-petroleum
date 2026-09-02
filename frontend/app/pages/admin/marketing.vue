@@ -273,14 +273,14 @@ function openDetail(id: string) {
                     :items="statusOptions"
                     value-key="value"
                     size="sm"
-                    class="w-44"
+                    class="w-full sm:w-44"
                   />
                   <UInput
                     v-model="search"
                     icon="i-lucide-search"
                     placeholder="Cari nomor Surat Penawaran, customer, status..."
                     size="sm"
-                    class="w-64"
+                    class="w-full sm:w-64"
                   />
                 </div>
               </div>

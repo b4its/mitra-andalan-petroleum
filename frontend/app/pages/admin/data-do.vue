@@ -293,7 +293,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
             v-model="search"
             icon="i-lucide-search"
             placeholder="Cari nomor Delivery Order, customer, Purchase Order, atau transportir..."
-            class="w-72"
+            class="w-full sm:w-72"
           />
         </div>
 
@@ -419,7 +419,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
           />
           <USkeleton v-else class="h-10 w-full rounded-lg" />
         </UFormField>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <UFormField label="Nomor Purchase Order">
             <UInput v-model="form.po_number" placeholder="Contoh: PO-001" />
           </UFormField>
@@ -430,7 +430,7 @@ const columns: TableColumn<DeliveryOrderRow>[] = [
             />
           </UFormField>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <UFormField label="Volume BBM (L)">
             <UInput v-model.number="form.fuel_total" type="number" />
           </UFormField>

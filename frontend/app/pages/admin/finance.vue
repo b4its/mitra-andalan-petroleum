@@ -417,21 +417,21 @@ function openDetail(id: string, type: "invoice" | "do") {
                     :items="invStatusOptions"
                     value-key="value"
                     size="sm"
-                    class="w-44"
+                    class="w-full sm:w-44"
                   />
                   <USelect
                     v-model="deadlineStatusFilter"
                     :items="deadlineStatusOptions"
                     value-key="value"
                     size="sm"
-                    class="w-48"
+                    class="w-full sm:w-48"
                   />
                   <UInput
                     v-model="invSearch"
                     icon="i-lucide-search"
                     placeholder="Cari nomor invoice, customer, status..."
                     size="sm"
-                    class="w-64"
+                    class="w-full sm:w-64"
                   />
                 </div>
               </div>
@@ -480,14 +480,14 @@ function openDetail(id: string, type: "invoice" | "do") {
                     :items="doFlowOptions"
                     value-key="value"
                     size="sm"
-                    class="w-56"
+                    class="w-full sm:w-56"
                   />
                   <UInput
                     v-model="doSearch"
                     icon="i-lucide-search"
                     placeholder="Cari nomor Delivery Order, customer, Purchase Order..."
                     size="sm"
-                    class="w-64"
+                    class="w-full sm:w-64"
                   />
                 </div>
               </div>

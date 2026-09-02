@@ -478,7 +478,7 @@ async function downloadFile(upload: RecordUpload) {
       <template v-else>
         <!-- ── Offering Letter ── -->
         <div v-if="type === 'ol' && data" class="space-y-4 text-sm">
-          <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor Surat Penawaran
@@ -583,7 +583,7 @@ async function downloadFile(upload: RecordUpload) {
 
         <!-- ── Purchase Order ── -->
         <div v-else-if="type === 'po' && data" class="space-y-4 text-sm">
-          <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor Purchase Order
@@ -716,7 +716,7 @@ async function downloadFile(upload: RecordUpload) {
                   </UBadge>
                 </div>
 
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                   <div>
                     <p class="text-muted">
                       Customer
@@ -794,7 +794,7 @@ async function downloadFile(upload: RecordUpload) {
 
         <!-- ── Delivery Order ── -->
         <div v-else-if="type === 'do' && data" class="space-y-4 text-sm">
-          <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor Delivery Order
@@ -911,7 +911,7 @@ async function downloadFile(upload: RecordUpload) {
                 </UBadge>
               </div>
 
-              <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
                 <div>
                   <p class="text-muted">
                     Customer
@@ -978,7 +978,7 @@ async function downloadFile(upload: RecordUpload) {
             >
               Status Alur Pengiriman
             </p>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="rounded-lg border border-default p-3 space-y-1">
                 <div class="flex items-center gap-2">
                   <UIcon
@@ -1075,7 +1075,7 @@ async function downloadFile(upload: RecordUpload) {
             >
               Catatan Pengiriman
             </p>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <p class="text-xs text-muted">
                   T2 Depo
@@ -1131,7 +1131,7 @@ async function downloadFile(upload: RecordUpload) {
 
         <!-- ── Invoice ── -->
         <div v-else-if="type === 'invoice' && data" class="space-y-4 text-sm">
-          <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <p class="text-xs text-muted uppercase tracking-wide mb-0.5">
                 Nomor Invoice

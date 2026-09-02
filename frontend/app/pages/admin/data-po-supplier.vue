@@ -141,7 +141,7 @@ async function onRilisDana(id: string) {
               v-model="search"
               icon="i-lucide-search"
               placeholder="Cari nomor PO atau status..."
-              class="w-64"
+              class="w-full sm:w-64"
             />
             <UButton
               icon="i-lucide-refresh-cw"

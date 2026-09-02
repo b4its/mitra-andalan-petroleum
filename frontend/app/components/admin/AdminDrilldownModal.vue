@@ -502,7 +502,7 @@ const searchPlaceholder = computed(() => {
               icon="i-lucide-search"
               :placeholder="searchPlaceholder"
               size="sm"
-              class="w-64"
+              class="w-full sm:w-64"
             />
             <span class="text-xs text-muted">
               {{ filteredItems.length }} dari {{ data?.total || 0 }} record

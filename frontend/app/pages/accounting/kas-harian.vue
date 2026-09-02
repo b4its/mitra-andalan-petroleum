@@ -179,7 +179,7 @@ definePageMeta({ layout: "accounting" });
                   v-model="search"
                   icon="i-lucide-search"
                   placeholder="Cari deskripsi, akun..."
-                  class="w-64"
+                  class="w-full sm:w-64"
                 />
                 <USelectMenu
                   v-model="accountFilters"
@@ -189,7 +189,7 @@ definePageMeta({ layout: "accounting" });
                   searchable
                   :search-input="{ placeholder: 'Cari akun...' }"
                   placeholder="Akun Kas/Bank"
-                  class="w-64"
+                  class="w-full sm:w-64"
                 />
                 <HomeDateRangePicker v-model="range" />
               </div>

@@ -375,7 +375,7 @@ const modalTitle = computed(() => {
               v-model="search"
               icon="i-lucide-search"
               placeholder="Cari nama, email, telepon, alamat..."
-              class="w-72"
+              class="w-full sm:w-72"
             />
           </div>
           <div class="flex flex-wrap justify-end gap-2">
@@ -455,7 +455,7 @@ const modalTitle = computed(() => {
     <template #body>
       <!-- VIEW mode -->
       <div v-if="modalMode === 'view' && selectedSupplier" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <p class="text-xs text-muted uppercase tracking-wide mb-1">
               Nama

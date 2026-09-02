@@ -316,7 +316,7 @@ definePageMeta({ layout: "accounting" });
                 v-model="search"
                 icon="i-lucide-search"
                 placeholder="Cari nomor atau deskripsi..."
-                class="w-64"
+                class="w-full sm:w-64"
               />
               <USelectMenu
                 v-model="accountFilters"
@@ -326,7 +326,7 @@ definePageMeta({ layout: "accounting" });
                 searchable
                 :search-input="{ placeholder: 'Cari akun...' }"
                 placeholder="Semua Akun"
-                class="w-64"
+                class="w-full sm:w-64"
               />
               <HomeDateRangePicker v-model="range" />
             </div>
@@ -458,13 +458,13 @@ definePageMeta({ layout: "accounting" });
                         :items="accountItems"
                         value-key="value"
                         placeholder="Pilih akun"
-                        class="w-56"
+                        class="w-full sm:w-56"
                       />
                       <USkeleton v-else class="h-10 w-56 rounded-lg" />
                       <UInput
                         v-model="line.description"
                         placeholder="Keterangan"
-                        class="w-40"
+                        class="w-full sm:w-40"
                       />
                       <UInput
                         v-model.number="line.debit"

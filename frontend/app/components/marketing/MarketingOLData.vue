@@ -183,7 +183,7 @@ async function openDeliveryOrders(id: string) {
         v-model="search"
         icon="i-lucide-search"
         placeholder="Cari nomor penawaran atau customer..."
-        class="w-64"
+        class="w-full sm:w-64"
         @keyup.enter="() => {}"
       />
       <USelect

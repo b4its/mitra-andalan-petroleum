@@ -191,7 +191,7 @@ function openDetail(id: string) {
         v-model="search"
         icon="i-lucide-search"
         placeholder="Cari nomor invoice atau customer..."
-        class="w-72"
+        class="w-full sm:w-72"
       />
     </div>
 

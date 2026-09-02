@@ -705,9 +705,9 @@ const links = [
             ref="carousel"
             v-slot="{ item }"
             :items="mappedAnalytics"
-            :ui="{ item: 'basis-1/4', root: 'w-full' }"
+            :ui="{ item: 'basis-full sm:basis-1/2 lg:basis-1/3 2xl:basis-1/4', root: 'w-full' }"
             :arrows="false"
-            :slides-to-scroll="4"
+            :slides-to-scroll="1"
             loop
           >
             <UPageCard
@@ -842,7 +842,7 @@ const links = [
                     icon="i-lucide-search"
                     placeholder="Cari notifikasi..."
                     size="sm"
-                    class="w-48"
+                    class="w-full sm:w-48"
                   />
                 </div>
               </template>
@@ -877,7 +877,7 @@ const links = [
                     icon="i-lucide-search"
                     placeholder="Cari aktivitas..."
                     size="sm"
-                    class="w-48"
+                    class="w-full sm:w-48"
                   />
                 </div>
               </template>

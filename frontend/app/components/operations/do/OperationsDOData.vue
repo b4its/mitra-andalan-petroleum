@@ -645,7 +645,7 @@ const columns: TableColumn<DoRow>[] = [
         v-model="search"
         icon="i-lucide-search"
         placeholder="Cari nomor Delivery Order, Purchase Order, atau transportir..."
-        class="w-72"
+        class="w-full sm:w-72"
       />
     </div>
 
@@ -889,7 +889,7 @@ const columns: TableColumn<DoRow>[] = [
           >
             Header Surat
           </p>
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-xs text-muted mb-1"
                 >Nomor Delivery Order <span class="text-error">*</span></label
@@ -926,8 +926,8 @@ const columns: TableColumn<DoRow>[] = [
           >
             Penerima (Customer)
           </p>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="col-span-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
               <label class="block text-xs text-muted mb-1"
                 >Alamat Customer</label
               >
@@ -975,7 +975,7 @@ const columns: TableColumn<DoRow>[] = [
           >
             Agen / Transportir
           </p>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs text-muted mb-1"
                 >Nama Transportir <span class="text-error">*</span></label
@@ -996,7 +996,7 @@ const columns: TableColumn<DoRow>[] = [
                 size="sm"
               />
             </div>
-            <div class="col-span-2">
+            <div class="sm:col-span-2">
               <label class="block text-xs text-muted mb-1"
                 >Alamat Transportir</label
               >
@@ -1042,7 +1042,7 @@ const columns: TableColumn<DoRow>[] = [
           >
             Produk & Volume
           </p>
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-xs text-muted mb-1"
                 >Nama Produk <span class="text-error">*</span></label
@@ -1105,7 +1105,7 @@ const columns: TableColumn<DoRow>[] = [
           >
             Kendaraan & Waktu
           </p>
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-xs text-muted mb-1">No. Kendaraan</label>
               <UInput
@@ -1190,7 +1190,7 @@ const columns: TableColumn<DoRow>[] = [
           >
             Catatan Pengiriman
           </p>
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-xs text-muted mb-1">T2 Depo</label>
               <UInputNumber
@@ -1282,7 +1282,7 @@ const columns: TableColumn<DoRow>[] = [
           >
             Footer Surat
           </p>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs text-muted mb-1"
                 >Koordinator MAP</label

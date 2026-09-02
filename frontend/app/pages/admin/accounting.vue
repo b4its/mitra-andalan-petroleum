@@ -880,7 +880,7 @@ const exportItems = (
                 searchable
                 :search-input="{ placeholder: 'Cari akun...' }"
                 placeholder="Semua Akun"
-                class="w-64"
+                class="w-full sm:w-64"
               />
               <HomeDateRangePicker v-model="range" />
               <UButton
@@ -975,7 +975,7 @@ const exportItems = (
                       icon="i-lucide-search"
                       placeholder="Cari nomor, deskripsi, akun..."
                       size="sm"
-                      class="w-64"
+                      class="w-full sm:w-64"
                     />
                   </div>
                   <div class="flex flex-wrap justify-end gap-2">
@@ -1026,7 +1026,7 @@ const exportItems = (
                       icon="i-lucide-search"
                       placeholder="Cari kode, nama akun..."
                       size="sm"
-                      class="w-64"
+                      class="w-full sm:w-64"
                     />
                   </div>
                   <div class="flex flex-wrap justify-end gap-2">
