@@ -365,10 +365,10 @@ export function useDeliveryOrderPdf() {
                     text: ":",
                   },
                   {
-                    text:
-                      surat.receiverDateReceived === undefined
-                        ? formatDateDoc(surat.receiverDateReceived)
-                        : "",
+                text:
+                  surat.receiverDateReceived === undefined
+                    ? ""
+                    : formatDateDoc(surat.receiverDateReceived),
                     border: [false, false, true, false],
                   },
                   {
@@ -380,10 +380,10 @@ export function useDeliveryOrderPdf() {
                     text: ":",
                   },
                   {
-                    text:
-                      surat.receiverDateReceived === undefined
-                        ? formatDateDoc(surat.transportDateReceived)
-                        : "",
+                text:
+                  surat.receiverDateReceived === undefined
+                    ? ""
+                    : formatDateDoc(surat.transportDateReceived),
                     border: [false, false, true, false],
                   },
                 ],
@@ -582,7 +582,7 @@ export function useDeliveryOrderPdf() {
                     bold: true,
                   },
                   {
-                    text: `${formatNumber(surat.productInformation.qty || 0)} # (${useChangeCase(angkaTerbilang(surat.productInformation.qty), "capitalCase").value} Liter) #`,
+                    text: `${formatNumber(surat.productInformation.qty || 0)} # (${useChangeCase(angkaTerbilang(surat.productInformation.qty || 0), "capitalCase").value} Liter) #`,
                     italics: true,
                     colSpan: 5,
                   },

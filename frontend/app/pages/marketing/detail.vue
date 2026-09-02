@@ -20,7 +20,7 @@ const { data: customerDetail, pending: pendingCustomer } = await useAsyncData(
   "customer-detail-offering",
   async () => {
     const res = await get<Customer>(
-      `/customers/${offeringLetterDetails.value?.details.receiver}`,
+      `/customers/${offeringLetterDetails.value?.details?.receiver}`,
     );
     return res;
   },
@@ -51,7 +51,7 @@ definePageMeta({ layout: "marketing" });
         :title="
           pendingOL || pendingCustomer
             ? `Surat Penawaran Customer (…)`
-            : `Surat Penawaran Customer (${offeringLetterDetails?.details.offeringLetterNumber}) ${customerDetail?.name ? `| ${customerDetail?.name}` : ''}`
+            : `Surat Penawaran Customer (${offeringLetterDetails?.details?.offeringLetterNumber}) ${customerDetail?.name ? `| ${customerDetail?.name}` : ''}`
         "
       >
         <template #leading>

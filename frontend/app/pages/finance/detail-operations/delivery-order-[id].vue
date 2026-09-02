@@ -22,7 +22,7 @@ const { data: doDetails, pending } = await useAsyncData(
   { default: () => null }
 )
 
-const details: Details = doDetails.value?.details as Details
+const details: Details = (doDetails.value?.details ?? {}) as Details
 
 const tableBodyNotes: { text: string, border: [boolean, boolean, boolean, boolean] }[][] = [
   [
@@ -33,7 +33,7 @@ const tableBodyNotes: { text: string, border: [boolean, boolean, boolean, boolea
   ]
 ]
 
-for (const note of details.notes) {
+for (const note of details.notes || []) {
   tableBodyNotes.push([
     {
       text: note.note || '',
@@ -383,8 +383,8 @@ const loadPdf = async () => {
                 {
                   text:
                     details.receiverDateReceived === undefined
-                      ? formatDateDoc(details.receiverDateReceived)
-                      : '',
+                      ? ''
+                      : formatDateDoc(details.receiverDateReceived),
                   border: [false, false, true, false]
                 },
                 {
@@ -398,8 +398,8 @@ const loadPdf = async () => {
                 {
                   text:
                     details.receiverDateReceived === undefined
-                      ? formatDateDoc(details.transportDateReceived)
-                      : '',
+                      ? ''
+                      : formatDateDoc(details.transportDateReceived),
                   border: [false, false, true, false]
                 }
               ]
@@ -576,7 +576,7 @@ const loadPdf = async () => {
                   bold: true
                 },
                 {
-                  text: `${details.transportInformation.sgMeter}`
+                  text: `${details.transportInformation.sgMeter ?? ''}`
                 },
                 {
                   text: 'Temperatur',
@@ -607,7 +607,7 @@ const loadPdf = async () => {
                   bold: true
                 },
                 {
-                  text: `${formatNumber(details.productInformation.qty || 0)} # (${useChangeCase(angkaTerbilang(details.productInformation.qty), 'capitalCase').value} Liter) #`,
+                  text: `${formatNumber(details.productInformation.qty || 0)} # (${useChangeCase(angkaTerbilang(details.productInformation.qty || 0), 'capitalCase').value} Liter) #`,
                   italics: true,
                   colSpan: 5
                 },

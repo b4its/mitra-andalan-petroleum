@@ -366,11 +366,11 @@ export function usePoSupplierPdf() {
                 ],
                 [
                   {
-                    text: `Distance KM : ${formatToKm(Number(details.delivery.distance) || 0)}\nLoading Terminal : ${details.delivery.loadingTerminal || ""}\nLoading Date : ${details.delivery.loadingDate || ""}\nPIC OPERATION MAP : ${details.delivery.picOperationMap || ""}`,
+                    text: `Distance KM : ${formatToKm(Number(details.delivery?.distance) || 0)}\nLoading Terminal : ${details.delivery?.loadingTerminal || ""}\nLoading Date : ${details.delivery?.loadingDate || ""}\nPIC OPERATION MAP : ${details.delivery?.picOperationMap || ""}`,
                     border: [true, false, true, true],
                   },
                   {
-                    text: `Trucking : ${details.forwarder.trucking}`,
+                    text: `Trucking : ${details.forwarder?.trucking}`,
                   },
                 ],
               ],

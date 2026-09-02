@@ -22,7 +22,7 @@ const { data: customerDetail, pending: pendingCustomer } = await useAsyncData(
   'customer-detail-surat',
   async () => {
     const res = await get<Customer>(
-      `/customers/${offeringLetter.value?.details.receiver}`
+      `/customers/${offeringLetter.value?.details?.receiver}`
     )
     return res
   }

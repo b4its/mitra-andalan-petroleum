@@ -38,7 +38,7 @@ definePageMeta({ layout: "operations" });
   <UDashboardPanel id="delivery-order" :ui="{ body: 'lg:py-12' }">
     <template #header>
       <UDashboardNavbar
-        :title="`Surat Delivery Order (${details?.doInformation.doNumber})`"
+        :title="`Surat Delivery Order (${details?.doInformation?.doNumber})`"
       >
         <template #leading>
           <UDashboardSidebarCollapse />

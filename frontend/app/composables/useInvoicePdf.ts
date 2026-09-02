@@ -83,7 +83,7 @@ export function useInvoicePdf() {
     const tableBodyDetails: TableCell[][] = [];
     const rp = (value: number): string => `Rp ${formatNumber(value)}`;
 
-    for (let i = 0; i < Math.max(details.products.length, 3); i++) {
+    for (let i = 0; i < Math.max(details.products?.length ?? 0, 3); i++) {
       const product = details?.products[i];
       tableBodyDetails.push([
         {

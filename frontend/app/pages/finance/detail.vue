@@ -34,7 +34,7 @@ definePageMeta({ layout: "finance" });
   <UDashboardPanel id="detail-invoice" :ui="{ body: 'lg:py-12' }">
     <template #header>
       <UDashboardNavbar
-        :title="`Invoice (${details?.invoiceInformation.invoiceNumber}) ${details?.billToInformation ? `| ${details.billToInformation}` : ''}`"
+        :title="`Invoice (${details?.invoiceInformation?.invoiceNumber}) ${details?.billToInformation ? `| ${details.billToInformation}` : ''}`"
       >
         <template #leading>
           <UDashboardSidebarCollapse />
