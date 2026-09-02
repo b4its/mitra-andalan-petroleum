@@ -84,21 +84,22 @@ services:
         condition: service_healthy
 
   # ── Ngrok: tunnel HTTPS publik ke nginx ─────────────────────
+  # Domain publik (NGROK_DOMAIN) dimiliki sebuah CLOUD ENDPOINT di dashboard
+  # ngrok — endpoint itu selalu online, sehingga koneksi agen memakai
+  # `--domain` akan ditolak (ERR_NGROK_334: endpoint already online).
+  # Cara benar: agen menempel ke endpoint cloud lewat INTERNAL URL-nya
+  # (`--url https://default.internal`, tampil pada halaman placeholder domain).
   ngrok:
     image: ngrok/ngrok:latest
     container_name: mandalan-prod-ngrok
     restart: unless-stopped
-    entrypoint: /bin/sh
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - -c
       - |-
-        if [ -n "${NGROK_DOMAIN:-}" ]; then
-          exec ngrok http nginx:92 --domain="${NGROK_DOMAIN}" --log=stdout
-        else
-          exec ngrok http nginx:92 --log=stdout
-        fi
+        exec ngrok http nginx:92 --log=stdout --url=$${NGROK_INTERNAL_URL:-https://default.internal}
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?NGROK_AUTHTOKEN wajib diisi di .env.production}
+      NGROK_INTERNAL_URL: ${NGROK_INTERNAL_URL:-https://default.internal}
       NGROK_DOMAIN: ${NGROK_DOMAIN:-}
     depends_on:
       - nginx

@@ -72,7 +72,7 @@
 #   python -m app.db.seed [--force] [--check]
 #   uvicorn app.main:app --host 0.0.0.0 --port 8012
 
-.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli show-ip prod help-prod prod-build prod-up prod-down prod-down-all prod-logs prod-ps prod-ngrok-url prod-backend-test test test-backend test-frontend frontend-typecheck frontend-lint _wait-backend _show-access-info _show-prod-access _resolve-public-url
+.PHONY: help doctor up down build seed reseed seed-check logs ps clean restart db mysql-shell sql-cli show-ip prod help-prod prod-build prod-up prod-down prod-down-all prod-logs prod-ps prod-ngrok-url prod-backend-test test test-backend test-frontend frontend-typecheck frontend-lint _wait-backend _wait-ngrok _show-access-info _show-prod-access _resolve-public-url
 
 help: ## Tampilkan daftar perintah dan informasi akses aplikasi
 	@echo "Mitra Andalan Petroleum — Build & Run System"
@@ -248,14 +248,19 @@ _resolve-public-url: ## (internal) Cetak PUBLIC_URL untuk dipakai target lain
 _show-prod-access: ## (internal) Tampilkan URL publik + domain ngrok
 	@echo "   URL Akses Publik (Ngrok):"; \
 	domain=$$(grep -E '^NGROK_DOMAIN=' .env.production 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d ' '); \
-	ngrok_url=$$(docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | tail -1 | sed 's/^url=//'); \
+	ngrok_url=$$($(_NGROK_URL_EXTRACT)); \
 	if [ -n "$$ngrok_url" ]; then \
 		echo "      Public URL (aktif):   $$ngrok_url"; \
 		echo "      Login:                 $$ngrok_url/login"; \
 		echo "      Admin:                 $$ngrok_url/admin"; \
 		echo "      Backend (health):      $$ngrok_url/api/v1/health"; \
+	elif err=$$(docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'ERR_NGROK_[0-9]+' | tail -1); then \
+		echo "      ⚠️  ngrok gagal: $$err"; \
+		echo "         Jalankan 'make prod-ngrok-url' untuk detail cara memperbaiki."; \
+	elif docker ps -a --filter name=mandalan-prod-ngrok --format '{{.Names}}' | grep -q .; then \
+		echo "      (tunnel ngrok masih menghubungkan — ulangi 'make prod-ngrok-url' dalam beberapa detik)"; \
 	else \
-		echo "      (container ngrok belum berjalan — jalankan make prod)"; \
+		echo "      (container ngrok belum dibuat — jalankan 'make prod')"; \
 	fi; \
 	if [ -n "$$domain" ]; then echo "      Domain tetap (NGROK_DOMAIN):  $$domain"; fi
 	@echo "   Akses Lokal (nginx):  http://localhost:8093"
@@ -265,6 +270,12 @@ _show-prod-access: ## (internal) Tampilkan URL publik + domain ngrok
 # Lihat `.env.production.example` untuk daftar variabel yang tersedia.
 
 _ENV_PROD := --env-file .env.production -f docker-compose.prod.yml
+
+# Ekstrak URL publik dari log container ngrok.
+# Baris "started tunnel" memakai format: url=https://<sub>.ngrok-free.dev
+# (Hanya garis dengan `url=` yang dipakai, supaya URL di pesan error/ERR_NGROK_334
+#  — yang muncul tanpa `url=` — TIDAK ikut terambil.)
+_NGROK_URL_EXTRACT := docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | sed 's/^url=//' | sed 's/[,"[]*$$//' | tail -1
 
 help-prod: ## Informasi akses stack produksi (nginx + ngrok) — domain & URL publik
 	@echo "Mitra Andalan Petroleum — Production (Nginx + Ngrok)"
@@ -277,6 +288,8 @@ help-prod: ## Informasi akses stack produksi (nginx + ngrok) — domain & URL pu
 prod: ## Deploy produksi: build image + migrasi & seed otomatis + buka tunnel ngrok
 	@if [ ! -f .env.production ]; then echo "ERROR: .env.production belum ada. Buat dari .env.production.example"; exit 1; fi
 	docker compose $(_ENV_PROD) up -d --build
+	@echo ""
+	@$(MAKE) --no-print-directory _wait-ngrok
 	@echo ""
 	@$(MAKE) --no-print-directory _show-prod-access
 
@@ -302,9 +315,50 @@ prod-logs: ## Ikuti log semua service produksi (termasuk ngrok)
 prod-ps: ## Status service produksi
 	docker compose $(_ENV_PROD) ps
 
-prod-ngrok-url: ## Tampilkan URL publik ngrok
-	/usr/bin/docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | tail -1 || \
-	docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'url=https://[^ ]+' | tail -1
+_wait-ngrok: ## (internal) Tunggu sampai tunnel ngrok mendapat URL publik
+	@i=0; while [ $$i -lt 30 ]; do \
+	  url=$$($(_NGROK_URL_EXTRACT)); \
+	  if [ -n "$$url" ]; then echo "   ✅ Tunnel ngrok aktif: $$url"; exit 0; fi; \
+	  err=$$(docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'ERR_NGROK_[0-9]+' | tail -1); \
+	  if [ -n "$$err" ]; then echo "   ⚠️  ngrok gagal: $$err (lihat 'make prod-ngrok-url' untuk perbaikan)"; exit 0; fi; \
+	  sleep 2; i=$$((i+1)); \
+	done; \
+	echo "   ⚠️  Ngrok belum mendapat URL dalam 60 detik — cek 'docker logs mandalan-prod-ngrok'";
+	@exit 0
+
+prod-ngrok-url: ## Tampilkan URL publik ngrok + panduan perbaikan bila gagal
+	@url=$$($(_NGROK_URL_EXTRACT)); \
+	if [ -n "$$url" ]; then \
+		echo "URL publik ngrok: $$url"; \
+		echo "  Login:   $$url/login"; \
+		echo "  Admin:   $$url/admin"; \
+		exit 0; \
+	fi; \
+	err=$$(docker logs mandalan-prod-ngrok 2>&1 | grep -oE 'ERR_NGROK_[0-9]+' | tail -1); \
+	if [ -z "$$err" ]; then \
+		echo "ℹ️  Ngrok masih menghubungkan (belum ada URL). Coba lagi dalam beberapa detik: docker logs mandalan-prod-ngrok"; \
+		exit 0; \
+	fi; \
+	echo "⚠️  Ngrok gagal ($$err):"; \
+	case "$$err" in \
+	  ERR_NGROK_334) \
+	    echo "   Endpoint sudah online di akun ngrok ini. Kemungkinan penyebab:"; \
+	    echo "     • Ada sesi ngrok lain memakai authtoken yang sama (perangkat lain / container)."; \
+	    echo "     • Endpoint ngrok masih 'Online' di dashboard (dashboard.ngrok.com -> Endpoints)."; \
+	    echo "   Perbaikan:"; \
+	    echo "     1. Hentikan/matikan sesi ngrok lain untuk authtoken ini."; \
+	    echo "     2. Di dashboard ngrok, matikan endpoint 'Online' yang berbenturan."; \
+	    echo "     3. Tunggu beberapa menit lalu ulangi 'make prod-ngrok-url'."; \
+	    echo "     4. Atau isi NGROK_DOMAIN di .env.production dengan domain yang sudah di-reserve.";; \
+	  ERR_NGROK_206) \
+	    echo "   Token yang diset adalah authtoken (bukan API key) — untuk agen ngrok ini sudah benar."; \
+	    echo "   Jika tetap gagal, pastikan NGROK_AUTHTOKEN di .env.production adalah authtoken dari dashboard.";; \
+	  ERR_NGROK_107|ERR_NGROK_108|ERR_NGROK_200|ERR_NGROK_202|ERR_NGROK_203) \
+	    echo "   Autentikasi ngrok gagal — periksa NGROK_AUTHTOKEN di .env.production (harus authtoken, tanpa spasi)."; \
+	    echo "   Ambil dari: https://dashboard.ngrok.com/get-started/your-authtoken";; \
+	  *) \
+	    echo "   Cek detail lengkap: docker logs mandalan-prod-ngrok" ;; \
+	esac
 
 prod-backend-test: ## Jalankan pytest di container backend produksi (install pytest sementara bila perlu)
 	docker exec mandalan-prod-backend pip install -q pytest pytest-asyncio aiosqlite httpx
