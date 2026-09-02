@@ -26,7 +26,8 @@ function extOf(name: string): string {
 
 type FileKind = 'image' | 'pdf' | 'spreadsheet' | 'word' | 'other'
 
-function fileKind(u: ResUploads): FileKind {
+function fileKind(u: ResUploads | null | undefined): FileKind {
+  if (!u) return 'other'
   const mime = u.mime_type
   const ext = extOf(u.original_filename)
   if (mime.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext))
@@ -97,7 +98,7 @@ const wordPdfUrl = computed(() => {
 })
 
 function fileIcon(u: ResUploads | null | undefined): string {
-  switch (fileKind(u as ResUploads)) {
+  switch (fileKind(u)) {
     case 'image': return 'i-lucide-image'
     case 'pdf': return 'i-lucide-file-text'
     case 'spreadsheet': return 'i-lucide-table'
