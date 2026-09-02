@@ -886,15 +886,26 @@ async def get_summary(
     cash_debit, cash_credit = (await db.execute(cash_stmt)).one()
     cash_balance = round((cash_debit or 0) - (cash_credit or 0), 2)
 
-    # Counts
+    # Counts — hitung baris jurnal aktual (bukan COUNT atas subquery SUM
+    # yang selalu mengembalikan satu baris dan karenanya selalu = 1).
     jc = await db.execute(select(func.count()).select_from(JournalEntry))
     journal_count = jc.scalar() or 0
     ac = await db.execute(select(func.count()).select_from(Account))
     account_count = ac.scalar() or 0
-    ic = await db.execute(select(func.count()).select_from(income_stmt.subquery()))
-    income_count = ic.scalar() or 0
-    ec = await db.execute(select(func.count()).select_from(expense_stmt.subquery()))
-    expense_count = ec.scalar() or 0
+
+    async def _count_type(count_type: str) -> int:
+        q = (
+            select(func.count(JournalLine.id))
+            .join(JournalEntry, JournalLine.journal_entry_id == JournalEntry.id)
+            .join(Account, JournalLine.account_id == Account.id)
+            .where(Account.type == count_type)
+        )
+        for cond in conditions:
+            q = q.where(cond)
+        return (await db.execute(q)).scalar() or 0
+
+    income_count = await _count_type("revenue")
+    expense_count = await _count_type("expense")
 
     # Recent journals
     recent = []

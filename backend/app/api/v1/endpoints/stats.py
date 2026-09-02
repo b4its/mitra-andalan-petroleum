@@ -131,8 +131,9 @@ async def revenue_stats(
         if period == "monthly":
             return created_at.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if period == "weekly":
-            day = created_at.isocalendar()
-            first_weekday = created_at - timedelta(days=day.weekday)
+            # datetime.weekday() 0-6 (Senin=0); isocalendar().weekday() 1-7
+            # (Senin=1) salah dipakai sebelumnya sehingga bucket jatuh di Minggu.
+            first_weekday = created_at - timedelta(days=created_at.weekday())
             return first_weekday.replace(hour=0, minute=0, second=0, microsecond=0)
         return created_at.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -338,7 +339,17 @@ async def admin_drilldown(
     if metric == "unread_notifications": records = [record for record in records if not record.is_read]
     if status and status_field: records = [record for record in records if str(getattr(record, status_field, "")) == status]
     value_fields = ("grand_total", "total", "fuel_total", "amount", "size")
-    total_value = sum(float(getattr(record, field, 0) or 0) for record in records for field in value_fields[:1] if hasattr(record, field))
+    # total_value harus menjumlahkan field yang sama persis dengan yang dipakai
+    # per-item `value` (field pertama yang ada pada record), bukan hardcode
+    # grand_total saja (yang bernilai 0 untuk Sale/Upload/Notification/PO).
+    total_value = sum(
+        next(
+            (float(getattr(record, field)) for field in value_fields
+             if hasattr(record, field) and getattr(record, field) is not None),
+            0,
+        )
+        for record in records
+    )
     items = [AdminDrilldownItem(id=record.id, title=str(getattr(record, title_field)), subtitle=str(getattr(record, status_field, "") if status_field else ""), status=str(getattr(record, status_field, "")) if status_field else None, value=next((float(getattr(record, field)) for field in value_fields if hasattr(record, field) and getattr(record, field) is not None), None), created_at=record.created_at, to=route) for record in sorted(records, key=lambda item: item.created_at, reverse=True)]
     offset = (page - 1) * page_size
     return AdminDrilldownResponse(metric=metric, title=metric.replace("_", " ").title(), description="Record penyusun nilai pada periode dan filter aktif.", total=len(items), total_value=total_value, page=page, page_size=page_size, items=items[offset:offset + page_size])

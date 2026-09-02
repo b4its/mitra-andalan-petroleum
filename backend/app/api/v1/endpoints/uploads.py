@@ -311,6 +311,11 @@ async def convert_docx_to_pdf(id: str, db: AsyncSession = Depends(get_db)):
                 status_code=500,
                 detail=f"Gagal konversi ke PDF: {e.stderr.decode(errors='replace') or e.stdout.decode(errors='replace') or str(e)}"
             )
+        except (subprocess.TimeoutExpired, OSError) as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Konversi ke PDF gagal (timeout atau libreoffice tidak tersedia): {e}"
+            )
 
         pdf_name = f"{Path(upload.stored_filename).stem}.pdf"
         pdf_path = Path(tmpdir) / pdf_name
