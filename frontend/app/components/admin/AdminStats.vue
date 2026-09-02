@@ -10,7 +10,7 @@ defineProps<{
 
 function displayValue(stat: { title: string, value: number | string }): string {
   if (stat.title === 'Total Revenue' && typeof stat.value === 'number') {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(stat.value)
+    return formatCurrency(stat.value)
   }
   return String(stat.value)
 }

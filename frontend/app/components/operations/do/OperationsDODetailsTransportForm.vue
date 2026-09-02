@@ -113,7 +113,7 @@ function onSubmit(_event: FormSubmitEvent<OperationsDODetailsTransportState>) {
             </p>
           </div>
           <span class="ml-auto text-sm font-semibold" :class="product.delivered ? 'text-muted' : ''">
-            {{ product.qty ? `${Number(product.qty).toLocaleString()} L` : '-' }}
+            {{ product.qty ? `${formatNumber(Number(product.qty))} L` : '-' }}
           </span>
         </label>
       </div>

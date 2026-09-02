@@ -63,11 +63,7 @@ const total = computed(() =>
   data.value.reduce((acc: number, { amount }) => acc + amount, 0),
 );
 
-const formatNumber = new Intl.NumberFormat("id-ID", {
-  style: "currency",
-  currency: "IDR",
-  maximumFractionDigits: 0,
-}).format;
+const formatNumber = (value: number) => formatCurrency(value);
 
 const formatDate = (date: Date): string => {
   return {

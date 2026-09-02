@@ -62,7 +62,7 @@ const columns: TableColumn<Price>[] = [
     accessorKey: 'price',
     header: 'Harga',
     cell: ({ row }) =>
-      h('span', { class: 'font-semibold' }, `Rp ${Number(row.getValue('price')).toLocaleString('id-ID')}${row.getValue('unit') ? ` / ${row.getValue('unit')}` : ''}`)
+      h('span', { class: 'font-semibold' }, `${formatCurrency(Number(row.getValue('price')) || 0)}${row.getValue('unit') ? ` / ${row.getValue('unit')}` : ''}`)
   },
   {
     accessorKey: 'effective_date',

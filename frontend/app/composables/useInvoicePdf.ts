@@ -81,6 +81,7 @@ export function useInvoicePdf() {
     });
 
     const tableBodyDetails: TableCell[][] = [];
+    const rp = (value: number): string => `Rp ${formatNumber(value)}`;
 
     for (let i = 0; i < Math.max(details.products.length, 3); i++) {
       const product = details?.products[i];
@@ -106,12 +107,12 @@ export function useInvoicePdf() {
           border: [true, false, true, false],
         },
         {
-          text: product ? formatNumber(product.price || 0) : "",
+          text: product ? rp(product.price || 0) : "",
           alignment: "right",
           border: [true, false, true, false],
         },
         {
-          text: product ? formatNumber(product.totalPrice || 0) : "",
+          text: product ? rp(product.totalPrice || 0) : "",
           alignment: "right",
           border: [true, false, true, false],
         },
@@ -353,7 +354,7 @@ export function useInvoicePdf() {
                     bold: true,
                   },
                   {
-                    text: `${formatNumber(details.priceSummary.subTotal || 0)}`,
+                    text: `${rp(details.priceSummary.subTotal || 0)}`,
                     bold: true,
                     alignment: "right",
                   },
@@ -369,7 +370,7 @@ export function useInvoicePdf() {
                   {},
                   { text: "Pre-Paid", bold: true },
                   {
-                    text: `${formatNumber(details.priceSummary.prePaid || 0)}`,
+                    text: `${rp(details.priceSummary.prePaid || 0)}`,
                     alignment: "right",
                   },
                 ],
@@ -384,7 +385,7 @@ export function useInvoicePdf() {
                   {},
                   { text: "Discount", bold: true },
                   {
-                    text: `${formatNumber(details.priceSummary.discount || 0)}`,
+                    text: `${rp(details.priceSummary.discount || 0)}`,
                     alignment: "right",
                   },
                 ],
@@ -399,7 +400,7 @@ export function useInvoicePdf() {
                   {},
                   { text: "PPn", bold: true },
                   {
-                    text: `${formatNumber(details.priceSummary.ppn || 0)}`,
+                    text: `${rp(details.priceSummary.ppn || 0)}`,
                     alignment: "right",
                   },
                 ],
@@ -414,7 +415,7 @@ export function useInvoicePdf() {
                   {},
                   { text: "Grand Total", bold: true },
                   {
-                    text: `${formatNumber(details.priceSummary.grandTotal || 0)}`,
+                    text: `${rp(details.priceSummary.grandTotal || 0)}`,
                     bold: true,
                     alignment: "right",
                   },
