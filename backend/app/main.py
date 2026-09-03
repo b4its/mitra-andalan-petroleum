@@ -103,5 +103,3 @@ app.include_router(v1_router)
 from app.api.v1.endpoints import status_translations
 app.include_router(status_translations.router, prefix="/api/v1", tags=["Status Translations"])
 app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")
-from app.api.v1.endpoints import status_translations
-app.include_router(status_translations.router, prefix="/api/v1", tags=["Status Translations"])

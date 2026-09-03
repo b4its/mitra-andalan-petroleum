@@ -74,7 +74,6 @@ const chartOptions = computed(() => ({
     y: {
       beginAtZero: true,
       ticks: {
-        stepSize: 1,
         color: isDark.value ? '#94a3b8' : '#64748b'
       },
       grid: { color: isDark.value ? 'rgba(148,163,184,0.1)' : 'rgba(100,116,139,0.1)' }

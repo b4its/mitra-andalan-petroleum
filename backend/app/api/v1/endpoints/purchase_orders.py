@@ -1,7 +1,7 @@
 import json
-import uuid
 from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, func, or_
@@ -22,6 +22,8 @@ from app.schemas.purchase_order import (
 from app.utils.notifications import create_document_notification, valid_sender_id
 
 router = APIRouter()
+
+WITA = ZoneInfo("Asia/Makassar")
 
 
 def _details_to_str(details: dict[str, Any] | None) -> str | None:
@@ -221,7 +223,7 @@ async def rilis_dana_purchase_order(request: Request, id: str, db: AsyncSession 
     if po.type != "supplier":
         raise HTTPException(status_code=400, detail="Rilis dana hanya untuk PO supplier")
     old_data = model_to_dict(po)
-    now = datetime.now()
+    now = datetime.now(WITA)
     po.rilis_dana_at = now
     po.status_rilis_dana = True
     await db.flush()

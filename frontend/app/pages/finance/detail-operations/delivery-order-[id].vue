@@ -382,7 +382,7 @@ const loadPdf = async () => {
                 },
                 {
                   text:
-                    details.receiverDateReceived === undefined
+                    details.receiverDateReceived
                       ? formatDateDoc(details.receiverDateReceived)
                       : '',
                   border: [false, false, true, false]
@@ -397,7 +397,7 @@ const loadPdf = async () => {
                 },
                 {
                   text:
-                    details.receiverDateReceived === undefined
+                    details.transportDateReceived
                       ? formatDateDoc(details.transportDateReceived)
                       : '',
                   border: [false, false, true, false]

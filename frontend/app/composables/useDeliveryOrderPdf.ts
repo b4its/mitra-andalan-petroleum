@@ -366,7 +366,7 @@ export function useDeliveryOrderPdf() {
                   },
                   {
                     text:
-                      surat.receiverDateReceived === undefined
+                      surat.receiverDateReceived
                         ? formatDateDoc(surat.receiverDateReceived)
                         : "",
                     border: [false, false, true, false],
@@ -381,7 +381,7 @@ export function useDeliveryOrderPdf() {
                   },
                   {
                     text:
-                      surat.receiverDateReceived === undefined
+                      surat.transportDateReceived
                         ? formatDateDoc(surat.transportDateReceived)
                         : "",
                     border: [false, false, true, false],

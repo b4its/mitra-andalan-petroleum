@@ -255,7 +255,7 @@ const { data: doRelatedUploads, pending: doRelatedUploadsPending } = await useAs
         const olIds: string[] = JSON.parse(po.id_offering_letters)
         for (const olId of olIds) {
           const olUps = await get<RecordUpload[]>('/uploads', {
-            document_type: 'offering_letter',
+            document_type: 'ol',
             document_id: olId
           })
           files.push(...olUps)
@@ -353,7 +353,7 @@ const { data: invoiceRelatedUploads, pending: invoiceRelatedUploadsPending } = a
           const olIds: string[] = JSON.parse(po.id_offering_letters)
           for (const olId of olIds) {
             const olUps = await get<RecordUpload[]>('/uploads', {
-              document_type: 'offering_letter',
+              document_type: 'ol',
               document_id: olId
             })
             push(olUps)

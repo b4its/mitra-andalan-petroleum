@@ -56,12 +56,16 @@ async def list_offering_letters(
     page: int = 1, page_size: int = 20, search: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db)
 ):
-    base = select(OfferingLetter)
+    base = (
+        select(OfferingLetter)
+        .outerjoin(Customer, OfferingLetter.customer_id == Customer.id)
+    )
     if search:
         base = base.where(or_(
             OfferingLetter.offering_letter_number.ilike(f"%{search}%"),
             OfferingLetter.receiver.ilike(f"%{search}%"),
             OfferingLetter.status.ilike(f"%{search}%"),
+            Customer.name.ilike(f"%{search}%"),
         ))
     total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0

@@ -10,9 +10,7 @@ from app.models.offering_letter import OfferingLetter
 from app.models.delivery_order import DeliveryOrder
 from app.models.invoice import Invoice
 from app.models.customer import Customer
-from app.models.delivery_order import DeliveryOrder
 from app.models.notification import Notification
-from app.models.offering_letter import OfferingLetter
 from app.models.purchase_order import PurchaseOrder
 from app.models.sale import Sale
 from app.models.supplier import Supplier
@@ -95,7 +93,8 @@ async def finance_stats(db: AsyncSession = Depends(get_db)):
     description="Statistik halaman utama: total customer, revenue, orders.",
 )
 async def home_stats(db: AsyncSession = Depends(get_db)):
-    total_customers = await _count(db, select(OfferingLetter).distinct(OfferingLetter.customer_id))
+    total_customers_result = await db.execute(select(func.count(func.distinct(OfferingLetter.customer_id))))
+    total_customers = total_customers_result.scalar() or 0
     total_revenue_result = await db.execute(select(func.coalesce(func.sum(Invoice.grand_total), 0)))
     total_revenue = total_revenue_result.scalar() or 0
     total_ol = await _count(db, select(OfferingLetter))
@@ -166,12 +165,15 @@ async def _variation(db, model, where=None, aggregate=None):
     prev_start = now - timedelta(days=60)
 
     async def _measure(start, end):
-        stmt = select(model).where(model.created_at >= start, model.created_at < end)
+        if aggregate is None:
+            stmt = select(model).where(model.created_at >= start, model.created_at < end)
+            if where is not None:
+                stmt = stmt.where(where)
+            return await _count(db, stmt)
+        stmt = select(aggregate).select_from(model).where(model.created_at >= start, model.created_at < end)
         if where is not None:
             stmt = stmt.where(where)
-        if aggregate is None:
-            return await _count(db, stmt)
-        result = await db.execute(select(aggregate).select_from(stmt.subquery()))
+        result = await db.execute(stmt)
         return result.scalar() or 0
 
     current = await _measure(cur_start, now)
@@ -330,7 +332,14 @@ async def admin_drilldown(
     if metric == "unread_notifications": records = [record for record in records if not record.is_read]
     if status and status_field: records = [record for record in records if str(getattr(record, status_field, "")) == status]
     value_fields = ("grand_total", "total", "fuel_total", "amount", "size")
-    total_value = sum(float(getattr(record, field, 0) or 0) for record in records for field in value_fields[:1] if hasattr(record, field))
-    items = [AdminDrilldownItem(id=record.id, title=str(getattr(record, title_field)), subtitle=str(getattr(record, status_field, "") if status_field else ""), status=str(getattr(record, status_field, "")) if status_field else None, value=next((float(getattr(record, field)) for field in value_fields if hasattr(record, field) and getattr(record, field) is not None), None), created_at=record.created_at, to=route) for record in sorted(records, key=lambda item: item.created_at, reverse=True)]
+
+    def _record_value(record):
+        for field in value_fields:
+            if hasattr(record, field) and getattr(record, field) is not None:
+                return float(getattr(record, field))
+        return None
+
+    total_value = sum(v for v in (_record_value(record) for record in records) if v is not None)
+    items = [AdminDrilldownItem(id=record.id, title=str(getattr(record, title_field)), subtitle=str(getattr(record, status_field, "") if status_field else ""), status=str(getattr(record, status_field, "")) if status_field else None, value=_record_value(record), created_at=record.created_at, to=route) for record in sorted(records, key=lambda item: item.created_at, reverse=True)]
     offset = (page - 1) * page_size
     return AdminDrilldownResponse(metric=metric, title=metric.replace("_", " ").title(), description="Record penyusun nilai pada periode dan filter aktif.", total=len(items), total_value=total_value, page=page, page_size=page_size, items=items[offset:offset + page_size])
