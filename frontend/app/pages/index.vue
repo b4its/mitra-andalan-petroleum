@@ -3,7 +3,8 @@ const { user, loadUser } = useAuth()
 
 onMounted(() => {
   loadUser()
-  if (user.value) {
+  // Cegah redirect ke `/undefined` bila role user tidak dikenal/korup.
+  if (user.value?.role) {
     navigateTo(`/${user.value.role}`)
   } else {
     navigateTo('/login')

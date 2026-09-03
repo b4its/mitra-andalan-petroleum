@@ -33,7 +33,7 @@ const { data: PoData, pending } = await useAsyncData(
       customerName: purchaseOrder.supplier_name,
       fuelTotalPrice: purchaseOrder.total,
       transportPrice: 0,
-      distanceKm: purchaseOrder?.details.delivery.distance || 0,
+      distanceKm: purchaseOrder.details?.delivery?.distance || 0,
       dateCreated: purchaseOrder.created_at.toString(),
       dateChanged: purchaseOrder.updated_at.toString(),
       status: purchaseOrder.status

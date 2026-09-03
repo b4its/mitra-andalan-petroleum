@@ -25,7 +25,10 @@ const items = computed<DropdownMenuItem[][]>(() => [
       label: 'Profil',
       icon: 'i-lucide-user',
       onSelect: () => {
-        router.push(`/${user.value?.role}/profile`)
+        // Jangan arahkan ke `/undefined/profile` bila role tidak dikenal.
+        if (user.value?.role) {
+          router.push(`/${user.value.role}/profile`)
+        }
       }
     },
     {

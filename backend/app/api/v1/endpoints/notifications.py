@@ -12,6 +12,7 @@ from app.schemas.notification import (
     NotificationUpdate,
 )
 from app.schemas.common import MessageResponse
+from app.utils.notifications import valid_sender_id
 
 router = APIRouter()
 
@@ -85,7 +86,11 @@ async def get_notification(id: str, db: AsyncSession = Depends(get_db)):
     description="Membuat notifikasi baru.",
 )
 async def create_notification(request: Request, body: NotificationCreate, db: AsyncSession = Depends(get_db)):
-    n = Notification(**body.model_dump())
+    data = body.model_dump()
+    # sender_id dari browser bisa basi (mis. user id lama / reseed); validasi dulu
+    # agar penyimpanan tidak gagal karena constraint FK.
+    data["sender_id"] = await valid_sender_id(db, data.get("sender_id"))
+    n = Notification(**data)
     db.add(n)
     await db.flush()
     await db.refresh(n)

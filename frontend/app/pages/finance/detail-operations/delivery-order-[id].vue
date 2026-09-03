@@ -46,7 +46,18 @@ const loadPdf = async () => {
   const pdfMake = usePDFMake()
   if (!pdfMake) return
 
-  pdfLink.value = await pdfMake
+  // DO dari alur upload/seed bisa tanpa detail lengkap; jangan deref null.
+  if (
+    !details?.companyInformation ||
+    !details?.doInformation ||
+    !details?.transportInformation?.timeInformation
+  ) {
+    console.warn('Detail Delivery Order belum lengkap, PDF dilewati.')
+    return
+  }
+
+  try {
+    pdfLink.value = await pdfMake
     .createPdf({
       info: {
         title: `Delivery Order ${idDoLetter}`,
@@ -397,7 +408,7 @@ const loadPdf = async () => {
                 },
                 {
                   text:
-                    details.receiverDateReceived === undefined
+                    details.transportDateReceived === undefined
                       ? ''
                       : formatDateDoc(details.transportDateReceived),
                   border: [false, false, true, false]
@@ -798,6 +809,11 @@ const loadPdf = async () => {
       }
     })
     .getDataUrl()
+  } catch (error) {
+    // Jangan sampai data tidak lengkap / error render memblokir halaman.
+    console.error('Gagal membangun PDF Delivery Order:', error)
+    pdfLink.value = null
+  }
 }
 
 onMounted(() => {

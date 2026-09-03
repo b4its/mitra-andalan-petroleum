@@ -211,6 +211,26 @@ function onDetailsSubmit() {
 
 async function onFooterSubmit() {
   try {
+    // Validasi & unggah tanda tangan DULU sebelum revisi disimpan, agar kalau
+    // tanda tangan belum ada, revisi TIDAK ikut tersimpan (sebelumnya PUT jalan
+    // lebih dulu lalu error tanda tangan → data tersimpan tapi muncul toast Gagal).
+    const signature = letterFooter.offeror.signature
+    if (!signature) {
+      throw new Error('Tanda tangan belum diunggah')
+    }
+
+    if (signature !== loadedSignatureFile.value) {
+      const resUpload = await postFile<ResUploads[]>('/upload', {
+        files: [signature],
+        folder: 'marketing',
+        document_type: 'ol',
+        document_id: String(idOfferingLetter)
+      })
+
+      console.log(resUpload)
+      loadedSignatureFile.value = signature
+    }
+
     const res = await put<unknown, OfferingLetterPost>(
       `/offering-letters/${idOfferingLetter}`,
       {
@@ -232,23 +252,6 @@ async function onFooterSubmit() {
       }
     )
     console.log(res)
-
-    const signature = letterFooter.offeror.signature
-    if (!signature) {
-      throw new Error('Tanda tangan belum diunggah')
-    }
-
-    if (signature !== loadedSignatureFile.value) {
-      const resUpload = await postFile<ResUploads[]>('/upload', {
-        files: [signature],
-        folder: 'marketing',
-        document_type: 'ol',
-        document_id: String(idOfferingLetter)
-      })
-
-      console.log(resUpload)
-      loadedSignatureFile.value = signature
-    }
 
     toast.add({
       title: 'Sukses',

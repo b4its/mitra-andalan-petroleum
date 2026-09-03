@@ -21,7 +21,7 @@ from app.schemas.delivery_order import (
     DeliveryOrderCreate,
     DeliveryOrderUpdate,
 )
-from app.utils.notifications import create_document_notification
+from app.utils.notifications import create_document_notification, valid_sender_id
 
 router = APIRouter()
 
@@ -262,6 +262,10 @@ async def create_delivery_order(request: Request, body: DeliveryOrderCreate, db:
         if not c.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
 
+    # created_by dari browser bisa basi (mis. setelah DB di-reseed & user id berubah);
+    # validasi dulu agar penyimpanan tidak gagal karena constraint FK.
+    data["created_by"] = await valid_sender_id(db, data.get("created_by"))
+
     do = DeliveryOrder(**data)
     db.add(do)
     await db.flush()
@@ -464,13 +468,16 @@ async def selesai_dikirim(request: Request, id: str, db: AsyncSession = Depends(
                     (it.get("name") or "").strip()
                     for it in delivered_items if isinstance(it, dict)
                 }
-                for prod in pt_products:
-                    if not isinstance(prod, dict):
-                        continue
-                    name = (prod.get("name") or "").strip()
-                    if name and (not delivered_names or name in delivered_names):
-                        prod["delivered"] = True
-                        prod["delivered_at"] = now_wita.strftime("%d/%m/%Y %H:%M")
+                # Jangan tandai semua produk delivered saat DOL tanpa detail item
+                # (selectedProducts kosong) — hanya item yang benar-benar cocok.
+                if delivered_names:
+                    for prod in pt_products:
+                        if not isinstance(prod, dict):
+                            continue
+                        name = (prod.get("name") or "").strip()
+                        if name and name in delivered_names:
+                            prod["delivered"] = True
+                            prod["delivered_at"] = now_wita.strftime("%d/%m/%Y %H:%M")
                 pt_details["products"] = pt_products
                 pt.details = _details_to_str(pt_details)
                 # Jika semua item sudah diantar → status completed

@@ -6,7 +6,17 @@ export function useAuth() {
   function loadUser() {
     if (import.meta.server) return
     const raw = localStorage.getItem('auth')
-    user.value = raw ? JSON.parse(raw) : null
+    if (!raw) {
+      user.value = null
+      return
+    }
+    try {
+      user.value = JSON.parse(raw)
+    } catch {
+      // localStorage berisi data korup — buang agar tidak crash startup.
+      localStorage.removeItem('auth')
+      user.value = null
+    }
   }
 
   function setUser(newUser: AuthUser) {

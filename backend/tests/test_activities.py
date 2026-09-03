@@ -62,6 +62,17 @@ def test_list_activities_filter_by_action(client: TestClient, seeded_db):
     assert response.json()["total"] == 1
 
 
+def test_list_activities_search(client: TestClient, seeded_db):
+    # Regresi: filter `search` sempat memicu NameError (`or_` tidak diimpor) → 500.
+    _insert_activity("customer", actor_name="Ahmad Fauzi")
+    _insert_activity("supplier", actor_name="Alea Rahmawati")
+    response = client.get("/api/v1/activities?search=ahmad")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["items"][0]["actor_name"] == "Ahmad Fauzi"
+
+
 def test_list_resource_types(client: TestClient, seeded_db):
     _insert_activity("customer")
     _insert_activity("purchase_order")
