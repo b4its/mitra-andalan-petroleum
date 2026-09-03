@@ -6,24 +6,33 @@ export function formatCurrency(value: number) {
   }).format(value)
 }
 
-export function formatDate(date: string | Date) {
+function parseDate(date: string | Date | null | undefined): Date {
+  if (date === null || date === undefined || date === '') return new Date(NaN)
+  return new Date(date as string | number | Date)
+}
+
+export function formatDate(date?: string | Date | null) {
+  const d = parseDate(date)
+  if (Number.isNaN(d.getTime())) return ''
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric'
   }
 
-  return new Intl.DateTimeFormat('id-ID', options).format(new Date(date))
+  return new Intl.DateTimeFormat('id-ID', options).format(d)
 }
 
-export function formatDateDoc(date: string | Date) {
+export function formatDateDoc(date?: string | Date | null) {
+  const d = parseDate(date)
+  if (Number.isNaN(d.getTime())) return ''
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   }
 
-  return new Intl.DateTimeFormat('id-ID', options).format(new Date(date))
+  return new Intl.DateTimeFormat('id-ID', options).format(d)
 }
 
 export function toBase64(url: string): Promise<string> {

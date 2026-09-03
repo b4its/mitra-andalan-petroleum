@@ -382,7 +382,7 @@ function openDetail(id: string, type: "invoice" | "do") {
                 {{ m.title }}
               </template>
               <p class="text-2xl font-semibold tabular-nums">
-                {{ formatCurrency(m.value) }}
+                <CurrencyText :value="m.value" size="lg" />
               </p>
               <p class="text-xs text-muted mt-1">
                 {{ m.description }}

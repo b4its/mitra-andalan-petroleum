@@ -44,6 +44,13 @@ async def _get_customer_name(db, customer_id):
     return c_obj.name if c_obj else ""
 
 
+async def _get_po_transportir_number(db, po_transportir_id):
+    if not po_transportir_id:
+        return None
+    pt = await db.get(PoTransportir, po_transportir_id)
+    return pt.po_number if pt else None
+
+
 async def _sync_offering_letters(
     db: AsyncSession, po_id: str | None, po_number: str | None, do_id: str
 ) -> None:
@@ -328,7 +335,8 @@ async def update_delivery_order(request: Request, id: str, body: DeliveryOrderUp
     )
     cn = await _get_customer_name(db, do.customer_id)
     await _sync_offering_letters(db, do.id_purchase_order, do.po_number, do.id)
-    return _to_response(do, cn)
+    po_transportir_number = await _get_po_transportir_number(db, do.id_po_transportir)
+    return _to_response(do, cn, po_transportir_number)
 
 
 @router.post(

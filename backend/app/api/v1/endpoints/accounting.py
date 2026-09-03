@@ -87,12 +87,13 @@ async def _next_entry_number(db: AsyncSession, entry_date: date) -> str:
     month = f"{entry_date.year:04d}{entry_date.month:02d}"
     prefix = f"JRM-{month}"
     result = await db.execute(
-        select(func.count()).select_from(JournalEntry).where(
+        select(func.max(JournalEntry.entry_number)).where(
             JournalEntry.entry_number.like(f"{prefix}-%")
         )
     )
-    count = result.scalar() or 0
-    return f"{prefix}-{count + 1:04d}"
+    last = result.scalar()
+    seq = int(last.rsplit("-", 1)[-1]) + 1 if last else 1
+    return f"{prefix}-{seq:04d}"
 
 
 def _journal_to_dict(entry: JournalEntry, lines) -> dict:

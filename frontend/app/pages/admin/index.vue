@@ -756,7 +756,7 @@ const links = [
                   {{ card.title }}
                 </template>
                 <p class="text-2xl font-semibold tabular-nums">
-                  {{ card.value }}
+                  <CurrencyText :value="card.value" size="lg" />
                 </p>
               </UCard>
             </div>
@@ -813,7 +813,7 @@ const links = [
                   </div>
                   <div class="shrink-0 text-right">
                     <p class="font-semibold">
-                      {{ formatCurrency(totalDebit(journal)) }}
+                      <CurrencyText :value="totalDebit(journal)" size="sm" />
                     </p>
                     <p class="text-xs text-neutral-500 dark:text-neutral-400">
                       {{ journal.lines.length }} baris

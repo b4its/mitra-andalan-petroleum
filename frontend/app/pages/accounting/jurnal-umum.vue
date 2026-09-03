@@ -493,10 +493,12 @@ definePageMeta({ layout: "accounting" });
                     class="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-elevated/50 px-3 py-2 text-sm"
                   >
                     <span class="font-medium"
-                      >Total Debit: {{ formatCurrency(formTotalDebit) }}</span
+                      >Total Debit:
+                      <CurrencyText :value="formTotalDebit" size="sm" /></span
                     >
                     <span class="font-medium"
-                      >Total Kredit: {{ formatCurrency(formTotalCredit) }}</span
+                      >Total Kredit:
+                      <CurrencyText :value="formTotalCredit" size="sm" /></span
                     >
                     <UBadge
                       variant="soft"

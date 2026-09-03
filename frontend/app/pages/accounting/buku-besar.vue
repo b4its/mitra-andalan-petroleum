@@ -239,7 +239,7 @@ definePageMeta({ layout: "accounting" });
                 Total Saldo Awal
               </p>
               <p class="mt-1 text-xl font-bold">
-                {{ formatCurrency(totalOpening) }}
+                <CurrencyText :value="totalOpening" size="md" />
               </p>
             </UCard>
             <UCard>
@@ -247,7 +247,7 @@ definePageMeta({ layout: "accounting" });
                 Total Saldo Akhir
               </p>
               <p class="mt-1 text-xl font-bold">
-                {{ formatCurrency(totalClosing) }}
+                <CurrencyText :value="totalClosing" size="md" />
               </p>
             </UCard>
           </div>

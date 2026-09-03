@@ -932,7 +932,7 @@ const exportItems = (
                 {{ card.title }}
               </template>
               <p class="text-lg font-bold tabular-nums">
-                {{ formatCurrency(card.value) }}
+                <CurrencyText :value="card.value" size="md" />
               </p>
               <p class="text-xs text-muted mt-1">Data akuntansi keseluruhan</p>
             </UCard>
@@ -1196,25 +1196,25 @@ const exportItems = (
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Saldo Awal</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(data.dailyCash.opening_balance) }}
+                  <CurrencyText :value="data.dailyCash.opening_balance" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Masuk</p>
                 <p class="text-xl font-bold text-success">
-                  {{ formatCurrency(data.dailyCash.total_debit) }}
+                  <CurrencyText :value="data.dailyCash.total_debit" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Keluar</p>
                 <p class="text-xl font-bold text-error">
-                  {{ formatCurrency(data.dailyCash.total_credit) }}
+                  <CurrencyText :value="data.dailyCash.total_credit" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Saldo Akhir</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(data.dailyCash.closing_balance) }}
+                  <CurrencyText :value="data.dailyCash.closing_balance" size="md" />
                 </p>
               </div>
             </div>
@@ -1248,7 +1248,7 @@ const exportItems = (
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Saldo Awal</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(data.cashflow.opening_balance) }}
+                  <CurrencyText :value="data.cashflow.opening_balance" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
@@ -1261,13 +1261,13 @@ const exportItems = (
                       : 'text-error'
                   "
                 >
-                  {{ formatCurrency(data.cashflow.net_cashflow) }}
+                  <CurrencyText :value="data.cashflow.net_cashflow" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Saldo Akhir</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(data.cashflow.closing_balance) }}
+                  <CurrencyText :value="data.cashflow.closing_balance" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
@@ -1280,7 +1280,7 @@ const exportItems = (
                       : 'text-error'
                   "
                 >
-                  {{ formatCurrency(data.cashflow.operating.total) }}
+                  <CurrencyText :value="data.cashflow.operating.total" size="md" />
                 </p>
               </div>
             </div>
@@ -1308,7 +1308,7 @@ const exportItems = (
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <p class="font-medium">Rekap Biaya</p>
                 <p class="text-sm font-bold text-error">
-                  {{ formatCurrency(data.costRecap.total_cost) }}
+                  <CurrencyText :value="data.costRecap.total_cost" size="sm" />
                 </p>
               </div>
             </template>
@@ -1402,25 +1402,25 @@ const exportItems = (
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Penghasilan</p>
                 <p class="text-xl font-bold text-success">
-                  {{ formatCurrency(data.monitoring.total_penghasilan) }}
+                  <CurrencyText :value="data.monitoring.total_penghasilan" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Operasional</p>
                 <p class="text-xl font-bold text-error">
-                  {{ formatCurrency(data.monitoring.total_operasional) }}
+                  <CurrencyText :value="data.monitoring.total_operasional" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Margin Kotor</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(data.monitoring.total_gross_margin) }}
+                  <CurrencyText :value="data.monitoring.total_gross_margin" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total OAT</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(data.monitoring.total_oat) }}
+                  <CurrencyText :value="data.monitoring.total_oat" size="md" />
                 </p>
               </div>
             </div>
@@ -1447,19 +1447,19 @@ const exportItems = (
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Pokok Pinjaman</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(data.bankInterest.total_principal) }}
+                  <CurrencyText :value="data.bankInterest.total_principal" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Bunga</p>
                 <p class="text-xl font-bold text-warning">
-                  {{ formatCurrency(data.bankInterest.total_interest) }}
+                  <CurrencyText :value="data.bankInterest.total_interest" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Pembayaran</p>
                 <p class="text-xl font-bold text-success">
-                  {{ formatCurrency(data.bankInterest.total_paid) }}
+                  <CurrencyText :value="data.bankInterest.total_paid" size="md" />
                 </p>
               </div>
             </div>

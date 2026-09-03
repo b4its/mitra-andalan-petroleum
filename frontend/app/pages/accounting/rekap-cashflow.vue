@@ -157,7 +157,7 @@ definePageMeta({ layout: "accounting" });
                   Saldo Awal
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(cashflow.opening_balance) }}
+                  <CurrencyText :value="cashflow.opening_balance" size="lg" />
                 </p>
               </UCard>
               <UCard color="success" variant="subtle">
@@ -170,7 +170,7 @@ definePageMeta({ layout: "accounting" });
                     cashflow.net_cashflow >= 0 ? 'text-success' : 'text-error'
                   "
                 >
-                  {{ formatCurrency(cashflow.net_cashflow) }}
+                  <CurrencyText :value="cashflow.net_cashflow" size="lg" />
                 </p>
               </UCard>
               <UCard color="primary" variant="subtle">
@@ -178,7 +178,7 @@ definePageMeta({ layout: "accounting" });
                   Saldo Akhir
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(cashflow.closing_balance) }}
+                  <CurrencyText :value="cashflow.closing_balance" size="lg" />
                 </p>
               </UCard>
               <UCard color="info" variant="subtle">
@@ -193,7 +193,7 @@ definePageMeta({ layout: "accounting" });
                       : 'text-error'
                   "
                 >
-                  {{ formatCurrency(cashflow.operating.total) }}
+                  <CurrencyText :value="cashflow.operating.total" size="lg" />
                 </p>
               </UCard>
             </div>
@@ -211,7 +211,7 @@ definePageMeta({ layout: "accounting" });
                         : 'text-error'
                     "
                   >
-                    {{ formatCurrency(cashflow.operating.total) }}
+                  <CurrencyText :value="cashflow.operating.total" size="md" />
                   </span>
                 </div>
               </template>
@@ -250,9 +250,9 @@ definePageMeta({ layout: "accounting" });
                 <template #header>
                   <div class="flex items-center justify-between">
                     <span class="font-semibold">Arus Kas Investasi</span>
-                    <span class="font-bold text-lg">{{
-                      formatCurrency(cashflow.investing.total)
-                    }}</span>
+                    <span class="font-bold text-lg">
+                      <CurrencyText :value="cashflow.investing.total" size="md" />
+                    </span>
                   </div>
                 </template>
                 <p class="py-6 text-center text-sm text-neutral-500">
@@ -263,9 +263,9 @@ definePageMeta({ layout: "accounting" });
                 <template #header>
                   <div class="flex items-center justify-between">
                     <span class="font-semibold">Arus Kas Pendanaan</span>
-                    <span class="font-bold text-lg">{{
-                      formatCurrency(cashflow.financing.total)
-                    }}</span>
+                    <span class="font-bold text-lg">
+                      <CurrencyText :value="cashflow.financing.total" size="md" />
+                    </span>
                   </div>
                 </template>
                 <p class="py-6 text-center text-sm text-neutral-500">

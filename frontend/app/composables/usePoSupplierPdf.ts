@@ -73,11 +73,10 @@ export function usePoSupplierPdf() {
           },
           {
             text:
-              product.name ||
-              "" +
-                (product.ppkb || product.pph || product.ppn
-                  ? `\nPPKB: ${formatCurrency(product.ppkb || 0)} | PPH: ${formatPercent(product.pph || 0)} | PPN: ${formatCurrency(product.ppn || 0)}`
-                  : ""),
+              product.name +
+              (product.ppkb || product.pph || product.ppn
+                ? `\nPPKB: ${formatCurrency(product.ppkb || 0)} | PPH: ${formatPercent(product.pph || 0)} | PPN: ${formatCurrency(product.ppn || 0)}`
+                : ""),
             alignment: "left",
             border: [true, false, true, true],
           },

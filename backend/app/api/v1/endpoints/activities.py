@@ -26,6 +26,7 @@ async def list_activities(
     from_date: datetime | None = Query(None),
     to_date: datetime | None = Query(None),
     user_id: str | None = Query(None),
+    search: str | None = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
     """Get paginated activities with optional filters"""
@@ -34,6 +35,15 @@ async def list_activities(
     query = select(Activity).order_by(Activity.created_at.desc())
     
     # Apply filters
+    if search:
+        query = query.where(or_(
+            Activity.action.ilike(f"%{search}%"),
+            Activity.resource_type.ilike(f"%{search}%"),
+            Activity.resource_name.ilike(f"%{search}%"),
+            Activity.actor_name.ilike(f"%{search}%"),
+            Activity.details.ilike(f"%{search}%"),
+        ))
+    
     if action:
         query = query.where(Activity.action == action)
     

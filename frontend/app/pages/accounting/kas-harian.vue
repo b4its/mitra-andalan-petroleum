@@ -245,7 +245,7 @@ definePageMeta({ layout: "accounting" });
                   Saldo Awal
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.opening_balance) }}
+                  <CurrencyText :value="data.opening_balance" size="lg" />
                 </p>
               </UCard>
               <UCard color="success" variant="subtle">
@@ -253,7 +253,7 @@ definePageMeta({ layout: "accounting" });
                   Total Masuk
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_debit) }}
+                  <CurrencyText :value="data.total_debit" size="lg" />
                 </p>
               </UCard>
               <UCard color="error" variant="subtle">
@@ -261,7 +261,7 @@ definePageMeta({ layout: "accounting" });
                   Total Keluar
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_credit) }}
+                  <CurrencyText :value="data.total_credit" size="lg" />
                 </p>
               </UCard>
               <UCard color="primary" variant="subtle">
@@ -269,7 +269,7 @@ definePageMeta({ layout: "accounting" });
                   Saldo Akhir
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.closing_balance) }}
+                  <CurrencyText :value="data.closing_balance" size="lg" />
                 </p>
               </UCard>
             </div>

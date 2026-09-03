@@ -483,7 +483,7 @@ definePageMeta({ layout: 'accounting' })
                       Total Debit
                     </p>
                     <p class="text-xl font-bold">
-                      {{ formatCurrency(detailData.total_debit as number) }}
+                      <CurrencyText :value="detailData.total_debit as number" size="md" />
                     </p>
                   </UCard>
                   <UCard color="warning" variant="subtle" :ui="{ body: 'py-3' }">
@@ -491,7 +491,7 @@ definePageMeta({ layout: 'accounting' })
                       Total Kredit
                     </p>
                     <p class="text-xl font-bold">
-                      {{ formatCurrency(detailData.total_credit as number) }}
+                      <CurrencyText :value="detailData.total_credit as number" size="md" />
                     </p>
                   </UCard>
                   <UCard color="primary" variant="subtle" :ui="{ body: 'py-3' }">
@@ -499,7 +499,7 @@ definePageMeta({ layout: 'accounting' })
                       Saldo
                     </p>
                     <p class="text-xl font-bold">
-                      {{ formatCurrency(detailData.balance as number) }}
+                      <CurrencyText :value="detailData.balance as number" size="md" />
                     </p>
                   </UCard>
                 </div>

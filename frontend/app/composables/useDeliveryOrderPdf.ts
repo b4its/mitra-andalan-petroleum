@@ -365,10 +365,10 @@ export function useDeliveryOrderPdf() {
                     text: ":",
                   },
                   {
-                text:
-                  surat.receiverDateReceived === undefined
-                    ? ""
-                    : formatDateDoc(surat.receiverDateReceived),
+                    text:
+                      surat.receiverDateReceived === undefined
+                        ? ""
+                        : formatDateDoc(surat.receiverDateReceived),
                     border: [false, false, true, false],
                   },
                   {
@@ -380,10 +380,10 @@ export function useDeliveryOrderPdf() {
                     text: ":",
                   },
                   {
-                text:
-                  surat.receiverDateReceived === undefined
-                    ? ""
-                    : formatDateDoc(surat.transportDateReceived),
+                    text:
+                      surat.transportDateReceived === undefined
+                        ? ""
+                        : formatDateDoc(surat.transportDateReceived),
                     border: [false, false, true, false],
                   },
                 ],
