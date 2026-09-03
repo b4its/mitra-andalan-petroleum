@@ -249,7 +249,7 @@ definePageMeta({ layout: "accounting" });
                   Total Penghasilan
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_penghasilan) }}
+                  <CurrencyText :value="data.total_penghasilan" size="lg" />
                 </p>
               </UCard>
               <UCard color="error" variant="subtle">
@@ -257,7 +257,7 @@ definePageMeta({ layout: "accounting" });
                   Total Operasional
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_operasional) }}
+                  <CurrencyText :value="data.total_operasional" size="lg" />
                 </p>
               </UCard>
               <UCard color="primary" variant="subtle">
@@ -265,7 +265,7 @@ definePageMeta({ layout: "accounting" });
                   Total Margin Kotor
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_gross_margin) }}
+                  <CurrencyText :value="data.total_gross_margin" size="lg" />
                 </p>
               </UCard>
               <UCard color="info" variant="subtle">
@@ -273,7 +273,7 @@ definePageMeta({ layout: "accounting" });
                   Total OAT
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_oat) }}
+                  <CurrencyText :value="data.total_oat" size="lg" />
                 </p>
               </UCard>
             </div>
@@ -316,37 +316,37 @@ definePageMeta({ layout: "accounting" });
                 <div>
                   <p class="text-xs text-muted">Modal Elnusa</p>
                   <p class="font-bold">
-                    {{ formatCurrency(data.total_modal) }}
+                    <CurrencyText :value="data.total_modal" size="sm" />
                   </p>
                 </div>
                 <div>
                   <p class="text-xs text-muted">OAT</p>
                   <p class="font-bold">
-                    {{ formatCurrency(data.total_oat) }}
+                    <CurrencyText :value="data.total_oat" size="sm" />
                   </p>
                 </div>
                 <div>
                   <p class="text-xs text-muted">Margin Kotor</p>
                   <p class="font-bold">
-                    {{ formatCurrency(data.total_gross_margin) }}
+                    <CurrencyText :value="data.total_gross_margin" size="sm" />
                   </p>
                 </div>
                 <div>
                   <p class="text-xs text-muted">Penghasilan</p>
                   <p class="font-bold">
-                    {{ formatCurrency(data.total_penghasilan) }}
+                    <CurrencyText :value="data.total_penghasilan" size="sm" />
                   </p>
                 </div>
                 <div>
                   <p class="text-xs text-muted">Operasional</p>
                   <p class="font-bold">
-                    {{ formatCurrency(data.total_operasional) }}
+                    <CurrencyText :value="data.total_operasional" size="sm" />
                   </p>
                 </div>
                 <div>
                   <p class="text-xs text-muted">Fee Manajemen</p>
                   <p class="font-bold">
-                    {{ formatCurrency(data.total_fee_manajemen) }}
+                    <CurrencyText :value="data.total_fee_manajemen" size="sm" />
                   </p>
                 </div>
               </div>

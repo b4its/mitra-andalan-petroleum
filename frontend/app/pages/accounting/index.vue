@@ -480,7 +480,7 @@ definePageMeta({ layout: "accounting" });
                     {{ card.title }}
                   </p>
                   <p class="mt-1 text-2xl font-bold">
-                    {{ card.value }}
+                    <CurrencyText :value="card.value" size="lg" />
                   </p>
                 </div>
                 <UBadge
@@ -566,25 +566,25 @@ definePageMeta({ layout: "accounting" });
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Saldo Awal</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(dailyCash.opening_balance) }}
+                  <CurrencyText :value="dailyCash.opening_balance" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Masuk</p>
                 <p class="text-xl font-bold text-success">
-                  {{ formatCurrency(dailyCash.total_debit) }}
+                  <CurrencyText :value="dailyCash.total_debit" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Total Keluar</p>
                 <p class="text-xl font-bold text-error">
-                  {{ formatCurrency(dailyCash.total_credit) }}
+                  <CurrencyText :value="dailyCash.total_credit" size="md" />
                 </p>
               </div>
               <div class="rounded-lg border border-default p-3">
                 <p class="text-sm text-muted">Saldo Akhir</p>
                 <p class="text-xl font-bold">
-                  {{ formatCurrency(dailyCash.closing_balance) }}
+                  <CurrencyText :value="dailyCash.closing_balance" size="md" />
                 </p>
               </div>
             </div>

@@ -236,7 +236,7 @@ definePageMeta({ layout: "accounting" });
                   Total Pokok Pinjaman
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_principal) }}
+                  <CurrencyText :value="data.total_principal" size="lg" />
                 </p>
               </UCard>
               <UCard color="warning" variant="subtle">
@@ -244,7 +244,7 @@ definePageMeta({ layout: "accounting" });
                   Total Bunga
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_interest) }}
+                  <CurrencyText :value="data.total_interest" size="lg" />
                 </p>
               </UCard>
               <UCard color="success" variant="subtle">
@@ -252,7 +252,7 @@ definePageMeta({ layout: "accounting" });
                   Total Pembayaran
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(data.total_paid) }}
+                  <CurrencyText :value="data.total_paid" size="lg" />
                 </p>
               </UCard>
             </div>

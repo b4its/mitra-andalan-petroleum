@@ -264,7 +264,7 @@ definePageMeta({ layout: "accounting" });
                   Total Pengeluaran
                 </p>
                 <p class="mt-1 text-xl font-bold text-error">
-                  {{ formatCurrency(totalAmount) }}
+                  <CurrencyText :value="totalAmount" size="md" />
                 </p>
               </UCard>
             </div>

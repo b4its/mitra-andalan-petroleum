@@ -229,7 +229,7 @@ definePageMeta({ layout: "accounting" });
                   Total Aset
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(neraca.total_assets) }}
+                  <CurrencyText :value="neraca.total_assets" size="lg" />
                 </p>
               </UCard>
               <UCard color="warning" variant="subtle">
@@ -237,7 +237,7 @@ definePageMeta({ layout: "accounting" });
                   Total Kewajiban
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(neraca.total_liabilities) }}
+                  <CurrencyText :value="neraca.total_liabilities" size="lg" />
                 </p>
               </UCard>
               <UCard color="primary" variant="subtle">
@@ -245,7 +245,7 @@ definePageMeta({ layout: "accounting" });
                   Total Ekuitas
                 </p>
                 <p class="text-2xl font-bold">
-                  {{ formatCurrency(neraca.total_equity) }}
+                  <CurrencyText :value="neraca.total_equity" size="lg" />
                 </p>
               </UCard>
             </div>

@@ -8,10 +8,11 @@ defineProps<{
   }[]
 }>()
 
+function isCurrency(stat: { title: string, value: number | string }): boolean {
+  return stat.title === 'Total Revenue' && typeof stat.value === 'number'
+}
+
 function displayValue(stat: { title: string, value: number | string }): string {
-  if (stat.title === 'Total Revenue' && typeof stat.value === 'number') {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(stat.value)
-  }
   return String(stat.value)
 }
 </script>
@@ -34,7 +35,13 @@ function displayValue(stat: { title: string, value: number | string }): string {
           </p>
         </div>
       </template>
-      <span class="text-2xl font-semibold text-highlighted">
+      <CurrencyText
+        v-if="isCurrency(stat)"
+        :value="stat.value"
+        size="lg"
+        class="font-semibold text-highlighted"
+      />
+      <span v-else class="text-2xl font-semibold text-highlighted">
         {{ displayValue(stat) }}
       </span>
     </UCard>
